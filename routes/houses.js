@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
 const House = require("../models/House");
 const auth = require("../middleware/auth");
 const {
@@ -8,16 +10,30 @@ const {
   handleValidationErrors,
 } = require("../middleware/validator");
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
+// Configure Cloudinary (use environment variables)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// Configure multer storage for Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "rental-marketplace",
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
+    transformation: [{ width: 800, height: 600, crop: "limit" }],
+  },
+});
+
 const upload = multer({ storage });
 
 // UPLOAD HOUSE
 router.post("/", auth, upload.array("images", 5), validateHouse, handleValidationErrors, async (req, res) => {
   try {
-    const images = req.files ? req.files.map(f => f.filename) : [];
+    // Cloudinary returns the full secure URL for each uploaded file
+    const images = req.files ? req.files.map(file => file.path) : [];
     const house = new House({
       name: req.body.name,
       location: req.body.location,
@@ -79,8 +95,9 @@ router.put("/:id", auth, upload.array("images", 5), validateHouse, handleValidat
       house.unavailableDates = JSON.parse(req.body.unavailableDates).map(d => new Date(d));
     }
 
+    // If new images are uploaded, replace the old ones (Cloudinary URLs)
     if (req.files && req.files.length > 0) {
-      house.images = req.files.map(f => f.filename);
+      house.images = req.files.map(f => f.path);
     }
 
     await house.save();
@@ -134,7 +151,6 @@ router.get("/", async (req, res) => {
     if (req.query.furnished === 'true') houseFilter.furnished = true;
     if (req.query.petFriendly === 'true') houseFilter.petFriendly = true;
 
-    // Aggregation pipeline to join with users and optionally filter by subscription
     const pipeline = [
       { $match: houseFilter },
       {
@@ -146,7 +162,7 @@ router.get("/", async (req, res) => {
         }
       },
       { $unwind: "$ownerInfo" },
-      // { $match: { "ownerInfo.subscriptionExpiresAt": { $gt: new Date() } } }, // disabled
+      // { $match: { "ownerInfo.subscriptionExpiresAt": { $gt: new Date() } } }, // optional
       {
         $addFields: {
           owner: {
