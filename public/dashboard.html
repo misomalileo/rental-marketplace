@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Landlord Dashboard | Rental Marketplace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#3498db">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Flatpickr for date picking -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <style>
+    /* Theme variables */
+    body.theme-light {
+      --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      --navbar-bg: white;
+      --text-color: #2c3e50;
+      --card-bg: white;
+      --footer-bg: white;
+      --input-bg: white;
+      --input-border: #ddd;
+      --button-bg: #3498db;
+      --button-hover: #2980b9;
+    }
+    body.theme-dark {
+      --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+      --navbar-bg: #1e2b3a;
+      --text-color: #ecf0f1;
+      --card-bg: #2c3e50;
+      --footer-bg: #1e2b3a;
+      --input-bg: #34495e;
+      --input-border: #4a6782;
+      --button-bg: #3498db;
+      --button-hover: #2980b9;
+    }
+    body.theme-aquatic {
+      --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      --navbar-bg: #4aa3a2;
+      --text-color: #1e4a4b;
+      --card-bg: rgba(255,255,255,0.9);
+      --footer-bg: #4aa3a2;
+      --input-bg: #e0f7fa;
+      --input-border: #4aa3a2;
+      --button-bg: #ff6b6b;
+      --button-hover: #ee5253;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient, linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%));
+      color: var(--text-color, #2c3e50);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .navbar {
+      background: var(--navbar-bg, white) !important;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: var(--card-bg, white);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .stat-card h3 {
+      margin: 0 0 10px;
+      color: var(--text-color, #555);
+      font-size: 1rem;
+    }
+    .stat-card .value {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: var(--text-color, #2c3e50);
+    }
+
+    .verification-card {
+      background: var(--card-bg, white);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin: 20px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .verification-card h3 {
+      margin: 0 0 10px 0;
+      color: var(--text-color, #2c3e50);
+    }
+    .payment-btn {
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
+      transition: transform 0.2s;
+    }
+    .payment-btn.official {
+      background: #2ecc71;
+      color: white;
+    }
+    .payment-btn.premium {
+      background: #f1c40f;
+      color: #2c3e50;
+    }
+    .payment-btn:hover {
+      transform: translateY(-2px);
+    }
+    .premium-badge {
+      background: gold;
+      color: #2c3e50;
+      padding: 8px 15px;
+      border-radius: 30px;
+      display: inline-block;
+      font-weight: bold;
+    }
+    .official-badge {
+      background: #2ecc71;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 30px;
+      display: inline-block;
+      font-weight: bold;
+    }
+    .none-badge {
+      background: #bdc3c7;
+      color: #2c3e50;
+      padding: 8px 15px;
+      border-radius: 30px;
+      display: inline-block;
+      font-weight: bold;
+    }
+    .days-left {
+      font-size: 0.9rem;
+      color: #27ae60;
+      font-weight: normal;
+      margin-left: 5px;
+    }
+    .days-left.expired {
+      color: #e74c3c;
+    }
+
+    /* Badge for unread messages */
+    .badge {
+      background: #e74c3c;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      margin-left: 5px;
+    }
+
+    #my-houses {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .house-card {
+      background: var(--card-bg, white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+    .house-card:hover {
+      transform: translateY(-4px);
+    }
+    .house-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .house-content {
+      padding: 15px;
+    }
+    .house-content h3 {
+      margin: 0 0 5px;
+      font-size: 1.2rem;
+      color: var(--text-color, #2c3e50);
+    }
+    .house-content p {
+      margin: 5px 0;
+      color: var(--text-color, #555);
+    }
+    .edit, .delete {
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 5px;
+      font-weight: bold;
+    }
+    .edit { background: #f39c12; color: white; }
+    .delete { background: #e74c3c; color: white; }
+    .feature-btn {
+      background: gold;
+      color: #2c3e50;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .feature-btn:hover {
+      background: #f1c40f;
+    }
+    .featured-badge {
+      background: gold;
+      color: #2c3e50;
+      padding: 4px 8px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 5px;
+    }
+    .house-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    #map { height: 300px; margin: 20px 0; border-radius: 12px; }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: var(--text-color, #2c3e50);
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--input-border, #ddd);
+      border-radius: 6px;
+      background: var(--input-bg, white);
+      color: var(--text-color, #2c3e50);
+    }
+    .gps-btn {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .gps-btn:hover {
+      background: var(--button-hover, #2980b9);
+    }
+    .upload-btn {
+      background: var(--button-bg, #27ae60);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+    .upload-btn:hover {
+      background: var(--button-hover, #2ecc71);
+    }
+
+    /* Amenities checkboxes styling */
+    .amenities-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 5px;
+    }
+    .amenities-group label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: normal;
+    }
+
+    /* Modal styles */
+    .modal {
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: var(--card-bg, #fefefe);
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .close-btn {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close-btn:hover {
+      color: black;
+    }
+
+    /* Payment modal specific */
+    .payment-option {
+      background: white;
+      border: 2px solid var(--input-border, #ddd);
+      border-radius: 40px;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+      width: 100%;
+      margin: 5px 0;
+    }
+    .payment-option:hover {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border-color: var(--button-bg, #3498db);
+    }
+    .payment-option img {
+      height: 24px;
+      width: auto;
+    }
+
+    /* Flatpickr styling for dark theme */
+    .flatpickr-calendar {
+      background: var(--card-bg, white);
+      color: var(--text-color, #2c3e50);
+    }
+
+    /* Booking cards */
+    .booking-card {
+      background: var(--card-bg, white);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .booking-status {
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .booking-status.pending { color: orange; }
+    .booking-status.approved { color: green; }
+    .booking-status.rejected { color: red; }
+    .booking-actions button {
+      margin-right: 0.5rem;
+      padding: 0.3rem 0.8rem;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+    .approve-btn { background: #2ecc71; color: white; }
+    .reject-btn { background: #e74c3c; color: white; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      background: var(--footer-bg, white);
+      color: var(--text-color, #2c3e50);
+      border-radius: 40px 40px 0 0;
+      margin-top: 3rem;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      margin: 0 0.5rem;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Navbar additions */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-color, #2c3e50);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: var(--text-color, #2c3e50);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .lang-select, .theme-select {
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      border: 1px solid var(--input-border, #ccc);
+      background: var(--input-bg, white);
+      color: var(--text-color, #2c3e50);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h2 class="logo" data-i18n="home">🏠 Landlord Dashboard</h2>
+    <div class="nav-links">
+      <a href="index.html" data-i18n="home">Home</a>
+      <a href="#" onclick="logout()" data-i18n="logout">Logout</a>
+      <!-- Messages link with badge -->
+      <a href="chat.html">💬 Messages <span id="messageBadge" class="badge" style="display:none;">0</span></a>
+      <select class="lang-select" onchange="setLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="ny">Chichewa</option>
+      </select>
+      <select class="theme-select" onchange="setTheme(this.value)">
+        <option value="light" data-i18n="light">Light</option>
+        <option value="dark" data-i18n="dark">Dark</option>
+        <option value="aquatic" data-i18n="aquatic">Aquatic</option>
+      </select>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <h1 data-i18n="welcome">Welcome, Landlord</h1>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3 data-i18n="totalHouses">Total Houses</h3>
+        <div class="value" id="totalHouses">0</div>
+      </div>
+      <div class="stat-card">
+        <h3 data-i18n="totalViews">Total Views</h3>
+        <div class="value" id="totalViews">0</div>
+      </div>
+      <div class="stat-card">
+        <h3 data-i18n="avgRating">Avg Rating</h3>
+        <div class="value" id="avgRating">0.0</div>
+      </div>
+    </div>
+
+    <!-- Verification Section -->
+    <div id="verification-section" class="verification-card">
+      <h3 data-i18n="accountVerification">Account Verification</h3>
+      <div id="verification-status">Loading...</div>
+    </div>
+
+    <!-- Upload Form -->
+    <h2 data-i18n="uploadNewHouse">📤 Upload New House</h2>
+    <form id="houseForm" enctype="multipart/form-data">
+      <div class="form-group">
+        <label data-i18n="houseName">House Name</label>
+        <input type="text" name="name" placeholder="e.g., Sunny 3-Bedroom House" required>
+      </div>
+      <div class="form-group">
+        <label data-i18n="location">Location (Area)</label>
+        <input type="text" name="location" placeholder="e.g., Bangwe, Ndirande, Chichiri" required>
+      </div>
+      <div class="form-group">
+        <label data-i18n="price">Price (MWK)</label>
+        <input type="number" name="price" placeholder="e.g., 150000" required>
+      </div>
+      <div class="form-group">
+        <label data-i18n="whatsapp">WhatsApp Number</label>
+        <input type="text" name="phone" placeholder="e.g., 265888123456" required>
+      </div>
+      <div class="form-group">
+        <label data-i18n="description">Description</label>
+        <textarea name="description" placeholder="Describe the house..."></textarea>
+      </div>
+      <div class="form-group">
+        <label data-i18n="propertyType">Property Type</label>
+        <select name="type" id="propertyType" required>
+          <option value="House">House</option>
+          <option value="Hostel">Hostel</option>
+          <option value="Apartment">Apartment</option>
+          <option value="Room">Room</option>
+          <option value="Office">Office</option>
+        </select>
+      </div>
+      <div class="form-group" id="bedroomsGroup">
+        <label data-i18n="bedrooms">Bedrooms</label>
+        <input type="number" name="bedrooms" value="0">
+      </div>
+      <div class="form-group" id="vacanciesGroup" style="display:none;">
+        <label data-i18n="vacancies">Vacancies (available rooms)</label>
+        <input type="number" name="vacancies" value="0">
+      </div>
+      <div class="form-group">
+        <label data-i18n="condition">Condition</label>
+        <select name="condition">
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Needs renovation">Needs renovation</option>
+        </select>
+      </div>
+
+      <!-- Gender Restriction -->
+      <div class="form-group" id="genderGroup">
+        <label>Gender Restriction (for hostels/rooms)</label>
+        <select name="gender">
+          <option value="none">None</option>
+          <option value="boys">Boys Only</option>
+          <option value="girls">Girls Only</option>
+          <option value="mixed">Mixed (Boys & Girls)</option>
+        </select>
+      </div>
+
+      <!-- NEW: Self Contained -->
+      <div class="form-group">
+        <label><input type="checkbox" name="selfContained"> 🏡 Self Contained (private bathroom & kitchen)</label>
+      </div>
+
+      <!-- Amenities checkboxes -->
+      <div class="form-group">
+        <label>Amenities</label>
+        <div class="amenities-group">
+          <label><input type="checkbox" name="wifi"> 📶 WiFi</label>
+          <label><input type="checkbox" name="parking"> 🅿️ Parking</label>
+          <label><input type="checkbox" name="furnished"> 🛋️ Furnished</label>
+          <label><input type="checkbox" name="petFriendly"> 🐾 Pet Friendly</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="photos">Photos (up to 5)</label>
+        <input type="file" name="images" multiple accept="image/*" required>
+      </div>
+      <div class="form-group">
+        <label data-i18n="latitude">Latitude</label>
+        <input type="text" name="lat" id="latitude" readonly>
+      </div>
+      <div class="form-group">
+        <label data-i18n="longitude">Longitude</label>
+        <input type="text" name="lng" id="longitude" readonly>
+      </div>
+      <button type="button" class="gps-btn" onclick="getLocation()" data-i18n="captureLocation">📍 Use My GPS Location</button>
+      <div id="map"></div>
+      <button type="submit" class="upload-btn" data-i18n="uploadNewHouse">🏠 Upload House</button>
+    </form>
+
+    <hr>
+
+    <!-- My Houses -->
+    <h2 data-i18n="myHouses">📋 My Houses</h2>
+    <div id="my-houses"></div>
+
+    <!-- Booking Requests -->
+    <h2>📅 Booking Requests</h2>
+    <div id="bookingRequests"></div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeEditModal()">&times;</span>
+      <h2 data-i18n="edit">✏️ Edit House</h2>
+      <form id="editForm" enctype="multipart/form-data">
+        <input type="hidden" id="editHouseId" name="houseId">
+        <div class="form-group">
+          <label data-i18n="houseName">House Name</label>
+          <input type="text" id="editName" name="name" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="location">Location</label>
+          <input type="text" id="editLocation" name="location" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="price">Price (MWK)</label>
+          <input type="number" id="editPrice" name="price" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="whatsapp">WhatsApp Number</label>
+          <input type="text" id="editPhone" name="phone" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="description">Description</label>
+          <textarea id="editDescription" name="description"></textarea>
+        </div>
+        <div class="form-group">
+          <label data-i18n="propertyType">Property Type</label>
+          <select id="editType" name="type" required>
+            <option value="House">House</option>
+            <option value="Hostel">Hostel</option>
+            <option value="Apartment">Apartment</option>
+            <option value="Room">Room</option>
+            <option value="Office">Office</option>
+          </select>
+        </div>
+        <div class="form-group" id="editBedroomsGroup">
+          <label data-i18n="bedrooms">Bedrooms</label>
+          <input type="number" id="editBedrooms" name="bedrooms" value="0">
+        </div>
+        <div class="form-group" id="editVacanciesGroup" style="display:none;">
+          <label data-i18n="vacancies">Vacancies (available rooms)</label>
+          <input type="number" id="editVacancies" name="vacancies" value="0">
+        </div>
+        <div class="form-group">
+          <label data-i18n="condition">Condition</label>
+          <select id="editCondition" name="condition">
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+            <option value="Needs renovation">Needs renovation</option>
+          </select>
+        </div>
+
+        <!-- Gender Restriction in edit modal -->
+        <div class="form-group" id="editGenderGroup">
+          <label>Gender Restriction (for hostels/rooms)</label>
+          <select id="editGender" name="gender">
+            <option value="none">None</option>
+            <option value="boys">Boys Only</option>
+            <option value="girls">Girls Only</option>
+            <option value="mixed">Mixed (Boys & Girls)</option>
+          </select>
+        </div>
+
+        <!-- NEW: Self Contained checkbox in edit modal -->
+        <div class="form-group">
+          <label><input type="checkbox" id="editSelfContained" name="selfContained"> 🏡 Self Contained</label>
+        </div>
+
+        <!-- Amenities checkboxes in edit modal -->
+        <div class="form-group">
+          <label>Amenities</label>
+          <div class="amenities-group">
+            <label><input type="checkbox" id="editWifi" name="wifi"> 📶 WiFi</label>
+            <label><input type="checkbox" id="editParking" name="parking"> 🅿️ Parking</label>
+            <label><input type="checkbox" id="editFurnished" name="furnished"> 🛋️ Furnished</label>
+            <label><input type="checkbox" id="editPetFriendly" name="petFriendly"> 🐾 Pet Friendly</label>
+          </div>
+        </div>
+
+        <!-- Unavailable Dates (flatpickr) -->
+        <div class="form-group">
+          <label>Unavailable Dates (Booked)</label>
+          <input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly>
+          <small>Select dates that are already booked. Leave empty if all dates available.</small>
+        </div>
+
+        <div class="form-group">
+          <label data-i18n="photos">Photos (leave empty to keep current)</label>
+          <input type="file" name="images" multiple accept="image/*">
+          <small>Current images will be replaced if you upload new ones.</small>
+        </div>
+        <div class="form-group">
+          <label data-i18n="latitude">Latitude</label>
+          <input type="text" id="editLat" name="lat" readonly>
+        </div>
+        <div class="form-group">
+          <label data-i18n="longitude">Longitude</label>
+          <input type="text" id="editLng" name="lng" readonly>
+        </div>
+        <button type="button" class="gps-btn" onclick="getEditLocation()" data-i18n="captureLocation">📍 Use GPS</button>
+        <div id="editMap" style="height: 200px; margin-bottom: 10px;"></div>
+        <button type="submit" class="upload-btn" data-i18n="saveChanges">💾 Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:400px;">
+      <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+      <h2 id="paymentTitle">Select Payment Method</h2>
+      <p id="paymentAmount" style="font-size:1.2rem; margin:10px 0;"></p>
+
+      <!-- Phone number input -->
+      <div id="paymentPhone" style="margin:15px 0;">
+        <label for="phoneNumber" style="display:block; margin-bottom:5px; font-weight:bold;">Mobile Money Number:</label>
+        <input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX" 
+               style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:1rem;">
+      </div>
+
+      <div class="payment-options" style="display: flex; flex-direction: column; gap:10px; margin:20px 0;">
+        <button class="payment-option" onclick="processPayment('Airtel Money')">
+          <img src="https://www.airtel.co.mw/images/logo.png" style="height:30px;"> Airtel Money
+        </button>
+        <button class="payment-option" onclick="processPayment('TNM Mpamba')">
+          <img src="https://www.tnm.co.mw/images/logo.png" style="height:30px;"> TNM Mpamba
+        </button>
+        <button class="payment-option" onclick="processPayment('Standard Bank')">
+          <img src="https://www.standardbank.co.mw/images/logo.png" style="height:30px;"> Standard Bank
+        </button>
+      </div>
+      <div id="paymentStatus" style="text-align:center; font-weight:bold;"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span data-i18n="copyright">© 2026 Rental Marketplace Malawi</span>
+    <br><br>
+    <a href="terms.html" data-i18n="terms">Terms</a> | 
+    <a href="privacy.html" data-i18n="privacy">Privacy</a> | 
+    <a href="faq.html" data-i18n="faq">FAQ</a> | 
+    <a href="contact.html" data-i18n="contact">Contact</a>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script>
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      window.location = "login.html";
+    }
+    document.getElementById('propertyType').addEventListener('change', function() {
+      if (this.value === 'Hostel') {
+        document.getElementById('bedroomsGroup').style.display = 'none';
+        document.getElementById('vacanciesGroup').style.display = 'block';
+      } else {
+        document.getElementById('bedroomsGroup').style.display = 'block';
+        document.getElementById('vacanciesGroup').style.display = 'none';
+      }
+    });
+    document.getElementById('editType').addEventListener('change', function() {
+      if (this.value === 'Hostel') {
+        document.getElementById('editBedroomsGroup').style.display = 'none';
+        document.getElementById('editVacanciesGroup').style.display = 'block';
+      } else {
+        document.getElementById('editBedroomsGroup').style.display = 'block';
+        document.getElementById('editVacanciesGroup').style.display = 'none';
+      }
+    });
+    // Set initial language/theme selectors
+    document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
+    document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
+  </script>
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

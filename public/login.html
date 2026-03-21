@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login | Rental Marketplace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { font-family: Arial; background: #f4f4f4; }
+    .form-container { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+    .form-container h2 { text-align: center; margin-bottom: 20px; }
+    .form-container input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    .form-container button { width: 100%; padding: 10px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .google-btn { background: white; border: 1px solid #ccc; color: black; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; width: 100%; padding: 10px; border-radius: 5px; cursor: pointer; }
+    .google-btn img { width: 20px; }
+    .forgot-link { display: block; text-align: center; margin-top: 10px; }
+    @media(max-width:600px){ .form-container { margin:20px; } }
+  </style>
+</head>
+<body>
+<div class="form-container">
+  <h2>Landlord Login</h2>
+  <form id="loginForm">
+    <input type="email" placeholder="Email" id="email" required>
+    <input type="password" placeholder="Password" id="password" required>
+    <button type="submit">Login</button>
+  </form>
+
+  <!-- Forgot Password Link -->
+  <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+
+  <!-- Google Login -->
+  <a href="/api/auth/google">
+    <button class="google-btn" type="button">
+      <img src="https://developers.google.com/identity/images/g-logo.png">
+      Login with Google
+    </button>
+  </a>
+
+  <p style="text-align:center; margin-top:10px;">
+    No account? <a href="register.html">Register</a>
+  </p>
+</div>
+
+<script src="js/login.js"></script>
+<script>
+  // Check for error in URL (e.g., from Google auth failure)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('error') === 'google-auth-failed') {
+    alert('Google authentication failed. Please try again.');
+  }
+  // Show success message after email verification
+  if (urlParams.get('verified') === 'true') {
+    alert('Email verified! You can now log in.');
+  }
+</script>
+</body>
+</html>

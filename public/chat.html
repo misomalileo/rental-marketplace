@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat | Rental Marketplace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#3498db">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #f0f2f5; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+    .navbar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .chat-container { display: flex; flex: 1; overflow: hidden; }
+    .sidebar { width: 300px; background: white; border-right: 1px solid #ddd; overflow-y: auto; }
+    .sidebar h3 { padding: 1rem; margin: 0; border-bottom: 1px solid #eee; }
+    .chat-list { list-style: none; padding: 0; margin: 0; }
+    .chat-item { padding: 1rem; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
+    .chat-item:hover { background: #f5f5f5; }
+    .chat-item.active { background: #e3f2fd; }
+    .chat-item h4 { margin: 0 0 5px 0; font-size: 1rem; }
+    .chat-item p { margin: 0; font-size: 0.85rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-item small { color: #999; font-size: 0.7rem; }
+    .main-chat { flex: 1; display: flex; flex-direction: column; background: white; }
+    .chat-header { padding: 1rem; border-bottom: 1px solid #ddd; font-weight: bold; }
+    .messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 10px; }
+    .message { max-width: 70%; padding: 8px 12px; border-radius: 18px; word-wrap: break-word; }
+    .message.sent { align-self: flex-end; background: #0084ff; color: white; }
+    .message.received { align-self: flex-start; background: #e4e6eb; color: black; }
+    .message small { display: block; font-size: 0.6rem; opacity: 0.7; margin-top: 4px; text-align: right; }
+    .input-area { display: flex; padding: 1rem; border-top: 1px solid #ddd; }
+    .input-area input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+    .input-area button { margin-left: 10px; padding: 10px 20px; background: #0084ff; color: white; border: none; border-radius: 20px; cursor: pointer; }
+    .input-area button:disabled { background: #ccc; cursor: not-allowed; }
+    .no-chat { display: flex; align-items: center; justify-content: center; height: 100%; color: #999; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h2 class="logo">💬 Chat</h2>
+    <div>
+      <a href="index.html" style="margin-right:15px;">Home</a>
+      <a href="#" onclick="logout()">Logout</a>
+    </div>
+  </nav>
+
+  <div class="chat-container">
+    <div class="sidebar">
+      <h3>Conversations</h3>
+      <ul class="chat-list" id="chatList"></ul>
+    </div>
+    <div class="main-chat" id="mainChat">
+      <div class="no-chat">Select a conversation to start chatting</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+  <script src="js/chat.js"></script>
+  <script>
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      window.location = "login.html";
+    }
+  </script>
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

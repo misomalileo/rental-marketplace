@@ -1,0 +1,40 @@
+[
+{
+"name": "2 Bedroom House",
+"location": "Bangwe",
+"price": "MWK 80,000",
+"status": "Available",
+"images": [
+"images/house1.jpg",
+"images/house1_2.jpg",
+"images/house1_3.jpg"
+],
+"phone": "265996726966"
+},
+
+{
+"name": "1 Bedroom Hostel",
+"location": "Chichiri",
+"price": "MWK 50,000",
+"status": "Occupied",
+"images": [
+"images/house2.jpg",
+"images/house2_2.jpg",
+"images/house2_3.jpg"
+],
+"phone": "265996726966"
+},
+
+{
+"name": "3 Bedroom House",
+"location": "Ndirande",
+"price": "MWK 120,000",
+"status": "Available",
+"images": [
+"images/house3.jpg",
+"images/house3_2.jpg",
+"images/house3_3.jpg"
+],
+"phone": "265996726966"
+}
+]

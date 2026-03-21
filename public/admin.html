@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Rental Marketplace</title>
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#3498db">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Theme variables */
+    body.theme-light {
+      --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      --navbar-bg: white;
+      --text-color: #2c3e50;
+      --card-bg: white;
+      --footer-bg: white;
+      --input-bg: white;
+      --input-border: #ddd;
+      --button-bg: #3498db;
+      --button-hover: #2980b9;
+    }
+    body.theme-dark {
+      --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+      --navbar-bg: #1e2b3a;
+      --text-color: #ecf0f1;
+      --card-bg: #2c3e50;
+      --footer-bg: #1e2b3a;
+      --input-bg: #34495e;
+      --input-border: #4a6782;
+      --button-bg: #3498db;
+      --button-hover: #2980b9;
+    }
+    body.theme-aquatic {
+      --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      --navbar-bg: #4aa3a2;
+      --text-color: #1e4a4b;
+      --card-bg: rgba(255,255,255,0.9);
+      --footer-bg: #4aa3a2;
+      --input-bg: #e0f7fa;
+      --input-border: #4aa3a2;
+      --button-bg: #ff6b6b;
+      --button-hover: #ee5253;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient, linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%));
+      color: var(--text-color, #2c3e50);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .navbar {
+      background: var(--navbar-bg, #1e2b3a) !important;
+    }
+
+    .main-container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-color, #2c3e50);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg, white);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+    }
+
+    .stat-card h3 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-color, #7f8c8d);
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card .value {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--text-color, #2c3e50);
+      line-height: 1.2;
+    }
+
+    .stat-card .sub {
+      font-size: 0.9rem;
+      color: #27ae60;
+      margin-top: 0.5rem;
+    }
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-card {
+      background: var(--card-bg, white);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .chart-card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--text-color, #34495e);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .chart-card canvas {
+      max-height: 250px;
+      width: 100% !important;
+    }
+
+    .table-card {
+      background: var(--card-bg, white);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    }
+
+    .table-card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--text-color, #34495e);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 1rem 0.5rem 0.5rem 0.5rem;
+      color: var(--text-color, #7f8c8d);
+      font-weight: 600;
+      border-bottom: 2px solid #ecf0f1;
+    }
+
+    td {
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid #ecf0f1;
+      color: var(--text-color, #1a1a1a);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .badge.none { background: #bdc3c7; color: #2c3e50; }
+    .badge.official { background: #2ecc71; color: white; }
+    .badge.premium { background: #f1c40f; color: #2c3e50; }
+    .badge.featured { background: gold; color: #2c3e50; }
+
+    .action-btn {
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 0.3rem;
+      transition: opacity 0.2s;
+    }
+    .action-btn.verify { background: #2ecc71; color: white; }
+    .action-btn.premium { background: #f1c40f; color: #2c3e50; }
+    .action-btn.ban { background: #e74c3c; color: white; }
+    .action-btn.delete { background: #e67e22; color: white; }
+    .action-btn:hover {
+      opacity: 0.8;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      background: var(--footer-bg, white);
+      color: var(--text-color, #2c3e50);
+      border-radius: 40px 40px 0 0;
+      margin-top: 3rem;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      margin: 0 0.5rem;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Navbar additions */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .nav-links a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+    }
+    .lang-select, .theme-select {
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      border: 1px solid #ccc;
+      background: white;
+      color: #2c3e50;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .charts-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo" data-i18n="admin">👑 Admin Panel</div>
+    <div class="nav-links">
+      <a href="index.html" data-i18n="home">Home</a>
+      <a href="#" onclick="logout()" class="logout-btn" data-i18n="logout">Logout</a>
+      <select class="lang-select" onchange="setLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="ny">Chichewa</option>
+      </select>
+      <select class="theme-select" onchange="setTheme(this.value)">
+        <option value="light" data-i18n="light">Light</option>
+        <option value="dark" data-i18n="dark">Dark</option>
+        <option value="aquatic" data-i18n="aquatic">Aquatic</option>
+      </select>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <h1 data-i18n="dashboardOverview">Dashboard Overview</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3 data-i18n="totalLandlords">Total Landlords</h3>
+        <div class="value" id="totalLandlords">0</div>
+        <div class="sub" data-i18n="registered">registered</div>
+      </div>
+      <div class="stat-card">
+        <h3 data-i18n="totalHouses">Total Houses</h3>
+        <div class="value" id="totalHouses">0</div>
+        <div class="sub" data-i18n="listings">listings</div>
+      </div>
+      <div class="stat-card">
+        <h3 data-i18n="totalViews">Total Views</h3>
+        <div class="value" id="totalViews">0</div>
+        <div class="sub" data-i18n="allHouses">all houses</div>
+      </div>
+      <div class="stat-card">
+        <h3 data-i18n="pendingVerifications">Pending Verifications</h3>
+        <div class="value" id="pendingVerifications">0</div>
+        <div class="sub" data-i18n="landlords">landlords</div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <h2 data-i18n="housesPerMonth">📊 Houses Posted per Month</h2>
+        <canvas id="housesChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2 data-i18n="landlordVerification">🥧 Landlord Verification</h2>
+        <canvas id="verificationChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Landlords Table -->
+    <div class="table-card">
+      <h2 data-i18n="landlordManagement">🧑‍💼 Landlord Management</h2>
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="name">Name</th>
+            <th data-i18n="email">Email</th>
+            <th data-i18n="verification">Verification</th>
+            <th data-i18n="actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="landlordsTable">
+          <tr><td colspan="4" style="text-align:center;" data-i18n="loading">Loading landlords...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Houses Table -->
+    <div class="table-card">
+      <h2 data-i18n="allHouses">🏠 All Houses</h2>
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="house">House</th>
+            <th data-i18n="location">Location</th>
+            <th data-i18n="price">Price</th>
+            <th data-i18n="owner">Owner</th>
+            <th data-i18n="featured">Featured</th>
+            <th data-i18n="actions">Action</th>
+          </tr>
+        </thead>
+        <tbody id="housesTable">
+          <tr><td colspan="6" style="text-align:center;" data-i18n="loading">Loading houses...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="table-card">
+      <h2 data-i18n="userReports">🚩 User Reports</h2>
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="reporter">Reporter</th>
+            <th data-i18n="landlord">Landlord</th>
+            <th data-i18n="house">House</th>
+            <th data-i18n="reason">Reason</th>
+            <th data-i18n="date">Date</th>
+            <th data-i18n="status">Status</th>
+            <th data-i18n="actions">Action</th>
+          </tr>
+        </thead>
+        <tbody id="reportsTable">
+          <tr><td colspan="7" style="text-align:center;" data-i18n="loading">Loading reports...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span data-i18n="copyright">© 2026 Rental Marketplace Malawi</span>
+    <br><br>
+    <a href="terms.html" data-i18n="terms">Terms</a> | 
+    <a href="privacy.html" data-i18n="privacy">Privacy</a> | 
+    <a href="faq.html" data-i18n="faq">FAQ</a> | 
+    <a href="contact.html" data-i18n="contact">Contact</a>
+  </footer>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      window.location = "login.html";
+    }
+    // Set initial selectors
+    document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
+    document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
+  </script>
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

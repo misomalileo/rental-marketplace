@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Bookings | Rental Marketplace</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #f0f2f5; }
+    .bookings-container { max-width: 800px; margin: 2rem auto; padding: 1rem; }
+    .booking-card { background: white; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .status { font-weight: bold; }
+    .status.pending { color: orange; }
+    .status.approved { color: green; }
+    .status.rejected { color: red; }
+    .cancel-btn { background: #e74c3c; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 30px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h2 class="logo">My Bookings</h2>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="#" onclick="logout()">Logout</a>
+    </div>
+  </nav>
+  <div class="bookings-container" id="bookingsList">
+    Loading...
+  </div>
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) window.location = "login.html";
+
+    async function loadBookings() {
+      try {
+        const res = await fetch("/api/bookings/my", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const bookings = await res.json();
+        const container = document.getElementById("bookingsList");
+        if (bookings.length === 0) {
+          container.innerHTML = "<p>No bookings yet.</p>";
+          return;
+        }
+        container.innerHTML = "";
+        bookings.forEach(b => {
+          const card = document.createElement("div");
+          card.className = "booking-card";
+          card.innerHTML = `
+            <h3>${b.house?.name || 'Unknown house'}</h3>
+            <p>Location: ${b.house?.location || 'N/A'}</p>
+            <p>Dates: ${new Date(b.startDate).toLocaleDateString()} - ${new Date(b.endDate).toLocaleDateString()}</p>
+            <p>Status: <span class="status ${b.status}">${b.status}</span></p>
+            <p>Message: ${b.message || 'No message'}</p>
+            ${b.status === 'pending' ? `<button class="cancel-btn" onclick="cancelBooking('${b._id}')">Cancel Request</button>` : ''}
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm("Cancel this booking request?")) return;
+      try {
+        const res = await fetch(`/api/bookings/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (res.ok) {
+          alert("Booking cancelled");
+          loadBookings();
+        } else {
+          const data = await res.json();
+          alert("Error: " + data.message);
+        }
+      } catch (err) {
+        alert("Network error");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      window.location = "login.html";
+    }
+
+    loadBookings();
+  </script>
+</body>
+</html>

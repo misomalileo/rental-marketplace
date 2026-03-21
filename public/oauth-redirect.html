@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting...</title>
+  <script>
+    // Extract token and role from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const role = urlParams.get('role');
+
+    if (token) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
+      // Redirect based on role
+      if (role === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'dashboard.html'; // ✅ changed from landlord-dashboard.html
+      }
+    } else {
+      window.location.href = 'login.html?error=no-token';
+    }
+  </script>
+</head>
+<body>
+  <p>Authenticating... Please wait.</p>
+</body>
+</html>

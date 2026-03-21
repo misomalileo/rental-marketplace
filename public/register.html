@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register | Rental Marketplace</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .form-container { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .form-container h2 { text-align: center; margin-bottom: 20px; }
+        .form-container input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .form-container button { width: 100%; padding: 10px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .google-btn { background: white; border: 1px solid #ccc; color: black; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; width: 100%; padding: 10px; border-radius: 5px; cursor: pointer; }
+        .google-btn img { width: 20px; }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <h2>Create Landlord Account</h2>
+    <form id="registerForm">
+        <input type="text" placeholder="Full Name" id="name" required>
+        <input type="email" placeholder="Email" id="email" required>
+        <input type="text" placeholder="WhatsApp Number (265...)" id="phone" required>
+        <input type="password" placeholder="Password" id="password" required>
+        <input type="password" placeholder="Confirm Password" id="confirmPassword" required>
+        <button type="submit">Register</button>
+    </form>
+    <a href="/api/auth/google"><button class="google-btn" type="button"><img src="https://developers.google.com/identity/images/g-logo.png"> Sign up with Google</button></a>
+    <p style="text-align:center; margin-top:10px;">Already have an account? <a href="login.html">Login</a></p>
+</div>
+<script>
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        password: document.getElementById("password").value,
+        confirmPassword: document.getElementById("confirmPassword").value
+    };
+    const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    alert(result.message);
+    if (res.ok) window.location.href = "login.html";
+});
+</script>
+</body>
+</html>

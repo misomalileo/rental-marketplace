@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ | Rental Marketplace</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .faq-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .faq-container h1 { color: #2c3e50; margin-bottom: 1rem; }
+    .faq-item { margin-bottom: 1.5rem; border-bottom: 1px solid #ecf0f1; padding-bottom: 1rem; }
+    .faq-item h3 { color: #3498db; cursor: pointer; margin: 0; }
+    .faq-item p { display: none; margin-top: 0.5rem; color: #555; }
+    .faq-item.active p { display: block; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">🏠 Rental Marketplace</div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="login.html">Login</a>
+    </div>
+  </nav>
+
+  <div class="faq-container">
+    <h1>Frequently Asked Questions</h1>
+
+    <div class="faq-item">
+      <h3 onclick="toggleFAQ(this)">❓ How do I list a property?</h3>
+      <p>Log in to your landlord account, go to the dashboard, fill in the property details (name, location, price, photos, etc.), and click "Upload House". Your listing will appear on the public page after admin approval (or immediately if auto‑approved).</p>
+    </div>
+
+    <div class="faq-item">
+      <h3 onclick="toggleFAQ(this)">❓ Is there a fee to list?</h3>
+      <p>Basic listing is free. You can pay to become a verified landlord (official or premium) or to feature a house for better visibility.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3 onclick="toggleFAQ(this)">❓ How do tenants contact me?</h3>
+      <p>Each listing displays your WhatsApp number. Tenants can click the link to chat directly. We also have an in‑app messaging system (coming soon).</p>
+    </div>
+
+    <div class="faq-item">
+      <h3 onclick="toggleFAQ(this)">❓ How do I reset my password?</h3>
+      <p>On the login page, click "Forgot password?" and follow the instructions. A reset link will be sent to your email.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3 onclick="toggleFAQ(this)">❓ How do I report a fake listing?</h3>
+      <p>If you are logged in, click the "Report" button on the property card, provide a reason, and the admin will review it.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3 onclick="toggleFAQ(this)">❓ I'm an admin – how do I manage the site?</h3>
+      <p>Use the admin login page with your credentials. You'll see a dashboard with stats, and you can verify landlords, delete houses, and resolve reports.</p>
+    </div>
+  </div>
+
+  <footer style="text-align:center; padding:2rem; background:white; color:#2c3e50;">
+    © 2026 Rental Marketplace Malawi
+  </footer>
+
+  <script>
+    function toggleFAQ(el) {
+      const item = el.closest('.faq-item');
+      item.classList.toggle('active');
+    }
+  </script>
+</body>
+</html>
