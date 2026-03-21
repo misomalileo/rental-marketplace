@@ -332,9 +332,7 @@
 
     /* Payment modal specific */
     .payment-option {
-      background: white;
-      border: 2px solid var(--input-border, #ddd);
-      border-radius: 40px;
+      border: none;
       padding: 12px;
       font-size: 1rem;
       font-weight: 600;
@@ -346,15 +344,31 @@
       transition: all 0.2s;
       width: 100%;
       margin: 5px 0;
+      border-radius: 40px;
     }
-    .payment-option:hover {
-      background: var(--button-bg, #3498db);
+    .payment-option.airtel {
+      background: #E50000;
       color: white;
-      border-color: var(--button-bg, #3498db);
     }
-    .payment-option img {
-      height: 24px;
-      width: auto;
+    .payment-option.airtel:hover {
+      background: #cc0000;
+      transform: translateY(-2px);
+    }
+    .payment-option.tnm {
+      background: #00A651;
+      color: white;
+    }
+    .payment-option.tnm:hover {
+      background: #008c45;
+      transform: translateY(-2px);
+    }
+    .payment-option.standard {
+      background: #0077B6;
+      color: white;
+    }
+    .payment-option.standard:hover {
+      background: #005f8c;
+      transform: translateY(-2px);
     }
 
     /* Flatpickr styling for dark theme */
@@ -718,14 +732,14 @@
       </div>
 
       <div class="payment-options" style="display: flex; flex-direction: column; gap:10px; margin:20px 0;">
-        <button class="payment-option" onclick="processPayment('Airtel Money')">
-          <img src="https://www.airtel.co.mw/images/logo.png" style="height:30px;"> Airtel Money
+        <button class="payment-option airtel" onclick="processPayment('Airtel Money')">
+          <i class="fas fa-mobile-alt"></i> Airtel Money
         </button>
-        <button class="payment-option" onclick="processPayment('TNM Mpamba')">
-          <img src="https://www.tnm.co.mw/images/logo.png" style="height:30px;"> TNM Mpamba
+        <button class="payment-option tnm" onclick="processPayment('TNM Mpamba')">
+          <i class="fas fa-mobile-alt"></i> TNM Mpamba
         </button>
-        <button class="payment-option" onclick="processPayment('Standard Bank')">
-          <img src="https://www.standardbank.co.mw/images/logo.png" style="height:30px;"> Standard Bank
+        <button class="payment-option standard" onclick="processPayment('Standard Bank')">
+          <i class="fas fa-university"></i> Standard Bank
         </button>
       </div>
       <div id="paymentStatus" style="text-align:center; font-weight:bold;"></div>

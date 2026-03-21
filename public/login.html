@@ -4,15 +4,18 @@
   <title>Login | Rental Marketplace</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    body { font-family: Arial; background: #f4f4f4; }
-    .form-container { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
-    .form-container h2 { text-align: center; margin-bottom: 20px; }
-    .form-container input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    .form-container button { width: 100%; padding: 10px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    .google-btn { background: white; border: 1px solid #ccc; color: black; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; width: 100%; padding: 10px; border-radius: 5px; cursor: pointer; }
-    .google-btn img { width: 20px; }
-    .forgot-link { display: block; text-align: center; margin-top: 10px; }
+    body { font-family: 'Inter', sans-serif; background: #f4f4f4; }
+    .form-container { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .form-container h2 { text-align: center; margin-bottom: 20px; color: #2c3e50; }
+    .form-container input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
+    .form-container button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .form-container button:hover { background: #2980b9; }
+    .google-btn { background: white; border: 1px solid #e0e0e0; color: #2c3e50; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .google-btn:hover { background: #f8f9fa; }
+    .forgot-link { display: block; text-align: center; margin-top: 12px; color: #3498db; text-decoration: none; font-size: 0.9rem; }
+    .forgot-link:hover { text-decoration: underline; }
     @media(max-width:600px){ .form-container { margin:20px; } }
   </style>
 </head>
@@ -24,34 +27,21 @@
     <input type="password" placeholder="Password" id="password" required>
     <button type="submit">Login</button>
   </form>
-
-  <!-- Forgot Password Link -->
   <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
-
-  <!-- Google Login -->
   <a href="/api/auth/google">
     <button class="google-btn" type="button">
-      <img src="https://developers.google.com/identity/images/g-logo.png">
-      Login with Google
+      <i class="fab fa-google" style="font-size: 1.2rem;"></i> Login with Google
     </button>
   </a>
-
-  <p style="text-align:center; margin-top:10px;">
+  <p style="text-align:center; margin-top:20px;">
     No account? <a href="register.html">Register</a>
   </p>
 </div>
-
 <script src="js/login.js"></script>
 <script>
-  // Check for error in URL (e.g., from Google auth failure)
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('error') === 'google-auth-failed') {
-    alert('Google authentication failed. Please try again.');
-  }
-  // Show success message after email verification
-  if (urlParams.get('verified') === 'true') {
-    alert('Email verified! You can now log in.');
-  }
+  if (urlParams.get('verified') === 'true') alert('Email verified! You can now log in.');
+  if (urlParams.get('error') === 'google-auth-failed') alert('Google authentication failed.');
 </script>
 </body>
 </html>

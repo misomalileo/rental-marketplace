@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
@@ -580,7 +582,6 @@
     <div class="nav-links">
       <a href="#" data-i18n="home">Home</a>
       <a href="#map" data-i18n="exploreMap">Explore Map</a>
-      <!-- Static Landlord Login link (always visible) -->
       <a href="login.html" data-i18n="landlordLogin">Landlord Login</a>
       <select class="lang-select" onchange="setLanguage(this.value)">
         <option value="en">English</option>
@@ -618,7 +619,7 @@
         <option value="House">House</option>
         <option value="Hostel">Hostel</option>
       </select>
-      <button id="nearMeBtn" data-i18n="nearMe">📍 Near Me</button>
+      <button id="nearMeBtn" data-i18n="nearMe"><i class="fas fa-map-marker-alt"></i> Near Me</button>
       <button id="applyFiltersBtn" data-i18n="applyFilters">Apply Filters</button>
     </section>
 
@@ -659,7 +660,7 @@
     <!-- GPS LOCATOR -->
     <section class="gps-section">
       <h2 data-i18n="gpsLocator">📍 Property GPS Locator</h2>
-      <button id="getLocationBtn" data-i18n="captureLocation">Capture My Property Location</button>
+      <button id="getLocationBtn" data-i18n="captureLocation"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
       <p id="gpsStatus"></p>
       <input type="hidden" id="latitude">
       <input type="hidden" id="longitude">
