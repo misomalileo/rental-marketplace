@@ -19,6 +19,13 @@ const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: "*" } });
 
 // ===============================
+// PROXY TRUST (for Render / reverse proxies)
+// ===============================
+// Required for express-rate-limit to correctly identify client IPs
+// when the app runs behind a proxy (e.g., Render, Nginx, Heroku)
+app.set("trust proxy", 1); // 1 = trust first proxy
+
+// ===============================
 // SECURITY MIDDLEWARE (custom CSP)
 // ===============================
 app.use(
