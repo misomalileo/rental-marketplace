@@ -177,6 +177,25 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/bookings", bookingRoutes);
 
 // ===============================
+// DEBUG ENDPOINT – TEST MONGODB CONNECTION
+// ===============================
+app.get("/api/db-test", async (req, res) => {
+  try {
+    const admin = mongoose.connection.db.admin();
+    const info = await admin.buildInfo();
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    res.json({
+      connected: true,
+      version: info.version,
+      collections: collections.map(c => c.name)
+    });
+  } catch (err) {
+    console.error("DB test error:", err);
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
+// ===============================
 // CRON JOB FOR SUBSCRIPTION EXPIRY
 // ===============================
 require('./utils/cron');
