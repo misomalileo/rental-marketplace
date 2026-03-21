@@ -200,6 +200,9 @@ function closePropertyModal() {
   document.getElementById("propertyModal").style.display = "none";
 }
 
+// ======================================
+// RENDER HOUSE CARDS
+// ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
@@ -294,9 +297,10 @@ function renderHouses(houses) {
       ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')">💬 Chat</button>`
       : '';
 
+    // ✅ IMAGE SOURCE – use full Cloudinary URL directly
     card.innerHTML = `
       <div class="slider">
-        <img id="img-${house._id}" src="/uploads/${images[0]}">
+        <img id="img-${house._id}" src="${images[0]}">
         ${images.length > 1 ? `<button class="prev">‹</button><button class="next">›</button>` : ""}
       </div>
       <div class="house-card-content">
@@ -320,6 +324,7 @@ function renderHouses(houses) {
 
     container.appendChild(card);
 
+    // ✅ SLIDER – update image source using the full URL from the array
     if (images.length > 1) {
       const img = card.querySelector(`#img-${house._id}`);
       const prevBtn = card.querySelector(".prev");
@@ -327,12 +332,12 @@ function renderHouses(houses) {
       prevBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         current = (current - 1 + images.length) % images.length;
-        img.src = "/uploads/" + images[current];
+        img.src = images[current];
       });
       nextBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         current = (current + 1) % images.length;
-        img.src = "/uploads/" + images[current];
+        img.src = images[current];
       });
     }
 
@@ -410,6 +415,9 @@ async function submitRating(houseId, value, stars, messageSpan) {
   }
 }
 
+// ======================================
+// MAP MARKERS – use full Cloudinary URLs in popup
+// ======================================
 function renderMarkers(houses) {
   if (!markersLayer) return;
   markersLayer.clearLayers();
@@ -464,12 +472,12 @@ function renderMarkers(houses) {
     }
 
     const selfContainedBadge = house.selfContained ? '<br><span class="badge self-contained">🏡 Self Contained</span>' : '';
-
     const featuredBadge = house.featured ? '<br><span class="badge featured">⭐ FEATURED</span>' : '';
 
+    // ✅ POPUP IMAGE – use full Cloudinary URL directly
     const popup = `
       <div style="width:200px">
-        <img src="/uploads/${img}" style="width:100%;height:140px;object-fit:cover">
+        <img src="${img}" style="width:100%;height:140px;object-fit:cover">
         <h4>${house.name}</h4>
         ${details}
         ${genderInfo}
