@@ -10,14 +10,23 @@ const {
   handleValidationErrors,
 } = require("../middleware/validator");
 
-// Configure Cloudinary (use environment variables)
+// ======================================
+// CLOUDINARY CONFIGURATION
+// ======================================
+console.log("🔧 Configuring Cloudinary...");
+console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME);
+console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY ? "***" : "missing");
+console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "***" : "missing");
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure multer storage for Cloudinary
+// ======================================
+// MULTER STORAGE (Cloudinary)
+// ======================================
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -29,11 +38,25 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
+// ======================================
 // UPLOAD HOUSE
+// ======================================
 router.post("/", auth, upload.array("images", 5), validateHouse, handleValidationErrors, async (req, res) => {
   try {
+    console.log("📤 Upload request received");
+    console.log("req.files:", req.files ? `${req.files.length} files` : "no files");
+
+    if (!req.files || req.files.length === 0) {
+      console.warn("⚠️ No files uploaded");
+      return res.status(400).json({ message: "At least one image is required" });
+    }
+
     // Cloudinary returns the full secure URL for each uploaded file
-    const images = req.files ? req.files.map(file => file.path) : [];
+    const images = req.files.map(file => {
+      console.log("✅ Uploaded file:", file.path);
+      return file.path;
+    });
+
     const house = new House({
       name: req.body.name,
       location: req.body.location,
@@ -57,7 +80,9 @@ router.post("/", auth, upload.array("images", 5), validateHouse, handleValidatio
       unavailableDates: req.body.unavailableDates ? JSON.parse(req.body.unavailableDates).map(d => new Date(d)) : [],
       selfContained: req.body.selfContained === "on" || req.body.selfContained === "true"
     });
+
     await house.save();
+    console.log("✅ House saved with ID:", house._id);
     res.json({ message: "House uploaded successfully", house });
   } catch (err) {
     console.error("❌ Upload error:", err);
@@ -65,7 +90,9 @@ router.post("/", auth, upload.array("images", 5), validateHouse, handleValidatio
   }
 });
 
+// ======================================
 // UPDATE HOUSE
+// ======================================
 router.put("/:id", auth, upload.array("images", 5), validateHouse, handleValidationErrors, async (req, res) => {
   try {
     const house = await House.findOne({ _id: req.params.id, owner: req.user.id });
@@ -73,6 +100,7 @@ router.put("/:id", auth, upload.array("images", 5), validateHouse, handleValidat
       return res.status(404).json({ message: "House not found or not owned by you" });
     }
 
+    // Update text fields
     house.name = req.body.name || house.name;
     house.location = req.body.location || house.location;
     house.price = req.body.price || house.price;
@@ -97,6 +125,7 @@ router.put("/:id", auth, upload.array("images", 5), validateHouse, handleValidat
 
     // If new images are uploaded, replace the old ones (Cloudinary URLs)
     if (req.files && req.files.length > 0) {
+      console.log("🖼️ Updating images:", req.files.length);
       house.images = req.files.map(f => f.path);
     }
 
@@ -109,7 +138,9 @@ router.put("/:id", auth, upload.array("images", 5), validateHouse, handleValidat
   }
 });
 
+// ======================================
 // GET MY HOUSES
+// ======================================
 router.get("/my-houses", auth, async (req, res) => {
   try {
     const houses = await House.find({ owner: req.user.id })
@@ -121,7 +152,9 @@ router.get("/my-houses", auth, async (req, res) => {
   }
 });
 
+// ======================================
 // DELETE HOUSE
+// ======================================
 router.delete("/:id", auth, async (req, res) => {
   try {
     await House.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
@@ -131,7 +164,9 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
+// ======================================
 // GET ALL HOUSES (public) with pagination and filters
+// ======================================
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -210,7 +245,9 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ======================================
 // INCREMENT VIEW COUNT
+// ======================================
 router.put("/:id/view", async (req, res) => {
   try {
     const house = await House.findByIdAndUpdate(
@@ -224,7 +261,9 @@ router.put("/:id/view", async (req, res) => {
   }
 });
 
+// ======================================
 // RATE HOUSE
+// ======================================
 router.post("/:id/rate", auth, async (req, res) => {
   try {
     const house = await House.findById(req.params.id);
@@ -242,7 +281,9 @@ router.post("/:id/rate", auth, async (req, res) => {
   }
 });
 
+// ======================================
 // FEATURE HOUSE (mock payment)
+// ======================================
 router.put("/:id/feature", auth, async (req, res) => {
   try {
     const house = await House.findOne({ _id: req.params.id, owner: req.user.id });
