@@ -14,39 +14,54 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* Theme variables */
+    /* ========== THEME VARIABLES ========== */
     body.theme-light {
       --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      --navbar-bg: white;
+      --navbar-bg: rgba(255,255,255,0.95);
       --text-color: #2c3e50;
-      --card-bg: white;
-      --footer-bg: white;
+      --card-bg: rgba(255,255,255,0.92);
+      --footer-bg: rgba(255,255,255,0.95);
       --input-bg: white;
       --input-border: #ddd;
       --button-bg: #3498db;
       --button-hover: #2980b9;
+      background-image: url('https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
     body.theme-dark {
       --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
-      --navbar-bg: #1e2b3a;
+      --navbar-bg: rgba(30,43,58,0.95);
       --text-color: #ecf0f1;
-      --card-bg: #2c3e50;
-      --footer-bg: #1e2b3a;
+      --card-bg: rgba(44,62,80,0.92);
+      --footer-bg: rgba(30,43,58,0.95);
       --input-bg: #34495e;
       --input-border: #4a6782;
       --button-bg: #3498db;
       --button-hover: #2980b9;
+      background-image: url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
     body.theme-aquatic {
       --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      --navbar-bg: #4aa3a2;
+      --navbar-bg: rgba(74,163,162,0.95);
       --text-color: #1e4a4b;
-      --card-bg: rgba(255,255,255,0.9);
-      --footer-bg: #4aa3a2;
+      --card-bg: rgba(255,255,255,0.88);
+      --footer-bg: rgba(74,163,162,0.95);
       --input-bg: #e0f7fa;
       --input-border: #4aa3a2;
       --button-bg: #ff6b6b;
       --button-hover: #ee5253;
+      background-image: url('https://images.pexels.com/photos/2121121/pexels-photo-2121121.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
 
     * {
@@ -57,8 +72,8 @@
     }
 
     body {
-      background: var(--bg-gradient, linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%));
-      color: var(--text-color, #2c3e50);
+      background: var(--bg-gradient);
+      color: var(--text-color);
       min-height: 100vh;
       transition: background 0.3s, color 0.3s;
     }
@@ -69,7 +84,8 @@
       justify-content: space-between;
       align-items: center;
       padding: 1rem 2rem;
-      background: var(--navbar-bg, white);
+      background: var(--navbar-bg);
+      backdrop-filter: blur(5px);
       box-shadow: 0 4px 20px rgba(0,0,0,0.05);
       position: sticky;
       top: 0;
@@ -79,7 +95,7 @@
     .logo {
       font-size: 1.6rem;
       font-weight: 700;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
 
     .nav-links {
@@ -90,7 +106,7 @@
     }
 
     .nav-links a {
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
       text-decoration: none;
       font-weight: 500;
       transition: color 0.2s;
@@ -102,9 +118,9 @@
     .lang-select, .theme-select {
       padding: 0.3rem 0.8rem;
       border-radius: 30px;
-      border: 1px solid var(--input-border, #ccc);
-      background: var(--input-bg, white);
-      color: var(--text-color, #2c3e50);
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
       cursor: pointer;
       font-size: 0.9rem;
     }
@@ -144,12 +160,12 @@
     .filters input,
     .filters select,
     .filters button {
-      border: 1px solid var(--input-border, #e0e0e0);
+      border: 1px solid var(--input-border);
       border-radius: 40px;
       padding: 0.6rem 1.2rem;
       font-size: 0.9rem;
-      background: var(--input-bg, white);
-      color: var(--text-color, #2c3e50);
+      background: var(--input-bg);
+      color: var(--text-color);
       transition: all 0.2s;
       outline: none;
     }
@@ -159,17 +175,16 @@
       box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
     }
     .filters button {
-      background: var(--button-bg, #3498db);
+      background: var(--button-bg);
       color: white;
       border: none;
       font-weight: 600;
       cursor: pointer;
     }
     .filters button:hover {
-      background: var(--button-hover, #2980b9);
+      background: var(--button-hover);
     }
 
-    /* Amenities filter checkboxes */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -182,7 +197,7 @@
       align-items: center;
       gap: 5px;
       font-size: 0.9rem;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
 
     #searchInput {
@@ -191,14 +206,13 @@
       display: block;
       margin: 1rem auto;
       padding: 0.8rem 1.5rem;
-      border: 1px solid var(--input-border, #e0e0e0);
+      border: 1px solid var(--input-border);
       border-radius: 40px;
-      background: var(--input-bg, white);
-      color: var(--text-color, #2c3e50);
+      background: var(--input-bg);
+      color: var(--text-color);
       font-size: 1rem;
     }
 
-    /* ---------- CATEGORY TABS ---------- */
     .category-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -207,25 +221,25 @@
       justify-content: center;
     }
     .tab-btn {
-      background: var(--card-bg, white);
-      border: 2px solid var(--input-border, #e0e0e0);
+      background: var(--card-bg);
+      border: 2px solid var(--input-border);
       border-radius: 40px;
       padding: 10px 24px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     .tab-btn:hover {
-      background: var(--button-bg, #3498db);
+      background: var(--button-bg);
       color: white;
-      border-color: var(--button-bg, #3498db);
+      border-color: var(--button-bg);
     }
     .tab-btn.active {
-      background: var(--button-bg, #3498db);
+      background: var(--button-bg);
       color: white;
-      border-color: var(--button-bg, #3498db);
+      border-color: var(--button-bg);
     }
 
     /* ---------- HOUSE GRID ---------- */
@@ -237,7 +251,8 @@
     }
 
     .house-card {
-      background: var(--card-bg, white);
+      background: var(--card-bg);
+      backdrop-filter: blur(4px);
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 8px 20px rgba(0,0,0,0.05);
@@ -289,15 +304,14 @@
       font-size: 1.1rem;
       font-weight: 600;
       margin-bottom: 0.3rem;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     .house-card-content p {
       margin: 0.2rem 0;
       font-size: 0.9rem;
-      color: var(--text-color, #555);
+      color: var(--text-color);
     }
 
-    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -325,7 +339,6 @@
       color: white;
     }
 
-    /* Amenity icons in card */
     .amenities-list {
       display: flex;
       flex-wrap: wrap;
@@ -333,23 +346,21 @@
       margin: 0.5rem 0;
     }
 
-    /* Favorite button */
     .fav-btn {
       background: none;
-      border: 1px solid var(--input-border, #e0e0e0);
+      border: 1px solid var(--input-border);
       border-radius: 30px;
       padding: 0.2rem 0.8rem;
       margin-top: 0.3rem;
       cursor: pointer;
       font-size: 1rem;
       transition: all 0.2s;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     .fav-btn:hover {
       background: #f8f9fa;
     }
 
-    /* Rating stars */
     .rating-widget {
       margin-top: 0.5rem;
     }
@@ -367,7 +378,6 @@
       color: #27ae60;
     }
 
-    /* Read more button */
     .read-more-btn {
       background: none;
       border: none;
@@ -382,9 +392,8 @@
       color: #2980b9;
     }
 
-    /* Chat, report, booking buttons */
     .chat-btn, .report-btn, .booking-btn {
-      background: var(--button-bg, #3498db);
+      background: var(--button-bg);
       color: white;
       border: none;
       padding: 6px 12px;
@@ -395,7 +404,7 @@
       transition: background 0.2s;
     }
     .chat-btn:hover, .report-btn:hover, .booking-btn:hover {
-      background: var(--button-hover, #2980b9);
+      background: var(--button-hover);
     }
 
     /* ---------- PAGINATION ---------- */
@@ -407,24 +416,24 @@
       margin: 30px 0;
     }
     .page-btn {
-      background: var(--card-bg, white);
-      border: 1px solid var(--input-border, #ddd);
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
       border-radius: 30px;
       padding: 8px 16px;
       font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.2s;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     .page-btn:hover {
-      background: var(--button-bg, #3498db);
+      background: var(--button-bg);
       color: white;
-      border-color: var(--button-bg, #3498db);
+      border-color: var(--button-bg);
     }
     .page-btn.active {
-      background: var(--button-bg, #3498db);
+      background: var(--button-bg);
       color: white;
-      border-color: var(--button-bg, #3498db);
+      border-color: var(--button-bg);
     }
     .page-btn.disabled {
       opacity: 0.5;
@@ -437,7 +446,7 @@
     }
     .map-section h2 {
       margin-bottom: 1rem;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     #map {
       height: 400px;
@@ -449,7 +458,8 @@
 
     /* ---------- GPS SECTION ---------- */
     .gps-section {
-      background: var(--card-bg, white);
+      background: var(--card-bg);
+      backdrop-filter: blur(4px);
       border-radius: 24px;
       padding: 2rem;
       margin: 2rem 0;
@@ -458,10 +468,10 @@
     }
     .gps-section h2 {
       margin-bottom: 1rem;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     #getLocationBtn {
-      background: var(--button-bg, #3498db);
+      background: var(--button-bg);
       color: white;
       border: none;
       padding: 0.8rem 2rem;
@@ -471,19 +481,19 @@
       transition: background 0.2s;
     }
     #getLocationBtn:hover {
-      background: var(--button-hover, #2980b9);
+      background: var(--button-hover);
     }
     #gpsStatus {
       margin-top: 1rem;
-      color: var(--text-color, #7f8c8d);
+      color: var(--text-color);
     }
 
     /* ---------- FOOTER ---------- */
     footer {
       text-align: center;
       padding: 2rem;
-      background: var(--footer-bg, white);
-      color: var(--text-color, #2c3e50);
+      background: var(--footer-bg);
+      color: var(--text-color);
       border-radius: 40px 40px 0 0;
       margin-top: 3rem;
       box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
@@ -509,7 +519,7 @@
       background-color: rgba(0,0,0,0.5);
     }
     .modal-content {
-      background-color: var(--card-bg, #fefefe);
+      background-color: var(--card-bg);
       margin: 20px auto;
       padding: 20px;
       border-radius: 12px;
@@ -528,7 +538,6 @@
       color: black;
     }
 
-    /* Booking modal specific */
     #bookingModal .form-group {
       margin-bottom: 1rem;
     }
@@ -539,7 +548,6 @@
       border-radius: 6px;
     }
 
-    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 768px) {
       .navbar {
         flex-direction: column;
