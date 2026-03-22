@@ -21,9 +21,7 @@ const io = socketIo(server, { cors: { origin: "*" } });
 // ===============================
 // PROXY TRUST (for Render / reverse proxies)
 // ===============================
-// Required for express-rate-limit to correctly identify client IPs
-// when the app runs behind a proxy (e.g., Render, Nginx, Heroku)
-app.set("trust proxy", 1); // 1 = trust first proxy
+app.set("trust proxy", 1);
 
 // ===============================
 // SECURITY MIDDLEWARE (custom CSP)
@@ -58,6 +56,7 @@ app.use(
           "https://*.tile.openstreetmap.org",
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
+          "https://res.cloudinary.com",   // <-- FIX: added Cloudinary
         ],
         connectSrc: [
           "'self'",
