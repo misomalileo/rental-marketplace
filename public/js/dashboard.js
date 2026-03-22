@@ -7,11 +7,18 @@ let myHouses = [];
 let currentEditId = null;
 let currentUser = null;
 
-// Payment modal globals
 let currentPaymentAction = null;
 let currentHouseId = null;
 
-// Fetch current user
+// ========== LOADING INDICATOR ==========
+function showLoading() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// ========== FETCH USER & PROFILE CHECK ==========
 async function fetchUser() {
   try {
     const res = await fetch("/api/auth/me", {
@@ -20,12 +27,147 @@ async function fetchUser() {
     if (res.ok) {
       currentUser = await res.json();
       updateVerificationUI();
+      updateProfileCard();
+      // If profile not completed, show modal
+      if (!currentUser.profileCompleted) {
+        showProfileModal();
+      }
     }
   } catch (err) {
     console.error("Failed to fetch user", err);
   }
 }
 
+function updateProfileCard() {
+  if (!currentUser) return;
+  document.getElementById('profileAvatar').src = currentUser.profilePicture || 'default-avatar.png';
+  document.getElementById('profileDisplayName').innerText = currentUser.name;
+  document.getElementById('profileDisplayBusiness').innerHTML = currentUser.businessName ? `<strong>${currentUser.businessName}</strong>` : '';
+}
+
+// ========== PROFILE MODAL ==========
+function showProfileModal() {
+  // Pre-fill existing data if any
+  document.getElementById('profileName').value = currentUser.name || '';
+  document.getElementById('profilePhone').value = currentUser.phone || '';
+  document.getElementById('profileBusinessName').value = currentUser.businessName || '';
+  document.getElementById('profileAddress').value = currentUser.address || '';
+  document.getElementById('profileBio').value = currentUser.bio || '';
+  document.getElementById('profileModal').style.display = 'block';
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').style.display = 'none';
+  // If still not completed, you may force logout or show message
+  if (!currentUser.profileCompleted) {
+    alert('You must complete your profile to use the dashboard.');
+    window.location = 'login.html';
+  }
+}
+
+function openEditProfile() {
+  // Re‑open modal with current data for editing
+  document.getElementById('profileName').value = currentUser.name || '';
+  document.getElementById('profilePhone').value = currentUser.phone || '';
+  document.getElementById('profileBusinessName').value = currentUser.businessName || '';
+  document.getElementById('profileAddress').value = currentUser.address || '';
+  document.getElementById('profileBio').value = currentUser.bio || '';
+  document.getElementById('profileModal').style.display = 'block';
+}
+
+// Handle profile form submission
+document.getElementById('profileForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  showLoading();
+
+  const name = document.getElementById('profileName').value;
+  const phone = document.getElementById('profilePhone').value;
+  const businessName = document.getElementById('profileBusinessName').value;
+  const address = document.getElementById('profileAddress').value;
+  const bio = document.getElementById('profileBio').value;
+
+  // Phone validation
+  if (!phone.match(/^265[0-9]{9}$/)) {
+    alert('Phone number must be 265XXXXXXXXX');
+    hideLoading();
+    return;
+  }
+
+  const profilePictureFile = document.getElementById('profilePicture').files[0];
+  let profilePictureUrl = currentUser.profilePicture || '';
+
+  if (profilePictureFile) {
+    // Upload image to Cloudinary via test endpoint
+    const imgFormData = new FormData();
+    imgFormData.append('image', profilePictureFile);
+    try {
+      const uploadRes = await fetch('/api/houses/test-upload', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+        body: imgFormData
+      });
+      const uploadData = await uploadRes.json();
+      if (uploadRes.ok) {
+        profilePictureUrl = uploadData.url;
+      } else {
+        alert('Failed to upload profile picture');
+        hideLoading();
+        return;
+      }
+    } catch (err) {
+      alert('Network error uploading picture');
+      hideLoading();
+      return;
+    }
+  }
+
+  try {
+    const res = await fetch('/api/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({ name, phone, businessName, address, bio, profilePicture: profilePictureUrl })
+    });
+    if (res.ok) {
+      const updatedUser = await res.json();
+      currentUser = updatedUser;
+      updateProfileCard();
+      alert('Profile saved!');
+      closeProfileModal();
+    } else {
+      const data = await res.json();
+      alert('Error: ' + data.message);
+    }
+  } catch (err) {
+    alert('Network error');
+  } finally {
+    hideLoading();
+  }
+});
+
+// Preview profile picture on file select
+document.getElementById('profilePicture').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  const previewDiv = document.getElementById('profilePreview');
+  previewDiv.innerHTML = '';
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const img = document.createElement('img');
+      img.src = event.target.result;
+      img.style.width = '100px';
+      img.style.height = '100px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '8px';
+      previewDiv.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// ========== VERIFICATION UI ==========
 function updateVerificationUI() {
   const container = document.getElementById("verification-status");
   if (!container || !currentUser) return;
@@ -223,7 +365,7 @@ async function loadMyHouses() {
     document.getElementById("avgRating").innerText = avgRating.toFixed(1);
 
     renderHouses(houses);
-    loadBookingRequests(); // load booking requests for landlord
+    loadBookingRequests();
   } catch (err) {
     console.error("Error loading houses:", err);
   }
@@ -234,7 +376,6 @@ function renderHouses(houses) {
   container.innerHTML = "";
 
   houses.forEach(house => {
-    // ✅ FIXED: use full Cloudinary URL directly, no /uploads/ prefix
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     const card = document.createElement("div");
     card.className = "house-card";
@@ -262,6 +403,7 @@ function renderHouses(houses) {
 
 async function deleteHouse(id) {
   if (!confirm("Delete this house permanently?")) return;
+  showLoading();
   try {
     const res = await fetch("/api/houses/" + id, {
       method: "DELETE",
@@ -276,6 +418,8 @@ async function deleteHouse(id) {
     }
   } catch (err) {
     alert("Network error");
+  } finally {
+    hideLoading();
   }
 }
 
@@ -355,6 +499,7 @@ function getEditLocation() {
 
 document.getElementById("editForm").addEventListener("submit", async e => {
   e.preventDefault();
+  showLoading();
   const formData = new FormData(e.target);
   formData.delete("houseId");
 
@@ -378,11 +523,55 @@ document.getElementById("editForm").addEventListener("submit", async e => {
     }
   } catch (err) {
     alert("❌ Network error: " + err.message);
+  } finally {
+    hideLoading();
   }
 });
 
+// ========== IMAGE PREVIEW & FORM VALIDATION ==========
+// Image preview for house upload
+document.querySelector('input[name="images"]').addEventListener('change', function(e) {
+  const preview = document.getElementById('imagePreview');
+  preview.innerHTML = '';
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File too large, max 10MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const img = document.createElement('img');
+      img.src = event.target.result;
+      img.style.width = '100px';
+      img.style.height = '100px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '8px';
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+// Form validation before upload
 document.getElementById("houseForm").addEventListener("submit", async e => {
   e.preventDefault();
+
+  // Validate required fields
+  const name = document.querySelector('input[name="name"]').value.trim();
+  const location = document.querySelector('input[name="location"]').value.trim();
+  const price = document.querySelector('input[name="price"]').value;
+  const phone = document.querySelector('input[name="phone"]').value.trim();
+  const images = document.querySelector('input[name="images"]').files;
+
+  if (!name) { alert('House name is required'); return; }
+  if (!location) { alert('Location is required'); return; }
+  if (!price || price <= 0) { alert('Price must be greater than 0'); return; }
+  if (!phone.match(/^265[0-9]{9}$/)) { alert('Phone number must be 265XXXXXXXXX'); return; }
+  if (images.length === 0) { alert('At least one image is required'); return; }
+
+  showLoading();
   const formData = new FormData(e.target);
 
   try {
@@ -395,6 +584,7 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
     if (res.ok) {
       alert("✅ House uploaded successfully!");
       e.target.reset();
+      document.getElementById('imagePreview').innerHTML = ''; // clear preview
       if (marker) map.removeLayer(marker);
       loadMyHouses();
     } else {
@@ -402,6 +592,8 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
     }
   } catch (err) {
     alert("❌ Network error: " + err.message);
+  } finally {
+    hideLoading();
   }
 });
 
@@ -453,6 +645,7 @@ function renderBookings(bookings) {
 }
 
 async function updateBooking(bookingId, status) {
+  showLoading();
   try {
     const res = await fetch(`/api/bookings/${bookingId}`, {
       method: "PUT",
@@ -466,15 +659,18 @@ async function updateBooking(bookingId, status) {
     if (res.ok) {
       alert(`Booking ${status}`);
       loadBookingRequests();
-      loadMyHouses(); // refresh houses (unavailable dates may have changed)
+      loadMyHouses();
     } else {
       alert("Error: " + data.message);
     }
   } catch (err) {
     alert("Network error");
+  } finally {
+    hideLoading();
   }
 }
 
+// Initialize everything
 initMap();
 fetchUser();
 loadMyHouses();
@@ -486,3 +682,5 @@ window.featureHouse = featureHouse;
 window.processPayment = processPayment;
 window.closePaymentModal = closePaymentModal;
 window.updateBooking = updateBooking;
+window.openEditProfile = openEditProfile;
+window.closeProfileModal = closeProfileModal;

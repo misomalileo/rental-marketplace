@@ -21,7 +21,12 @@ const UserSchema = new mongoose.Schema({
         responseRate: Number,
         joinedDate: { type: Date, default: Date.now }
     },
-    // NEW: subscription expiry
+    // New fields for mandatory profile
+    businessName: { type: String, default: '' },
+    address: { type: String, default: '' },
+    profilePicture: { type: String, default: '' },
+    bio: { type: String, default: '' },
+    profileCompleted: { type: Boolean, default: false },
     subscriptionExpiresAt: { type: Date, default: null }
 });
 
