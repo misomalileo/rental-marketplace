@@ -11,39 +11,54 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <style>
-    /* Theme variables */
+    /* ========== GLOBAL THEME VARIABLES ========== */
     body.theme-light {
       --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      --navbar-bg: white;
+      --navbar-bg: rgba(255,255,255,0.95);
       --text-color: #2c3e50;
-      --card-bg: white;
-      --footer-bg: white;
+      --card-bg: rgba(255,255,255,0.92);
+      --footer-bg: rgba(255,255,255,0.95);
       --input-bg: white;
       --input-border: #ddd;
       --button-bg: #3498db;
       --button-hover: #2980b9;
+      background-image: url('https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
     body.theme-dark {
       --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
-      --navbar-bg: #1e2b3a;
+      --navbar-bg: rgba(30,43,58,0.95);
       --text-color: #ecf0f1;
-      --card-bg: #2c3e50;
-      --footer-bg: #1e2b3a;
+      --card-bg: rgba(44,62,80,0.92);
+      --footer-bg: rgba(30,43,58,0.95);
       --input-bg: #34495e;
       --input-border: #4a6782;
       --button-bg: #3498db;
       --button-hover: #2980b9;
+      background-image: url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
     body.theme-aquatic {
       --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      --navbar-bg: #4aa3a2;
+      --navbar-bg: rgba(74,163,162,0.95);
       --text-color: #1e4a4b;
-      --card-bg: rgba(255,255,255,0.9);
-      --footer-bg: #4aa3a2;
+      --card-bg: rgba(255,255,255,0.88);
+      --footer-bg: rgba(74,163,162,0.95);
       --input-bg: #e0f7fa;
       --input-border: #4aa3a2;
       --button-bg: #ff6b6b;
       --button-hover: #ee5253;
+      background-image: url('https://images.pexels.com/photos/2121121/pexels-photo-2121121.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
 
     * {
@@ -54,15 +69,18 @@
     }
 
     body {
-      background: var(--bg-gradient, linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%));
-      color: var(--text-color, #2c3e50);
+      background: var(--bg-gradient);
+      color: var(--text-color);
       transition: background 0.3s, color 0.3s;
     }
 
     .navbar {
-      background: var(--navbar-bg, white) !important;
+      background: var(--navbar-bg) !important;
+      backdrop-filter: blur(5px);
     }
 
+    /* ========== REST OF YOUR STYLES ========== */
+    /* Keep all existing styles below, they now use the variables correctly */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -70,25 +88,26 @@
       margin: 20px 0;
     }
     .stat-card {
-      background: var(--card-bg, white);
+      background: var(--card-bg);
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       text-align: center;
+      backdrop-filter: blur(4px);
     }
     .stat-card h3 {
       margin: 0 0 10px;
-      color: var(--text-color, #555);
+      color: var(--text-color);
       font-size: 1rem;
     }
     .stat-card .value {
       font-size: 2.2rem;
       font-weight: bold;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
 
     .verification-card {
-      background: var(--card-bg, white);
+      background: var(--card-bg);
       border-radius: 16px;
       padding: 1.5rem;
       margin: 20px 0;
@@ -97,10 +116,11 @@
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
+      backdrop-filter: blur(4px);
     }
     .verification-card h3 {
       margin: 0 0 10px 0;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     .payment-btn {
       border: none;
@@ -172,11 +192,12 @@
       margin-top: 20px;
     }
     .house-card {
-      background: var(--card-bg, white);
+      background: var(--card-bg);
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       transition: transform 0.2s;
+      backdrop-filter: blur(4px);
     }
     .house-card:hover {
       transform: translateY(-4px);
@@ -192,11 +213,11 @@
     .house-content h3 {
       margin: 0 0 5px;
       font-size: 1.2rem;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     .house-content p {
       margin: 5px 0;
-      color: var(--text-color, #555);
+      color: var(--text-color);
     }
     .edit, .delete {
       border: none;
@@ -237,7 +258,12 @@
       gap: 5px;
       margin-top: 10px;
     }
-    #map { height: 300px; margin: 20px 0; border-radius: 12px; }
+    #map {
+      height: 300px;
+      margin: 20px 0;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
     .form-group {
       margin-bottom: 15px;
     }
@@ -245,18 +271,18 @@
       display: block;
       margin-bottom: 5px;
       font-weight: bold;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     .form-group input, .form-group textarea, .form-group select {
       width: 100%;
       padding: 10px;
-      border: 1px solid var(--input-border, #ddd);
+      border: 1px solid var(--input-border);
       border-radius: 6px;
-      background: var(--input-bg, white);
-      color: var(--text-color, #2c3e50);
+      background: var(--input-bg);
+      color: var(--text-color);
     }
     .gps-btn {
-      background: var(--button-bg, #3498db);
+      background: var(--button-bg);
       color: white;
       border: none;
       padding: 10px;
@@ -265,10 +291,10 @@
       margin-bottom: 10px;
     }
     .gps-btn:hover {
-      background: var(--button-hover, #2980b9);
+      background: var(--button-hover);
     }
     .upload-btn {
-      background: var(--button-bg, #27ae60);
+      background: var(--button-bg);
       color: white;
       border: none;
       padding: 12px;
@@ -279,7 +305,7 @@
       font-weight: bold;
     }
     .upload-btn:hover {
-      background: var(--button-hover, #2ecc71);
+      background: var(--button-hover);
     }
 
     .amenities-group {
@@ -306,7 +332,7 @@
       background-color: rgba(0,0,0,0.5);
     }
     .modal-content {
-      background-color: var(--card-bg, #fefefe);
+      background-color: var(--card-bg);
       margin: 20px auto;
       padding: 20px;
       border-radius: 12px;
@@ -366,12 +392,12 @@
     }
 
     .flatpickr-calendar {
-      background: var(--card-bg, white);
-      color: var(--text-color, #2c3e50);
+      background: var(--card-bg);
+      color: var(--text-color);
     }
 
     .booking-card {
-      background: var(--card-bg, white);
+      background: var(--card-bg);
       border-radius: 12px;
       padding: 1rem;
       margin-bottom: 1rem;
@@ -397,8 +423,8 @@
     footer {
       text-align: center;
       padding: 2rem;
-      background: var(--footer-bg, white);
-      color: var(--text-color, #2c3e50);
+      background: var(--footer-bg);
+      color: var(--text-color);
       border-radius: 40px 40px 0 0;
       margin-top: 3rem;
       box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
@@ -425,7 +451,7 @@
     .logo {
       font-size: 1.6rem;
       font-weight: 700;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
     }
     .nav-links {
       display: flex;
@@ -434,23 +460,22 @@
       flex-wrap: wrap;
     }
     .nav-links a {
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
       text-decoration: none;
       font-weight: 500;
     }
     .lang-select, .theme-select {
       padding: 0.3rem 0.8rem;
       border-radius: 30px;
-      border: 1px solid var(--input-border, #ccc);
-      background: var(--input-bg, white);
-      color: var(--text-color, #2c3e50);
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
       cursor: pointer;
       font-size: 0.9rem;
     }
 
-    /* Profile card */
     .profile-card {
-      background: var(--card-bg, white);
+      background: var(--card-bg);
       border-radius: 12px;
       padding: 1rem;
       margin-bottom: 1rem;
@@ -459,9 +484,9 @@
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
+      backdrop-filter: blur(4px);
     }
 
-    /* Loading overlay */
     #loadingOverlay {
       position: fixed;
       top: 0;
@@ -481,7 +506,6 @@
       margin-left: 10px;
     }
 
-    /* Image preview */
     #imagePreview img, #profilePreview img {
       width: 80px;
       height: 80px;
