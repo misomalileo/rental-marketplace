@@ -14,12 +14,568 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* === all your styles – keep them as you had === */
-    /* For brevity, keep your existing CSS (I'm not repeating it here) */
+    /* Theme variables */
+    body.theme-light {
+      --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      --navbar-bg: white;
+      --text-color: #2c3e50;
+      --card-bg: white;
+      --footer-bg: white;
+      --input-bg: white;
+      --input-border: #ddd;
+      --button-bg: #3498db;
+      --button-hover: #2980b9;
+    }
+    body.theme-dark {
+      --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+      --navbar-bg: #1e2b3a;
+      --text-color: #ecf0f1;
+      --card-bg: #2c3e50;
+      --footer-bg: #1e2b3a;
+      --input-bg: #34495e;
+      --input-border: #4a6782;
+      --button-bg: #3498db;
+      --button-hover: #2980b9;
+    }
+    body.theme-aquatic {
+      --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      --navbar-bg: #4aa3a2;
+      --text-color: #1e4a4b;
+      --card-bg: rgba(255,255,255,0.9);
+      --footer-bg: #4aa3a2;
+      --input-bg: #e0f7fa;
+      --input-border: #4aa3a2;
+      --button-bg: #ff6b6b;
+      --button-hover: #ee5253;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient, linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%));
+      color: var(--text-color, #2c3e50);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ---------- NAVBAR ---------- */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: var(--navbar-bg, white);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-color, #2c3e50);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--text-color, #2c3e50);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #3498db;
+    }
+
+    .lang-select, .theme-select {
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      border: 1px solid var(--input-border, #ccc);
+      background: var(--input-bg, white);
+      color: var(--text-color, #2c3e50);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    /* ---------- HERO ---------- */
+    .hero {
+      text-align: center;
+      padding: 3rem 1rem;
+      background: linear-gradient(135deg, #3498db, #2c3e50);
+      color: white;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    /* ---------- MAIN CONTAINER ---------- */
+    .main-container {
+      max-width: 1300px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    /* ---------- FILTERS & SEARCH ---------- */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin: 2rem 0;
+      justify-content: center;
+    }
+    .filters input,
+    .filters select,
+    .filters button {
+      border: 1px solid var(--input-border, #e0e0e0);
+      border-radius: 40px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      background: var(--input-bg, white);
+      color: var(--text-color, #2c3e50);
+      transition: all 0.2s;
+      outline: none;
+    }
+    .filters input:focus,
+    .filters select:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+    }
+    .filters button {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .filters button:hover {
+      background: var(--button-hover, #2980b9);
+    }
+
+    /* Amenities filter checkboxes */
+    .amenities-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+    .amenities-filters label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9rem;
+      color: var(--text-color, #2c3e50);
+    }
+
+    #searchInput {
+      width: 100%;
+      max-width: 500px;
+      display: block;
+      margin: 1rem auto;
+      padding: 0.8rem 1.5rem;
+      border: 1px solid var(--input-border, #e0e0e0);
+      border-radius: 40px;
+      background: var(--input-bg, white);
+      color: var(--text-color, #2c3e50);
+      font-size: 1rem;
+    }
+
+    /* ---------- CATEGORY TABS ---------- */
+    .category-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+      justify-content: center;
+    }
+    .tab-btn {
+      background: var(--card-bg, white);
+      border: 2px solid var(--input-border, #e0e0e0);
+      border-radius: 40px;
+      padding: 10px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: var(--text-color, #2c3e50);
+    }
+    .tab-btn:hover {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border-color: var(--button-bg, #3498db);
+    }
+    .tab-btn.active {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border-color: var(--button-bg, #3498db);
+    }
+
+    /* ---------- HOUSE GRID ---------- */
+    #houses-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .house-card {
+      background: var(--card-bg, white);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .house-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+
+    .slider {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      overflow: hidden;
+    }
+    .slider img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .slider button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.8);
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .slider button:hover {
+      background: white;
+    }
+    .prev { left: 8px; }
+    .next { right: 8px; }
+
+    .house-card-content {
+      padding: 1rem;
+    }
+    .house-card-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      color: var(--text-color, #2c3e50);
+    }
+    .house-card-content p {
+      margin: 0.2rem 0;
+      font-size: 0.9rem;
+      color: var(--text-color, #555);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border-radius: 30px;
+      margin-right: 0.3rem;
+      text-transform: uppercase;
+    }
+    .badge.verified {
+      background: #2ecc71;
+      color: white;
+    }
+    .badge.premium {
+      background: #f1c40f;
+      color: #2c3e50;
+    }
+    .badge.featured {
+      background: gold;
+      color: #2c3e50;
+      font-weight: bold;
+    }
+    .badge.self-contained {
+      background: #9b59b6;
+      color: white;
+    }
+
+    /* Amenity icons in card */
+    .amenities-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
+
+    /* Favorite button */
+    .fav-btn {
+      background: none;
+      border: 1px solid var(--input-border, #e0e0e0);
+      border-radius: 30px;
+      padding: 0.2rem 0.8rem;
+      margin-top: 0.3rem;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+      color: var(--text-color, #2c3e50);
+    }
+    .fav-btn:hover {
+      background: #f8f9fa;
+    }
+
+    /* Rating stars */
+    .rating-widget {
+      margin-top: 0.5rem;
+    }
+    .star {
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: #f39c12;
+      transition: transform 0.1s;
+    }
+    .star:hover {
+      transform: scale(1.2);
+    }
+    .rating-message {
+      font-size: 0.75rem;
+      color: #27ae60;
+    }
+
+    /* Read more button */
+    .read-more-btn {
+      background: none;
+      border: none;
+      color: #3498db;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.9rem;
+      padding: 0;
+      margin-left: 5px;
+    }
+    .read-more-btn:hover {
+      color: #2980b9;
+    }
+
+    /* Chat, report, booking buttons */
+    .chat-btn, .report-btn, .booking-btn {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-right: 5px;
+      transition: background 0.2s;
+    }
+    .chat-btn:hover, .report-btn:hover, .booking-btn:hover {
+      background: var(--button-hover, #2980b9);
+    }
+
+    /* ---------- PAGINATION ---------- */
+    .pagination {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin: 30px 0;
+    }
+    .page-btn {
+      background: var(--card-bg, white);
+      border: 1px solid var(--input-border, #ddd);
+      border-radius: 30px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-color, #2c3e50);
+    }
+    .page-btn:hover {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border-color: var(--button-bg, #3498db);
+    }
+    .page-btn.active {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border-color: var(--button-bg, #3498db);
+    }
+    .page-btn.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* ---------- MAP SECTION ---------- */
+    .map-section {
+      margin: 2rem 0;
+    }
+    .map-section h2 {
+      margin-bottom: 1rem;
+      color: var(--text-color, #2c3e50);
+    }
+    #map {
+      height: 400px;
+      width: 100%;
+      border-radius: 24px;
+      border: 2px solid white;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+
+    /* ---------- GPS SECTION ---------- */
+    .gps-section {
+      background: var(--card-bg, white);
+      border-radius: 24px;
+      padding: 2rem;
+      margin: 2rem 0;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+    .gps-section h2 {
+      margin-bottom: 1rem;
+      color: var(--text-color, #2c3e50);
+    }
+    #getLocationBtn {
+      background: var(--button-bg, #3498db);
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #getLocationBtn:hover {
+      background: var(--button-hover, #2980b9);
+    }
+    #gpsStatus {
+      margin-top: 1rem;
+      color: var(--text-color, #7f8c8d);
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      background: var(--footer-bg, white);
+      color: var(--text-color, #2c3e50);
+      border-radius: 40px 40px 0 0;
+      margin-top: 3rem;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      margin: 0 0.5rem;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* ---------- MODAL ---------- */
+    .modal {
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: var(--card-bg, #fefefe);
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .close-btn {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close-btn:hover {
+      color: black;
+    }
+
+    /* Booking modal specific */
+    #bookingModal .form-group {
+      margin-bottom: 1rem;
+    }
+    #bookingModal input, #bookingModal textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .nav-links a {
+        margin-left: 0;
+        margin-right: 1rem;
+      }
+      .hero h1 {
+        font-size: 2rem;
+      }
+      .filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .amenities-filters {
+        flex-direction: column;
+        align-items: center;
+      }
+      .category-tabs {
+        flex-direction: column;
+        align-items: center;
+      }
+      #houses-container {
+        grid-template-columns: 1fr;
+      }
+      #map {
+        height: 300px;
+      }
+    }
   </style>
 </head>
 <body>
 
+  <!-- NAVBAR -->
   <nav class="navbar">
     <div class="logo" data-i18n="home">🏠 Rental Marketplace</div>
     <div class="nav-links">
@@ -38,6 +594,7 @@
     </div>
   </nav>
 
+  <!-- HERO -->
   <header class="hero">
     <h1 data-i18n="heroTitle">Find Houses & Hostels in Blantyre</h1>
     <p data-i18n="heroSubtitle">Explore verified rentals posted by landlords</p>
@@ -45,6 +602,7 @@
 
   <main class="main-container">
 
+    <!-- FILTERS -->
     <section class="filters">
       <input type="number" id="priceMin" data-i18n-placeholder="minPrice" placeholder="Min Price">
       <input type="number" id="priceMax" data-i18n-placeholder="maxPrice" placeholder="Max Price">
@@ -64,6 +622,7 @@
       <button id="applyFiltersBtn" data-i18n="applyFilters">Apply Filters</button>
     </section>
 
+    <!-- Amenities filter checkboxes -->
     <section class="amenities-filters">
       <label><input type="checkbox" id="filterWifi"> 📶 WiFi</label>
       <label><input type="checkbox" id="filterParking"> 🅿️ Parking</label>
@@ -71,8 +630,10 @@
       <label><input type="checkbox" id="filterPetFriendly"> 🐾 Pet Friendly</label>
     </section>
 
+    <!-- SEARCH -->
     <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by area or name...">
 
+    <!-- Category Tabs -->
     <div class="category-tabs">
       <button class="tab-btn active" data-type="all">All</button>
       <button class="tab-btn" data-type="House">🏠 Houses</button>
@@ -82,16 +643,20 @@
       <button class="tab-btn" data-type="Office">🏢 Offices</button>
     </div>
 
+    <!-- HOUSES GRID -->
     <h2 style="margin: 1rem 0;" data-i18n="availableProperties">Available Properties</h2>
     <div id="houses-container" data-i18n="loading">Loading houses...</div>
 
+    <!-- Pagination -->
     <div class="pagination" id="pagination"></div>
 
+    <!-- MAP SECTION -->
     <section class="map-section" id="map-section">
       <h2 data-i18n="mapView">📍 Map View</h2>
       <div id="map"></div>
     </section>
 
+    <!-- GPS LOCATOR -->
     <section class="gps-section">
       <h2 data-i18n="gpsLocator">📍 Property GPS Locator</h2>
       <button id="getLocationBtn" data-i18n="captureLocation"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
@@ -102,6 +667,7 @@
 
   </main>
 
+  <!-- FOOTER -->
   <footer>
     <span data-i18n="copyright">© 2026 Rental Marketplace Malawi</span>
     <br><br>
@@ -111,6 +677,7 @@
     <a href="contact.html" data-i18n="contact">Contact</a>
   </footer>
 
+  <!-- Property Details Modal -->
   <div id="propertyModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:600px;">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
@@ -118,6 +685,7 @@
     </div>
   </div>
 
+  <!-- Booking Modal -->
   <div id="bookingModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:500px;">
       <span class="close-btn" onclick="closeBookingModal()">&times;</span>
@@ -142,6 +710,7 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
@@ -151,6 +720,7 @@
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
 
+    // Booking modal functions (will be called from script.js)
     window.openBookingModal = function(houseId, houseName) {
       window.currentBookingHouseId = houseId;
       document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
@@ -164,6 +734,7 @@
       document.getElementById("bookingModal").style.display = "none";
       window.currentBookingHouseId = null;
     };
+    // Booking form submit handler
     document.getElementById("bookingForm").addEventListener("submit", async e => {
       e.preventDefault();
       const token = localStorage.getItem("token");
