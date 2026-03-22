@@ -234,7 +234,8 @@ function renderHouses(houses) {
   container.innerHTML = "";
 
   houses.forEach(house => {
-    const img = house.images?.length ? "/uploads/" + house.images[0] : "placeholder.jpg";
+    // ✅ FIXED: use full Cloudinary URL directly, no /uploads/ prefix
+    const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     const card = document.createElement("div");
     card.className = "house-card";
     const featureButton = house.featured 
