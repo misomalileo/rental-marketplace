@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
@@ -274,6 +273,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      cursor: pointer;
     }
     .slider button {
       position: absolute;
@@ -312,6 +312,7 @@
       color: var(--text-color);
     }
 
+    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -548,6 +549,83 @@
       border-radius: 6px;
     }
 
+    /* ========== LIGHTBOX ========== */
+    .lightbox-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .lightbox-content {
+      max-width: 90%;
+      max-height: 90%;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox-content img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 40px;
+      color: white;
+      cursor: pointer;
+      z-index: 10001;
+      font-weight: bold;
+    }
+    .lightbox-close:hover {
+      color: #ccc;
+    }
+    .lightbox-prev, .lightbox-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 40px;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+      background: rgba(0,0,0,0.5);
+      padding: 10px 15px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+    .lightbox-prev { left: 20px; }
+    .lightbox-next { right: 20px; }
+    .lightbox-prev:hover, .lightbox-next:hover {
+      background: rgba(0,0,0,0.8);
+    }
+    .lightbox-counter {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+      font-size: 14px;
+      background: rgba(0,0,0,0.6);
+      display: inline-block;
+      width: auto;
+      margin: 0 auto;
+      padding: 5px 12px;
+      border-radius: 20px;
+      pointer-events: none;
+    }
+
     @media (max-width: 768px) {
       .navbar {
         flex-direction: column;
@@ -577,6 +655,15 @@
       }
       #map {
         height: 300px;
+      }
+      .lightbox-prev, .lightbox-next {
+        font-size: 30px;
+        padding: 5px 10px;
+      }
+      .lightbox-close {
+        font-size: 30px;
+        top: 10px;
+        right: 15px;
       }
     }
   </style>
@@ -718,12 +805,74 @@
     </div>
   </div>
 
+  <!-- Image Lightbox Modal -->
+  <div id="lightboxModal" class="lightbox-modal" style="display: none;">
+    <span class="lightbox-close">&times;</span>
+    <span class="lightbox-prev">&#10094;</span>
+    <span class="lightbox-next">&#10095;</span>
+    <div class="lightbox-content">
+      <img id="lightboxImage" src="" alt="Full size house image">
+    </div>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
+    // Lightbox variables and functions
+    let currentLightboxImages = [];
+    let currentImageIndex = 0;
+
+    function openLightbox(images, startIndex = 0) {
+      if (!images || images.length === 0) return;
+      currentLightboxImages = images;
+      currentImageIndex = startIndex;
+      const modal = document.getElementById('lightboxModal');
+      const imgElement = document.getElementById('lightboxImage');
+      const counter = document.getElementById('lightboxCounter');
+      imgElement.src = images[startIndex];
+      counter.textContent = `${startIndex + 1} / ${images.length}`;
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightboxModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function showPrevImage() {
+      if (currentLightboxImages.length === 0) return;
+      currentImageIndex = (currentImageIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
+      document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex];
+      document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`;
+    }
+
+    function showNextImage() {
+      if (currentLightboxImages.length === 0) return;
+      currentImageIndex = (currentImageIndex + 1) % currentLightboxImages.length;
+      document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex];
+      document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`;
+    }
+
+    // Attach event listeners after DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      const modal = document.getElementById('lightboxModal');
+      const closeBtn = document.querySelector('.lightbox-close');
+      const prevBtn = document.querySelector('.lightbox-prev');
+      const nextBtn = document.querySelector('.lightbox-next');
+
+      if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+      if (prevBtn) prevBtn.addEventListener('click', showPrevImage);
+      if (nextBtn) nextBtn.addEventListener('click', showNextImage);
+      if (modal) modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeLightbox();
+      });
+    });
+
     // Set initial language/theme selectors
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
@@ -779,6 +928,9 @@
         statusDiv.innerHTML = "❌ Network error";
       }
     });
+
+    // Expose lightbox functions globally so they can be called from script.js
+    window.openLightbox = openLightbox;
   </script>
 </body>
 </html>

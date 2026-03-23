@@ -201,7 +201,7 @@ function closePropertyModal() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS
+// RENDER HOUSE CARDS WITH LIGHTBOX
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -217,7 +217,7 @@ function renderHouses(houses) {
     card.className = "house-card";
 
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
-    let current = 0;
+    let currentIndex = 0;
 
     let landlordInfo = '';
     if (house.owner) {
@@ -285,7 +285,6 @@ function renderHouses(houses) {
       unavailableHtml = `<p>🚫 Unavailable: ${dates}</p>`;
     }
 
-    // Short description and read more
     const shortDesc = house.description ? house.description.substring(0, 60) + '...' : '';
     const readMoreBtn = house.description ? `<button class="read-more-btn" onclick="showDetails('${house._id}')">📖 Read more</button>` : '';
 
@@ -297,10 +296,10 @@ function renderHouses(houses) {
       ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')">💬 Chat</button>`
       : '';
 
-    // ✅ IMAGE SOURCE – use full Cloudinary URL directly
+    // Build card HTML
     card.innerHTML = `
       <div class="slider">
-        <img id="img-${house._id}" src="${images[0]}">
+        <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
         ${images.length > 1 ? `<button class="prev">‹</button><button class="next">›</button>` : ""}
       </div>
       <div class="house-card-content">
@@ -324,42 +323,65 @@ function renderHouses(houses) {
 
     container.appendChild(card);
 
-    // ✅ SLIDER – update image source using the full URL from the array
+    // ========== SLIDER AND LIGHTBOX ==========
+    const img = card.querySelector(`#img-${house._id}`);
     if (images.length > 1) {
-      const img = card.querySelector(`#img-${house._id}`);
       const prevBtn = card.querySelector(".prev");
       const nextBtn = card.querySelector(".next");
+
+      // Update current index when changing image
+      const updateImage = (newIndex) => {
+        currentIndex = newIndex;
+        img.src = images[currentIndex];
+        img.setAttribute('data-current-index', currentIndex);
+      };
+
       prevBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        current = (current - 1 + images.length) % images.length;
-        img.src = images[current];
+        const newIndex = (currentIndex - 1 + images.length) % images.length;
+        updateImage(newIndex);
       });
       nextBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        current = (current + 1) % images.length;
-        img.src = images[current];
+        const newIndex = (currentIndex + 1) % images.length;
+        updateImage(newIndex);
       });
     }
 
+    // Lightbox on image click
+    img.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const currentIdx = parseInt(img.getAttribute('data-current-index') || "0");
+      if (typeof window.openLightbox === 'function') {
+        window.openLightbox(images, currentIdx);
+      } else {
+        console.warn('openLightbox not defined');
+      }
+    });
+
+    // Rating widget (unchanged)
     if (isLoggedIn) {
       const widget = card.querySelector(".rating-widget");
-      const stars = widget.querySelectorAll(".star");
-      const messageSpan = widget.querySelector(".rating-message");
-      stars.forEach(star => {
-        star.addEventListener("mouseover", () => {
-          const value = star.dataset.value;
-          highlightStars(stars, value);
+      if (widget) {
+        const stars = widget.querySelectorAll(".star");
+        const messageSpan = widget.querySelector(".rating-message");
+        stars.forEach(star => {
+          star.addEventListener("mouseover", () => {
+            const value = star.dataset.value;
+            highlightStars(stars, value);
+          });
+          star.addEventListener("mouseout", () => {
+            resetStars(stars);
+          });
+          star.addEventListener("click", async () => {
+            const value = star.dataset.value;
+            await submitRating(house._id, value, stars, messageSpan);
+          });
         });
-        star.addEventListener("mouseout", () => {
-          resetStars(stars);
-        });
-        star.addEventListener("click", async () => {
-          const value = star.dataset.value;
-          await submitRating(house._id, value, stars, messageSpan);
-        });
-      });
+      }
     }
 
+    // Double-click on card centers map (unchanged)
     card.addEventListener("dblclick", (e) => {
       e.stopPropagation();
       if (house.lat && house.lng) {
@@ -367,6 +389,7 @@ function renderHouses(houses) {
       }
     });
 
+    // Record view on card click (unchanged)
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" })
@@ -416,7 +439,7 @@ async function submitRating(houseId, value, stars, messageSpan) {
 }
 
 // ======================================
-// MAP MARKERS – use full Cloudinary URLs in popup
+// MAP MARKERS
 // ======================================
 function renderMarkers(houses) {
   if (!markersLayer) return;
@@ -474,7 +497,6 @@ function renderMarkers(houses) {
     const selfContainedBadge = house.selfContained ? '<br><span class="badge self-contained">🏡 Self Contained</span>' : '';
     const featuredBadge = house.featured ? '<br><span class="badge featured">⭐ FEATURED</span>' : '';
 
-    // ✅ POPUP IMAGE – use full Cloudinary URL directly
     const popup = `
       <div style="width:200px">
         <img src="${img}" style="width:100%;height:140px;object-fit:cover">
