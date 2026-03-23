@@ -4,45 +4,59 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | Rental Marketplace</title>
-  <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Theme variables */
+    /* ========== THEME VARIABLES (overrides) ========== */
     body.theme-light {
       --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      --navbar-bg: white;
+      --navbar-bg: rgba(255,255,255,0.95);
       --text-color: #2c3e50;
-      --card-bg: white;
-      --footer-bg: white;
+      --card-bg: rgba(255,255,255,0.92);
+      --footer-bg: rgba(255,255,255,0.95);
       --input-bg: white;
       --input-border: #ddd;
       --button-bg: #3498db;
       --button-hover: #2980b9;
+      background-image: url('https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
     body.theme-dark {
       --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
-      --navbar-bg: #1e2b3a;
+      --navbar-bg: rgba(30,43,58,0.95);
       --text-color: #ecf0f1;
-      --card-bg: #2c3e50;
-      --footer-bg: #1e2b3a;
+      --card-bg: rgba(44,62,80,0.92);
+      --footer-bg: rgba(30,43,58,0.95);
       --input-bg: #34495e;
       --input-border: #4a6782;
       --button-bg: #3498db;
       --button-hover: #2980b9;
+      background-image: url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
     body.theme-aquatic {
       --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      --navbar-bg: #4aa3a2;
+      --navbar-bg: rgba(74,163,162,0.95);
       --text-color: #1e4a4b;
-      --card-bg: rgba(255,255,255,0.9);
-      --footer-bg: #4aa3a2;
+      --card-bg: rgba(255,255,255,0.88);
+      --footer-bg: rgba(74,163,162,0.95);
       --input-bg: #e0f7fa;
       --input-border: #4aa3a2;
       --button-bg: #ff6b6b;
       --button-hover: #ee5253;
+      background-image: url('https://images.pexels.com/photos/2121121/pexels-photo-2121121.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-blend-mode: overlay;
     }
 
     * {
@@ -53,140 +67,183 @@
     }
 
     body {
-      background: var(--bg-gradient, linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%));
-      color: var(--text-color, #2c3e50);
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      min-height: 100vh;
       transition: background 0.3s, color 0.3s;
     }
 
+    /* Navbar */
     .navbar {
-      background: var(--navbar-bg, #1e2b3a) !important;
+      background: var(--navbar-bg);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #3498db;
+    }
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+    }
+    .lang-select, .theme-select {
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      cursor: pointer;
+      font-size: 0.9rem;
     }
 
+    /* Main container */
     .main-container {
       max-width: 1400px;
       margin: 2rem auto;
       padding: 0 2rem;
     }
-
     h1 {
-      font-size: 2.2rem;
+      font-size: 2rem;
       margin-bottom: 1.5rem;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
+      font-weight: 700;
     }
 
+    /* Stats grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
-
     .stat-card {
-      background: var(--card-bg, white);
-      border-radius: 16px;
+      background: var(--card-bg);
+      backdrop-filter: blur(4px);
+      border-radius: 20px;
       padding: 1.5rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
       transition: transform 0.2s, box-shadow 0.2s;
-      border: 1px solid rgba(0,0,0,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
     }
-
     .stat-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 12px 28px rgba(0,0,0,0.1);
     }
-
     .stat-card h3 {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: var(--text-color, #7f8c8d);
+      color: var(--text-color);
+      opacity: 0.7;
       margin-bottom: 0.75rem;
     }
-
     .stat-card .value {
       font-size: 2.8rem;
       font-weight: 700;
-      color: var(--text-color, #2c3e50);
+      color: var(--text-color);
       line-height: 1.2;
     }
-
     .stat-card .sub {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #27ae60;
       margin-top: 0.5rem;
     }
 
+    /* Charts row */
     .charts-row {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
-
     .chart-card {
-      background: var(--card-bg, white);
-      border-radius: 16px;
+      background: var(--card-bg);
+      backdrop-filter: blur(4px);
+      border-radius: 20px;
       padding: 1.5rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-      border: 1px solid rgba(0,0,0,0.03);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
     }
-
     .chart-card h2 {
       font-size: 1.3rem;
       margin-bottom: 1rem;
-      color: var(--text-color, #34495e);
+      color: var(--text-color);
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-
     .chart-card canvas {
       max-height: 250px;
       width: 100% !important;
     }
 
+    /* Tables */
     .table-card {
-      background: var(--card-bg, white);
-      border-radius: 16px;
+      background: var(--card-bg);
+      backdrop-filter: blur(4px);
+      border-radius: 20px;
       padding: 1.5rem;
       margin-bottom: 2rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      overflow-x: auto;
     }
-
     .table-card h2 {
       font-size: 1.3rem;
       margin-bottom: 1rem;
-      color: var(--text-color, #34495e);
+      color: var(--text-color);
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      min-width: 600px;
     }
-
     th {
       text-align: left;
       padding: 1rem 0.5rem 0.5rem 0.5rem;
-      color: var(--text-color, #7f8c8d);
+      color: var(--text-color);
       font-weight: 600;
-      border-bottom: 2px solid #ecf0f1;
+      border-bottom: 2px solid var(--input-border);
     }
-
     td {
       padding: 0.75rem 0.5rem;
-      border-bottom: 1px solid #ecf0f1;
-      color: var(--text-color, #1a1a1a);
+      border-bottom: 1px solid var(--input-border);
+      color: var(--text-color);
     }
-
     .badge {
       display: inline-block;
       padding: 0.25rem 0.75rem;
       border-radius: 30px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 600;
       text-transform: capitalize;
     }
@@ -195,30 +252,32 @@
     .badge.premium { background: #f1c40f; color: #2c3e50; }
     .badge.featured { background: gold; color: #2c3e50; }
 
+    /* Action buttons */
     .action-btn {
       border: none;
       padding: 0.4rem 0.8rem;
       border-radius: 30px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
       margin-right: 0.3rem;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s, transform 0.1s;
     }
     .action-btn.verify { background: #2ecc71; color: white; }
     .action-btn.premium { background: #f1c40f; color: #2c3e50; }
     .action-btn.ban { background: #e74c3c; color: white; }
     .action-btn.delete { background: #e67e22; color: white; }
     .action-btn:hover {
-      opacity: 0.8;
+      opacity: 0.85;
+      transform: scale(0.98);
     }
 
     /* Footer */
     footer {
       text-align: center;
       padding: 2rem;
-      background: var(--footer-bg, white);
-      color: var(--text-color, #2c3e50);
+      background: var(--footer-bg);
+      color: var(--text-color);
       border-radius: 40px 40px 0 0;
       margin-top: 3rem;
       box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
@@ -232,55 +291,28 @@
       text-decoration: underline;
     }
 
-    /* Navbar additions */
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .logo {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-    .nav-links a {
-      color: white;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .nav-links a:hover {
-      opacity: 0.8;
-      text-decoration: underline;
-    }
-    .logout-btn {
-      background: rgba(255,255,255,0.2);
-      padding: 0.5rem 1rem;
-      border-radius: 30px;
-    }
-    .lang-select, .theme-select {
-      padding: 0.3rem 0.8rem;
-      border-radius: 30px;
-      border: 1px solid #ccc;
-      background: white;
-      color: #2c3e50;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-
     @media (max-width: 900px) {
-      .charts-row { grid-template-columns: 1fr; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
     @media (max-width: 600px) {
-      .stats-grid { grid-template-columns: 1fr; }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .nav-links {
+        margin-top: 0.5rem;
+      }
+      .main-container {
+        padding: 0 1rem;
+      }
     }
   </style>
 </head>
@@ -305,6 +337,7 @@
   <div class="main-container">
     <h1 data-i18n="dashboardOverview">Dashboard Overview</h1>
 
+    <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card">
         <h3 data-i18n="totalLandlords">Total Landlords</h3>
@@ -328,6 +361,7 @@
       </div>
     </div>
 
+    <!-- Charts -->
     <div class="charts-row">
       <div class="chart-card">
         <h2 data-i18n="housesPerMonth">📊 Houses Posted per Month</h2>
@@ -342,64 +376,69 @@
     <!-- Landlords Table -->
     <div class="table-card">
       <h2 data-i18n="landlordManagement">🧑‍💼 Landlord Management</h2>
-      <table>
-        <thead>
-          <tr>
-            <th data-i18n="name">Name</th>
-            <th data-i18n="email">Email</th>
-            <th data-i18n="verification">Verification</th>
-            <th data-i18n="actions">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="landlordsTable">
-          <tr><td colspan="4" style="text-align:center;" data-i18n="loading">Loading landlords...</td></tr>
-        </tbody>
-      </table>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="name">Name</th>
+              <th data-i18n="email">Email</th>
+              <th data-i18n="verification">Verification</th>
+              <th data-i18n="actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="landlordsTable">
+            <tr><td colspan="4" style="text-align:center;">Loading landlords...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Houses Table -->
     <div class="table-card">
       <h2 data-i18n="allHouses">🏠 All Houses</h2>
-      <table>
-        <thead>
-          <tr>
-            <th data-i18n="house">House</th>
-            <th data-i18n="location">Location</th>
-            <th data-i18n="price">Price</th>
-            <th data-i18n="owner">Owner</th>
-            <th data-i18n="featured">Featured</th>
-            <th data-i18n="actions">Action</th>
-          </tr>
-        </thead>
-        <tbody id="housesTable">
-          <tr><td colspan="6" style="text-align:center;" data-i18n="loading">Loading houses...</td></tr>
-        </tbody>
-      </table>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="house">House</th>
+              <th data-i18n="location">Location</th>
+              <th data-i18n="price">Price</th>
+              <th data-i18n="owner">Owner</th>
+              <th data-i18n="featured">Featured</th>
+              <th data-i18n="actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="housesTable">
+            <tr><td colspan="6" style="text-align:center;">Loading houses...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Reports Table -->
     <div class="table-card">
       <h2 data-i18n="userReports">🚩 User Reports</h2>
-      <table>
-        <thead>
-          <tr>
-            <th data-i18n="reporter">Reporter</th>
-            <th data-i18n="landlord">Landlord</th>
-            <th data-i18n="house">House</th>
-            <th data-i18n="reason">Reason</th>
-            <th data-i18n="date">Date</th>
-            <th data-i18n="status">Status</th>
-            <th data-i18n="actions">Action</th>
-          </tr>
-        </thead>
-        <tbody id="reportsTable">
-          <tr><td colspan="7" style="text-align:center;" data-i18n="loading">Loading reports...</td></tr>
-        </tbody>
-      </table>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="reporter">Reporter</th>
+              <th data-i18n="landlord">Landlord</th>
+              <th data-i18n="house">House</th>
+              <th data-i18n="reason">Reason</th>
+              <th data-i18n="date">Date</th>
+              <th data-i18n="status">Status</th>
+              <th data-i18n="actions">Action</th>
+            </tr>
+          </thead>
+          <tbody id="reportsTable">
+            <tr><td colspan="7" style="text-align:center;">Loading reports...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer>
     <span data-i18n="copyright">© 2026 Rental Marketplace Malawi</span>
     <br><br>
@@ -418,19 +457,8 @@
       localStorage.removeItem("role");
       window.location = "login.html";
     }
-    // Set initial selectors
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
-  </script>
-  <!-- Service Worker Registration -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('Service Worker registered:', reg.scope))
-          .catch(err => console.log('Service Worker registration failed:', err));
-      });
-    }
   </script>
 </body>
 </html>
