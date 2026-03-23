@@ -4,24 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rental Marketplace | Blantyre Houses</title>
+  <!-- Google Fonts & Leaflet CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Leaflet core -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Leaflet Draw -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
-  <!-- Leaflet Marker Cluster -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- noUiSlider for price range -->
+  <!-- noUiSlider -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* ========== THEME VARIABLES ========== */
+    /* Theme variables – same as before */
     body.theme-light {
       --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       --navbar-bg: rgba(255,255,255,0.95);
@@ -85,7 +83,7 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    /* ---------- NAVBAR ---------- */
+    /* Navbar */
     .navbar {
       display: flex;
       justify-content: space-between;
@@ -98,20 +96,17 @@
       top: 0;
       z-index: 1000;
     }
-
     .logo {
       font-size: 1.6rem;
       font-weight: 700;
       color: var(--text-color);
     }
-
     .nav-links {
       display: flex;
       align-items: center;
       gap: 1.5rem;
       flex-wrap: wrap;
     }
-
     .nav-links a {
       color: var(--text-color);
       text-decoration: none;
@@ -121,7 +116,6 @@
     .nav-links a:hover {
       color: #3498db;
     }
-
     .lang-select, .theme-select {
       padding: 0.3rem 0.8rem;
       border-radius: 30px;
@@ -132,7 +126,7 @@
       font-size: 0.9rem;
     }
 
-    /* ---------- HERO ---------- */
+    /* Hero */
     .hero {
       text-align: center;
       padding: 3rem 1rem;
@@ -149,14 +143,14 @@
       opacity: 0.9;
     }
 
-    /* ---------- MAIN CONTAINER ---------- */
+    /* Main container */
     .main-container {
       max-width: 1300px;
       margin: 2rem auto;
       padding: 0 2rem;
     }
 
-    /* ---------- FILTER ROW (price slider, sort, save) ---------- */
+    /* Filters & search */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -172,9 +166,7 @@
       justify-content: center;
       flex: 1;
     }
-    .filters input,
-    .filters select,
-    .filters button {
+    .filters input, .filters select, .filters button {
       border: 1px solid var(--input-border);
       border-radius: 40px;
       padding: 0.6rem 1.2rem;
@@ -183,11 +175,6 @@
       color: var(--text-color);
       transition: all 0.2s;
       outline: none;
-    }
-    .filters input:focus,
-    .filters select:focus {
-      border-color: #3498db;
-      box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
     }
     .filters button {
       background: var(--button-bg);
@@ -224,7 +211,6 @@
       color: var(--text-color);
       cursor: pointer;
     }
-
     .save-search-btn {
       background: var(--button-bg);
       color: white;
@@ -234,7 +220,6 @@
       cursor: pointer;
     }
 
-    /* Amenities filter checkboxes (iconized) */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -309,14 +294,13 @@
       border-color: var(--button-bg);
     }
 
-    /* ---------- HOUSE GRID ---------- */
+    /* House grid */
     #houses-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 1.5rem;
       margin: 2rem 0;
     }
-
     .house-card {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -330,7 +314,6 @@
       transform: translateY(-4px);
       box-shadow: 0 12px 30px rgba(0,0,0,0.1);
     }
-
     .slider {
       position: relative;
       width: 100%;
@@ -380,7 +363,7 @@
       color: var(--text-color);
     }
 
-    /* Badges */
+    /* Badges (same) */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -456,7 +439,7 @@
       color: #2980b9;
     }
 
-    /* ---------- PAGINATION ---------- */
+    /* Pagination */
     .pagination {
       display: flex;
       flex-wrap: wrap;
@@ -489,7 +472,7 @@
       pointer-events: none;
     }
 
-    /* ---------- MAP SECTION ---------- */
+    /* Map section */
     .map-section {
       margin: 2rem 0;
     }
@@ -504,8 +487,6 @@
       border: 2px solid white;
       box-shadow: 0 12px 30px rgba(0,0,0,0.1);
     }
-
-    /* Map controls (draw, radius) */
     .map-controls {
       margin: 10px 0;
       display: flex;
@@ -521,11 +502,11 @@
       font-size: 0.9rem;
       cursor: pointer;
     }
-    #radiusSlider {
+    #radiusSliderControl {
       width: 150px;
     }
 
-    /* ---------- GPS SECTION ---------- */
+    /* GPS Section */
     .gps-section {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -606,76 +587,22 @@
       color: black;
     }
 
-    /* Landlord Profile Modal */
-    .landlord-profile {
-      text-align: center;
-    }
-    .landlord-profile .avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin: 0 auto 1rem;
-      border: 3px solid var(--button-bg);
-    }
-    .landlord-profile h2 {
-      font-size: 1.6rem;
-      margin-bottom: 0.25rem;
-      color: var(--text-color);
-    }
-    .landlord-profile .business-name {
-      font-size: 1rem;
-      color: #3498db;
-      margin-bottom: 0.5rem;
-    }
-    .landlord-profile .badge {
-      display: inline-block;
-      margin: 0.25rem 0;
-    }
-    .landlord-profile .info-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin: 0.5rem 0;
-      font-size: 0.9rem;
-    }
-    .landlord-profile .bio {
-      margin: 1rem 0;
-      padding: 0.5rem;
-      background: rgba(0,0,0,0.05);
-      border-radius: 12px;
-      font-style: italic;
-    }
-    .landlord-profile .houses-preview {
-      margin-top: 1rem;
-      text-align: left;
-    }
-    .landlord-profile .houses-preview h4 {
-      margin-bottom: 0.5rem;
-      font-size: 1rem;
-      border-bottom: 1px solid var(--input-border);
-      display: inline-block;
-    }
-    .landlord-profile .houses-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-    .landlord-profile .house-thumb {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 8px;
+    /* Tabs inside modal */
+    .modal-tab {
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
+      padding: 8px 16px;
+      border-radius: 30px;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: all 0.2s;
     }
-    .landlord-profile .house-thumb:hover {
-      transform: scale(1.05);
+    .modal-tab.active {
+      background: var(--button-bg);
+      color: white;
+      border-color: var(--button-bg);
     }
 
-    /* Lightbox */
+    /* Lightbox (unchanged) */
     .lightbox-modal {
       position: fixed;
       top: 0;
@@ -827,6 +754,7 @@
 </head>
 <body>
 
+  <!-- Navbar -->
   <nav class="navbar">
     <div class="logo" data-i18n="home">🏠 Rental Marketplace</div>
     <div class="nav-links">
@@ -845,14 +773,14 @@
     </div>
   </nav>
 
+  <!-- Hero -->
   <header class="hero">
     <h1 data-i18n="heroTitle">Find Houses & Hostels in Blantyre</h1>
     <p data-i18n="heroSubtitle">Explore verified rentals posted by landlords</p>
   </header>
 
   <main class="main-container">
-
-    <!-- Filter row: price slider + sort + save -->
+    <!-- Filter row -->
     <div class="filters-row">
       <div class="price-range">
         <div class="range-values">
@@ -907,7 +835,7 @@
     <!-- Pagination -->
     <div class="pagination" id="pagination"></div>
 
-    <!-- MAP SECTION with controls -->
+    <!-- MAP SECTION -->
     <section class="map-section" id="map-section">
       <h2 data-i18n="mapView">📍 Map View</h2>
       <div class="map-controls">
@@ -943,15 +871,23 @@
     <a href="contact.html" data-i18n="contact">Contact</a>
   </footer>
 
-  <!-- Property Details Modal -->
+  <!-- Property Details Modal (with tabs) -->
   <div id="propertyModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:600px;">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
       <div id="propertyModalContent"></div>
+      <div class="modal-tabs" style="display:flex; gap:10px; margin-top:15px;">
+        <button class="modal-tab active" data-tab="details">🏠 Details</button>
+        <button class="modal-tab" data-tab="insights">🏙️ Neighbourhood Insights</button>
+      </div>
+      <div id="modalDetails" style="display:block;"></div>
+      <div id="modalInsights" style="display:none;">
+        <div id="insightsLoader" style="text-align:center; padding:20px;">Loading neighbourhood data...</div>
+      </div>
     </div>
   </div>
 
-  <!-- Booking Modal -->
+  <!-- Booking Modal (unchanged) -->
   <div id="bookingModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:500px;">
       <span class="close-btn" onclick="closeBookingModal()">&times;</span>
@@ -976,7 +912,7 @@
     </div>
   </div>
 
-  <!-- Image Lightbox Modal -->
+  <!-- Lightbox Modal (unchanged) -->
   <div id="lightboxModal" class="lightbox-modal" style="display: none;">
     <span class="lightbox-close">&times;</span>
     <span class="lightbox-prev">&#10094;</span>
@@ -987,7 +923,7 @@
     <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
 
-  <!-- Save Search Modal -->
+  <!-- Save Search Modal (unchanged) -->
   <div id="saveSearchModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeSaveSearchModal()">&times;</span>
@@ -1008,7 +944,7 @@
     </div>
   </div>
 
-  <!-- Landlord Profile Modal -->
+  <!-- Landlord Profile Modal (unchanged) -->
   <div id="landlordModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width: 500px; border-radius: 20px; overflow: hidden;">
       <span class="close-btn" onclick="closeLandlordModal()">&times;</span>
@@ -1016,6 +952,7 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -1025,7 +962,7 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox variables (same as before)
+    // Lightbox functions (unchanged)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
@@ -1078,6 +1015,7 @@
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
 
+    // Booking modal functions (unchanged)
     window.openBookingModal = function(houseId, houseName) {
       window.currentBookingHouseId = houseId;
       document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;

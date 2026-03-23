@@ -50,9 +50,6 @@ function getDistance(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
-// ======================================
-// CUSTOM MARKER ICON
-// ======================================
 function getMarkerIcon(house) {
   let iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
   if (house.type === 'Hostel') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/green-dot.png';
@@ -72,7 +69,7 @@ function getMarkerIcon(house) {
 }
 
 // ======================================
-// RENDER MARKERS WITH CLUSTERING
+// RENDER MARKERS (clustering)
 // ======================================
 function renderMarkers(houses) {
   if (!markersLayer) return;
@@ -82,8 +79,6 @@ function renderMarkers(houses) {
     if (!house.lat || !house.lng) return;
     const icon = getMarkerIcon(house);
     const marker = L.marker([house.lat, house.lng], { icon });
-
-    // Popup content (same as before)
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     let badge = "";
     if (house.owner?.verificationType === "premium") {
@@ -156,7 +151,7 @@ function renderMarkers(houses) {
 }
 
 // ======================================
-// FETCH HOUSES (with filters, sorting)
+// FETCH HOUSES
 // ======================================
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
@@ -289,7 +284,7 @@ function handleSortChange() {
 }
 
 // ======================================
-// SAVE SEARCH (localStorage)
+// SAVE SEARCH
 // ======================================
 function saveSearch() {
   const modal = document.getElementById('saveSearchModal');
@@ -320,7 +315,7 @@ function saveSearch() {
 }
 
 // ======================================
-// MAP INITIALIZATION (clustering, drawing, radius)
+// MAP INIT
 // ======================================
 function initMap() {
   map = L.map("map").setView([-15.786, 35.005], 12);
@@ -418,7 +413,7 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS (with blur, landlord popup)
+// RENDER HOUSE CARDS (with blur and landlord click)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -712,43 +707,6 @@ async function startChat(houseId, landlordId) {
   }
 }
 
-function showDetails(houseId) {
-  const house = allHouses.find(h => h._id === houseId);
-  if (!house) return;
-  const modalContent = document.getElementById("propertyModalContent");
-  modalContent.innerHTML = `
-    <h2>${house.name}</h2>
-    <p><strong>Type:</strong> ${house.type}</p>
-    <p><strong>Location:</strong> ${house.location}</p>
-    <p><strong>Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
-    <p><strong>Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
-    <p><strong>Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
-    <p><strong>Condition:</strong> ${house.condition}</p>
-    <p><strong>Self Contained:</strong> ${house.selfContained ? '✅ Yes' : '❌ No'}</p>
-    <p><strong>Description:</strong> ${house.description || 'No description'}</p>
-    <p><strong>Amenities:</strong> ${house.wifi ? '📶 WiFi ' : ''}${house.parking ? '🅿️ Parking ' : ''}${house.furnished ? '🛋️ Furnished ' : ''}${house.petFriendly ? '🐾 Pet Friendly ' : ''}${house.pool ? '🏊 Pool ' : ''}${house.ac ? '❄️ AC ' : ''}</p>
-    <p><strong>Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender}</p>
-    <p><strong>Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
-    <p><strong>Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>
-  `;
-  document.getElementById("propertyModal").style.display = "block";
-}
-
-function closePropertyModal() {
-  document.getElementById("propertyModal").style.display = "none";
-}
-
-function toggleFavorite(id) {
-  let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
-  if (favs.includes(id)) {
-    favs = favs.filter(x => x !== id);
-  } else {
-    favs.push(id);
-  }
-  localStorage.setItem("favorites", JSON.stringify(favs));
-  renderHouses(allHouses);
-}
-
 // ======================================
 // LANDLORD PROFILE MODAL
 // ======================================
@@ -825,6 +783,183 @@ async function showLandlordProfile(landlordId) {
 
 function closeLandlordModal() {
   document.getElementById('landlordModal').style.display = 'none';
+}
+
+// ======================================
+// NEIGHBOURHOOD INSIGHTS (new feature)
+// ======================================
+async function loadNeighbourhoodInsights(houseLat, houseLng) {
+  const insightsDiv = document.getElementById('modalInsights');
+  if (!insightsDiv) return;
+
+  const amenities = [
+    { type: 'school', label: '🏫 Schools', maxDist: 2000 },
+    { type: 'hospital', label: '🏥 Hospitals', maxDist: 3000 },
+    { type: 'pharmacy', label: '💊 Pharmacy', maxDist: 1500 },
+    { type: 'supermarket', label: '🛒 Supermarket', maxDist: 1500 },
+    { type: 'restaurant', label: '🍽️ Restaurants', maxDist: 1000 },
+    { type: 'cafe', label: '☕ Cafes', maxDist: 1000 },
+    { type: 'police', label: '👮 Police Station', maxDist: 3000 },
+    { type: 'marketplace', label: '📦 Market', maxDist: 2000 }
+  ];
+
+  let allResults = [];
+  for (let amenity of amenities) {
+    const radius = amenity.maxDist;
+    const query = `
+      [out:json];
+      (
+        node["amenity"="${amenity.type}"](around:${radius},${houseLat},${houseLng});
+        way["amenity"="${amenity.type}"](around:${radius},${houseLat},${houseLng});
+      );
+      out center;
+    `;
+    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.elements && data.elements.length) {
+        const nearest = data.elements
+          .map(el => {
+            const lat = el.lat || el.center?.lat;
+            const lng = el.lon || el.center?.lon;
+            const dist = getDistance(houseLat, houseLng, lat, lng) * 1000;
+            return { name: el.tags?.name || `${amenity.label} (unnamed)`, dist };
+          })
+          .filter(el => el.dist <= amenity.maxDist)
+          .sort((a,b) => a.dist - b.dist);
+        if (nearest.length) {
+          allResults.push({
+            label: amenity.label,
+            places: nearest.slice(0, 3)
+          });
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch ${amenity.type} data:`, err);
+    }
+  }
+
+  // Find the house object (approximate)
+  const house = allHouses.find(h => Math.abs(h.lat - houseLat) < 0.001 && Math.abs(h.lng - houseLng) < 0.001);
+  let prosText = '';
+  const props = [];
+  if (house) {
+    if (house.featured) props.push("⭐ featured listing");
+    if (house.wifi) props.push("📶 WiFi");
+    if (house.parking) props.push("🅿️ parking");
+    if (house.furnished) props.push("🛋️ furnished");
+    if (house.petFriendly) props.push("🐾 pet-friendly");
+    if (house.pool) props.push("🏊 pool");
+    if (house.ac) props.push("❄️ air conditioning");
+    if (house.selfContained) props.push("🏡 self-contained");
+  }
+
+  if (allResults.some(r => r.label === '🏫 Schools')) {
+    const school = allResults.find(r => r.label === '🏫 Schools');
+    if (school && school.places[0].dist < 1000) {
+      prosText += `🏫 Within ${Math.round(school.places[0].dist)}m of a school. `;
+    }
+  }
+  if (allResults.some(r => r.label === '🛒 Supermarket')) {
+    const market = allResults.find(r => r.label === '🛒 Supermarket');
+    if (market && market.places[0].dist < 1000) {
+      prosText += `🛒 Nearby supermarket (${Math.round(market.places[0].dist)}m). `;
+    }
+  }
+
+  if (props.length) {
+    prosText = `✨ ${house?.name || 'This property'} is a ${props.join(', ')} property. ${prosText}`;
+  } else {
+    prosText = `✨ ${house?.name || 'This property'} is a comfortable property in a convenient location. ${prosText}`;
+  }
+
+  let insightsHtml = `<h3>🔍 Neighbourhood Insights</h3>`;
+  insightsHtml += `<div class="insight-pros" style="background:rgba(0,0,0,0.05); padding:12px; border-radius:12px; margin-bottom:16px;">${prosText}</div>`;
+
+  if (allResults.length === 0) {
+    insightsHtml += `<p>No nearby amenities found in OpenStreetMap data. You may be in a developing area – check back later!</p>`;
+  } else {
+    insightsHtml += `<div style="display:grid; gap:12px;">`;
+    allResults.forEach(cat => {
+      insightsHtml += `<div><strong>${cat.label}</strong><ul style="margin:5px 0 0 20px;">`;
+      cat.places.forEach(place => {
+        const walkMinutes = Math.round(place.dist / 80);
+        insightsHtml += `<li>${place.name} – ${Math.round(place.dist)}m (about ${walkMinutes} min walk)</li>`;
+      });
+      insightsHtml += `</ul></div>`;
+    });
+    insightsHtml += `</div>`;
+  }
+
+  insightsDiv.innerHTML = insightsHtml;
+}
+
+// ======================================
+// SHOW DETAILS (with tabs)
+// ======================================
+function showDetails(houseId) {
+  const house = allHouses.find(h => h._id === houseId);
+  if (!house) return;
+
+  const detailsHtml = `
+    <h2>${house.name}</h2>
+    <p><strong>Type:</strong> ${house.type}</p>
+    <p><strong>Location:</strong> ${house.location}</p>
+    <p><strong>Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
+    <p><strong>Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
+    <p><strong>Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
+    <p><strong>Condition:</strong> ${house.condition}</p>
+    <p><strong>Self Contained:</strong> ${house.selfContained ? '✅ Yes' : '❌ No'}</p>
+    <p><strong>Description:</strong> ${house.description || 'No description'}</p>
+    <p><strong>Amenities:</strong> ${house.wifi ? '📶 WiFi ' : ''}${house.parking ? '🅿️ Parking ' : ''}${house.furnished ? '🛋️ Furnished ' : ''}${house.petFriendly ? '🐾 Pet Friendly ' : ''}${house.pool ? '🏊 Pool ' : ''}${house.ac ? '❄️ AC ' : ''}</p>
+    <p><strong>Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender}</p>
+    <p><strong>Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
+    <p><strong>Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>
+  `;
+
+  document.getElementById('modalDetails').innerHTML = detailsHtml;
+  document.getElementById('propertyModal').style.display = 'block';
+
+  if (house.lat && house.lng) {
+    loadNeighbourhoodInsights(house.lat, house.lng);
+  } else {
+    document.getElementById('modalInsights').innerHTML = '<p>No location data available for insights.</p>';
+  }
+
+  const tabs = document.querySelectorAll('.modal-tab');
+  const detailsPanel = document.getElementById('modalDetails');
+  const insightsPanel = document.getElementById('modalInsights');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      if (target === 'details') {
+        detailsPanel.style.display = 'block';
+        insightsPanel.style.display = 'none';
+      } else {
+        detailsPanel.style.display = 'none';
+        insightsPanel.style.display = 'block';
+      }
+    });
+  });
+}
+
+function closePropertyModal() {
+  document.getElementById("propertyModal").style.display = "none";
+}
+
+function toggleFavorite(id) {
+  let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+  if (favs.includes(id)) {
+    favs = favs.filter(x => x !== id);
+  } else {
+    favs.push(id);
+  }
+  localStorage.setItem("favorites", JSON.stringify(favs));
+  renderHouses(allHouses);
 }
 
 // ======================================
@@ -924,6 +1059,7 @@ if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
 
 loadHouses(currentPage, currentType, currentFilters, currentSort);
 
+// Expose functions
 window.showDetails = showDetails;
 window.closePropertyModal = closePropertyModal;
 window.toggleFavorite = toggleFavorite;
