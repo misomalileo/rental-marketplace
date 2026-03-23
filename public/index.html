@@ -7,7 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Leaflet core -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet Draw -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+  <!-- Leaflet Marker Cluster -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- noUiSlider for price range -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
@@ -149,7 +156,7 @@
       padding: 0 2rem;
     }
 
-    /* ---------- FILTERS & SEARCH ---------- */
+    /* ---------- FILTER ROW (price slider, sort, save) ---------- */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -193,7 +200,6 @@
       background: var(--button-hover);
     }
 
-    /* Price range slider container */
     .price-range {
       min-width: 200px;
       background: var(--input-bg);
@@ -210,7 +216,6 @@
       margin: 0.5rem 0;
     }
 
-    /* Sort options */
     .sort-select {
       padding: 0.6rem 1.2rem;
       border-radius: 40px;
@@ -220,7 +225,6 @@
       cursor: pointer;
     }
 
-    /* Save search button */
     .save-search-btn {
       background: var(--button-bg);
       color: white;
@@ -230,7 +234,7 @@
       cursor: pointer;
     }
 
-    /* Amenities filter checkboxes with icons */
+    /* Amenities filter checkboxes (iconized) */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -305,7 +309,7 @@
       border-color: var(--button-bg);
     }
 
-    /* ---------- HOUSE GRID (unchanged) ---------- */
+    /* House grid */
     #houses-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -376,7 +380,7 @@
       color: var(--text-color);
     }
 
-    /* Badges (same as before) */
+    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -485,7 +489,7 @@
       pointer-events: none;
     }
 
-    /* Map */
+    /* Map section */
     .map-section {
       margin: 2rem 0;
     }
@@ -499,6 +503,26 @@
       border-radius: 24px;
       border: 2px solid white;
       box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+
+    /* Map controls (draw, radius) */
+    .map-controls {
+      margin: 10px 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .map-controls button, .map-controls label {
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 30px;
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    #radiusSlider {
+      width: 150px;
     }
 
     /* GPS Section */
@@ -551,7 +575,7 @@
       text-decoration: underline;
     }
 
-    /* Modal (property details, booking) - unchanged */
+    /* Modal styles */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -582,14 +606,83 @@
       color: black;
     }
 
-    /* Lightbox (unchanged) */
+    /* Landlord Profile Modal */
+    .landlord-profile {
+      text-align: center;
+    }
+    .landlord-profile .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--button-bg);
+    }
+    .landlord-profile h2 {
+      font-size: 1.6rem;
+      margin-bottom: 0.25rem;
+      color: var(--text-color);
+    }
+    .landlord-profile .business-name {
+      font-size: 1rem;
+      color: #3498db;
+      margin-bottom: 0.5rem;
+    }
+    .landlord-profile .badge {
+      display: inline-block;
+      margin: 0.25rem 0;
+    }
+    .landlord-profile .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+    .landlord-profile .bio {
+      margin: 1rem 0;
+      padding: 0.5rem;
+      background: rgba(0,0,0,0.05);
+      border-radius: 12px;
+      font-style: italic;
+    }
+    .landlord-profile .houses-preview {
+      margin-top: 1rem;
+      text-align: left;
+    }
+    .landlord-profile .houses-preview h4 {
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      border-bottom: 1px solid var(--input-border);
+      display: inline-block;
+    }
+    .landlord-profile .houses-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .landlord-profile .house-thumb {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .landlord-profile .house-thumb:hover {
+      transform: scale(1.05);
+    }
+
+    /* Lightbox */
     .lightbox-modal {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0,0,0,0.9);
       z-index: 10000;
       display: flex;
       align-items: center;
@@ -759,7 +852,7 @@
 
   <main class="main-container">
 
-    <!-- Filter row: price slider + sort + save search -->
+    <!-- Filter row: price slider + sort + save -->
     <div class="filters-row">
       <div class="price-range">
         <div class="range-values">
@@ -784,7 +877,7 @@
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);">Apply Filters</button>
     </div>
 
-    <!-- Amenities filter checkboxes (enhanced with icons) -->
+    <!-- Amenities filter checkboxes (with icons) -->
     <section class="amenities-filters">
       <label><input type="checkbox" id="filterWifi"> <i class="fas fa-wifi"></i> WiFi</label>
       <label><input type="checkbox" id="filterParking"> <i class="fas fa-parking"></i> Parking</label>
@@ -814,9 +907,19 @@
     <!-- Pagination -->
     <div class="pagination" id="pagination"></div>
 
-    <!-- MAP SECTION -->
+    <!-- MAP SECTION with controls -->
     <section class="map-section" id="map-section">
       <h2 data-i18n="mapView">📍 Map View</h2>
+      <div class="map-controls">
+        <button id="drawAreaBtn" class="save-search-btn">✏️ Draw Area to Search</button>
+        <button id="clearDrawBtn" class="save-search-btn" style="background: #e74c3c;">🗑️ Clear Drawing</button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <label>Near Me Radius:</label>
+          <input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2">
+          <span id="radiusValueControl">2 km</span>
+          <button id="applyRadiusBtn" class="save-search-btn">Find Nearby</button>
+        </div>
+      </div>
       <div id="map"></div>
     </section>
 
@@ -884,7 +987,7 @@
     <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
 
-  <!-- Save Search Modal (for email alerts) -->
+  <!-- Save Search Modal -->
   <div id="saveSearchModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeSaveSearchModal()">&times;</span>
@@ -905,13 +1008,24 @@
     </div>
   </div>
 
+  <!-- Landlord Profile Modal -->
+  <div id="landlordModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width: 500px; border-radius: 20px; overflow: hidden;">
+      <span class="close-btn" onclick="closeLandlordModal()">&times;</span>
+      <div id="landlordModalContent" style="text-align: center;"></div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox functions (unchanged)
+    // Lightbox variables (same as before)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 

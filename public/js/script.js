@@ -9,18 +9,18 @@ let totalPages = 1;
 let currentType = 'all';
 let currentFilters = {};
 let currentSort = 'default';
-let userLocation = null; // for distance sorting
+let userLocation = null;
+let radius = 2; // km
+let drawnPolygon = null;
+let drawnItems;
 
 // ======================================
-// CHECK LOGIN STATUS
+// HELPER FUNCTIONS
 // ======================================
 function checkAuth() {
   return !!localStorage.getItem("token");
 }
 
-// ======================================
-// GET USER ID FROM TOKEN
-// ======================================
 function getUserIdFromToken() {
   const token = localStorage.getItem("token");
   if (!token) return null;
@@ -32,19 +32,134 @@ function getUserIdFromToken() {
   }
 }
 
-// ======================================
-// INITIALIZE MAP
-// ======================================
-function initMap() {
-  map = L.map("map").setView([-15.786, 35.005], 12);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors"
-  }).addTo(map);
-  markersLayer = L.layerGroup().addTo(map);
+function getStarRating(average) {
+  if (!average) return "☆☆☆☆☆";
+  const fullStars = Math.round(average);
+  const emptyStars = 5 - fullStars;
+  return "★".repeat(fullStars) + "☆".repeat(emptyStars);
 }
 
 // ======================================
-// FETCH HOUSES WITH PAGINATION AND SORT
+// DISTANCE CALCULATION (haversine)
+// ======================================
+function getDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// ======================================
+// CUSTOM MARKER ICON BASED ON PROPERTY TYPE & VERIFICATION
+// ======================================
+function getMarkerIcon(house) {
+  let iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+  if (house.type === 'Hostel') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/green-dot.png';
+  else if (house.type === 'Apartment') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+  else if (house.type === 'Room') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png';
+  else if (house.type === 'Office') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png';
+
+  if (house.owner?.verificationType === 'premium') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+  else if (house.owner?.verificationType === 'official') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/lightblue-dot.png';
+
+  return L.icon({
+    iconUrl: iconUrl,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+}
+
+// ======================================
+// RENDER MARKERS WITH CLUSTERING
+// ======================================
+function renderMarkers(houses) {
+  if (!markersLayer) return;
+  markersLayer.clearLayers();
+
+  houses.forEach(house => {
+    if (!house.lat || !house.lng) return;
+    const icon = getMarkerIcon(house);
+    const marker = L.marker([house.lat, house.lng], { icon });
+
+    // Popup content (same as before)
+    const img = house.images?.length ? house.images[0] : "placeholder.jpg";
+    let badge = "";
+    if (house.owner?.verificationType === "premium") {
+      badge = `<span class="badge premium">⭐ Premium</span>`;
+    } else if (house.owner?.verificationType === "official") {
+      badge = `<span class="badge verified">✔ Verified</span>`;
+    }
+
+    let details = '';
+    if (house.type === 'Hostel') {
+      details = `
+        <p>🏨 Hostel</p>
+        <p>🛏️ Vacancies: ${house.vacancies || 0} rooms</p>
+        <p>💰 MWK ${Number(house.price).toLocaleString()} / room</p>
+      `;
+    } else {
+      details = `
+        <p>🏠 ${house.type || 'House'}</p>
+        <p>🛏️ Bedrooms: ${house.bedrooms || 'N/A'}</p>
+        <p>💰 MWK ${Number(house.price).toLocaleString()} / month</p>
+      `;
+    }
+    details += `<p>📋 Condition: ${house.condition || 'Good'}</p>`;
+
+    let genderInfo = '';
+    if (house.gender && house.gender !== 'none') {
+      let genderText = '';
+      if (house.gender === 'boys') genderText = '👦 Boys Only';
+      else if (house.gender === 'girls') genderText = '👧 Girls Only';
+      else if (house.gender === 'mixed') genderText = '👫 Mixed';
+      genderInfo = `<p>${genderText}</p>`;
+    }
+
+    let amenities = [];
+    if (house.wifi) amenities.push("📶 WiFi");
+    if (house.parking) amenities.push("🅿️ Parking");
+    if (house.furnished) amenities.push("🛋️ Furnished");
+    if (house.petFriendly) amenities.push("🐾 Pet Friendly");
+    if (house.pool) amenities.push("🏊 Pool");
+    if (house.ac) amenities.push("❄️ AC");
+    const amenitiesHtml = amenities.length ? `<p>${amenities.join(" • ")}</p>` : '';
+
+    let unavailableHtml = '';
+    if (house.unavailableDates && house.unavailableDates.length > 0) {
+      const dates = house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ');
+      unavailableHtml = `<p>🚫 Unavailable: ${dates}</p>`;
+    }
+
+    const selfContainedBadge = house.selfContained ? '<br><span class="badge self-contained">🏡 Self Contained</span>' : '';
+    const featuredBadge = house.featured ? '<br><span class="badge featured">⭐ FEATURED</span>' : '';
+
+    const popup = `
+      <div style="width:200px">
+        <img src="${img}" style="width:100%;height:140px;object-fit:cover">
+        <h4>${house.name}</h4>
+        ${details}
+        ${genderInfo}
+        ${amenitiesHtml}
+        ${unavailableHtml}
+        ${badge}
+        ${selfContainedBadge}
+        ${featuredBadge}
+        <br>
+        <a href="https://wa.me/${house.phone}" target="_blank">Contact</a>
+      </div>
+    `;
+    marker.bindPopup(popup);
+    markersLayer.addLayer(marker);
+  });
+}
+
+// ======================================
+// FETCH HOUSES (with filters and sorting)
 // ======================================
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
@@ -79,28 +194,16 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
   }
 }
 
-// ======================================
-// UPDATE BROWSER URL
-// ======================================
 function updateURL() {
   const url = new URL(window.location);
   url.searchParams.set('page', currentPage);
-  if (currentType !== 'all') {
-    url.searchParams.set('type', currentType);
-  } else {
-    url.searchParams.delete('type');
-  }
-  if (currentSort !== 'default') {
-    url.searchParams.set('sort', currentSort);
-  } else {
-    url.searchParams.delete('sort');
-  }
+  if (currentType !== 'all') url.searchParams.set('type', currentType);
+  else url.searchParams.delete('type');
+  if (currentSort !== 'default') url.searchParams.set('sort', currentSort);
+  else url.searchParams.delete('sort');
   window.history.replaceState({}, '', url);
 }
 
-// ======================================
-// RENDER PAGINATION CONTROLS
-// ======================================
 function renderPagination() {
   const paginationDiv = document.getElementById('pagination');
   if (!paginationDiv) return;
@@ -126,18 +229,7 @@ function changePage(page) {
 }
 
 // ======================================
-// SORT HANDLER
-// ======================================
-function handleSortChange() {
-  const sortSelect = document.getElementById('sortSelect');
-  if (!sortSelect) return;
-  currentSort = sortSelect.value;
-  currentPage = 1;
-  loadHouses(currentPage, currentType, currentFilters, currentSort);
-}
-
-// ======================================
-// PRICE SLIDER INIT
+// PRICE SLIDER
 // ======================================
 function initPriceSlider() {
   const slider = document.getElementById('priceSlider');
@@ -175,7 +267,7 @@ function initPriceSlider() {
 // GET CURRENT FILTERS FROM UI
 // ======================================
 function getCurrentFilters() {
-  const filters = {
+  return {
     minPrice: document.getElementById('priceMin')?.value || '',
     maxPrice: document.getElementById('priceMax')?.value || '',
     bedrooms: document.getElementById('bedrooms')?.value || '',
@@ -186,12 +278,8 @@ function getCurrentFilters() {
     pool: document.getElementById('filterPool')?.checked || false,
     ac: document.getElementById('filterAC')?.checked || false
   };
-  return filters;
 }
 
-// ======================================
-// APPLY FILTERS BUTTON
-// ======================================
 function applyFilters() {
   currentFilters = getCurrentFilters();
   currentPage = 1;
@@ -199,7 +287,18 @@ function applyFilters() {
 }
 
 // ======================================
-// SAVE SEARCH (frontend only for now)
+// SORT HANDLER
+// ======================================
+function handleSortChange() {
+  const sortSelect = document.getElementById('sortSelect');
+  if (!sortSelect) return;
+  currentSort = sortSelect.value;
+  currentPage = 1;
+  loadHouses(currentPage, currentType, currentFilters, currentSort);
+}
+
+// ======================================
+// SAVE SEARCH (localStorage for now)
 // ======================================
 function saveSearch() {
   const modal = document.getElementById('saveSearchModal');
@@ -218,8 +317,6 @@ function saveSearch() {
       sort: currentSort,
       createdAt: new Date().toISOString()
     };
-    // In real app, you'd send this to backend to store and schedule email alerts.
-    // For now, store in localStorage and show success message.
     let savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
     savedSearches.push(searchData);
     localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
@@ -232,13 +329,110 @@ function saveSearch() {
 }
 
 // ======================================
-// EXISTING FUNCTIONS (reportHouse, startChat, showDetails, etc.)
+// MAP INITIALIZATION (clustering, drawing, radius)
 // ======================================
-// ... (keep all existing functions unchanged)
-// I'll include them here for completeness, but they are the same as before.
+function initMap() {
+  map = L.map("map").setView([-15.786, 35.005], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors"
+  }).addTo(map);
+
+  // Marker cluster group
+  markersLayer = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    maxClusterRadius: 50,
+    iconCreateFunction: function(cluster) {
+      return L.divIcon({
+        html: '<div style="background:#3498db; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-weight:bold;">' + cluster.getChildCount() + '</div>',
+        className: 'marker-cluster-custom',
+        iconSize: L.point(30, 30)
+      });
+    }
+  });
+  map.addLayer(markersLayer);
+
+  // Drawing control
+  drawnItems = L.featureGroup().addTo(map);
+  const drawControl = new L.Control.Draw({
+    edit: {
+      featureGroup: drawnItems,
+      remove: true
+    },
+    draw: {
+      polygon: true,
+      polyline: false,
+      rectangle: false,
+      circle: false,
+      marker: false,
+      circlemarker: false
+    }
+  });
+  map.addControl(drawControl);
+
+  map.on(L.Draw.Event.CREATED, (e) => {
+    if (drawnPolygon) map.removeLayer(drawnPolygon);
+    drawnPolygon = e.layer;
+    drawnItems.addLayer(drawnPolygon);
+    // Filter houses inside polygon
+    filterHousesByPolygon();
+  });
+
+  // Clear drawing button
+  const clearDrawBtn = document.getElementById('clearDrawBtn');
+  if (clearDrawBtn) {
+    clearDrawBtn.addEventListener('click', () => {
+      drawnItems.clearLayers();
+      drawnPolygon = null;
+      renderHouses(allHouses);
+      renderMarkers(allHouses);
+    });
+  }
+
+  // Radius slider (separate from the other one in map controls)
+  const radiusSlider = document.getElementById('radiusSliderControl');
+  const radiusValueSpan = document.getElementById('radiusValueControl');
+  if (radiusSlider) {
+    radiusSlider.addEventListener('input', (e) => {
+      radius = parseFloat(e.target.value);
+      radiusValueSpan.innerText = radius + ' km';
+    });
+  }
+
+  const applyRadiusBtn = document.getElementById('applyRadiusBtn');
+  if (applyRadiusBtn) {
+    applyRadiusBtn.addEventListener('click', () => {
+      if (userLocation) {
+        const nearby = allHouses.filter(h => {
+          if (!h.lat || !h.lng) return false;
+          const dist = getDistance(userLocation.lat, userLocation.lng, h.lat, h.lng);
+          return dist <= radius;
+        });
+        renderHouses(nearby);
+        renderMarkers(nearby);
+        map.setView([userLocation.lat, userLocation.lng], 14);
+        L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("You are here").openPopup();
+      } else {
+        alert("Please use 'Near Me' first to get your location.");
+      }
+    });
+  }
+}
+
+function filterHousesByPolygon() {
+  if (!drawnPolygon) return;
+  const filtered = allHouses.filter(house => {
+    if (!house.lat || !house.lng) return false;
+    const point = turf.point([house.lng, house.lat]);
+    const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]);
+    const poly = turf.polygon([coords]);
+    return turf.booleanPointInPolygon(point, poly);
+  });
+  renderHouses(filtered);
+  renderMarkers(filtered);
+}
 
 // ======================================
-// RENDER HOUSE CARDS (same as before, but now amenities include pool and AC)
+// RENDER HOUSE CARDS (with blur and clickable landlord)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -256,9 +450,10 @@ function renderHouses(houses) {
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
     let currentIndex = 0;
 
+    // Landlord info with clickable name
     let landlordInfo = '';
     if (house.owner) {
-      landlordInfo = `<p><a href="profile.html?id=${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a> `;
+      landlordInfo = `<p><a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a> `;
       if (house.owner.verificationType === "premium") {
         landlordInfo += `<span class="badge premium">⭐ Premium</span>`;
       } else if (house.owner.verificationType === "official") {
@@ -335,7 +530,7 @@ function renderHouses(houses) {
       ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')">💬 Chat</button>`
       : '';
 
-    // Build card HTML
+    // Build card HTML – wrap textual content
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
@@ -364,7 +559,7 @@ function renderHouses(houses) {
 
     container.appendChild(card);
 
-    // Apply blur if landlord is unverified
+    // Apply blur if landlord unverified
     const detailsDiv = card.querySelector('.house-details-content');
     if (house.owner && house.owner.verificationType === "none") {
       detailsDiv.classList.add('house-details-blurred');
@@ -372,18 +567,16 @@ function renderHouses(houses) {
       detailsDiv.classList.remove('house-details-blurred');
     }
 
-    // Slider and Lightbox (unchanged)
+    // Slider and lightbox
     const img = card.querySelector(`#img-${house._id}`);
     if (images.length > 1) {
       const prevBtn = card.querySelector(".prev");
       const nextBtn = card.querySelector(".next");
-
       const updateImage = (newIndex) => {
         currentIndex = newIndex;
         img.src = images[currentIndex];
         img.setAttribute('data-current-index', currentIndex);
       };
-
       prevBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         const newIndex = (currentIndex - 1 + images.length) % images.length;
@@ -395,7 +588,6 @@ function renderHouses(houses) {
         updateImage(newIndex);
       });
     }
-
     img.addEventListener("click", (e) => {
       e.stopPropagation();
       const currentIdx = parseInt(img.getAttribute('data-current-index') || "0");
@@ -404,7 +596,7 @@ function renderHouses(houses) {
       }
     });
 
-    // Rating widget (unchanged)
+    // Rating widget
     if (isLoggedIn) {
       const widget = card.querySelector(".rating-widget");
       if (widget) {
@@ -426,6 +618,7 @@ function renderHouses(houses) {
       }
     }
 
+    // Double-click on card centers map
     card.addEventListener("dblclick", (e) => {
       e.stopPropagation();
       if (house.lat && house.lng) {
@@ -433,22 +626,26 @@ function renderHouses(houses) {
       }
     });
 
+    // Record view on click (but not on buttons)
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" })
         .catch(err => console.error("Failed to record view", err));
     });
   });
+
+  // Attach click events to landlord name links
+  document.querySelectorAll('.landlord-name-link').forEach(link => {
+    link.removeEventListener('click', handleLandlordClick);
+    link.addEventListener('click', handleLandlordClick);
+  });
 }
 
-// ======================================
-// HELPER FUNCTIONS (unchanged)
-// ======================================
-function getStarRating(average) {
-  if (!average) return "☆☆☆☆☆";
-  const fullStars = Math.round(average);
-  const emptyStars = 5 - fullStars;
-  return "★".repeat(fullStars) + "☆".repeat(emptyStars);
+function handleLandlordClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const landlordId = this.getAttribute('data-landlord-id');
+  if (landlordId) showLandlordProfile(landlordId);
 }
 
 function highlightStars(stars, value) {
@@ -574,88 +771,82 @@ function toggleFavorite(id) {
   renderHouses(allHouses);
 }
 
-function renderMarkers(houses) {
-  if (!markersLayer) return;
-  markersLayer.clearLayers();
+// ======================================
+// LANDLORD PROFILE MODAL
+// ======================================
+async function showLandlordProfile(landlordId) {
+  try {
+    const res = await fetch(`/api/profile/landlord/${landlordId}`);
+    if (!res.ok) throw new Error('Failed to fetch landlord profile');
+    const data = await res.json();
+    const landlord = data.landlord;
+    const houses = data.houses;
 
-  houses.forEach(house => {
-    if (!house.lat || !house.lng) return;
+    const avatarHtml = landlord.profilePicture
+      ? `<img class="avatar" src="${landlord.profilePicture}" alt="${landlord.name}">`
+      : `<div class="avatar" style="background: #3498db; display: flex; align-items: center; justify-content: center; font-size: 2rem;">${landlord.name.charAt(0)}</div>`;
 
-    const img = house.images?.length ? house.images[0] : "placeholder.jpg";
-    let badge = "";
-    if (house.owner?.verificationType === "premium") {
-      badge = `<span class="badge premium">⭐ Premium</span>`;
-    } else if (house.owner?.verificationType === "official") {
-      badge = `<span class="badge verified">✔ Verified</span>`;
-    }
-
-    let details = '';
-    if (house.type === 'Hostel') {
-      details = `
-        <p>🏨 Hostel</p>
-        <p>🛏️ Vacancies: ${house.vacancies || 0} rooms</p>
-        <p>💰 MWK ${Number(house.price).toLocaleString()} / room</p>
-      `;
+    let badgeHtml = '';
+    if (landlord.verificationType === 'premium') {
+      badgeHtml = '<span class="badge premium">⭐ Premium Landlord</span>';
+    } else if (landlord.verificationType === 'official') {
+      badgeHtml = '<span class="badge verified">✔ Verified Landlord</span>';
     } else {
-      details = `
-        <p>🏠 ${house.type || 'House'}</p>
-        <p>🛏️ Bedrooms: ${house.bedrooms || 'N/A'}</p>
-        <p>💰 MWK ${Number(house.price).toLocaleString()} / month</p>
+      badgeHtml = '<span class="badge none">🔒 Not Verified</span>';
+    }
+
+    const businessHtml = landlord.businessName ? `<div class="business-name">🏢 ${landlord.businessName}</div>` : '';
+    const addressHtml = landlord.address ? `<div class="info-row"><i class="fas fa-map-marker-alt"></i> ${landlord.address}</div>` : '';
+    const phoneHtml = `<div class="info-row"><i class="fas fa-phone-alt"></i> ${landlord.phone || 'Not provided'}</div>`;
+    const emailHtml = `<div class="info-row"><i class="fas fa-envelope"></i> ${landlord.email}</div>`;
+    const joinedHtml = `<div class="info-row"><i class="fas fa-calendar-alt"></i> Joined ${new Date(landlord.createdAt).toLocaleDateString()}</div>`;
+    const responseRateHtml = `<div class="info-row"><i class="fas fa-reply-all"></i> Response Rate: ${landlord.profile?.responseRate || 0}%</div>`;
+    const bioHtml = landlord.bio ? `<div class="bio">${landlord.bio}</div>` : '';
+
+    let housesPreview = '';
+    if (houses && houses.length) {
+      housesPreview = `
+        <div class="houses-preview">
+          <h4>🏠 Properties (${houses.length})</h4>
+          <div class="houses-list">
+            ${houses.slice(0, 6).map(house => `
+              <img class="house-thumb" src="${house.images?.[0] || 'placeholder.jpg'}" alt="${house.name}" onclick="openLightbox(['${house.images?.[0]}'], 0); event.stopPropagation();">
+            `).join('')}
+          </div>
+          ${houses.length > 6 ? '<small>+ more</small>' : ''}
+        </div>
       `;
     }
-    details += `<p>📋 Condition: ${house.condition || 'Good'}</p>`;
 
-    let genderInfo = '';
-    if (house.gender && house.gender !== 'none') {
-      let genderText = '';
-      if (house.gender === 'boys') genderText = '👦 Boys Only';
-      else if (house.gender === 'girls') genderText = '👧 Girls Only';
-      else if (house.gender === 'mixed') genderText = '👫 Mixed';
-      genderInfo = `<p>${genderText}</p>`;
-    }
-
-    let amenities = [];
-    if (house.wifi) amenities.push("📶 WiFi");
-    if (house.parking) amenities.push("🅿️ Parking");
-    if (house.furnished) amenities.push("🛋️ Furnished");
-    if (house.petFriendly) amenities.push("🐾 Pet Friendly");
-    if (house.pool) amenities.push("🏊 Pool");
-    if (house.ac) amenities.push("❄️ AC");
-    const amenitiesHtml = amenities.length ? `<p>${amenities.join(" • ")}</p>` : '';
-
-    let unavailableHtml = '';
-    if (house.unavailableDates && house.unavailableDates.length > 0) {
-      const dates = house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ');
-      unavailableHtml = `<p>🚫 Unavailable: ${dates}</p>`;
-    }
-
-    const selfContainedBadge = house.selfContained ? '<br><span class="badge self-contained">🏡 Self Contained</span>' : '';
-    const featuredBadge = house.featured ? '<br><span class="badge featured">⭐ FEATURED</span>' : '';
-
-    const popup = `
-      <div style="width:200px">
-        <img src="${img}" style="width:100%;height:140px;object-fit:cover">
-        <h4>${house.name}</h4>
-        ${details}
-        ${genderInfo}
-        ${amenitiesHtml}
-        ${unavailableHtml}
-        ${badge}
-        ${selfContainedBadge}
-        ${featuredBadge}
-        <br>
-        <a href="https://wa.me/${house.phone}" target="_blank">Contact</a>
+    const modalContent = `
+      <div class="landlord-profile">
+        ${avatarHtml}
+        <h2>${landlord.name}</h2>
+        ${businessHtml}
+        ${badgeHtml}
+        ${addressHtml}
+        ${phoneHtml}
+        ${emailHtml}
+        ${joinedHtml}
+        ${responseRateHtml}
+        ${bioHtml}
+        ${housesPreview}
+        <div style="margin-top: 1rem;">
+          <button class="fav-btn" onclick="closeLandlordModal(); window.location.href='profile.html?id=${landlordId}'">View Full Profile</button>
+        </div>
       </div>
     `;
 
-    const icon = house.owner?.verificationType === "premium"
-      ? L.icon({ iconUrl: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png", iconSize: [32, 32] })
-      : L.icon({ iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png", iconSize: [32, 32] });
+    document.getElementById('landlordModalContent').innerHTML = modalContent;
+    document.getElementById('landlordModal').style.display = 'block';
+  } catch (err) {
+    console.error('Error loading landlord profile:', err);
+    alert('Could not load landlord profile.');
+  }
+}
 
-    const marker = L.marker([house.lat, house.lng], { icon });
-    marker.bindPopup(popup);
-    markersLayer.addLayer(marker);
-  });
+function closeLandlordModal() {
+  document.getElementById('landlordModal').style.display = 'none';
 }
 
 // ======================================
@@ -672,13 +863,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 const filterBtn = document.getElementById("applyFiltersBtn");
-if (filterBtn) {
-  filterBtn.onclick = () => {
-    currentFilters = getCurrentFilters();
-    currentPage = 1;
-    loadHouses(currentPage, currentType, currentFilters, currentSort);
-  };
-}
+if (filterBtn) filterBtn.onclick = applyFilters;
 
 const searchInput = document.getElementById("searchInput");
 if (searchInput) {
@@ -701,26 +886,15 @@ if (nearBtn) {
       return;
     }
     navigator.geolocation.getCurrentPosition(pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      userLocation = { lat, lng };
-      map.setView([lat, lng], 14);
-      L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
+      userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      map.setView([userLocation.lat, userLocation.lng], 14);
+      L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("You are here").openPopup();
 
       const nearby = allHouses.filter(h => {
         if (!h.lat || !h.lng) return false;
-        const R = 6371;
-        const dLat = (h.lat - lat) * Math.PI / 180;
-        const dLng = (h.lng - lng) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) ** 2 +
-          Math.cos(lat * Math.PI / 180) *
-          Math.cos(h.lat * Math.PI / 180) *
-          Math.sin(dLng / 2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const dist = R * c;
-        return dist <= 2;
+        const dist = getDistance(userLocation.lat, userLocation.lng, h.lat, h.lng);
+        return dist <= radius;
       });
-
       renderHouses(nearby);
       renderMarkers(nearby);
     });
@@ -748,28 +922,23 @@ if (gpsBtn) {
   });
 }
 
-// Price slider, sort, save search
+// ======================================
+// INITIALIZATION
+// ======================================
+initMap();
 initPriceSlider();
 const sortSelect = document.getElementById('sortSelect');
 if (sortSelect) sortSelect.addEventListener('change', handleSortChange);
 const saveBtn = document.getElementById('saveSearchBtn');
 if (saveBtn) saveBtn.addEventListener('click', saveSearch);
 
-// ======================================
-// INITIAL LOAD
-// ======================================
-initMap();
-
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.has('page')) currentPage = parseInt(urlParams.get('page'));
 if (urlParams.has('type')) {
   currentType = urlParams.get('type');
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    if (btn.dataset.type === currentType) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
+    if (btn.dataset.type === currentType) btn.classList.add('active');
+    else btn.classList.remove('active');
   });
 }
 if (urlParams.has('sort')) currentSort = urlParams.get('sort');
@@ -777,7 +946,7 @@ if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
 
 loadHouses(currentPage, currentType, currentFilters, currentSort);
 
-// Expose functions
+// Expose functions for global use
 window.showDetails = showDetails;
 window.closePropertyModal = closePropertyModal;
 window.toggleFavorite = toggleFavorite;
