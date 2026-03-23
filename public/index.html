@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rental Marketplace | Blantyre Houses</title>
-  <!-- Google Fonts & Leaflet CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -626,6 +625,33 @@
       pointer-events: none;
     }
 
+    /* ========== BLUR FOR UNVERIFIED LANDLORDS ========== */
+    .house-details-blurred {
+      filter: blur(4px);
+      pointer-events: none;
+      transition: filter 0.2s;
+      position: relative;
+    }
+    .house-details-blurred::after {
+      content: "🔒 Upgrade to unlock details";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      z-index: 10;
+      pointer-events: none;
+      backdrop-filter: blur(2px);
+    }
+    .house-details-blurred:hover::after {
+      background: rgba(0,0,0,0.8);
+    }
+
     @media (max-width: 768px) {
       .navbar {
         flex-direction: column;
@@ -670,7 +696,6 @@
 </head>
 <body>
 
-  <!-- NAVBAR -->
   <nav class="navbar">
     <div class="logo" data-i18n="home">🏠 Rental Marketplace</div>
     <div class="nav-links">
@@ -689,15 +714,12 @@
     </div>
   </nav>
 
-  <!-- HERO -->
   <header class="hero">
     <h1 data-i18n="heroTitle">Find Houses & Hostels in Blantyre</h1>
     <p data-i18n="heroSubtitle">Explore verified rentals posted by landlords</p>
   </header>
 
   <main class="main-container">
-
-    <!-- FILTERS -->
     <section class="filters">
       <input type="number" id="priceMin" data-i18n-placeholder="minPrice" placeholder="Min Price">
       <input type="number" id="priceMax" data-i18n-placeholder="maxPrice" placeholder="Max Price">
@@ -717,7 +739,6 @@
       <button id="applyFiltersBtn" data-i18n="applyFilters">Apply Filters</button>
     </section>
 
-    <!-- Amenities filter checkboxes -->
     <section class="amenities-filters">
       <label><input type="checkbox" id="filterWifi"> 📶 WiFi</label>
       <label><input type="checkbox" id="filterParking"> 🅿️ Parking</label>
@@ -725,10 +746,8 @@
       <label><input type="checkbox" id="filterPetFriendly"> 🐾 Pet Friendly</label>
     </section>
 
-    <!-- SEARCH -->
     <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by area or name...">
 
-    <!-- Category Tabs -->
     <div class="category-tabs">
       <button class="tab-btn active" data-type="all">All</button>
       <button class="tab-btn" data-type="House">🏠 Houses</button>
@@ -738,20 +757,16 @@
       <button class="tab-btn" data-type="Office">🏢 Offices</button>
     </div>
 
-    <!-- HOUSES GRID -->
     <h2 style="margin: 1rem 0;" data-i18n="availableProperties">Available Properties</h2>
     <div id="houses-container" data-i18n="loading">Loading houses...</div>
 
-    <!-- Pagination -->
     <div class="pagination" id="pagination"></div>
 
-    <!-- MAP SECTION -->
     <section class="map-section" id="map-section">
       <h2 data-i18n="mapView">📍 Map View</h2>
       <div id="map"></div>
     </section>
 
-    <!-- GPS LOCATOR -->
     <section class="gps-section">
       <h2 data-i18n="gpsLocator">📍 Property GPS Locator</h2>
       <button id="getLocationBtn" data-i18n="captureLocation"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
@@ -759,10 +774,8 @@
       <input type="hidden" id="latitude">
       <input type="hidden" id="longitude">
     </section>
-
   </main>
 
-  <!-- FOOTER -->
   <footer>
     <span data-i18n="copyright">© 2026 Rental Marketplace Malawi</span>
     <br><br>
@@ -772,7 +785,6 @@
     <a href="contact.html" data-i18n="contact">Contact</a>
   </footer>
 
-  <!-- Property Details Modal -->
   <div id="propertyModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:600px;">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
@@ -780,7 +792,6 @@
     </div>
   </div>
 
-  <!-- Booking Modal -->
   <div id="bookingModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:500px;">
       <span class="close-btn" onclick="closeBookingModal()">&times;</span>
@@ -805,7 +816,6 @@
     </div>
   </div>
 
-  <!-- Image Lightbox Modal -->
   <div id="lightboxModal" class="lightbox-modal" style="display: none;">
     <span class="lightbox-close">&times;</span>
     <span class="lightbox-prev">&#10094;</span>
@@ -816,13 +826,11 @@
     <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox variables and functions
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
@@ -858,7 +866,6 @@
       document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`;
     }
 
-    // Attach event listeners after DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
       const modal = document.getElementById('lightboxModal');
       const closeBtn = document.querySelector('.lightbox-close');
@@ -873,11 +880,9 @@
       });
     });
 
-    // Set initial language/theme selectors
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
 
-    // Booking modal functions (will be called from script.js)
     window.openBookingModal = function(houseId, houseName) {
       window.currentBookingHouseId = houseId;
       document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
@@ -891,7 +896,6 @@
       document.getElementById("bookingModal").style.display = "none";
       window.currentBookingHouseId = null;
     };
-    // Booking form submit handler
     document.getElementById("bookingForm").addEventListener("submit", async e => {
       e.preventDefault();
       const token = localStorage.getItem("token");
@@ -929,7 +933,6 @@
       }
     });
 
-    // Expose lightbox functions globally so they can be called from script.js
     window.openLightbox = openLightbox;
   </script>
 </body>

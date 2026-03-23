@@ -201,7 +201,7 @@ function closePropertyModal() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS WITH LIGHTBOX
+// RENDER HOUSE CARDS WITH BLUR FOR UNVERIFIED LANDLORDS
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -296,7 +296,7 @@ function renderHouses(houses) {
       ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')">💬 Chat</button>`
       : '';
 
-    // Build card HTML
+    // Build card HTML – wrap all textual content in a div
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
@@ -306,30 +306,39 @@ function renderHouses(houses) {
         ${landlordInfo}
         ${featuredBadge}
         ${selfContainedBadge}
-        <h3>${house.name}</h3>
-        ${details}
-        ${genderInfo}
-        ${amenitiesHtml}
-        ${unavailableHtml}
-        <p>${shortDesc} ${readMoreBtn}</p>
-        <p>⭐ Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
-        <p><a href="https://wa.me/${house.phone}" target="_blank">WhatsApp Landlord</a></p>
-        ${chatBtn}
-        <button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>
-        ${ratingWidget}
-        ${reportBtn}
+        <div class="house-details-content">
+          <h3>${house.name}</h3>
+          ${details}
+          ${genderInfo}
+          ${amenitiesHtml}
+          ${unavailableHtml}
+          <p>${shortDesc} ${readMoreBtn}</p>
+          <p>⭐ Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
+          <p><a href="https://wa.me/${house.phone}" target="_blank">WhatsApp Landlord</a></p>
+          ${chatBtn}
+          <button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>
+          ${ratingWidget}
+          ${reportBtn}
+        </div>
       </div>
     `;
 
     container.appendChild(card);
 
-    // ========== SLIDER AND LIGHTBOX ==========
+    // ========== Apply blur if landlord is unverified ==========
+    const detailsDiv = card.querySelector('.house-details-content');
+    if (house.owner && house.owner.verificationType === "none") {
+      detailsDiv.classList.add('house-details-blurred');
+    } else {
+      detailsDiv.classList.remove('house-details-blurred');
+    }
+
+    // ========== Slider and Lightbox ==========
     const img = card.querySelector(`#img-${house._id}`);
     if (images.length > 1) {
       const prevBtn = card.querySelector(".prev");
       const nextBtn = card.querySelector(".next");
 
-      // Update current index when changing image
       const updateImage = (newIndex) => {
         currentIndex = newIndex;
         img.src = images[currentIndex];
@@ -359,7 +368,7 @@ function renderHouses(houses) {
       }
     });
 
-    // Rating widget (unchanged)
+    // Rating widget
     if (isLoggedIn) {
       const widget = card.querySelector(".rating-widget");
       if (widget) {
@@ -381,7 +390,6 @@ function renderHouses(houses) {
       }
     }
 
-    // Double-click on card centers map (unchanged)
     card.addEventListener("dblclick", (e) => {
       e.stopPropagation();
       if (house.lat && house.lng) {
@@ -389,7 +397,6 @@ function renderHouses(houses) {
       }
     });
 
-    // Record view on card click (unchanged)
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" })
@@ -644,6 +651,5 @@ if (urlParams.has('type')) {
 }
 loadHouses(currentPage, currentType, currentFilters);
 
-// Expose modal functions globally
 window.showDetails = showDetails;
 window.closePropertyModal = closePropertyModal;
