@@ -10,6 +10,9 @@ let currentUser = null;
 let currentPaymentAction = null;
 let currentHouseId = null;
 
+// Chart variables
+let viewsChart, earningsChart, conversionChart;
+
 // ========== LOADING INDICATOR ==========
 function showLoading() {
   document.getElementById('loadingOverlay').style.display = 'flex';
@@ -28,7 +31,6 @@ async function fetchUser() {
       currentUser = await res.json();
       updateVerificationUI();
       updateProfileCard();
-      // If profile not completed, show modal
       if (!currentUser.profileCompleted) {
         showProfileModal();
       }
@@ -47,7 +49,6 @@ function updateProfileCard() {
 
 // ========== PROFILE MODAL ==========
 function showProfileModal() {
-  // Pre-fill existing data if any
   document.getElementById('profileName').value = currentUser.name || '';
   document.getElementById('profilePhone').value = currentUser.phone || '';
   document.getElementById('profileBusinessName').value = currentUser.businessName || '';
@@ -58,7 +59,6 @@ function showProfileModal() {
 
 function closeProfileModal() {
   document.getElementById('profileModal').style.display = 'none';
-  // If still not completed, you may force logout or show message
   if (!currentUser.profileCompleted) {
     alert('You must complete your profile to use the dashboard.');
     window.location = 'login.html';
@@ -66,7 +66,6 @@ function closeProfileModal() {
 }
 
 function openEditProfile() {
-  // Re‑open modal with current data for editing
   document.getElementById('profileName').value = currentUser.name || '';
   document.getElementById('profilePhone').value = currentUser.phone || '';
   document.getElementById('profileBusinessName').value = currentUser.businessName || '';
@@ -75,7 +74,6 @@ function openEditProfile() {
   document.getElementById('profileModal').style.display = 'block';
 }
 
-// Handle profile form submission
 document.getElementById('profileForm').addEventListener('submit', async e => {
   e.preventDefault();
   showLoading();
@@ -86,7 +84,6 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
   const address = document.getElementById('profileAddress').value;
   const bio = document.getElementById('profileBio').value;
 
-  // Phone validation
   if (!phone.match(/^265[0-9]{9}$/)) {
     alert('Phone number must be 265XXXXXXXXX');
     hideLoading();
@@ -97,7 +94,6 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
   let profilePictureUrl = currentUser.profilePicture || '';
 
   if (profilePictureFile) {
-    // Upload image to Cloudinary via test endpoint
     const imgFormData = new FormData();
     imgFormData.append('image', profilePictureFile);
     try {
@@ -147,7 +143,6 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
   }
 });
 
-// Preview profile picture on file select
 document.getElementById('profilePicture').addEventListener('change', function(e) {
   const file = e.target.files[0];
   const previewDiv = document.getElementById('profilePreview');
@@ -176,8 +171,7 @@ function updateVerificationUI() {
   if (currentUser.subscriptionExpiresAt) {
     const now = new Date();
     const expiry = new Date(currentUser.subscriptionExpiresAt);
-    const diffTime = expiry - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
     if (diffDays > 0) {
       daysLeft = `<span class="days-left"> (${diffDays} days remaining)</span>`;
     } else {
@@ -363,11 +357,76 @@ async function loadMyHouses() {
     document.getElementById("totalHouses").innerText = totalHouses;
     document.getElementById("totalViews").innerText = totalViews;
     document.getElementById("avgRating").innerText = avgRating.toFixed(1);
+    document.getElementById("totalBookings").innerText = houses.reduce((sum, h) => sum + (h.bookings || 0), 0);
 
     renderHouses(houses);
     loadBookingRequests();
+    loadHouseStats(); // fetch analytics
   } catch (err) {
     console.error("Error loading houses:", err);
+  }
+}
+
+// ========== ANALYTICS: CHARTS & INSIGHTS ==========
+async function loadHouseStats() {
+  if (!myHouses.length) return;
+  const house = myHouses[0]; // For demo, use the first house
+  try {
+    const res = await fetch(`/api/houses/stats/${house._id}`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const data = await res.json();
+    const viewsData = data.views; // array of { date, views }
+
+    const labels = viewsData.map(d => d.date);
+    const views = viewsData.map(d => d.views);
+
+    if (viewsChart) viewsChart.destroy();
+    const ctx = document.getElementById('viewsChart').getContext('2d');
+    viewsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Views',
+          data: views,
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52,152,219,0.1)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: true }
+    });
+
+    // Mock earnings and conversion data (replace with real data)
+    const earningsData = [10000, 15000, 8000, 20000];
+    const conversionData = [5, 10, 8, 12];
+
+    if (earningsChart) earningsChart.destroy();
+    earningsChart = new Chart(document.getElementById('earningsChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{ label: 'Earnings (MWK)', data: earningsData, backgroundColor: '#2ecc71' }]
+      }
+    });
+
+    if (conversionChart) conversionChart.destroy();
+    conversionChart = new Chart(document.getElementById('conversionChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Converted', 'Not Converted'],
+        datasets: [{ data: [conversionData[0], 100 - conversionData[0]], backgroundColor: ['#f1c40f', '#95a5a6'] }]
+      }
+    });
+
+    // Generate insight
+    const avgViews = views.reduce((a,b)=>a+b,0)/views.length;
+    const insightText = `📈 Your listing is viewed ${avgViews > 20 ? '30% more' : '20% less'} than similar houses in your area. ${avgViews > 20 ? 'Great job! Consider adding more photos.' : 'Try adding better descriptions to improve visibility.'}`;
+    document.getElementById('insightText').innerText = insightText;
+  } catch (err) {
+    console.error("Error loading stats:", err);
   }
 }
 
@@ -444,6 +503,8 @@ function openEditModal(houseId) {
   document.getElementById("editParking").checked = house.parking || false;
   document.getElementById("editFurnished").checked = house.furnished || false;
   document.getElementById("editPetFriendly").checked = house.petFriendly || false;
+  document.getElementById("editPool").checked = house.pool || false;
+  document.getElementById("editAC").checked = house.ac || false;
   document.getElementById("editGender").value = house.gender || 'none';
   document.getElementById("editSelfContained").checked = house.selfContained || false;
 
@@ -529,7 +590,6 @@ document.getElementById("editForm").addEventListener("submit", async e => {
 });
 
 // ========== IMAGE PREVIEW & FORM VALIDATION ==========
-// Image preview for house upload
 document.querySelector('input[name="images"]').addEventListener('change', function(e) {
   const preview = document.getElementById('imagePreview');
   preview.innerHTML = '';
@@ -554,11 +614,9 @@ document.querySelector('input[name="images"]').addEventListener('change', functi
   });
 });
 
-// Form validation before upload
 document.getElementById("houseForm").addEventListener("submit", async e => {
   e.preventDefault();
 
-  // Validate required fields
   const name = document.querySelector('input[name="name"]').value.trim();
   const location = document.querySelector('input[name="location"]').value.trim();
   const price = document.querySelector('input[name="price"]').value;
@@ -584,7 +642,7 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
     if (res.ok) {
       alert("✅ House uploaded successfully!");
       e.target.reset();
-      document.getElementById('imagePreview').innerHTML = ''; // clear preview
+      document.getElementById('imagePreview').innerHTML = '';
       if (marker) map.removeLayer(marker);
       loadMyHouses();
     } else {
@@ -670,13 +728,11 @@ async function updateBooking(bookingId, status) {
   }
 }
 
-// Initialize everything
 initMap();
 fetchUser();
 loadMyHouses();
 loadUnreadCount();
 
-// Expose functions globally
 window.payForVerification = payForVerification;
 window.featureHouse = featureHouse;
 window.processPayment = processPayment;

@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ========== THEME VARIABLES ========== */
+    /* Theme variables (same as index) */
     body.theme-light {
       --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       --navbar-bg: rgba(255,255,255,0.95);
@@ -69,78 +69,33 @@
     body {
       background: var(--bg-gradient);
       color: var(--text-color);
-      min-height: 100vh;
       transition: background 0.3s, color 0.3s;
     }
 
-    /* Navbar */
     .navbar {
-      background: var(--navbar-bg);
-      backdrop-filter: blur(8px);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-    .logo {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--text-color);
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .nav-links a {
-      color: var(--text-color);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover {
-      color: #3498db;
-    }
-    .logout-btn {
-      background: rgba(255,255,255,0.2);
-      padding: 0.5rem 1rem;
-      border-radius: 30px;
-    }
-    .lang-select, .theme-select {
-      padding: 0.3rem 0.8rem;
-      border-radius: 30px;
-      border: 1px solid var(--input-border);
-      background: var(--input-bg);
-      color: var(--text-color);
-      cursor: pointer;
-      font-size: 0.9rem;
+      background: var(--navbar-bg) !important;
+      backdrop-filter: blur(5px);
     }
 
-    /* Main container */
     .main-container {
       max-width: 1400px;
       margin: 2rem auto;
       padding: 0 2rem;
     }
+
     h1 {
-      font-size: 2rem;
+      font-size: 2.2rem;
       margin-bottom: 1.5rem;
       color: var(--text-color);
-      font-weight: 700;
     }
 
-    /* Stats grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
+
     .stat-card {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -155,7 +110,7 @@
       box-shadow: 0 12px 28px rgba(0,0,0,0.1);
     }
     .stat-card h3 {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--text-color);
@@ -174,7 +129,6 @@
       margin-top: 0.5rem;
     }
 
-    /* Charts row */
     .charts-row {
       display: grid;
       grid-template-columns: 2fr 1fr;
@@ -202,7 +156,6 @@
       width: 100% !important;
     }
 
-    /* Tables */
     .table-card {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -252,7 +205,6 @@
     .badge.premium { background: #f1c40f; color: #2c3e50; }
     .badge.featured { background: gold; color: #2c3e50; }
 
-    /* Action buttons */
     .action-btn {
       border: none;
       padding: 0.4rem 0.8rem;
@@ -272,7 +224,6 @@
       transform: scale(0.98);
     }
 
-    /* Footer */
     footer {
       text-align: center;
       padding: 2rem;
@@ -291,18 +242,54 @@
       text-decoration: underline;
     }
 
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .nav-links a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+    }
+    .lang-select, .theme-select {
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      border: 1px solid #ccc;
+      background: white;
+      color: #2c3e50;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
     @media (max-width: 900px) {
-      .charts-row {
-        grid-template-columns: 1fr;
-      }
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .charts-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 600px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
+      .stats-grid { grid-template-columns: 1fr; }
       .navbar {
         flex-direction: column;
         align-items: flex-start;
@@ -337,7 +324,6 @@
   <div class="main-container">
     <h1 data-i18n="dashboardOverview">Dashboard Overview</h1>
 
-    <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card">
         <h3 data-i18n="totalLandlords">Total Landlords</h3>
@@ -361,7 +347,6 @@
       </div>
     </div>
 
-    <!-- Charts -->
     <div class="charts-row">
       <div class="chart-card">
         <h2 data-i18n="housesPerMonth">📊 Houses Posted per Month</h2>
@@ -373,18 +358,30 @@
       </div>
     </div>
 
+    <!-- Real-time Stats -->
+    <div class="table-card">
+      <h2>📡 Real‑time Monitoring</h2>
+      <div class="stats-grid" id="realtimeStats" style="grid-template-columns: repeat(4,1fr); margin:0;">
+        <div class="stat-card"><h3>Active Users (last 15 min)</h3><div class="value" id="activeUsers">0</div></div>
+        <div class="stat-card"><h3>New Listings Today</h3><div class="value" id="newListings">0</div></div>
+        <div class="stat-card"><h3>Revenue Today</h3><div class="value" id="revenueToday">0</div></div>
+        <div class="stat-card"><h3>Total Houses</h3><div class="value" id="totalHousesAdmin">0</div></div>
+      </div>
+      <button id="exportCsvBtn" class="action-btn" style="background:#27ae60; margin-top:10px;">📥 Export Houses (CSV)</button>
+    </div>
+
     <!-- Landlords Table -->
     <div class="table-card">
       <h2 data-i18n="landlordManagement">🧑‍💼 Landlord Management</h2>
       <div style="overflow-x: auto;">
          <table>
           <thead>
-            <tr>
+             <tr>
               <th data-i18n="name">Name</th>
               <th data-i18n="email">Email</th>
               <th data-i18n="verification">Verification</th>
               <th data-i18n="actions">Actions</th>
-            </tr>
+             </tr>
           </thead>
           <tbody id="landlordsTable">
             <tr><td colspan="4" style="text-align:center;">Loading landlords...</td></tr>
@@ -399,14 +396,14 @@
       <div style="overflow-x: auto;">
         <table>
           <thead>
-            <tr>
+             <tr>
               <th data-i18n="house">House</th>
               <th data-i18n="location">Location</th>
               <th data-i18n="price">Price</th>
               <th data-i18n="owner">Owner</th>
               <th data-i18n="featured">Featured</th>
               <th data-i18n="actions">Actions</th>
-            </tr>
+             </tr>
           </thead>
           <tbody id="housesTable">
             <tr><td colspan="6" style="text-align:center;">Loading houses...</td></tr>
@@ -421,7 +418,7 @@
       <div style="overflow-x: auto;">
         <table>
           <thead>
-            <tr>
+             <tr>
               <th data-i18n="reporter">Reporter</th>
               <th data-i18n="landlord">Landlord</th>
               <th data-i18n="house">House</th>
@@ -429,13 +426,27 @@
               <th data-i18n="date">Date</th>
               <th data-i18n="status">Status</th>
               <th data-i18n="actions">Action</th>
-            </tr>
+             </tr>
           </thead>
           <tbody id="reportsTable">
             <tr><td colspan="7" style="text-align:center;">Loading reports...</td></tr>
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Activity Logs Table -->
+    <div class="table-card">
+      <h2>📜 User Activity Logs</h2>
+      <div style="overflow-x: auto;">
+        <table id="activityLogsTable">
+          <thead>
+            <tr><th>User</th><th>Action</th><th>Details</th><th>IP</th><th>Date</th></tr>
+          </thead>
+          <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="logsPagination"></div>
     </div>
   </div>
 
