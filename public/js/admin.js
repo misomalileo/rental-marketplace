@@ -1,6 +1,4 @@
-const API = "http://localhost:5000/api/admin";
 const token = localStorage.getItem("token");
-
 console.log("🔐 Token from localStorage:", token ? "exists" : "missing");
 
 if (!token) {
@@ -10,13 +8,14 @@ if (!token) {
 
 let housesChart, verificationChart;
 
+const API_BASE = "/api/admin";
+
 async function loadStats() {
   console.log("📊 Loading stats...");
   try {
-    const res = await fetch(API + "/stats", {
+    const res = await fetch(`${API_BASE}/stats`, {
       headers: { Authorization: "Bearer " + token }
     });
-    console.log("📡 Stats response status:", res.status);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const stats = await res.json();
     console.log("📈 Stats data:", stats);
@@ -28,9 +27,11 @@ async function loadStats() {
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const chartData = new Array(12).fill(0);
-    stats.housesPerMonth.forEach(item => {
-      chartData[item._id - 1] = item.count;
-    });
+    if (stats.housesPerMonth) {
+      stats.housesPerMonth.forEach(item => {
+        chartData[item._id - 1] = item.count;
+      });
+    }
 
     const ctx1 = document.getElementById('housesChart').getContext('2d');
     if (housesChart) housesChart.destroy();
@@ -63,9 +64,9 @@ async function loadStats() {
         labels: ['None', 'Official', 'Premium'],
         datasets: [{
           data: [
-            stats.totalLandlords - stats.officialLandlords - stats.premiumLandlords,
-            stats.officialLandlords,
-            stats.premiumLandlords
+            stats.totalLandlords - (stats.officialLandlords || 0) - (stats.premiumLandlords || 0),
+            stats.officialLandlords || 0,
+            stats.premiumLandlords || 0
           ],
           backgroundColor: ['#bdc3c7', '#2ecc71', '#f1c40f'],
           borderWidth: 0
@@ -88,10 +89,9 @@ async function loadStats() {
 async function loadLandlords() {
   console.log("👥 Loading landlords...");
   try {
-    const res = await fetch(API + "/landlords", {
+    const res = await fetch(`${API_BASE}/landlords`, {
       headers: { Authorization: "Bearer " + token }
     });
-    console.log("📡 Landlords response status:", res.status);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const users = await res.json();
     console.log("👤 Landlords count:", users.length);
@@ -101,14 +101,14 @@ async function loadLandlords() {
       const row = document.createElement("tr");
       const badgeClass = user.verificationType || 'none';
       row.innerHTML = `
-        <td>${user.name}</td>
-        <td>${user.email}</td>
-        <td><span class="badge ${badgeClass}">${user.verificationType}</span></td>
-        <td>
+         td>${user.name}</td>
+         td>${user.email}</td>
+         td><span class="badge ${badgeClass}">${user.verificationType}</span></td>
+         td>
           <button class="action-btn verify" onclick="verifyUser('${user._id}', 'official')">✔ Official</button>
           <button class="action-btn premium" onclick="verifyUser('${user._id}', 'premium')">⭐ Premium</button>
           <button class="action-btn ban" onclick="banUser('${user._id}')">🚫 Ban</button>
-        </td>
+         </td>
       `;
       tbody.appendChild(row);
     });
@@ -121,7 +121,7 @@ async function loadLandlords() {
 async function verifyUser(id, type) {
   console.log(`✅ Verifying user ${id} as ${type}...`);
   try {
-    const res = await fetch(API + "/verify/" + id, {
+    const res = await fetch(`${API_BASE}/verify/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -129,7 +129,6 @@ async function verifyUser(id, type) {
       },
       body: JSON.stringify({ type })
     });
-    console.log("📡 Verify response status:", res.status);
     const data = await res.json();
     if (res.ok) {
       alert(data.message);
@@ -148,11 +147,10 @@ async function banUser(id) {
   console.log(`🚫 Banning user ${id}...`);
   if (!confirm("Ban landlord? This will delete all their houses.")) return;
   try {
-    const res = await fetch(API + "/ban/" + id, {
+    const res = await fetch(`${API_BASE}/ban/${id}`, {
       method: "DELETE",
       headers: { Authorization: "Bearer " + token }
     });
-    console.log("📡 Ban response status:", res.status);
     const data = await res.json();
     if (res.ok) {
       alert(data.message);
@@ -171,10 +169,9 @@ async function banUser(id) {
 async function loadHouses() {
   console.log("🏠 Loading houses...");
   try {
-    const res = await fetch(API + "/houses", {
+    const res = await fetch(`${API_BASE}/houses`, {
       headers: { Authorization: "Bearer " + token }
     });
-    console.log("📡 Houses response status:", res.status);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const houses = await res.json();
     console.log("🏡 Houses count:", houses.length);
@@ -183,17 +180,17 @@ async function loadHouses() {
     houses.forEach(h => {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${h.name}</td>
-        <td>${h.location || 'N/A'}</td>
-        <td>MWK ${h.price?.toLocaleString()}</td>
-        <td>${h.owner?.name || 'Unknown'}</td>
-        <td><span class="badge ${h.featured ? 'premium' : 'none'}">${h.featured ? '⭐ Yes' : 'No'}</span></td>
-        <td>
+         td>${h.name}</td>
+         td>${h.location || 'N/A'}</td>
+         td>MWK ${h.price?.toLocaleString()}</td>
+         td>${h.owner?.name || 'Unknown'}</td>
+         td><span class="badge ${h.featured ? 'premium' : 'none'}">${h.featured ? '⭐ Yes' : 'No'}</span></td>
+         td>
           <button class="action-btn ${h.featured ? 'verify' : 'premium'}" onclick="toggleFeatured('${h._id}')">
             ${h.featured ? '❌ Remove' : '⭐ Make Featured'}
           </button>
           <button class="action-btn delete" onclick="deleteHouse('${h._id}')">🗑 Delete</button>
-        </td>
+         </td>
       `;
       tbody.appendChild(row);
     });
@@ -206,11 +203,10 @@ async function loadHouses() {
 async function toggleFeatured(id) {
   console.log(`⭐ Toggling featured for house ${id}...`);
   try {
-    const res = await fetch(API + "/house/" + id + "/toggle-featured", {
+    const res = await fetch(`${API_BASE}/house/${id}/toggle-featured`, {
       method: "PUT",
       headers: { Authorization: "Bearer " + token }
     });
-    console.log("📡 Toggle featured response status:", res.status);
     if (res.ok) {
       loadHouses();
     } else {
@@ -227,11 +223,10 @@ async function deleteHouse(id) {
   console.log(`🗑️ Deleting house ${id}...`);
   if (!confirm("Delete this house?")) return;
   try {
-    const res = await fetch(API + "/house/" + id, {
+    const res = await fetch(`${API_BASE}/house/${id}`, {
       method: "DELETE",
       headers: { Authorization: "Bearer " + token }
     });
-    console.log("📡 Delete response status:", res.status);
     if (res.ok) {
       loadHouses();
       loadStats();
@@ -248,10 +243,9 @@ async function deleteHouse(id) {
 async function loadReports() {
   console.log("📝 Loading reports...");
   try {
-    const res = await fetch(API + "/reports", {
+    const res = await fetch(`${API_BASE}/reports`, {
       headers: { Authorization: "Bearer " + token }
     });
-    console.log("📡 Reports response status:", res.status);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const reports = await res.json();
     const tbody = document.getElementById("reportsTable");
@@ -259,17 +253,17 @@ async function loadReports() {
     reports.forEach(r => {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${r.reporter?.name || 'Unknown'}</td>
-        <td>${r.landlord?.name || 'N/A'}</td>
-        <td>${r.house?.name || 'N/A'}</td>
-        <td>${r.reason}</td>
-        <td>${new Date(r.createdAt).toLocaleDateString()}</td>
-        <td><span class="badge ${r.status === 'pending' ? 'none' : 'official'}">${r.status}</span></td>
-        <td>
+         td>${r.reporter?.name || 'Unknown'}</td>
+         td>${r.landlord?.name || 'N/A'}</td>
+         td>${r.house?.name || 'N/A'}</td>
+         td>${r.reason}</td>
+         td>${new Date(r.createdAt).toLocaleDateString()}</td>
+         td><span class="badge ${r.status === 'pending' ? 'none' : 'official'}">${r.status}</span></td>
+         td>
           ${r.status === 'pending' 
             ? `<button class="action-btn verify" onclick="resolveReport('${r._id}')">✔ Resolve</button>` 
             : 'Resolved'}
-        </td>
+         </td>
       `;
       tbody.appendChild(row);
     });
@@ -282,11 +276,10 @@ async function loadReports() {
 async function resolveReport(id) {
   console.log(`✅ Resolving report ${id}...`);
   try {
-    const res = await fetch(API + "/report/" + id + "/resolve", {
+    const res = await fetch(`${API_BASE}/report/${id}/resolve`, {
       method: "PUT",
       headers: { Authorization: "Bearer " + token }
     });
-    console.log("📡 Resolve response status:", res.status);
     if (res.ok) {
       loadReports();
     } else {
@@ -304,3 +297,10 @@ loadStats();
 loadLandlords();
 loadHouses();
 loadReports();
+
+// Expose functions for onclick
+window.verifyUser = verifyUser;
+window.banUser = banUser;
+window.toggleFeatured = toggleFeatured;
+window.deleteHouse = deleteHouse;
+window.resolveReport = resolveReport;
