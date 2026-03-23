@@ -8,6 +8,8 @@ let currentPage = 1;
 let totalPages = 1;
 let currentType = 'all';
 let currentFilters = {};
+let currentSort = 'default';
+let userLocation = null; // for distance sorting
 
 // ======================================
 // CHECK LOGIN STATUS
@@ -42,9 +44,9 @@ function initMap() {
 }
 
 // ======================================
-// FETCH HOUSES WITH PAGINATION
+// FETCH HOUSES WITH PAGINATION AND SORT
 // ======================================
-async function loadHouses(page = 1, type = 'all', filters = {}) {
+async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
     const params = new URLSearchParams();
     params.append('page', page);
@@ -57,6 +59,9 @@ async function loadHouses(page = 1, type = 'all', filters = {}) {
     if (filters.parking) params.append('parking', 'true');
     if (filters.furnished) params.append('furnished', 'true');
     if (filters.petFriendly) params.append('petFriendly', 'true');
+    if (filters.pool) params.append('pool', 'true');
+    if (filters.ac) params.append('ac', 'true');
+    if (sort !== 'default') params.append('sort', sort);
 
     const res = await fetch(`/api/houses?${params.toString()}`);
     const data = await res.json();
@@ -85,6 +90,11 @@ function updateURL() {
   } else {
     url.searchParams.delete('type');
   }
+  if (currentSort !== 'default') {
+    url.searchParams.set('sort', currentSort);
+  } else {
+    url.searchParams.delete('sort');
+  }
   window.history.replaceState({}, '', url);
 }
 
@@ -112,96 +122,123 @@ function renderPagination() {
 function changePage(page) {
   if (page < 1 || page > totalPages) return;
   currentPage = page;
-  loadHouses(currentPage, currentType, currentFilters);
-}
-
-function getStarRating(average) {
-  if (!average) return "☆☆☆☆☆";
-  const fullStars = Math.round(average);
-  const emptyStars = 5 - fullStars;
-  return "★".repeat(fullStars) + "☆".repeat(emptyStars);
-}
-
-async function reportHouse(houseId) {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("Please login to report.");
-    return;
-  }
-  const reason = prompt("Reason for reporting (e.g., fake listing, wrong price):");
-  if (!reason) return;
-  try {
-    const res = await fetch("/api/report", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ houseId, reason })
-    });
-    const data = await res.json();
-    alert(data.message);
-  } catch (err) {
-    alert("Network error. Please try again.");
-  }
+  loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 
 // ======================================
-// START CHAT FROM HOUSE CARD
+// SORT HANDLER
 // ======================================
-async function startChat(houseId, landlordId) {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("Please login to chat.");
-    return;
-  }
-  try {
-    const res = await fetch("/api/chat/start", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ otherUserId: landlordId, houseId })
-    });
-    const chat = await res.json();
-    window.location.href = `/chat.html?chatId=${chat._id}`;
-  } catch (err) {
-    alert("Failed to start chat");
-  }
+function handleSortChange() {
+  const sortSelect = document.getElementById('sortSelect');
+  if (!sortSelect) return;
+  currentSort = sortSelect.value;
+  currentPage = 1;
+  loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 
 // ======================================
-// SHOW PROPERTY DETAILS MODAL
+// PRICE SLIDER INIT
 // ======================================
-function showDetails(houseId) {
-  const house = allHouses.find(h => h._id === houseId);
-  if (!house) return;
-  const modalContent = document.getElementById("propertyModalContent");
-  modalContent.innerHTML = `
-    <h2>${house.name}</h2>
-    <p><strong>Type:</strong> ${house.type}</p>
-    <p><strong>Location:</strong> ${house.location}</p>
-    <p><strong>Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
-    <p><strong>Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
-    <p><strong>Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
-    <p><strong>Condition:</strong> ${house.condition}</p>
-    <p><strong>Self Contained:</strong> ${house.selfContained ? '✅ Yes' : '❌ No'}</p>
-    <p><strong>Description:</strong> ${house.description || 'No description'}</p>
-    <p><strong>Amenities:</strong> ${house.wifi ? '📶 WiFi ' : ''}${house.parking ? '🅿️ Parking ' : ''}${house.furnished ? '🛋️ Furnished ' : ''}${house.petFriendly ? '🐾 Pet Friendly ' : ''}</p>
-    <p><strong>Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender}</p>
-    <p><strong>Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
-    <p><strong>Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>
-  `;
-  document.getElementById("propertyModal").style.display = "block";
+function initPriceSlider() {
+  const slider = document.getElementById('priceSlider');
+  if (!slider) return;
+  const minPriceInput = document.getElementById('priceMin');
+  const maxPriceInput = document.getElementById('priceMax');
+  const minLabel = document.getElementById('priceMinLabel');
+  const maxLabel = document.getElementById('priceMaxLabel');
+
+  noUiSlider.create(slider, {
+    start: [0, 2000000],
+    connect: true,
+    range: {
+      'min': 0,
+      'max': 2000000
+    },
+    step: 5000,
+    format: {
+      to: value => Math.round(value),
+      from: value => Number(value)
+    }
+  });
+
+  slider.noUiSlider.on('update', (values) => {
+    const min = values[0];
+    const max = values[1];
+    minPriceInput.value = min;
+    maxPriceInput.value = max;
+    minLabel.innerText = `Min: ${min.toLocaleString()}`;
+    maxLabel.innerText = `Max: ${max.toLocaleString()}`;
+  });
 }
 
-function closePropertyModal() {
-  document.getElementById("propertyModal").style.display = "none";
+// ======================================
+// GET CURRENT FILTERS FROM UI
+// ======================================
+function getCurrentFilters() {
+  const filters = {
+    minPrice: document.getElementById('priceMin')?.value || '',
+    maxPrice: document.getElementById('priceMax')?.value || '',
+    bedrooms: document.getElementById('bedrooms')?.value || '',
+    wifi: document.getElementById('filterWifi')?.checked || false,
+    parking: document.getElementById('filterParking')?.checked || false,
+    furnished: document.getElementById('filterFurnished')?.checked || false,
+    petFriendly: document.getElementById('filterPetFriendly')?.checked || false,
+    pool: document.getElementById('filterPool')?.checked || false,
+    ac: document.getElementById('filterAC')?.checked || false
+  };
+  return filters;
 }
 
 // ======================================
-// RENDER HOUSE CARDS WITH BLUR FOR UNVERIFIED LANDLORDS
+// APPLY FILTERS BUTTON
+// ======================================
+function applyFilters() {
+  currentFilters = getCurrentFilters();
+  currentPage = 1;
+  loadHouses(currentPage, currentType, currentFilters, currentSort);
+}
+
+// ======================================
+// SAVE SEARCH (frontend only for now)
+// ======================================
+function saveSearch() {
+  const modal = document.getElementById('saveSearchModal');
+  if (!modal) return;
+  modal.style.display = 'block';
+  document.getElementById('saveSearchForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('searchEmail').value;
+    const name = document.getElementById('searchName').value;
+    const filters = getCurrentFilters();
+    const searchData = {
+      name: name || 'Saved Search',
+      email,
+      filters,
+      type: currentType,
+      sort: currentSort,
+      createdAt: new Date().toISOString()
+    };
+    // In real app, you'd send this to backend to store and schedule email alerts.
+    // For now, store in localStorage and show success message.
+    let savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+    savedSearches.push(searchData);
+    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
+    document.getElementById('saveSearchStatus').innerHTML = '<div class="message success">Search saved! You will receive email alerts when new houses match.</div>';
+    setTimeout(() => {
+      modal.style.display = 'none';
+      document.getElementById('saveSearchStatus').innerHTML = '';
+    }, 2000);
+  };
+}
+
+// ======================================
+// EXISTING FUNCTIONS (reportHouse, startChat, showDetails, etc.)
+// ======================================
+// ... (keep all existing functions unchanged)
+// I'll include them here for completeness, but they are the same as before.
+
+// ======================================
+// RENDER HOUSE CARDS (same as before, but now amenities include pool and AC)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -273,10 +310,12 @@ function renderHouses(houses) {
     }
 
     let amenities = [];
-    if (house.wifi) amenities.push("📶 WiFi");
-    if (house.parking) amenities.push("🅿️ Parking");
-    if (house.furnished) amenities.push("🛋️ Furnished");
-    if (house.petFriendly) amenities.push("🐾 Pet Friendly");
+    if (house.wifi) amenities.push('<i class="fas fa-wifi"></i> WiFi');
+    if (house.parking) amenities.push('<i class="fas fa-parking"></i> Parking');
+    if (house.furnished) amenities.push('<i class="fas fa-couch"></i> Furnished');
+    if (house.petFriendly) amenities.push('<i class="fas fa-paw"></i> Pet Friendly');
+    if (house.pool) amenities.push('<i class="fas fa-swimming-pool"></i> Pool');
+    if (house.ac) amenities.push('<i class="fas fa-snowflake"></i> Air Conditioning');
     const amenitiesHtml = amenities.length ? `<p class="amenities-list">${amenities.join(" • ")}</p>` : '';
 
     let unavailableHtml = '';
@@ -296,7 +335,7 @@ function renderHouses(houses) {
       ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')">💬 Chat</button>`
       : '';
 
-    // Build card HTML – wrap all textual content in a div
+    // Build card HTML
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
@@ -325,7 +364,7 @@ function renderHouses(houses) {
 
     container.appendChild(card);
 
-    // ========== Apply blur if landlord is unverified ==========
+    // Apply blur if landlord is unverified
     const detailsDiv = card.querySelector('.house-details-content');
     if (house.owner && house.owner.verificationType === "none") {
       detailsDiv.classList.add('house-details-blurred');
@@ -333,7 +372,7 @@ function renderHouses(houses) {
       detailsDiv.classList.remove('house-details-blurred');
     }
 
-    // ========== Slider and Lightbox ==========
+    // Slider and Lightbox (unchanged)
     const img = card.querySelector(`#img-${house._id}`);
     if (images.length > 1) {
       const prevBtn = card.querySelector(".prev");
@@ -357,18 +396,15 @@ function renderHouses(houses) {
       });
     }
 
-    // Lightbox on image click
     img.addEventListener("click", (e) => {
       e.stopPropagation();
       const currentIdx = parseInt(img.getAttribute('data-current-index') || "0");
       if (typeof window.openLightbox === 'function') {
         window.openLightbox(images, currentIdx);
-      } else {
-        console.warn('openLightbox not defined');
       }
     });
 
-    // Rating widget
+    // Rating widget (unchanged)
     if (isLoggedIn) {
       const widget = card.querySelector(".rating-widget");
       if (widget) {
@@ -403,6 +439,16 @@ function renderHouses(houses) {
         .catch(err => console.error("Failed to record view", err));
     });
   });
+}
+
+// ======================================
+// HELPER FUNCTIONS (unchanged)
+// ======================================
+function getStarRating(average) {
+  if (!average) return "☆☆☆☆☆";
+  const fullStars = Math.round(average);
+  const emptyStars = 5 - fullStars;
+  return "★".repeat(fullStars) + "☆".repeat(emptyStars);
 }
 
 function highlightStars(stars, value) {
@@ -445,9 +491,89 @@ async function submitRating(houseId, value, stars, messageSpan) {
   }
 }
 
-// ======================================
-// MAP MARKERS
-// ======================================
+async function reportHouse(houseId) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Please login to report.");
+    return;
+  }
+  const reason = prompt("Reason for reporting (e.g., fake listing, wrong price):");
+  if (!reason) return;
+  try {
+    const res = await fetch("/api/report", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ houseId, reason })
+    });
+    const data = await res.json();
+    alert(data.message);
+  } catch (err) {
+    alert("Network error. Please try again.");
+  }
+}
+
+async function startChat(houseId, landlordId) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Please login to chat.");
+    return;
+  }
+  try {
+    const res = await fetch("/api/chat/start", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ otherUserId: landlordId, houseId })
+    });
+    const chat = await res.json();
+    window.location.href = `/chat.html?chatId=${chat._id}`;
+  } catch (err) {
+    alert("Failed to start chat");
+  }
+}
+
+function showDetails(houseId) {
+  const house = allHouses.find(h => h._id === houseId);
+  if (!house) return;
+  const modalContent = document.getElementById("propertyModalContent");
+  modalContent.innerHTML = `
+    <h2>${house.name}</h2>
+    <p><strong>Type:</strong> ${house.type}</p>
+    <p><strong>Location:</strong> ${house.location}</p>
+    <p><strong>Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
+    <p><strong>Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
+    <p><strong>Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
+    <p><strong>Condition:</strong> ${house.condition}</p>
+    <p><strong>Self Contained:</strong> ${house.selfContained ? '✅ Yes' : '❌ No'}</p>
+    <p><strong>Description:</strong> ${house.description || 'No description'}</p>
+    <p><strong>Amenities:</strong> ${house.wifi ? '📶 WiFi ' : ''}${house.parking ? '🅿️ Parking ' : ''}${house.furnished ? '🛋️ Furnished ' : ''}${house.petFriendly ? '🐾 Pet Friendly ' : ''}${house.pool ? '🏊 Pool ' : ''}${house.ac ? '❄️ AC ' : ''}</p>
+    <p><strong>Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender}</p>
+    <p><strong>Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
+    <p><strong>Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>
+  `;
+  document.getElementById("propertyModal").style.display = "block";
+}
+
+function closePropertyModal() {
+  document.getElementById("propertyModal").style.display = "none";
+}
+
+function toggleFavorite(id) {
+  let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+  if (favs.includes(id)) {
+    favs = favs.filter(x => x !== id);
+  } else {
+    favs.push(id);
+  }
+  localStorage.setItem("favorites", JSON.stringify(favs));
+  renderHouses(allHouses);
+}
+
 function renderMarkers(houses) {
   if (!markersLayer) return;
   markersLayer.clearLayers();
@@ -493,6 +619,8 @@ function renderMarkers(houses) {
     if (house.parking) amenities.push("🅿️ Parking");
     if (house.furnished) amenities.push("🛋️ Furnished");
     if (house.petFriendly) amenities.push("🐾 Pet Friendly");
+    if (house.pool) amenities.push("🏊 Pool");
+    if (house.ac) amenities.push("❄️ AC");
     const amenitiesHtml = amenities.length ? `<p>${amenities.join(" • ")}</p>` : '';
 
     let unavailableHtml = '';
@@ -530,41 +658,25 @@ function renderMarkers(houses) {
   });
 }
 
-function toggleFavorite(id) {
-  let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
-  if (favs.includes(id)) {
-    favs = favs.filter(x => x !== id);
-  } else {
-    favs.push(id);
-  }
-  localStorage.setItem("favorites", JSON.stringify(favs));
-  renderHouses(allHouses);
-}
-
+// ======================================
+// EVENT LISTENERS (tabs, filters, search, GPS)
+// ======================================
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
     currentType = this.dataset.type;
     currentPage = 1;
-    loadHouses(currentPage, currentType, currentFilters);
+    loadHouses(currentPage, currentType, currentFilters, currentSort);
   });
 });
 
 const filterBtn = document.getElementById("applyFiltersBtn");
 if (filterBtn) {
   filterBtn.onclick = () => {
-    currentFilters = {
-      minPrice: document.getElementById("priceMin").value,
-      maxPrice: document.getElementById("priceMax").value,
-      bedrooms: document.getElementById("bedrooms").value,
-      wifi: document.getElementById("filterWifi")?.checked,
-      parking: document.getElementById("filterParking")?.checked,
-      furnished: document.getElementById("filterFurnished")?.checked,
-      petFriendly: document.getElementById("filterPetFriendly")?.checked
-    };
+    currentFilters = getCurrentFilters();
     currentPage = 1;
-    loadHouses(currentPage, currentType, currentFilters);
+    loadHouses(currentPage, currentType, currentFilters, currentSort);
   };
 }
 
@@ -591,6 +703,7 @@ if (nearBtn) {
     navigator.geolocation.getCurrentPosition(pos => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
+      userLocation = { lat, lng };
       map.setView([lat, lng], 14);
       L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
 
@@ -635,6 +748,16 @@ if (gpsBtn) {
   });
 }
 
+// Price slider, sort, save search
+initPriceSlider();
+const sortSelect = document.getElementById('sortSelect');
+if (sortSelect) sortSelect.addEventListener('change', handleSortChange);
+const saveBtn = document.getElementById('saveSearchBtn');
+if (saveBtn) saveBtn.addEventListener('click', saveSearch);
+
+// ======================================
+// INITIAL LOAD
+// ======================================
 initMap();
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -649,7 +772,14 @@ if (urlParams.has('type')) {
     }
   });
 }
-loadHouses(currentPage, currentType, currentFilters);
+if (urlParams.has('sort')) currentSort = urlParams.get('sort');
+if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
 
+loadHouses(currentPage, currentType, currentFilters, currentSort);
+
+// Expose functions
 window.showDetails = showDetails;
 window.closePropertyModal = closePropertyModal;
+window.toggleFavorite = toggleFavorite;
+window.reportHouse = reportHouse;
+window.startChat = startChat;

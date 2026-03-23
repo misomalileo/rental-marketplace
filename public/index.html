@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- noUiSlider for price range -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
@@ -148,12 +150,20 @@
     }
 
     /* ---------- FILTERS & SEARCH ---------- */
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      justify-content: space-between;
+      align-items: center;
+    }
     .filters {
       display: flex;
       flex-wrap: wrap;
       gap: 0.75rem;
-      margin: 2rem 0;
       justify-content: center;
+      flex: 1;
     }
     .filters input,
     .filters select,
@@ -183,6 +193,44 @@
       background: var(--button-hover);
     }
 
+    /* Price range slider container */
+    .price-range {
+      min-width: 200px;
+      background: var(--input-bg);
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+    }
+    .price-range .range-values {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-top: 0.2rem;
+    }
+    #priceSlider {
+      margin: 0.5rem 0;
+    }
+
+    /* Sort options */
+    .sort-select {
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      cursor: pointer;
+    }
+
+    /* Save search button */
+    .save-search-btn {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+    }
+
+    /* Amenities filter checkboxes with icons */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -193,9 +241,26 @@
     .amenities-filters label {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
       font-size: 0.9rem;
       color: var(--text-color);
+      background: var(--input-bg);
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      border: 1px solid var(--input-border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .amenities-filters label input {
+      margin-right: 4px;
+    }
+    .amenities-filters label:hover {
+      background: var(--button-bg);
+      color: white;
+      border-color: var(--button-bg);
+    }
+    .amenities-filters label i {
+      font-size: 1rem;
     }
 
     #searchInput {
@@ -240,7 +305,7 @@
       border-color: var(--button-bg);
     }
 
-    /* ---------- HOUSE GRID ---------- */
+    /* ---------- HOUSE GRID (unchanged) ---------- */
     #houses-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -311,7 +376,7 @@
       color: var(--text-color);
     }
 
-    /* Badges */
+    /* Badges (same as before) */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -321,23 +386,10 @@
       margin-right: 0.3rem;
       text-transform: uppercase;
     }
-    .badge.verified {
-      background: #2ecc71;
-      color: white;
-    }
-    .badge.premium {
-      background: #f1c40f;
-      color: #2c3e50;
-    }
-    .badge.featured {
-      background: gold;
-      color: #2c3e50;
-      font-weight: bold;
-    }
-    .badge.self-contained {
-      background: #9b59b6;
-      color: white;
-    }
+    .badge.verified { background: #2ecc71; color: white; }
+    .badge.premium { background: #f1c40f; color: #2c3e50; }
+    .badge.featured { background: gold; color: #2c3e50; font-weight: bold; }
+    .badge.self-contained { background: #9b59b6; color: white; }
 
     .amenities-list {
       display: flex;
@@ -346,15 +398,23 @@
       margin: 0.5rem 0;
     }
 
+    .fav-btn, .chat-btn, .report-btn, .booking-btn {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-right: 5px;
+      transition: background 0.2s;
+    }
+    .fav-btn:hover, .chat-btn:hover, .report-btn:hover, .booking-btn:hover {
+      background: var(--button-hover);
+    }
     .fav-btn {
       background: none;
       border: 1px solid var(--input-border);
-      border-radius: 30px;
-      padding: 0.2rem 0.8rem;
-      margin-top: 0.3rem;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: all 0.2s;
       color: var(--text-color);
     }
     .fav-btn:hover {
@@ -392,22 +452,7 @@
       color: #2980b9;
     }
 
-    .chat-btn, .report-btn, .booking-btn {
-      background: var(--button-bg);
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 30px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      margin-right: 5px;
-      transition: background 0.2s;
-    }
-    .chat-btn:hover, .report-btn:hover, .booking-btn:hover {
-      background: var(--button-hover);
-    }
-
-    /* ---------- PAGINATION ---------- */
+    /* Pagination */
     .pagination {
       display: flex;
       flex-wrap: wrap;
@@ -440,7 +485,7 @@
       pointer-events: none;
     }
 
-    /* ---------- MAP SECTION ---------- */
+    /* Map */
     .map-section {
       margin: 2rem 0;
     }
@@ -456,7 +501,7 @@
       box-shadow: 0 12px 30px rgba(0,0,0,0.1);
     }
 
-    /* ---------- GPS SECTION ---------- */
+    /* GPS Section */
     .gps-section {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -488,7 +533,6 @@
       color: var(--text-color);
     }
 
-    /* ---------- FOOTER ---------- */
     footer {
       text-align: center;
       padding: 2rem;
@@ -507,7 +551,7 @@
       text-decoration: underline;
     }
 
-    /* ---------- MODAL ---------- */
+    /* Modal (property details, booking) - unchanged */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -538,17 +582,7 @@
       color: black;
     }
 
-    #bookingModal .form-group {
-      margin-bottom: 1rem;
-    }
-    #bookingModal input, #bookingModal textarea {
-      width: 100%;
-      padding: 0.6rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    /* ========== LIGHTBOX ========== */
+    /* Lightbox (unchanged) */
     .lightbox-modal {
       position: fixed;
       top: 0;
@@ -625,7 +659,7 @@
       pointer-events: none;
     }
 
-    /* ========== BLUR FOR UNVERIFIED LANDLORDS ========== */
+    /* Blur for unverified landlords */
     .house-details-blurred {
       filter: blur(4px);
       pointer-events: none;
@@ -663,6 +697,10 @@
       }
       .hero h1 {
         font-size: 2rem;
+      }
+      .filters-row {
+        flex-direction: column;
+        align-items: stretch;
       }
       .filters {
         flex-direction: column;
@@ -720,34 +758,46 @@
   </header>
 
   <main class="main-container">
-    <section class="filters">
-      <input type="number" id="priceMin" data-i18n-placeholder="minPrice" placeholder="Min Price">
-      <input type="number" id="priceMax" data-i18n-placeholder="maxPrice" placeholder="Max Price">
-      <select id="bedrooms">
-        <option value="" data-i18n="anyBedrooms">Any Bedrooms</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4+</option>
-      </select>
-      <select id="type">
-        <option value="" data-i18n="anyType">Any Type</option>
-        <option value="House">House</option>
-        <option value="Hostel">Hostel</option>
-      </select>
-      <button id="nearMeBtn" data-i18n="nearMe"><i class="fas fa-map-marker-alt"></i> Near Me</button>
-      <button id="applyFiltersBtn" data-i18n="applyFilters">Apply Filters</button>
-    </section>
 
+    <!-- Filter row: price slider + sort + save search -->
+    <div class="filters-row">
+      <div class="price-range">
+        <div class="range-values">
+          <span id="priceMinLabel">Min: 0</span>
+          <span id="priceMaxLabel">Max: 2,000,000</span>
+        </div>
+        <div id="priceSlider"></div>
+        <input type="hidden" id="priceMin" value="0">
+        <input type="hidden" id="priceMax" value="2000000">
+      </div>
+
+      <select id="sortSelect" class="sort-select">
+        <option value="default">Sort by: Default</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+        <option value="newest">Newest First</option>
+        <option value="rating">Highest Rated</option>
+        <option value="distance">Nearest to Me</option>
+      </select>
+
+      <button id="saveSearchBtn" class="save-search-btn">🔖 Save Search</button>
+      <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);">Apply Filters</button>
+    </div>
+
+    <!-- Amenities filter checkboxes (enhanced with icons) -->
     <section class="amenities-filters">
-      <label><input type="checkbox" id="filterWifi"> 📶 WiFi</label>
-      <label><input type="checkbox" id="filterParking"> 🅿️ Parking</label>
-      <label><input type="checkbox" id="filterFurnished"> 🛋️ Furnished</label>
-      <label><input type="checkbox" id="filterPetFriendly"> 🐾 Pet Friendly</label>
+      <label><input type="checkbox" id="filterWifi"> <i class="fas fa-wifi"></i> WiFi</label>
+      <label><input type="checkbox" id="filterParking"> <i class="fas fa-parking"></i> Parking</label>
+      <label><input type="checkbox" id="filterFurnished"> <i class="fas fa-couch"></i> Furnished</label>
+      <label><input type="checkbox" id="filterPetFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label>
+      <label><input type="checkbox" id="filterPool"> <i class="fas fa-swimming-pool"></i> Pool</label>
+      <label><input type="checkbox" id="filterAC"> <i class="fas fa-snowflake"></i> Air Conditioning</label>
     </section>
 
+    <!-- SEARCH -->
     <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by area or name...">
 
+    <!-- Category Tabs -->
     <div class="category-tabs">
       <button class="tab-btn active" data-type="all">All</button>
       <button class="tab-btn" data-type="House">🏠 Houses</button>
@@ -757,16 +807,20 @@
       <button class="tab-btn" data-type="Office">🏢 Offices</button>
     </div>
 
+    <!-- HOUSES GRID -->
     <h2 style="margin: 1rem 0;" data-i18n="availableProperties">Available Properties</h2>
     <div id="houses-container" data-i18n="loading">Loading houses...</div>
 
+    <!-- Pagination -->
     <div class="pagination" id="pagination"></div>
 
+    <!-- MAP SECTION -->
     <section class="map-section" id="map-section">
       <h2 data-i18n="mapView">📍 Map View</h2>
       <div id="map"></div>
     </section>
 
+    <!-- GPS LOCATOR -->
     <section class="gps-section">
       <h2 data-i18n="gpsLocator">📍 Property GPS Locator</h2>
       <button id="getLocationBtn" data-i18n="captureLocation"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
@@ -774,6 +828,7 @@
       <input type="hidden" id="latitude">
       <input type="hidden" id="longitude">
     </section>
+
   </main>
 
   <footer>
@@ -785,6 +840,7 @@
     <a href="contact.html" data-i18n="contact">Contact</a>
   </footer>
 
+  <!-- Property Details Modal -->
   <div id="propertyModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:600px;">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
@@ -792,6 +848,7 @@
     </div>
   </div>
 
+  <!-- Booking Modal -->
   <div id="bookingModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:500px;">
       <span class="close-btn" onclick="closeBookingModal()">&times;</span>
@@ -816,6 +873,7 @@
     </div>
   </div>
 
+  <!-- Image Lightbox Modal -->
   <div id="lightboxModal" class="lightbox-modal" style="display: none;">
     <span class="lightbox-close">&times;</span>
     <span class="lightbox-prev">&#10094;</span>
@@ -826,11 +884,34 @@
     <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
 
+  <!-- Save Search Modal (for email alerts) -->
+  <div id="saveSearchModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeSaveSearchModal()">&times;</span>
+      <h2>Save This Search</h2>
+      <p>Get email alerts when new houses match your filters.</p>
+      <form id="saveSearchForm">
+        <div class="form-group">
+          <label>Your Email</label>
+          <input type="email" id="searchEmail" required placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Search Name (optional)</label>
+          <input type="text" id="searchName" placeholder="e.g., Affordable Apartments">
+        </div>
+        <button type="submit" class="upload-btn">Save & Get Alerts</button>
+      </form>
+      <div id="saveSearchStatus"></div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
+    // Lightbox functions (unchanged)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
@@ -934,6 +1015,9 @@
     });
 
     window.openLightbox = openLightbox;
+    window.closeSaveSearchModal = function() {
+      document.getElementById('saveSearchModal').style.display = 'none';
+    };
   </script>
 </body>
 </html>
