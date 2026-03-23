@@ -14,6 +14,7 @@
       display: flex;
       align-items: center;
       gap: 2rem;
+      flex-wrap: wrap;
     }
     .avatar {
       width: 100px;
@@ -26,6 +27,12 @@
       justify-content: center;
       font-size: 3rem;
       font-weight: bold;
+      overflow: hidden;
+    }
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .landlord-info h1 {
       margin-bottom: 0.5rem;
@@ -75,6 +82,11 @@
       font-size: 1.1rem;
       margin-bottom: 0.3rem;
     }
+    .bio-text {
+      margin-top: 0.5rem;
+      color: #555;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
@@ -118,11 +130,24 @@
       const badgeClass = landlord.verificationType === 'premium' ? 'premium' : (landlord.verificationType === 'official' ? 'verified' : '');
       const badgeText = landlord.verificationType === 'premium' ? '⭐ Premium' : (landlord.verificationType === 'official' ? '✔ Verified' : '');
 
-      const avatarInitial = landlord.name ? landlord.name.charAt(0).toUpperCase() : '?';
+      // Avatar: if profilePicture exists, use it; else fallback to initial
+      let avatarHtml = '';
+      if (landlord.profilePicture) {
+        avatarHtml = `<img src="${landlord.profilePicture}" style="width:100px;height:100px;object-fit:cover;border-radius:50%;">`;
+      } else {
+        const avatarInitial = landlord.name ? landlord.name.charAt(0).toUpperCase() : '?';
+        avatarHtml = `<div class="avatar">${avatarInitial}</div>`;
+      }
+
+      // Display business name, address, bio if available
+      const businessHtml = landlord.businessName ? `<p><strong>🏢 Business:</strong> ${landlord.businessName}</p>` : '';
+      const addressHtml = landlord.address ? `<p><strong>📍 Address:</strong> ${landlord.address}</p>` : '';
+      const bioHtml = landlord.bio ? `<div class="bio-text"><strong>About:</strong><br>${landlord.bio}</div>` : '';
 
       let housesHtml = '';
       houses.forEach(house => {
-        const img = house.images?.length ? '/uploads/' + house.images[0] : 'placeholder.jpg';
+        // Use full Cloudinary URL
+        const img = house.images?.length ? house.images[0] : 'placeholder.jpg';
         housesHtml += `
           <div class="house-card">
             <img src="${img}">
@@ -137,13 +162,16 @@
 
       container.innerHTML = `
         <div class="profile-header">
-          <div class="avatar">${avatarInitial}</div>
+          <div style="width:100px; height:100px; border-radius:50%; overflow:hidden;">${avatarHtml}</div>
           <div class="landlord-info">
             <h1>${landlord.name}</h1>
             ${badgeClass ? `<span class="badge ${badgeClass}">${badgeText}</span>` : ''}
+            ${businessHtml}
+            ${addressHtml}
             <p>📞 ${landlord.phone || 'N/A'}</p>
             <p>📧 ${landlord.email}</p>
             <p>Joined ${new Date(landlord.createdAt).toLocaleDateString()}</p>
+            ${bioHtml}
             <div class="stats">
               <div class="stat"><span class="value">${houses.length}</span><br>Properties</div>
               <div class="stat"><span class="value">${landlord.profile?.responseRate || 0}%</span><br>Response Rate</div>

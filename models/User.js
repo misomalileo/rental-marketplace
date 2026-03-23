@@ -21,7 +21,6 @@ const UserSchema = new mongoose.Schema({
         responseRate: Number,
         joinedDate: { type: Date, default: Date.now }
     },
-    // New fields for mandatory profile
     businessName: { type: String, default: '' },
     address: { type: String, default: '' },
     profilePicture: { type: String, default: '' },

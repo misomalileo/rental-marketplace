@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const House = require("../models/House");
 const Report = require("../models/Report");
+const ActivityLog = require("../models/ActivityLog"); // NEW
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 const { logAdminAction } = require("../middleware/audit");
@@ -119,9 +120,7 @@ router.delete("/house/:id", auth, admin, async (req, res) => {
   }
 });
 
-// ======================================
 // TOGGLE FEATURED (admin)
-// ======================================
 router.put("/house/:id/toggle-featured", auth, admin, async (req, res) => {
   try {
     const house = await House.findById(req.params.id);
@@ -168,6 +167,71 @@ router.put("/report/:id/resolve", auth, admin, async (req, res) => {
     res.json({ message: "Report resolved", report });
   } catch (err) {
     console.error("Resolve report error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// REAL-TIME MONITORING STATS
+// ======================================
+router.get("/real-time", auth, admin, async (req, res) => {
+  try {
+    const activeUsers = await ActivityLog.distinct('user', {
+      createdAt: { $gt: new Date(Date.now() - 15 * 60 * 1000) }
+    });
+    const newListingsToday = await House.countDocuments({
+      createdAt: { $gt: new Date().setHours(0,0,0,0) }
+    });
+    const totalHouses = await House.countDocuments();
+    const totalViews = await House.aggregate([{ $group: { _id: null, total: { $sum: "$views" } } }]);
+
+    res.json({
+      activeUsers: activeUsers.length,
+      newListingsToday,
+      revenue: 0,
+      totalHouses,
+      totalViews: totalViews[0]?.total || 0
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// ACTIVITY LOGS (with pagination)
+// ======================================
+router.get("/activity-logs", auth, admin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+    const logs = await ActivityLog.find()
+      .populate("user", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    const total = await ActivityLog.countDocuments();
+    res.json({ logs, total, page, pages: Math.ceil(total / limit) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// CSV EXPORT (houses)
+// ======================================
+router.get("/export/csv", auth, admin, async (req, res) => {
+  try {
+    const houses = await House.find().populate("owner", "name email");
+    const fields = ["ID", "Name", "Location", "Price", "Type", "Bedrooms", "Owner", "Views", "Created At"];
+    const csvData = houses.map(h => [
+      h._id, h.name, h.location, h.price, h.type, h.bedrooms, h.owner?.name || "Unknown", h.views, h.createdAt.toISOString()
+    ]);
+    const csv = [fields, ...csvData].map(row => row.join(",")).join("\n");
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=houses_export.csv");
+    res.send(csv);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

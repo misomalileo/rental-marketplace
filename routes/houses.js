@@ -4,6 +4,8 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 const House = require("../models/House");
+const Review = require("../models/Review");
+const ActivityLog = require("../models/ActivityLog");
 const auth = require("../middleware/auth");
 const {
   validateHouse,
@@ -36,20 +38,18 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// Set up multer with file size limit (10 MB per file)
 const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
 
 // ======================================
-// UPLOAD HOUSE (with error handling)
+// UPLOAD HOUSE
 // ======================================
 router.post(
   "/",
   auth,
   (req, res, next) => {
-    // Wrap multer upload to catch errors
     upload.array("images", 5)(req, res, (err) => {
       if (err) {
         console.error("❌ Multer/Cloudinary upload error:", err);
@@ -72,7 +72,6 @@ router.post(
         return res.status(400).json({ message: "At least one image is required" });
       }
 
-      // Cloudinary returns the full secure URL for each uploaded file
       const images = req.files.map((file) => {
         console.log("✅ Uploaded file:", file.path);
         return file.path;
@@ -97,6 +96,8 @@ router.post(
         parking: req.body.parking === "on" || req.body.parking === "true",
         furnished: req.body.furnished === "on" || req.body.furnished === "true",
         petFriendly: req.body.petFriendly === "on" || req.body.petFriendly === "true",
+        pool: req.body.pool === "on" || req.body.pool === "true",
+        ac: req.body.ac === "on" || req.body.ac === "true",
         gender: req.body.gender || "none",
         unavailableDates: req.body.unavailableDates
           ? JSON.parse(req.body.unavailableDates).map((d) => new Date(d))
@@ -105,6 +106,18 @@ router.post(
       });
 
       await house.save();
+
+      // Log activity
+      await ActivityLog.create({
+        user: req.user.id,
+        action: "upload_house",
+        target: house._id,
+        targetModel: "House",
+        details: { name: house.name },
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+
       console.log("✅ House saved with ID:", house._id);
       res.json({ message: "House uploaded successfully", house });
     } catch (err) {
@@ -115,7 +128,7 @@ router.post(
 );
 
 // ======================================
-// UPDATE HOUSE (with error handling)
+// UPDATE HOUSE
 // ======================================
 router.put(
   "/:id",
@@ -140,7 +153,7 @@ router.put(
         return res.status(404).json({ message: "House not found or not owned by you" });
       }
 
-      // Update text fields
+      // Update fields
       house.name = req.body.name || house.name;
       house.location = req.body.location || house.location;
       house.price = req.body.price || house.price;
@@ -157,19 +170,32 @@ router.put(
       house.parking = req.body.parking === "on" || req.body.parking === "true";
       house.furnished = req.body.furnished === "on" || req.body.furnished === "true";
       house.petFriendly = req.body.petFriendly === "on" || req.body.petFriendly === "true";
+      house.pool = req.body.pool === "on" || req.body.pool === "true";
+      house.ac = req.body.ac === "on" || req.body.ac === "true";
       house.gender = req.body.gender || house.gender;
       house.selfContained = req.body.selfContained === "on" || req.body.selfContained === "true";
       if (req.body.unavailableDates) {
         house.unavailableDates = JSON.parse(req.body.unavailableDates).map((d) => new Date(d));
       }
 
-      // If new images are uploaded, replace the old ones (Cloudinary URLs)
       if (req.files && req.files.length > 0) {
         console.log("🖼️ Updating images:", req.files.length);
         house.images = req.files.map((f) => f.path);
       }
 
       await house.save();
+
+      // Log activity
+      await ActivityLog.create({
+        user: req.user.id,
+        action: "update_house",
+        target: house._id,
+        targetModel: "House",
+        details: { name: house.name },
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+
       console.log("✅ House updated:", house._id);
       res.json({ message: "House updated successfully", house });
     } catch (err) {
@@ -180,7 +206,7 @@ router.put(
 );
 
 // ======================================
-// TEST CLOUDINARY UPLOAD (for debugging)
+// TEST CLOUDINARY UPLOAD
 // ======================================
 router.post(
   "/test-upload",
@@ -233,6 +259,14 @@ router.get("/my-houses", auth, async (req, res) => {
 router.delete("/:id", auth, async (req, res) => {
   try {
     await House.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
+    await ActivityLog.create({
+      user: req.user.id,
+      action: "delete_house",
+      target: req.params.id,
+      targetModel: "House",
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
     res.json({ message: "House deleted" });
   } catch (err) {
     res.status(500).json({ message: "Delete failed" });
@@ -240,13 +274,14 @@ router.delete("/:id", auth, async (req, res) => {
 });
 
 // ======================================
-// GET ALL HOUSES (public) with pagination and filters
+// GET ALL HOUSES (public) with filters, sorting
 // ======================================
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
+    const sortBy = req.query.sort || "default";
 
     let houseFilter = {};
     if (req.query.minPrice) houseFilter.price = { $gte: Number(req.query.minPrice) };
@@ -260,6 +295,14 @@ router.get("/", async (req, res) => {
     if (req.query.parking === "true") houseFilter.parking = true;
     if (req.query.furnished === "true") houseFilter.furnished = true;
     if (req.query.petFriendly === "true") houseFilter.petFriendly = true;
+    if (req.query.pool === "true") houseFilter.pool = true;
+    if (req.query.ac === "true") houseFilter.ac = true;
+
+    let sortStage = { featured: -1, createdAt: -1 };
+    if (sortBy === "price_asc") sortStage = { price: 1 };
+    else if (sortBy === "price_desc") sortStage = { price: -1 };
+    else if (sortBy === "newest") sortStage = { createdAt: -1 };
+    else if (sortBy === "rating") sortStage = { averageRating: -1 };
 
     const pipeline = [
       { $match: houseFilter },
@@ -284,7 +327,7 @@ router.get("/", async (req, res) => {
         },
       },
       { $project: { ownerInfo: 0 } },
-      { $sort: { featured: -1, createdAt: -1 } },
+      { $sort: sortStage },
       { $skip: skip },
       { $limit: limit },
     ];
@@ -336,7 +379,7 @@ router.put("/:id/view", async (req, res) => {
 });
 
 // ======================================
-// RATE HOUSE
+// RATE HOUSE (star rating)
 // ======================================
 router.post("/:id/rate", auth, async (req, res) => {
   try {
@@ -350,6 +393,79 @@ router.post("/:id/rate", auth, async (req, res) => {
     house.averageRating = total / house.ratings.length;
     await house.save();
     res.json({ message: "Rating submitted", average: house.averageRating });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// ADD REVIEW (written review)
+// ======================================
+router.post("/:id/review", auth, async (req, res) => {
+  try {
+    const house = await House.findById(req.params.id);
+    if (!house) return res.status(404).json({ message: "House not found" });
+
+    const existing = await Review.findOne({ house: req.params.id, tenant: req.user.id });
+    if (existing) {
+      return res.status(400).json({ message: "You already reviewed this house" });
+    }
+
+    const review = new Review({
+      house: req.params.id,
+      tenant: req.user.id,
+      rating: req.body.rating,
+      comment: req.body.comment,
+    });
+    await review.save();
+
+    // Recalculate average rating
+    const allReviews = await Review.find({ house: req.params.id });
+    const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+    house.averageRating = avg;
+    await house.save();
+
+    res.json({ message: "Review added", review });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ======================================
+// GET REVIEWS FOR A HOUSE
+// ======================================
+router.get("/:id/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find({ house: req.params.id })
+      .populate("tenant", "name")
+      .sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// GET VIEW STATS (for landlord dashboard)
+// ======================================
+router.get("/stats/:id", auth, async (req, res) => {
+  try {
+    const house = await House.findOne({ _id: req.params.id, owner: req.user.id });
+    if (!house) return res.status(404).json({ message: "House not found" });
+
+    // Generate mock data for last 30 days (replace with real data from a View model)
+    const viewsData = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      viewsData.push({
+        date: date.toISOString().split('T')[0],
+        views: Math.floor(Math.random() * 50),
+      });
+    }
+    res.json({ views: viewsData });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

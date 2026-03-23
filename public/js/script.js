@@ -39,9 +39,6 @@ function getStarRating(average) {
   return "★".repeat(fullStars) + "☆".repeat(emptyStars);
 }
 
-// ======================================
-// DISTANCE CALCULATION (haversine)
-// ======================================
 function getDistance(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -54,7 +51,7 @@ function getDistance(lat1, lng1, lat2, lng2) {
 }
 
 // ======================================
-// CUSTOM MARKER ICON BASED ON PROPERTY TYPE & VERIFICATION
+// CUSTOM MARKER ICON
 // ======================================
 function getMarkerIcon(house) {
   let iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
@@ -159,7 +156,7 @@ function renderMarkers(houses) {
 }
 
 // ======================================
-// FETCH HOUSES (with filters and sorting)
+// FETCH HOUSES (with filters, sorting)
 // ======================================
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
@@ -263,9 +260,6 @@ function initPriceSlider() {
   });
 }
 
-// ======================================
-// GET CURRENT FILTERS FROM UI
-// ======================================
 function getCurrentFilters() {
   return {
     minPrice: document.getElementById('priceMin')?.value || '',
@@ -286,9 +280,6 @@ function applyFilters() {
   loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 
-// ======================================
-// SORT HANDLER
-// ======================================
 function handleSortChange() {
   const sortSelect = document.getElementById('sortSelect');
   if (!sortSelect) return;
@@ -298,7 +289,7 @@ function handleSortChange() {
 }
 
 // ======================================
-// SAVE SEARCH (localStorage for now)
+// SAVE SEARCH (localStorage)
 // ======================================
 function saveSearch() {
   const modal = document.getElementById('saveSearchModal');
@@ -337,7 +328,6 @@ function initMap() {
     attribution: "© OpenStreetMap contributors"
   }).addTo(map);
 
-  // Marker cluster group
   markersLayer = L.markerClusterGroup({
     showCoverageOnHover: false,
     maxClusterRadius: 50,
@@ -351,7 +341,6 @@ function initMap() {
   });
   map.addLayer(markersLayer);
 
-  // Drawing control
   drawnItems = L.featureGroup().addTo(map);
   const drawControl = new L.Control.Draw({
     edit: {
@@ -373,11 +362,9 @@ function initMap() {
     if (drawnPolygon) map.removeLayer(drawnPolygon);
     drawnPolygon = e.layer;
     drawnItems.addLayer(drawnPolygon);
-    // Filter houses inside polygon
     filterHousesByPolygon();
   });
 
-  // Clear drawing button
   const clearDrawBtn = document.getElementById('clearDrawBtn');
   if (clearDrawBtn) {
     clearDrawBtn.addEventListener('click', () => {
@@ -388,7 +375,6 @@ function initMap() {
     });
   }
 
-  // Radius slider (separate from the other one in map controls)
   const radiusSlider = document.getElementById('radiusSliderControl');
   const radiusValueSpan = document.getElementById('radiusValueControl');
   if (radiusSlider) {
@@ -432,7 +418,7 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS (with blur and clickable landlord)
+// RENDER HOUSE CARDS (with blur, landlord popup)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -450,7 +436,6 @@ function renderHouses(houses) {
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
     let currentIndex = 0;
 
-    // Landlord info with clickable name
     let landlordInfo = '';
     if (house.owner) {
       landlordInfo = `<p><a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a> `;
@@ -530,7 +515,6 @@ function renderHouses(houses) {
       ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')">💬 Chat</button>`
       : '';
 
-    // Build card HTML – wrap textual content
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
@@ -559,7 +543,6 @@ function renderHouses(houses) {
 
     container.appendChild(card);
 
-    // Apply blur if landlord unverified
     const detailsDiv = card.querySelector('.house-details-content');
     if (house.owner && house.owner.verificationType === "none") {
       detailsDiv.classList.add('house-details-blurred');
@@ -567,7 +550,6 @@ function renderHouses(houses) {
       detailsDiv.classList.remove('house-details-blurred');
     }
 
-    // Slider and lightbox
     const img = card.querySelector(`#img-${house._id}`);
     if (images.length > 1) {
       const prevBtn = card.querySelector(".prev");
@@ -596,7 +578,6 @@ function renderHouses(houses) {
       }
     });
 
-    // Rating widget
     if (isLoggedIn) {
       const widget = card.querySelector(".rating-widget");
       if (widget) {
@@ -618,7 +599,6 @@ function renderHouses(houses) {
       }
     }
 
-    // Double-click on card centers map
     card.addEventListener("dblclick", (e) => {
       e.stopPropagation();
       if (house.lat && house.lng) {
@@ -626,7 +606,6 @@ function renderHouses(houses) {
       }
     });
 
-    // Record view on click (but not on buttons)
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" })
@@ -634,7 +613,6 @@ function renderHouses(houses) {
     });
   });
 
-  // Attach click events to landlord name links
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
@@ -850,7 +828,7 @@ function closeLandlordModal() {
 }
 
 // ======================================
-// EVENT LISTENERS (tabs, filters, search, GPS)
+// EVENT LISTENERS
 // ======================================
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
@@ -946,7 +924,6 @@ if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
 
 loadHouses(currentPage, currentType, currentFilters, currentSort);
 
-// Expose functions for global use
 window.showDetails = showDetails;
 window.closePropertyModal = closePropertyModal;
 window.toggleFavorite = toggleFavorite;

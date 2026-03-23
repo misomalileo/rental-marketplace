@@ -12,10 +12,15 @@
     .form-container input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
     .form-container button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     .form-container button:hover { background: #2980b9; }
+    .form-container button:disabled { background: #95a5a6; cursor: not-allowed; }
     .google-btn { background: white; border: 1px solid #e0e0e0; color: #2c3e50; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     .google-btn:hover { background: #f8f9fa; }
     .forgot-link { display: block; text-align: center; margin-top: 12px; color: #3498db; text-decoration: none; font-size: 0.9rem; }
     .forgot-link:hover { text-decoration: underline; }
+    .message { margin-top: 15px; text-align: center; font-size: 0.9rem; padding: 8px; border-radius: 6px; display: none; }
+    .message.error { background: #f8d7da; color: #721c24; display: block; }
+    .message.success { background: #d4edda; color: #155724; display: block; }
+    .loading { display: inline-block; margin-left: 8px; }
     @media(max-width:600px){ .form-container { margin:20px; } }
   </style>
 </head>
@@ -25,8 +30,9 @@
   <form id="loginForm">
     <input type="email" placeholder="Email" id="email" required>
     <input type="password" placeholder="Password" id="password" required>
-    <button type="submit">Login</button>
+    <button type="submit" id="loginBtn">Login</button>
   </form>
+  <div id="message"></div>
   <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
   <a href="/api/auth/google">
     <button class="google-btn" type="button">
@@ -37,11 +43,66 @@
     No account? <a href="register.html">Register</a>
   </p>
 </div>
-<script src="js/login.js"></script>
 <script>
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('verified') === 'true') alert('Email verified! You can now log in.');
-  if (urlParams.get('error') === 'google-auth-failed') alert('Google authentication failed.');
+  if (urlParams.get('verified') === 'true') {
+    showMessage('Email verified! You can now log in.', 'success');
+  }
+  if (urlParams.get('error') === 'google-auth-failed') {
+    showMessage('Google authentication failed.', 'error');
+  }
+  if (urlParams.get('error') === 'invalid-verification-token') {
+    showMessage('Invalid or expired verification link. Please register again.', 'error');
+  }
+
+  function showMessage(text, type) {
+    const msgDiv = document.getElementById('message');
+    msgDiv.textContent = text;
+    msgDiv.className = 'message ' + type;
+    setTimeout(() => {
+      msgDiv.style.display = 'none';
+    }, 5000);
+  }
+
+  const form = document.getElementById('loginForm');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginBtn = document.getElementById('loginBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = 'Logging in... <i class="fas fa-spinner fa-spin"></i>';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.user.role);
+        if (data.user.role === 'admin') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'dashboard.html';
+        }
+      } else {
+        showMessage(data.message || 'Login failed', 'error');
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Login';
+      }
+    } catch (err) {
+      showMessage('Network error. Please try again.', 'error');
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = 'Login';
+    }
+  });
 </script>
 </body>
 </html>

@@ -35,13 +35,14 @@ const HouseSchema = new mongoose.Schema(
     parking: { type: Boolean, default: false },
     furnished: { type: Boolean, default: false },
     petFriendly: { type: Boolean, default: false },
+    pool: { type: Boolean, default: false },
+    ac: { type: Boolean, default: false },
     gender: {
       type: String,
       enum: ["boys", "girls", "mixed", "none"],
       default: "none"
     },
     unavailableDates: { type: [Date], default: [] },
-    // NEW: self contained
     selfContained: { type: Boolean, default: false }
   },
   { timestamps: true }
