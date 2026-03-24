@@ -7,146 +7,143 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
-  <!-- Google Fonts & Leaflet CSS -->
+  <!-- Modern fonts: Inter with light weights -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <!-- Leaflet & plugins -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- noUiSlider -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+  <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* ========== THEME VARIABLES ========== */
+    /* ========== MODERN THEME VARIABLES (no background images) ========== */
     :root {
-      --primary: #3b82f6;
-      --primary-dark: #2563eb;
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
       --secondary: #10b981;
       --accent: #f59e0b;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
     }
 
     body.theme-light {
-      --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      --navbar-bg: rgba(255,255,255,0.9);
-      --text-color: #1e293b;
-      --card-bg: rgba(255,255,255,0.85);
-      --footer-bg: rgba(255,255,255,0.9);
+      --bg-gradient: var(--gray-50);
+      --navbar-bg: rgba(255,255,255,0.96);
+      --text-color: var(--gray-800);
+      --card-bg: white;
+      --footer-bg: white;
       --input-bg: white;
-      --input-border: #e2e8f0;
+      --input-border: var(--gray-200);
       --button-bg: var(--primary);
       --button-hover: var(--primary-dark);
-      background-image: url('https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1600');
     }
     body.theme-dark {
-      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      --navbar-bg: rgba(15,23,42,0.9);
-      --text-color: #e2e8f0;
-      --card-bg: rgba(30,41,59,0.85);
-      --footer-bg: rgba(15,23,42,0.9);
-      --input-bg: #1e293b;
-      --input-border: #334155;
+      --bg-gradient: var(--gray-900);
+      --navbar-bg: rgba(17,24,39,0.96);
+      --text-color: var(--gray-100);
+      --card-bg: var(--gray-800);
+      --footer-bg: var(--gray-800);
+      --input-bg: var(--gray-800);
+      --input-border: var(--gray-700);
       --button-bg: var(--primary);
       --button-hover: var(--primary-dark);
-      background-image: url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1600');
     }
     body.theme-aquatic {
-      --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      --navbar-bg: rgba(74,163,162,0.9);
+      --bg-gradient: #e6f7f5;
+      --navbar-bg: rgba(230,247,245,0.96);
       --text-color: #1e4a4b;
-      --card-bg: rgba(255,255,255,0.85);
-      --footer-bg: rgba(74,163,162,0.9);
-      --input-bg: #e0f7fa;
-      --input-border: #4aa3a2;
-      --button-bg: #ff6b6b;
-      --button-hover: #ee5253;
-      background-image: url('https://images.pexels.com/photos/2121121/pexels-photo-2121121.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      --card-bg: white;
+      --footer-bg: white;
+      --input-bg: white;
+      --input-border: #cbd5e1;
+      --button-bg: #0f766e;
+      --button-hover: #0d5c55;
     }
     body.theme-minimal {
-      --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
-      --navbar-bg: rgba(255,255,255,0.95);
+      --bg-gradient: #ffffff;
+      --navbar-bg: #ffffff;
       --text-color: #2c3e50;
-      --card-bg: rgba(255,255,255,0.9);
-      --footer-bg: rgba(255,255,255,0.95);
-      --input-bg: white;
-      --input-border: #e0e0e0;
+      --card-bg: #ffffff;
+      --footer-bg: #f8fafc;
+      --input-bg: #ffffff;
+      --input-border: #e2e8f0;
       --button-bg: #2c3e50;
-      --button-hover: #1a252f;
-      background-image: url('https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      --button-hover: #1e293b;
     }
     body.theme-luxury {
-      --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
-      --navbar-bg: rgba(0,0,0,0.85);
-      --text-color: #f8f9fa;
-      --card-bg: rgba(0,0,0,0.7);
-      --footer-bg: rgba(0,0,0,0.8);
-      --input-bg: #2c2c2c;
-      --input-border: #ffd700;
-      --button-bg: #ffd700;
-      --button-hover: #e6c300;
-      background-image: url('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1600');
-      --primary: #ffd700;
-      --primary-dark: #e6c300;
-    }
-    body.theme-luxury .badge.premium {
-      background: #ffd700;
-      color: #1a1a1a;
-    }
-    body.theme-luxury .badge.verified {
-      background: #ffd700;
-      color: #1a1a1a;
+      --bg-gradient: #1e1e2f;
+      --navbar-bg: #1e1e2f;
+      --text-color: #f5e7d9;
+      --card-bg: #2a2a3c;
+      --footer-bg: #1e1e2f;
+      --input-bg: #2a2a3c;
+      --input-border: #d4af37;
+      --button-bg: #d4af37;
+      --button-hover: #c5a028;
+      --primary: #d4af37;
+      --primary-dark: #c5a028;
     }
 
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
     body {
       background: var(--bg-gradient);
       color: var(--text-color);
       min-height: 100vh;
-      transition: background 0.3s, color 0.3s;
-      background-attachment: fixed;
-      background-size: cover;
+      transition: background 0.2s, color 0.2s;
     }
 
+    /* Navbar – clean, minimal */
     .navbar {
       background: var(--navbar-bg);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--input-border);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 2rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      padding: 0.8rem 2rem;
       position: sticky;
       top: 0;
       z-index: 1000;
     }
 
     .logo {
-      font-size: 1.6rem;
-      font-weight: 700;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
       color: var(--text-color);
     }
     .logo i {
-      margin-right: 8px;
-      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
-      transition: transform 0.2s;
-    }
-    .logo:hover i {
-      transform: scale(1.05);
+      margin-right: 6px;
+      font-size: 1.2rem;
+      color: var(--primary);
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1.2rem;
       flex-wrap: wrap;
     }
 
@@ -154,245 +151,173 @@
       color: var(--text-color);
       text-decoration: none;
       font-weight: 500;
+      font-size: 0.85rem;
       transition: color 0.2s;
     }
     .nav-links a:hover {
-      color: #3498db;
+      color: var(--primary);
     }
 
     .lang-select, .theme-select {
-      padding: 0.3rem 0.8rem;
+      padding: 0.25rem 0.6rem;
       border-radius: 30px;
       border: 1px solid var(--input-border);
       background: var(--input-bg);
       color: var(--text-color);
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
-    /* ---------- 3D HERO ---------- */
+    /* Hero – subtle, floating, clean */
     .hero {
       text-align: center;
-      padding: 5rem 1rem 4rem 1rem;
-      background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(16,185,129,0.15));
-      border-radius: 0 0 50px 50px;
-      transform-style: preserve-3d;
-      perspective: 1000px;
-      margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
-      animation: rotate 20s linear infinite;
-      z-index: 0;
-    }
-    @keyframes rotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    .hero-content {
-      position: relative;
-      z-index: 1;
+      padding: 3rem 1rem 2.5rem 1rem;
+      background: transparent;
+      margin-bottom: 1rem;
     }
     .hero h1 {
-      font-size: 5rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      font-size: 2.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
+      gap: 0.5rem;
       flex-wrap: wrap;
-      animation: float 6s ease-in-out infinite;
-      margin-bottom: 1rem;
-    }
-    .hero h1 i {
-      font-size: 5rem;
+      color: var(--text-color);
       background: none;
       -webkit-background-clip: unset;
       background-clip: unset;
+      text-shadow: none;
+      animation: none;
+    }
+    .hero h1 i {
+      font-size: 2rem;
       color: var(--primary);
-      text-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-      transition: transform 0.3s;
-    }
-    .hero h1 i:hover {
-      transform: scale(1.1) rotate(5deg);
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
     }
     .hero p {
-      font-size: 1.3rem;
-      opacity: 0.9;
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--gray-500);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.6rem;
-      flex-wrap: wrap;
+      gap: 0.5rem;
       margin-top: 0.5rem;
     }
     .hero p i {
-      font-size: 1.4rem;
-      color: #fbbf24;
-      filter: drop-shadow(0 0 4px #f59e0b);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.7; transform: scale(1.1); }
+      font-size: 0.9rem;
+      color: var(--accent);
     }
 
     /* Main container */
     .main-container {
       max-width: 1400px;
-      margin: 2rem auto;
-      padding: 0;
+      margin: 0 auto;
+      padding: 0 1rem;
     }
 
+    /* Filters row */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
-      margin: 1.5rem 1rem;
+      gap: 0.8rem;
+      margin: 1.5rem 0;
       justify-content: space-between;
       align-items: center;
     }
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      justify-content: center;
-      flex: 1;
-    }
-    .filters input, .filters select, .filters button {
-      border: 1px solid var(--input-border);
-      border-radius: 40px;
-      padding: 0.6rem 1.2rem;
-      font-size: 0.9rem;
-      background: var(--input-bg);
-      color: var(--text-color);
-      transition: all 0.2s;
-      outline: none;
-    }
-    .filters button {
-      background: var(--button-bg);
-      color: white;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .filters button:hover {
-      background: var(--button-hover);
-    }
-
     .price-range {
       min-width: 200px;
       background: var(--input-bg);
       border-radius: 40px;
-      padding: 0.4rem 1rem;
+      padding: 0.3rem 1rem;
+      border: 1px solid var(--input-border);
     }
     .price-range .range-values {
       display: flex;
       justify-content: space-between;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       margin-top: 0.2rem;
     }
     #priceSlider {
-      margin: 0.5rem 0;
+      margin: 0.4rem 0;
     }
 
-    .sort-select {
-      padding: 0.6rem 1.2rem;
+    .sort-select, .save-search-btn {
+      padding: 0.4rem 1rem;
       border-radius: 40px;
       border: 1px solid var(--input-border);
       background: var(--input-bg);
       color: var(--text-color);
       cursor: pointer;
+      font-size: 0.85rem;
     }
-
     .save-search-btn {
       background: var(--button-bg);
       color: white;
       border: none;
-      border-radius: 40px;
-      padding: 0.6rem 1.2rem;
-      cursor: pointer;
+    }
+    .save-search-btn:hover {
+      background: var(--button-hover);
     }
 
+    /* Amenities filters (icon pills) */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.6rem;
       justify-content: center;
-      margin: 1rem 1rem;
+      margin: 1rem 0;
     }
     .amenities-filters label {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
+      gap: 6px;
+      font-size: 0.8rem;
       color: var(--text-color);
       background: var(--input-bg);
-      padding: 0.4rem 1rem;
+      padding: 0.3rem 0.8rem;
       border-radius: 30px;
       border: 1px solid var(--input-border);
       cursor: pointer;
       transition: all 0.2s;
-    }
-    .amenities-filters label input {
-      margin-right: 4px;
     }
     .amenities-filters label:hover {
       background: var(--button-bg);
       color: white;
       border-color: var(--button-bg);
     }
-    .amenities-filters label i {
-      font-size: 1rem;
-    }
 
     #searchInput {
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       display: block;
       margin: 1rem auto;
-      padding: 0.8rem 1.5rem;
+      padding: 0.6rem 1.2rem;
       border: 1px solid var(--input-border);
       border-radius: 40px;
       background: var(--input-bg);
       color: var(--text-color);
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
 
     .category-tabs {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin: 20px 1rem;
+      gap: 8px;
+      margin: 20px 0;
       justify-content: center;
     }
     .tab-btn {
       background: var(--card-bg);
-      border: 2px solid var(--input-border);
+      border: 1px solid var(--input-border);
       border-radius: 40px;
-      padding: 10px 24px;
-      font-size: 1rem;
-      font-weight: 600;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s;
       color: var(--text-color);
     }
     .tab-btn:hover {
@@ -408,37 +333,36 @@
 
     #houses-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.2rem;
-      margin: 2rem 1rem;
+      margin: 2rem 0;
     }
 
     .house-card {
       background: var(--card-bg);
-      backdrop-filter: blur(8px);
-      border-radius: 24px;
+      border-radius: 20px;
       overflow: hidden;
-      transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1), box-shadow 0.3s;
-      transform-style: preserve-3d;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.02);
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
       cursor: pointer;
+      border: 1px solid var(--input-border);
     }
     .house-card:hover {
-      transform: translateY(-10px) rotateX(2deg) rotateY(2deg);
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
     }
+
     .slider {
       position: relative;
       width: 100%;
-      height: 170px;
+      height: 160px;
       overflow: hidden;
     }
     .slider img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.3s;
-      cursor: pointer;
+      transition: transform 0.2s;
     }
     .house-card:hover .slider img {
       transform: scale(1.02);
@@ -449,21 +373,16 @@
       transform: translateY(-50%);
       background: rgba(255,255,255,0.8);
       border: none;
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      font-size: 1.2rem;
+      font-size: 0.8rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
     }
-    .slider button:hover {
-      background: white;
-    }
-    .prev { left: 8px; }
-    .next { right: 8px; }
+
     .house-card-content {
       padding: 0.8rem;
     }
@@ -474,49 +393,44 @@
       color: var(--text-color);
     }
     .house-card-content p {
-      margin: 0.1rem 0;
+      margin: 0.2rem 0;
       font-size: 0.8rem;
       color: var(--text-color);
+      opacity: 0.85;
     }
 
-    /* Badges, buttons, etc. (keep from your previous file – I'll include common ones) */
+    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.5rem;
       font-size: 0.7rem;
-      font-weight: 600;
+      font-weight: 500;
       border-radius: 30px;
       margin-right: 0.3rem;
       text-transform: uppercase;
     }
     .badge.verified { background: #2ecc71; color: white; }
     .badge.premium { background: #f1c40f; color: #2c3e50; }
-    .badge.featured { background: gold; color: #2c3e50; font-weight: bold; }
+    .badge.featured { background: #f1c40f; color: #2c3e50; }
     .badge.self-contained { background: #9b59b6; color: white; }
 
     .amenities-list {
       display: flex;
       flex-wrap: wrap;
       gap: 0.4rem;
-      margin: 0.3rem 0;
-    }
-    .amenities-list i {
-      font-size: 0.7rem;
+      margin: 0.4rem 0;
     }
 
-    .fav-btn, .chat-btn, .report-btn, .booking-btn, .share-btn, .compare-btn {
+    /* Buttons */
+    .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn {
       background: var(--button-bg);
       color: white;
       border: none;
-      padding: 4px 8px;
+      padding: 4px 10px;
       border-radius: 30px;
       font-size: 0.7rem;
       cursor: pointer;
-      margin-right: 3px;
       transition: background 0.2s;
-    }
-    .fav-btn:hover, .chat-btn:hover, .report-btn:hover, .booking-btn:hover, .share-btn:hover, .compare-btn:hover {
-      background: var(--button-hover);
     }
     .fav-btn {
       background: none;
@@ -524,40 +438,23 @@
       color: var(--text-color);
     }
     .fav-btn:hover {
-      background: #f8f9fa;
+      background: rgba(0,0,0,0.05);
+    }
+    .chat-btn:hover, .report-btn:hover, .share-btn:hover, .compare-btn:hover {
+      background: var(--button-hover);
     }
 
+    /* Rating stars */
     .rating-widget {
-      margin-top: 0.3rem;
+      margin-top: 0.4rem;
     }
     .star {
-      font-size: 1rem;
+      font-size: 0.9rem;
       cursor: pointer;
       color: #f39c12;
-      transition: transform 0.1s;
-    }
-    .star:hover {
-      transform: scale(1.2);
-    }
-    .rating-message {
-      font-size: 0.7rem;
-      color: #27ae60;
     }
 
-    .read-more-btn {
-      background: none;
-      border: none;
-      color: #3498db;
-      cursor: pointer;
-      text-decoration: underline;
-      font-size: 0.8rem;
-      padding: 0;
-      margin-left: 5px;
-    }
-    .read-more-btn:hover {
-      color: #2980b9;
-    }
-
+    /* Pagination */
     .pagination {
       display: flex;
       flex-wrap: wrap;
@@ -569,40 +466,28 @@
       background: var(--card-bg);
       border: 1px solid var(--input-border);
       border-radius: 30px;
-      padding: 8px 16px;
-      font-size: 0.9rem;
+      padding: 6px 12px;
+      font-size: 0.8rem;
       cursor: pointer;
       transition: all 0.2s;
       color: var(--text-color);
     }
-    .page-btn:hover {
+    .page-btn:hover, .page-btn.active {
       background: var(--button-bg);
       color: white;
       border-color: var(--button-bg);
-    }
-    .page-btn.active {
-      background: var(--button-bg);
-      color: white;
-      border-color: var(--button-bg);
-    }
-    .page-btn.disabled {
-      opacity: 0.5;
-      pointer-events: none;
     }
 
+    /* Map */
     .map-section {
-      margin: 2rem 1rem;
-    }
-    .map-section h2 {
-      margin-bottom: 1rem;
-      color: var(--text-color);
+      margin: 2rem 0;
     }
     #map {
-      height: 400px;
+      height: 380px;
       width: 100%;
-      border-radius: 24px;
-      border: 2px solid white;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--input-border);
     }
     .map-controls {
       margin: 10px 0;
@@ -615,63 +500,41 @@
       background: var(--card-bg);
       border: 1px solid var(--input-border);
       border-radius: 30px;
-      padding: 6px 14px;
-      font-size: 0.9rem;
+      padding: 5px 12px;
+      font-size: 0.8rem;
       cursor: pointer;
     }
-    #radiusSliderControl {
-      width: 150px;
-    }
 
+    /* GPS section */
     .gps-section {
       background: var(--card-bg);
-      backdrop-filter: blur(4px);
-      border-radius: 24px;
-      padding: 2rem;
-      margin: 2rem 1rem;
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin: 2rem 0;
       text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    }
-    .gps-section h2 {
-      margin-bottom: 1rem;
-      color: var(--text-color);
+      border: 1px solid var(--input-border);
     }
     #getLocationBtn {
       background: var(--button-bg);
       color: white;
       border: none;
-      padding: 0.8rem 2rem;
+      padding: 0.5rem 1.2rem;
       border-radius: 40px;
-      font-weight: 600;
+      font-size: 0.85rem;
       cursor: pointer;
-      transition: background 0.2s;
-    }
-    #getLocationBtn:hover {
-      background: var(--button-hover);
-    }
-    #gpsStatus {
-      margin-top: 1rem;
-      color: var(--text-color);
     }
 
     footer {
       text-align: center;
-      padding: 2rem;
+      padding: 1.5rem;
       background: var(--footer-bg);
       color: var(--text-color);
-      border-radius: 40px 40px 0 0;
-      margin-top: 3rem;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
-    }
-    footer a {
-      color: #3498db;
-      text-decoration: none;
-      margin: 0 0.5rem;
-    }
-    footer a:hover {
-      text-decoration: underline;
+      border-top: 1px solid var(--input-border);
+      font-size: 0.8rem;
+      margin-top: 2rem;
     }
 
+    /* Modal (unchanged structure) */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -686,36 +549,28 @@
       background-color: var(--card-bg);
       margin: 20px auto;
       padding: 20px;
-      border-radius: 12px;
+      border-radius: 20px;
       width: 90%;
       max-width: 600px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     }
     .close-btn {
       color: #aaa;
       float: right;
-      font-size: 28px;
+      font-size: 24px;
       font-weight: bold;
       cursor: pointer;
     }
-    .close-btn:hover {
-      color: black;
-    }
-
     .modal-tab {
       background: var(--card-bg);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 16px;
+      border: 1px solid var(--input-border);
+      padding: 6px 14px;
       border-radius: 40px;
       cursor: pointer;
-      transition: all 0.2s;
     }
     .modal-tab.active {
       background: var(--button-bg);
       color: white;
-      border-color: var(--button-bg);
     }
 
     .lightbox-modal {
@@ -731,119 +586,27 @@
       justify-content: center;
       cursor: pointer;
     }
-    .lightbox-content {
+    .lightbox-content img {
       max-width: 90%;
       max-height: 90%;
-      margin: auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .lightbox-content img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
       border-radius: 8px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    .lightbox-close {
-      position: absolute;
-      top: 20px;
-      right: 30px;
-      font-size: 40px;
-      color: white;
-      cursor: pointer;
-      z-index: 10001;
-      font-weight: bold;
-    }
-    .lightbox-close:hover {
-      color: #ccc;
-    }
-    .lightbox-prev, .lightbox-next {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 40px;
-      color: white;
-      cursor: pointer;
-      user-select: none;
-      background: rgba(0,0,0,0.5);
-      padding: 10px 15px;
-      border-radius: 50%;
-      transition: background 0.2s;
-    }
-    .lightbox-prev { left: 20px; }
-    .lightbox-next { right: 20px; }
-    .lightbox-prev:hover, .lightbox-next:hover {
-      background: rgba(0,0,0,0.8);
-    }
-    .lightbox-counter {
-      position: absolute;
-      bottom: 20px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      color: white;
-      font-size: 14px;
-      background: rgba(0,0,0,0.6);
-      display: inline-block;
-      width: auto;
-      margin: 0 auto;
-      padding: 5px 12px;
-      border-radius: 20px;
-      pointer-events: none;
     }
 
-    .house-details-blurred {
-      filter: blur(4px);
-      pointer-events: none;
-      transition: filter 0.2s;
-      position: relative;
-    }
-    .house-details-blurred::after {
-      content: "🔒 Upgrade to unlock details";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-size: 0.9rem;
-      white-space: nowrap;
-      z-index: 10;
-      pointer-events: none;
-      backdrop-filter: blur(2px);
-    }
-
+    /* Landlord avatar */
     .landlord-avatar {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
+      font-weight: 500;
       color: white;
-      font-size: 1rem;
+      font-size: 0.9rem;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      margin-right: 8px;
-      transform: translateZ(0);
+      margin-right: 6px;
       overflow: hidden;
-    }
-    .landlord-avatar:hover {
-      transform: scale(1.05) rotateZ(2deg);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    }
-    .landlord-avatar img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
     }
     .landlord-info-row {
       display: flex;
@@ -852,25 +615,22 @@
       margin-bottom: 6px;
     }
 
+    /* Compare button */
     #compareFloatingBtn {
       position: fixed;
-      bottom: 100px;
+      bottom: 90px;
       right: 20px;
       background: var(--button-bg);
       color: white;
-      border-radius: 50px;
-      padding: 12px 20px;
+      border-radius: 40px;
+      padding: 8px 16px;
       display: none;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       cursor: pointer;
       z-index: 9998;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      font-weight: bold;
-      transition: transform 0.2s;
-    }
-    #compareFloatingBtn:hover {
-      transform: scale(1.02);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-size: 0.8rem;
     }
 
     @media (max-width: 768px) {
@@ -878,58 +638,24 @@
         flex-direction: column;
         align-items: flex-start;
       }
-      .nav-links a {
-        margin-left: 0;
-        margin-right: 1rem;
-      }
       .hero h1 {
-        font-size: 2.5rem;
+        font-size: 1.8rem;
       }
       .hero h1 i {
-        font-size: 2.5rem;
+        font-size: 1.6rem;
       }
       .hero p {
-        font-size: 1rem;
+        font-size: 0.9rem;
       }
       .filters-row {
         flex-direction: column;
         align-items: stretch;
-        margin: 1.5rem 0.5rem;
-      }
-      .filters {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .amenities-filters {
-        flex-direction: column;
-        align-items: center;
-        margin: 1rem 0.5rem;
-      }
-      .category-tabs {
-        flex-direction: column;
-        align-items: center;
-        margin: 20px 0.5rem;
       }
       #houses-container {
         grid-template-columns: 1fr;
-        margin: 2rem 0.5rem;
       }
       #map {
-        height: 300px;
-      }
-      .lightbox-prev, .lightbox-next {
-        font-size: 30px;
-        padding: 5px 10px;
-      }
-      .lightbox-close {
-        font-size: 30px;
-        top: 10px;
-        right: 15px;
-      }
-      #compareFloatingBtn {
-        bottom: 80px;
-        right: 10px;
-        padding: 8px 16px;
+        height: 280px;
       }
     }
   </style>
@@ -938,12 +664,12 @@
 
   <nav class="navbar">
     <div class="logo">
-      <i class="fas fa-home icon-3d"></i> Khomo Lathu
+      <i class="fas fa-home"></i> Khomo Lathu
     </div>
     <div class="nav-links">
-      <a href="#" data-i18n="home">Home</a>
-      <a href="#map" data-i18n="exploreMap">Explore Map</a>
-      <a href="login.html" data-i18n="landlordLogin">Landlord Login</a>
+      <a href="#">Home</a>
+      <a href="#map">Explore Map</a>
+      <a href="login.html">Landlord Login</a>
       <select class="lang-select" onchange="setLanguage(this.value)">
         <option value="en">English</option>
         <option value="ny">Chichewa</option>
@@ -984,8 +710,7 @@
         <input type="hidden" id="priceMax" value="2000000">
       </div>
 
-      <!-- Region Filter -->
-      <select id="regionFilter" class="sort-select" style="min-width: 130px;">
+      <select id="regionFilter" class="sort-select" style="min-width: 120px;">
         <option value="">All Regions</option>
         <option value="Northern">Northern Region</option>
         <option value="Central">Central Region</option>
@@ -1025,29 +750,29 @@
       <button class="tab-btn" data-type="Office"><i class="fas fa-briefcase"></i> Offices</button>
     </div>
 
-    <h2 style="margin: 1rem 0 0 1rem;" data-i18n="availableProperties"><i class="fas fa-list"></i> Available Properties</h2>
+    <h2 style="margin: 1rem 0 0.5rem 0;"><i class="fas fa-list"></i> Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
 
     <div class="pagination" id="pagination"></div>
 
     <section class="map-section" id="map-section">
-      <h2 data-i18n="mapView"><i class="fas fa-map"></i> Map View</h2>
+      <h2><i class="fas fa-map"></i> Map View</h2>
       <div class="map-controls">
-        <button id="drawAreaBtn" class="save-search-btn"><i class="fas fa-draw-polygon"></i> Draw Area to Search</button>
-        <button id="clearDrawBtn" class="save-search-btn" style="background: #e74c3c;"><i class="fas fa-trash-alt"></i> Clear Drawing</button>
+        <button id="drawAreaBtn" class="save-search-btn"><i class="fas fa-draw-polygon"></i> Draw Area</button>
+        <button id="clearDrawBtn" class="save-search-btn" style="background: #e74c3c;"><i class="fas fa-trash-alt"></i> Clear</button>
         <div style="display: flex; align-items: center; gap: 10px;">
           <label><i class="fas fa-location-dot"></i> Near Me Radius:</label>
           <input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2">
           <span id="radiusValueControl">2 km</span>
-          <button id="applyRadiusBtn" class="save-search-btn">Find Nearby</button>
+          <button id="applyRadiusBtn" class="save-search-btn">Find</button>
         </div>
       </div>
       <div id="map"></div>
     </section>
 
     <section class="gps-section">
-      <h2 data-i18n="gpsLocator"><i class="fas fa-location-dot"></i> Property GPS Locator</h2>
-      <button id="getLocationBtn" data-i18n="captureLocation"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
+      <h2><i class="fas fa-location-dot"></i> Property GPS Locator</h2>
+      <button id="getLocationBtn"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
       <p id="gpsStatus"></p>
       <input type="hidden" id="latitude">
       <input type="hidden" id="longitude">
@@ -1056,60 +781,46 @@
   </main>
 
   <footer>
-    <span data-i18n="copyright">© 2026 Khomo Lathu – Connecting Renters Across the Nation</span>
+    <span>© 2026 Khomo Lathu – Connecting Renters Across the Nation</span>
     <br><br>
-    <a href="terms.html" data-i18n="terms">Terms</a> | 
-    <a href="privacy.html" data-i18n="privacy">Privacy</a> | 
-    <a href="faq.html" data-i18n="faq">FAQ</a> | 
-    <a href="contact.html" data-i18n="contact">Contact</a>
+    <a href="terms.html">Terms</a> | 
+    <a href="privacy.html">Privacy</a> | 
+    <a href="faq.html">FAQ</a> | 
+    <a href="contact.html">Contact</a>
   </footer>
 
+  <!-- ========== MODALS ========== -->
   <!-- Property Modal -->
   <div id="propertyModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:600px;">
+    <div class="modal-content">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
       <div id="propertyModalContent"></div>
-      <div class="modal-tabs" style="display:flex; gap:10px; margin-top:15px;">
+      <div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;">
         <button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button>
-        <button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Neighbourhood Insights</button>
+        <button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button>
         <button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button>
         <button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button>
       </div>
       <div id="modalDetails" style="display:block;"></div>
-      <div id="modalInsights" style="display:none;">
-        <div id="insightsLoader" style="text-align:center; padding:20px;">Loading neighbourhood data...</div>
-      </div>
-      <div id="modalStreetView" style="display:none;">
-        <div id="streetViewLoader" style="text-align:center; padding:20px;">Loading street view...</div>
-      </div>
-      <div id="modalPricing" style="display:none;">
-        <div id="pricingLoader" style="text-align:center; padding:20px;">Fetching market data...</div>
-      </div>
+      <div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div>
+      <div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div>
+      <div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div>
     </div>
   </div>
 
   <!-- Booking Modal -->
   <div id="bookingModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:500px;">
+    <div class="modal-content">
       <span class="close-btn" onclick="closeBookingModal()">&times;</span>
       <h2>Request Booking</h2>
       <div id="bookingHouseInfo"></div>
       <form id="bookingForm">
-        <div class="form-group">
-          <label>Check‑in Date</label>
-          <input type="date" id="bookingStart" required>
-        </div>
-        <div class="form-group">
-          <label>Check‑out Date</label>
-          <input type="date" id="bookingEnd" required>
-        </div>
-        <div class="form-group">
-          <label>Message (optional)</label>
-          <textarea id="bookingMessage" rows="3"></textarea>
-        </div>
-        <button type="submit" class="upload-btn">Send Request</button>
+        <div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div>
+        <div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div>
+        <div class="form-group"><label>Message (optional)</label><textarea id="bookingMessage" rows="2"></textarea></div>
+        <button type="submit" class="save-search-btn">Send Request</button>
       </form>
-      <div id="bookingStatus" style="margin-top:10px;"></div>
+      <div id="bookingStatus"></div>
     </div>
   </div>
 
@@ -1118,9 +829,7 @@
     <span class="lightbox-close">&times;</span>
     <span class="lightbox-prev">&#10094;</span>
     <span class="lightbox-next">&#10095;</span>
-    <div class="lightbox-content">
-      <img id="lightboxImage" src="" alt="Full size house image">
-    </div>
+    <div class="lightbox-content"><img id="lightboxImage" src=""></div>
     <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
 
@@ -1129,17 +838,11 @@
     <div class="modal-content">
       <span class="close-btn" onclick="closeSaveSearchModal()">&times;</span>
       <h2>Save This Search</h2>
-      <p>Get email alerts when new houses match your filters.</p>
+      <p>Get email alerts when new houses match.</p>
       <form id="saveSearchForm">
-        <div class="form-group">
-          <label>Your Email</label>
-          <input type="email" id="searchEmail" required placeholder="you@example.com">
-        </div>
-        <div class="form-group">
-          <label>Search Name (optional)</label>
-          <input type="text" id="searchName" placeholder="e.g., Affordable Apartments">
-        </div>
-        <button type="submit" class="upload-btn">Save & Get Alerts</button>
+        <div class="form-group"><label>Your Email</label><input type="email" id="searchEmail" required></div>
+        <div class="form-group"><label>Search Name (optional)</label><input type="text" id="searchName"></div>
+        <button type="submit" class="save-search-btn">Save & Get Alerts</button>
       </form>
       <div id="saveSearchStatus"></div>
     </div>
@@ -1147,39 +850,36 @@
 
   <!-- Landlord Profile Modal -->
   <div id="landlordModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width: 500px; border-radius: 20px; overflow: hidden;">
+    <div class="modal-content" style="max-width:500px;">
       <span class="close-btn" onclick="closeLandlordModal()">&times;</span>
-      <div id="landlordModalContent" style="text-align: center;"></div>
+      <div id="landlordModalContent"></div>
     </div>
   </div>
 
   <!-- Share Modal -->
   <div id="shareModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-content" style="max-width:400px;">
       <span class="close-btn" onclick="closeShareModal()">&times;</span>
-      <h3 style="margin-bottom: 1rem;"><i class="fas fa-share-alt"></i> Share this property</h3>
-      <div style="display: flex; justify-content: space-around; gap: 1rem; flex-wrap: wrap;">
-        <button onclick="shareOnFacebook()" class="share-platform" style="background:#1877f2; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fab fa-facebook-f"></i> Facebook</button>
-        <button onclick="shareOnWhatsApp()" class="share-platform" style="background:#25D366; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-        <button onclick="shareOnTwitter()" class="share-platform" style="background:#1DA1F2; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fab fa-twitter"></i> Twitter</button>
-        <button onclick="copyShareLink()" class="share-platform" style="background:#6c757d; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fas fa-link"></i> Copy Link</button>
+      <h3><i class="fas fa-share-alt"></i> Share this property</h3>
+      <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;">
+        <button onclick="shareOnFacebook()" style="background:#1877f2;">Facebook</button>
+        <button onclick="shareOnWhatsApp()" style="background:#25D366;">WhatsApp</button>
+        <button onclick="shareOnTwitter()" style="background:#1DA1F2;">Twitter</button>
+        <button onclick="copyShareLink()" style="background:#6c757d;">Copy Link</button>
       </div>
-      <div id="shareStatus" style="margin-top:1rem; text-align:center; font-size:0.9rem;"></div>
+      <div id="shareStatus"></div>
     </div>
   </div>
 
   <!-- Comparison Modal -->
   <div id="comparisonModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width: 900px;">
+    <div class="modal-content" style="max-width:900px;">
       <span class="close-btn" onclick="closeComparisonModal()">&times;</span>
       <h2><i class="fas fa-chart-simple"></i> Compare Properties</h2>
-      <div id="comparisonTable" style="overflow-x: auto;">
-        <p style="text-align:center;">Select up to 3 houses to compare.</p>
-      </div>
+      <div id="comparisonTable">Select up to 3 houses to compare.</div>
     </div>
   </div>
 
-  <!-- Floating Compare Button -->
   <div id="compareFloatingBtn">
     <i class="fas fa-chart-simple"></i> Compare (<span id="compareCount">0</span>/3)
   </div>
@@ -1198,7 +898,7 @@
   <script src="js/script.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
-    // Lightbox functions (unchanged)
+    // Lightbox functions (keep as before)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
@@ -1275,11 +975,11 @@
       const end = document.getElementById("bookingEnd").value;
       const message = document.getElementById("bookingMessage").value;
       if (!start || !end) {
-        alert("Please select both check‑in and check‑out dates");
+        alert("Please select both dates");
         return;
       }
       const statusDiv = document.getElementById("bookingStatus");
-      statusDiv.innerHTML = "Sending request...";
+      statusDiv.innerHTML = "Sending...";
       try {
         const res = await fetch("/api/bookings", {
           method: "POST",
