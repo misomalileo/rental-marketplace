@@ -19,7 +19,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* Theme variables – same as before */
+    /* ========== THEME VARIABLES ========== */
     body.theme-light {
       --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       --navbar-bg: rgba(255,255,255,0.95);
@@ -83,7 +83,7 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    /* Navbar */
+    /* ---------- NAVBAR ---------- */
     .navbar {
       display: flex;
       justify-content: space-between;
@@ -96,17 +96,20 @@
       top: 0;
       z-index: 1000;
     }
+
     .logo {
       font-size: 1.6rem;
       font-weight: 700;
       color: var(--text-color);
     }
+
     .nav-links {
       display: flex;
       align-items: center;
       gap: 1.5rem;
       flex-wrap: wrap;
     }
+
     .nav-links a {
       color: var(--text-color);
       text-decoration: none;
@@ -116,6 +119,7 @@
     .nav-links a:hover {
       color: #3498db;
     }
+
     .lang-select, .theme-select {
       padding: 0.3rem 0.8rem;
       border-radius: 30px;
@@ -126,7 +130,7 @@
       font-size: 0.9rem;
     }
 
-    /* Hero */
+    /* ---------- HERO ---------- */
     .hero {
       text-align: center;
       padding: 3rem 1rem;
@@ -143,14 +147,14 @@
       opacity: 0.9;
     }
 
-    /* Main container */
+    /* ---------- MAIN CONTAINER ---------- */
     .main-container {
       max-width: 1300px;
       margin: 2rem auto;
       padding: 0 2rem;
     }
 
-    /* Filters & search */
+    /* ---------- FILTER ROW (price slider, sort, save) ---------- */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -166,7 +170,9 @@
       justify-content: center;
       flex: 1;
     }
-    .filters input, .filters select, .filters button {
+    .filters input,
+    .filters select,
+    .filters button {
       border: 1px solid var(--input-border);
       border-radius: 40px;
       padding: 0.6rem 1.2rem;
@@ -175,6 +181,11 @@
       color: var(--text-color);
       transition: all 0.2s;
       outline: none;
+    }
+    .filters input:focus,
+    .filters select:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
     }
     .filters button {
       background: var(--button-bg);
@@ -211,6 +222,7 @@
       color: var(--text-color);
       cursor: pointer;
     }
+
     .save-search-btn {
       background: var(--button-bg);
       color: white;
@@ -220,6 +232,7 @@
       cursor: pointer;
     }
 
+    /* Amenities filter checkboxes (iconized) */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -294,13 +307,14 @@
       border-color: var(--button-bg);
     }
 
-    /* House grid */
+    /* ---------- HOUSE GRID ---------- */
     #houses-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 1.5rem;
       margin: 2rem 0;
     }
+
     .house-card {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -314,6 +328,7 @@
       transform: translateY(-4px);
       box-shadow: 0 12px 30px rgba(0,0,0,0.1);
     }
+
     .slider {
       position: relative;
       width: 100%;
@@ -363,7 +378,7 @@
       color: var(--text-color);
     }
 
-    /* Badges (same) */
+    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -602,7 +617,7 @@
       border-color: var(--button-bg);
     }
 
-    /* Lightbox (unchanged) */
+    /* Lightbox */
     .lightbox-modal {
       position: fixed;
       top: 0;
@@ -879,15 +894,19 @@
       <div class="modal-tabs" style="display:flex; gap:10px; margin-top:15px;">
         <button class="modal-tab active" data-tab="details">🏠 Details</button>
         <button class="modal-tab" data-tab="insights">🏙️ Neighbourhood Insights</button>
+        <button class="modal-tab" data-tab="streetview">🌆 Street View</button>
       </div>
       <div id="modalDetails" style="display:block;"></div>
       <div id="modalInsights" style="display:none;">
         <div id="insightsLoader" style="text-align:center; padding:20px;">Loading neighbourhood data...</div>
       </div>
+      <div id="modalStreetView" style="display:none;">
+        <div id="streetViewLoader" style="text-align:center; padding:20px;">Loading street view...</div>
+      </div>
     </div>
   </div>
 
-  <!-- Booking Modal (unchanged) -->
+  <!-- Booking Modal -->
   <div id="bookingModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:500px;">
       <span class="close-btn" onclick="closeBookingModal()">&times;</span>
@@ -912,7 +931,7 @@
     </div>
   </div>
 
-  <!-- Lightbox Modal (unchanged) -->
+  <!-- Lightbox Modal -->
   <div id="lightboxModal" class="lightbox-modal" style="display: none;">
     <span class="lightbox-close">&times;</span>
     <span class="lightbox-prev">&#10094;</span>
@@ -923,7 +942,7 @@
     <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
 
-  <!-- Save Search Modal (unchanged) -->
+  <!-- Save Search Modal -->
   <div id="saveSearchModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeSaveSearchModal()">&times;</span>
@@ -944,7 +963,7 @@
     </div>
   </div>
 
-  <!-- Landlord Profile Modal (unchanged) -->
+  <!-- Landlord Profile Modal -->
   <div id="landlordModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width: 500px; border-radius: 20px; overflow: hidden;">
       <span class="close-btn" onclick="closeLandlordModal()">&times;</span>
@@ -952,7 +971,11 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Google Maps API key -->
+  <script>
+    window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';
+  </script>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -962,7 +985,7 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox functions (unchanged)
+    // Lightbox functions
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
@@ -1015,7 +1038,7 @@
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
 
-    // Booking modal functions (unchanged)
+    // Booking modal functions
     window.openBookingModal = function(houseId, houseName) {
       window.currentBookingHouseId = houseId;
       document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;

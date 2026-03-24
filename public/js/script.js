@@ -69,7 +69,7 @@ function getMarkerIcon(house) {
 }
 
 // ======================================
-// RENDER MARKERS (clustering)
+// RENDER MARKERS WITH CLUSTERING
 // ======================================
 function renderMarkers(houses) {
   if (!markersLayer) return;
@@ -79,6 +79,8 @@ function renderMarkers(houses) {
     if (!house.lat || !house.lng) return;
     const icon = getMarkerIcon(house);
     const marker = L.marker([house.lat, house.lng], { icon });
+
+    // Popup content (same as before)
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     let badge = "";
     if (house.owner?.verificationType === "premium") {
@@ -151,7 +153,7 @@ function renderMarkers(houses) {
 }
 
 // ======================================
-// FETCH HOUSES
+// FETCH HOUSES (with filters and sorting)
 // ======================================
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
@@ -284,7 +286,7 @@ function handleSortChange() {
 }
 
 // ======================================
-// SAVE SEARCH
+// SAVE SEARCH (localStorage)
 // ======================================
 function saveSearch() {
   const modal = document.getElementById('saveSearchModal');
@@ -315,7 +317,7 @@ function saveSearch() {
 }
 
 // ======================================
-// MAP INIT
+// MAP INITIALIZATION (clustering, drawing, radius)
 // ======================================
 function initMap() {
   map = L.map("map").setView([-15.786, 35.005], 12);
@@ -786,7 +788,7 @@ function closeLandlordModal() {
 }
 
 // ======================================
-// NEIGHBOURHOOD INSIGHTS (new feature)
+// NEIGHBOURHOOD INSIGHTS
 // ======================================
 async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
@@ -896,6 +898,34 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
 }
 
 // ======================================
+// STREET VIEW
+// ======================================
+function loadStreetView(lat, lng) {
+  const container = document.getElementById('modalStreetView');
+  container.innerHTML = '<div style="text-align:center; padding:20px;">Loading street view...</div>';
+
+  const apiKey = window.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    container.innerHTML = '<p style="text-align:center; padding:20px;">Street view not configured. Please contact support.</p>';
+    return;
+  }
+
+  const size = '600x300';
+  const heading = '0';
+  const pitch = '0';
+  const url = `https://maps.googleapis.com/maps/api/streetview?size=${size}&location=${lat},${lng}&heading=${heading}&pitch=${pitch}&key=${apiKey}`;
+
+  const img = new Image();
+  img.onload = () => {
+    container.innerHTML = `<img src="${url}" style="width:100%; border-radius:12px;" alt="Street View">`;
+  };
+  img.onerror = () => {
+    container.innerHTML = '<p style="text-align:center; padding:20px;">Street view not available for this location. Try moving the map marker.</p>';
+  };
+  img.src = url;
+}
+
+// ======================================
 // SHOW DETAILS (with tabs)
 // ======================================
 function showDetails(houseId) {
@@ -923,13 +953,16 @@ function showDetails(houseId) {
 
   if (house.lat && house.lng) {
     loadNeighbourhoodInsights(house.lat, house.lng);
+    loadStreetView(house.lat, house.lng);
   } else {
     document.getElementById('modalInsights').innerHTML = '<p>No location data available for insights.</p>';
+    document.getElementById('modalStreetView').innerHTML = '<p>No location data for street view.</p>';
   }
 
   const tabs = document.querySelectorAll('.modal-tab');
   const detailsPanel = document.getElementById('modalDetails');
   const insightsPanel = document.getElementById('modalInsights');
+  const streetViewPanel = document.getElementById('modalStreetView');
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -939,9 +972,15 @@ function showDetails(houseId) {
       if (target === 'details') {
         detailsPanel.style.display = 'block';
         insightsPanel.style.display = 'none';
-      } else {
+        streetViewPanel.style.display = 'none';
+      } else if (target === 'insights') {
         detailsPanel.style.display = 'none';
         insightsPanel.style.display = 'block';
+        streetViewPanel.style.display = 'none';
+      } else if (target === 'streetview') {
+        detailsPanel.style.display = 'none';
+        insightsPanel.style.display = 'none';
+        streetViewPanel.style.display = 'block';
       }
     });
   });
