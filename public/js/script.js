@@ -920,11 +920,15 @@ function loadStreetView(lat, lng) {
     container.innerHTML = `<img src="${url}" style="width:100%; border-radius:12px;" alt="Street View">`;
   };
   img.onerror = () => {
-    container.innerHTML = '<p style="text-align:center; padding:20px;">Street view not available for this location. Try moving the map marker.</p>';
+    // If static image fails, provide a link to Google Maps Street View
+    const mapsUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+    container.innerHTML = `
+      <p style="text-align:center; padding:20px;">Street view not available in this image. 
+      <br>But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">open Google Maps Street View</a> to see the area.</p>
+    `;
   };
   img.src = url;
 }
-
 // ======================================
 // SHOW DETAILS (with tabs)
 // ======================================
