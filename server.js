@@ -38,6 +38,7 @@ app.use(
           "https://cdnjs.cloudflare.com",
           "https://cdn.socket.io",
           "'unsafe-inline'",
+          "'unsafe-eval'",   // <-- ADDED for noUiSlider and other libraries
         ],
         scriptSrcAttr: null,
         styleSrc: [
@@ -57,6 +58,7 @@ app.use(
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
           "https://res.cloudinary.com",
+          "https://images.pexels.com",   // <-- ADDED for hero background images
         ],
         connectSrc: [
           "'self'",
@@ -171,7 +173,7 @@ const reportRoutes = require("./routes/report");
 const chatRoutes = require("./routes/chat");
 const paymentRoutes = require("./routes/payment");
 const bookingRoutes = require("./routes/booking");
-const chatbotRoutes = require("./routes/chatbot"); // NEW
+const chatbotRoutes = require("./routes/chatbot");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/houses", houseRoutes);
@@ -182,7 +184,7 @@ app.use("/api/report", reportRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/bookings", bookingRoutes);
-app.use("/api/chatbot", chatbotRoutes); // NEW
+app.use("/api/chatbot", chatbotRoutes);
 
 // ===============================
 // DEBUG ENDPOINT – TEST MONGODB CONNECTION
