@@ -794,25 +794,39 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
   if (!insightsDiv) return;
 
+  // Show loading state
+  insightsDiv.innerHTML = '<div style="text-align:center; padding:20px;">🔍 Scanning nearby amenities...</div>';
+
+  // Expanded list of amenities with sensible search radii
   const amenities = [
     { type: 'school', label: '🏫 Schools', maxDist: 2000 },
-    { type: 'hospital', label: '🏥 Hospitals', maxDist: 3000 },
-    { type: 'pharmacy', label: '💊 Pharmacy', maxDist: 1500 },
-    { type: 'supermarket', label: '🛒 Supermarket', maxDist: 1500 },
-    { type: 'restaurant', label: '🍽️ Restaurants', maxDist: 1000 },
-    { type: 'cafe', label: '☕ Cafes', maxDist: 1000 },
+    { type: 'university', label: '🎓 Universities', maxDist: 3000 },
+    { type: 'hospital', label: '🏥 Hospitals', maxDist: 5000 },
+    { type: 'clinic', label: '🏨 Clinics', maxDist: 2000 },
+    { type: 'pharmacy', label: '💊 Pharmacy', maxDist: 2000 },
+    { type: 'supermarket', label: '🛒 Supermarkets', maxDist: 2000 },
+    { type: 'restaurant', label: '🍽️ Restaurants', maxDist: 1500 },
+    { type: 'cafe', label: '☕ Cafes', maxDist: 1500 },
+    { type: 'fast_food', label: '🍔 Fast Food', maxDist: 1500 },
     { type: 'police', label: '👮 Police Station', maxDist: 3000 },
-    { type: 'marketplace', label: '📦 Market', maxDist: 2000 }
+    { type: 'marketplace', label: '📦 Markets', maxDist: 2000 },
+    { type: 'bank', label: '🏦 Banks', maxDist: 2000 },
+    { type: 'atm', label: '🏧 ATMs', maxDist: 1000 },
+    { type: 'fuel', label: '⛽ Fuel Station', maxDist: 3000 }
   ];
 
   let allResults = [];
+
   for (let amenity of amenities) {
     const radius = amenity.maxDist;
+    // Improved Overpass query: uses "around" radius, searches both nodes and ways, and includes shops
     const query = `
-      [out:json];
+      [out:json][timeout:25];
       (
         node["amenity"="${amenity.type}"](around:${radius},${houseLat},${houseLng});
         way["amenity"="${amenity.type}"](around:${radius},${houseLat},${houseLng});
+        node["shop"="${amenity.type}"](around:${radius},${houseLat},${houseLng});
+        way["shop"="${amenity.type}"](around:${radius},${houseLat},${houseLng});
       );
       out center;
     `;
@@ -825,10 +839,11 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
           .map(el => {
             const lat = el.lat || el.center?.lat;
             const lng = el.lon || el.center?.lon;
-            const dist = getDistance(houseLat, houseLng, lat, lng) * 1000;
-            return { name: el.tags?.name || `${amenity.label} (unnamed)`, dist };
+            if (!lat || !lng) return null;
+            const dist = getDistance(houseLat, houseLng, lat, lng) * 1000; // meters
+            return { name: el.tags?.name || `${amenity.label} (nearby)`, dist };
           })
-          .filter(el => el.dist <= amenity.maxDist)
+          .filter(el => el && el.dist <= amenity.maxDist)
           .sort((a,b) => a.dist - b.dist);
         if (nearest.length) {
           allResults.push({
@@ -857,18 +872,13 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
     if (house.selfContained) props.push("🏡 self-contained");
   }
 
-  if (allResults.some(r => r.label === '🏫 Schools')) {
-    const school = allResults.find(r => r.label === '🏫 Schools');
-    if (school && school.places[0].dist < 1000) {
-      prosText += `🏫 Within ${Math.round(school.places[0].dist)}m of a school. `;
-    }
-  }
-  if (allResults.some(r => r.label === '🛒 Supermarket')) {
-    const market = allResults.find(r => r.label === '🛒 Supermarket');
-    if (market && market.places[0].dist < 1000) {
-      prosText += `🛒 Nearby supermarket (${Math.round(market.places[0].dist)}m). `;
-    }
-  }
+  // Add amenities to pros text if any are found within 1000m
+  const nearbySchools = allResults.find(r => r.label === '🏫 Schools' && r.places[0]?.dist < 1000);
+  if (nearbySchools) prosText += `🏫 Within ${Math.round(nearbySchools.places[0].dist)}m of a school. `;
+  const nearbySupermarkets = allResults.find(r => r.label === '🛒 Supermarkets' && r.places[0]?.dist < 1000);
+  if (nearbySupermarkets) prosText += `🛒 Nearby supermarket (${Math.round(nearbySupermarkets.places[0].dist)}m). `;
+  const nearbyHospitals = allResults.find(r => r.label === '🏥 Hospitals' && r.places[0]?.dist < 2000);
+  if (nearbyHospitals) prosText += `🏥 Hospital within ${Math.round(nearbyHospitals.places[0].dist)}m. `;
 
   if (props.length) {
     prosText = `✨ ${house?.name || 'This property'} is a ${props.join(', ')} property. ${prosText}`;
@@ -880,13 +890,15 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
   insightsHtml += `<div class="insight-pros" style="background:rgba(0,0,0,0.05); padding:12px; border-radius:12px; margin-bottom:16px;">${prosText}</div>`;
 
   if (allResults.length === 0) {
-    insightsHtml += `<p>No nearby amenities found in OpenStreetMap data. You may be in a developing area – check back later!</p>`;
+    // Provide a fallback link to Google Maps
+    const mapsUrl = `https://www.google.com/maps/search/amenities/@${houseLat},${houseLng},15z`;
+    insightsHtml += `<p>No nearby amenities found in OpenStreetMap data. But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">explore the area on Google Maps</a> to see what's around.</p>`;
   } else {
     insightsHtml += `<div style="display:grid; gap:12px;">`;
     allResults.forEach(cat => {
       insightsHtml += `<div><strong>${cat.label}</strong><ul style="margin:5px 0 0 20px;">`;
       cat.places.forEach(place => {
-        const walkMinutes = Math.round(place.dist / 80);
+        const walkMinutes = Math.round(place.dist / 80); // 80 m/min ≈ 5 km/h
         insightsHtml += `<li>${place.name} – ${Math.round(place.dist)}m (about ${walkMinutes} min walk)</li>`;
       });
       insightsHtml += `</ul></div>`;
@@ -896,7 +908,6 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
 
   insightsDiv.innerHTML = insightsHtml;
 }
-
 // ======================================
 // STREET VIEW
 // ======================================
