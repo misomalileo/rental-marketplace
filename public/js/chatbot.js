@@ -1,5 +1,5 @@
 // ======================================
-// AI Concierge Chatbot Widget
+// AI Concierge Chatbot Widget – Enhanced UI
 // ======================================
 (function() {
   // Create the widget elements
@@ -15,14 +15,14 @@
         </div>
         <div id="chatbot-messages" style="flex: 1; overflow-y: auto; padding: 12px; background: var(--input-bg, #f9f9f9);">
           <div style="margin-bottom: 8px; text-align: left;">
-            <div style="display: inline-block; background: var(--card-bg, white); padding: 8px 12px; border-radius: 18px; max-width: 80%;">
+            <div style="display: inline-block; background: var(--card-bg, white); padding: 8px 12px; border-radius: 18px; max-width: 80%; font-size: 0.85rem;">
               👋 Hi! I'm your AI concierge. Ask me anything about houses on our platform.
             </div>
           </div>
         </div>
         <div style="padding: 12px; border-top: 1px solid var(--input-border, #ddd); display: flex; gap: 8px;">
-          <input type="text" id="chatbot-input" placeholder="Ask me about houses..." style="flex: 1; padding: 8px 12px; border: 1px solid var(--input-border, #ddd); border-radius: 30px; background: var(--input-bg, white); color: var(--text-color, #333); outline: none;">
-          <button id="chatbot-send" style="background: var(--button-bg, #3498db); color: white; border: none; border-radius: 30px; padding: 8px 16px; cursor: pointer;">Send</button>
+          <input type="text" id="chatbot-input" placeholder="Ask me about houses..." style="flex: 1; padding: 8px 12px; border: 1px solid var(--input-border, #ddd); border-radius: 30px; background: var(--input-bg, white); color: var(--text-color, #333); outline: none; font-size: 0.85rem;">
+          <button id="chatbot-send" style="background: var(--button-bg, #3498db); color: white; border: none; border-radius: 30px; padding: 8px 16px; cursor: pointer; font-size: 0.85rem;">Send</button>
         </div>
       </div>
     </div>
@@ -39,13 +39,44 @@
 
   let isLoading = false;
 
-  function addMessage(text, isUser = false) {
+  // Helper to add a message bubble
+  function addMessage(text, isUser = false, isHtml = false) {
     const msgDiv = document.createElement('div');
     msgDiv.style.marginBottom = '8px';
     msgDiv.style.textAlign = isUser ? 'right' : 'left';
-    msgDiv.innerHTML = `<div style="display: inline-block; background: ${isUser ? 'var(--button-bg, #3498db)' : 'var(--card-bg, white)'}; color: ${isUser ? 'white' : 'var(--text-color, #333)'}; padding: 8px 12px; border-radius: 18px; max-width: 80%;">${text}</div>`;
+    const content = isHtml ? text : escapeHtml(text);
+    msgDiv.innerHTML = `<div style="display: inline-block; background: ${isUser ? 'var(--button-bg, #3498db)' : 'var(--card-bg, white)'}; color: ${isUser ? 'white' : 'var(--text-color, #333)'}; padding: 8px 12px; border-radius: 18px; max-width: 80%; font-size: 0.85rem; word-wrap: break-word;">${content}</div>`;
     messagesDiv.appendChild(msgDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // Simple escape to prevent XSS
+  function escapeHtml(str) {
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+      return c;
+    });
+  }
+
+  // Format search results as a clean list
+  function formatSearchResults(houses) {
+    if (!houses || houses.length === 0) {
+      return 'Sorry, I couldn’t find any houses matching your request.';
+    }
+    let html = '<div style="font-size: 0.8rem;"><strong>Here are some houses that match your request:</strong><ul style="margin: 8px 0 0 16px; padding-left: 0;">';
+    houses.forEach(house => {
+      // Build clickable link that opens the property modal without leaving the page
+      const linkUrl = `/?house=${house.id}`;
+      html += `<li style="margin-bottom: 6px; line-height: 1.3;">
+        🏠 <a href="${linkUrl}" target="_blank" style="color: var(--button-bg, #3498db); text-decoration: none; font-weight: 500;">${escapeHtml(house.name)}</a> – MWK ${house.price.toLocaleString()} (${escapeHtml(house.location)})
+      </li>`;
+    });
+    html += '</ul></div>';
+    return html;
   }
 
   async function sendMessage() {
@@ -60,7 +91,7 @@
     typingDiv.id = 'typing-indicator';
     typingDiv.style.marginBottom = '8px';
     typingDiv.style.textAlign = 'left';
-    typingDiv.innerHTML = `<div style="display: inline-block; background: var(--card-bg, white); padding: 8px 12px; border-radius: 18px;">🤖 typing...</div>`;
+    typingDiv.innerHTML = `<div style="display: inline-block; background: var(--card-bg, white); padding: 8px 12px; border-radius: 18px; font-size: 0.8rem;">🤖 typing...</div>`;
     messagesDiv.appendChild(typingDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
@@ -74,13 +105,8 @@
       typingDiv.remove();
 
       if (data.action === 'searchResults') {
-        // Show list of houses
-        let reply = "Here are some houses that match your request:\n\n";
-        data.houses.forEach(h => {
-          reply += `🏠 ${h.name} – MWK ${h.price.toLocaleString()} (${h.location})\n`;
-          reply += `   👉 ${window.location.origin}/?house=${h.id}\n\n`;
-        });
-        addMessage(reply);
+        const formatted = formatSearchResults(data.houses);
+        addMessage(formatted, false, true);
       } else {
         addMessage(data.text);
       }
