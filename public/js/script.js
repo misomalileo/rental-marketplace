@@ -240,6 +240,9 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     renderMarkers(allHouses);
     renderPagination();
     updateURL();
+
+    // Render featured section
+    renderFeaturedHouses();
   } catch (err) {
     console.error("Failed loading houses:", err);
     const container = document.getElementById("houses-container");
@@ -300,6 +303,42 @@ function applyRegionFilter() {
 }
 
 // ======================================
+// FEATURED SECTION
+// ======================================
+function renderFeaturedHouses() {
+  const container = document.getElementById('featured-container');
+  if (!container) return;
+  const featured = allHouses.filter(h => h.featured === true || (h.owner && h.owner.verificationType !== 'none'));
+  if (featured.length === 0) {
+    container.innerHTML = '<p>No premium listings yet.</p>';
+    return;
+  }
+  const limited = featured.slice(0, 6);
+  container.innerHTML = '';
+  limited.forEach(house => {
+    const card = document.createElement('div');
+    card.className = 'house-card';
+    const img = house.images?.[0] || 'placeholder.jpg';
+    const price = house.price.toLocaleString();
+    let badgeHtml = '';
+    if (house.featured) badgeHtml = '<span class="badge premium">⭐ Featured</span>';
+    else if (house.owner?.verificationType === 'premium') badgeHtml = '<span class="badge premium">⭐ Premium</span>';
+    else if (house.owner?.verificationType === 'official') badgeHtml = '<span class="badge verified">✔ Verified</span>';
+    card.innerHTML = `
+      <div class="slider"><img src="${img}" style="cursor:pointer;" onclick="event.stopPropagation(); openLightbox(['${img}'],0);"></div>
+      <div class="house-card-content">
+        <h3>${house.name}</h3>
+        <p><i class="fas fa-map-marker-alt"></i> ${house.location}</p>
+        <p><i class="fas fa-money-bill-wave"></i> MWK ${price} / month</p>
+        ${badgeHtml}
+        <div style="margin-top:0.5rem;"><button class="fav-btn" onclick="toggleFavorite('${house._id}')"><i class="far fa-heart"></i></button></div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ======================================
 // PRICE SLIDER
 // ======================================
 function initPriceSlider() {
@@ -339,7 +378,8 @@ function getCurrentFilters() {
     petFriendly: document.getElementById('filterPetFriendly')?.checked || false,
     pool: document.getElementById('filterPool')?.checked || false,
     ac: document.getElementById('filterAC')?.checked || false,
-    region: document.getElementById('regionFilter')?.value || ''
+    region: document.getElementById('regionFilter')?.value || '',
+    location: document.getElementById('districtFilter')?.value || ''
   };
 }
 
@@ -541,7 +581,7 @@ function openComparisonModal() {
   ];
 
   features.forEach(feature => {
-    tableHtml += `<td><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
+    tableHtml += `<tr><td style="padding: 8px; font-weight: bold;">${feature.label}梳`;
     housesToCompare.forEach(house => {
       let value = house[feature.key];
       if (feature.format) {
@@ -550,7 +590,7 @@ function openComparisonModal() {
       } else {
         value = value || 'N/A';
       }
-      tableHtml += `<td style="padding: 8px;">${value}</td>`;
+      tableHtml += `<td style="padding: 8px;">${value}梳`;
     });
     tableHtml += '</tr>';
   });
@@ -1313,6 +1353,15 @@ if (regionSelect) {
   regionSelect.addEventListener('change', () => {
     currentRegion = regionSelect.value;
     applyRegionFilter();
+  });
+}
+
+// District filter
+const districtSelect = document.getElementById('districtFilter');
+if (districtSelect) {
+  districtSelect.addEventListener('change', () => {
+    currentFilters.location = districtSelect.value;
+    applyFilters();
   });
 }
 
