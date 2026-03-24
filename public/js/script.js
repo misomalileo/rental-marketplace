@@ -233,7 +233,7 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
       }
     }
 
-    // Apply region filter
+    // Apply region filter after houses are loaded
     applyRegionFilter();
 
     renderHouses(allHouses);
