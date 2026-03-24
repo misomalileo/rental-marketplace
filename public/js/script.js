@@ -120,53 +120,53 @@ function renderMarkers(houses) {
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     let badge = "";
     if (house.owner?.verificationType === "premium") {
-      badge = `<span class="badge premium">⭐ Premium</span>`;
+      badge = `<span class="badge premium"><i class="fas fa-star"></i> Premium</span>`;
     } else if (house.owner?.verificationType === "official") {
-      badge = `<span class="badge verified">✔ Verified</span>`;
+      badge = `<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>`;
     }
 
     let details = '';
     if (house.type === 'Hostel') {
       details = `
-        <p>🏨 Hostel</p>
-        <p>🛏️ Vacancies: ${house.vacancies || 0} rooms</p>
-        <p>💰 MWK ${Number(house.price).toLocaleString()} / room</p>
+        <p><i class="fas fa-hotel"></i> Hostel</p>
+        <p><i class="fas fa-bed"></i> Vacancies: ${house.vacancies || 0} rooms</p>
+        <p><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / room</p>
       `;
     } else {
       details = `
-        <p>🏠 ${house.type || 'House'}</p>
-        <p>🛏️ Bedrooms: ${house.bedrooms || 'N/A'}</p>
-        <p>💰 MWK ${Number(house.price).toLocaleString()} / month</p>
+        <p><i class="fas ${house.type === 'House' ? 'fa-home' : (house.type === 'Apartment' ? 'fa-building' : 'fa-home')}"></i> ${house.type || 'House'}</p>
+        <p><i class="fas fa-bed"></i> Bedrooms: ${house.bedrooms || 'N/A'}</p>
+        <p><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / month</p>
       `;
     }
-    details += `<p>📋 Condition: ${house.condition || 'Good'}</p>`;
+    details += `<p><i class="fas fa-clipboard-list"></i> Condition: ${house.condition || 'Good'}</p>`;
 
     let genderInfo = '';
     if (house.gender && house.gender !== 'none') {
       let genderText = '';
-      if (house.gender === 'boys') genderText = '👦 Boys Only';
-      else if (house.gender === 'girls') genderText = '👧 Girls Only';
-      else if (house.gender === 'mixed') genderText = '👫 Mixed';
+      if (house.gender === 'boys') genderText = '<i class="fas fa-mars"></i> Boys Only';
+      else if (house.gender === 'girls') genderText = '<i class="fas fa-venus"></i> Girls Only';
+      else if (house.gender === 'mixed') genderText = '<i class="fas fa-venus-mars"></i> Mixed';
       genderInfo = `<p>${genderText}</p>`;
     }
 
     let amenities = [];
-    if (house.wifi) amenities.push("📶 WiFi");
-    if (house.parking) amenities.push("🅿️ Parking");
-    if (house.furnished) amenities.push("🛋️ Furnished");
-    if (house.petFriendly) amenities.push("🐾 Pet Friendly");
-    if (house.pool) amenities.push("🏊 Pool");
-    if (house.ac) amenities.push("❄️ AC");
+    if (house.wifi) amenities.push('<i class="fas fa-wifi"></i> WiFi');
+    if (house.parking) amenities.push('<i class="fas fa-parking"></i> Parking');
+    if (house.furnished) amenities.push('<i class="fas fa-couch"></i> Furnished');
+    if (house.petFriendly) amenities.push('<i class="fas fa-paw"></i> Pet Friendly');
+    if (house.pool) amenities.push('<i class="fas fa-swimming-pool"></i> Pool');
+    if (house.ac) amenities.push('<i class="fas fa-snowflake"></i> AC');
     const amenitiesHtml = amenities.length ? `<p>${amenities.join(" • ")}</p>` : '';
 
     let unavailableHtml = '';
     if (house.unavailableDates && house.unavailableDates.length > 0) {
       const dates = house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ');
-      unavailableHtml = `<p>🚫 Unavailable: ${dates}</p>`;
+      unavailableHtml = `<p><i class="fas fa-calendar-times"></i> Unavailable: ${dates}</p>`;
     }
 
-    const selfContainedBadge = house.selfContained ? '<br><span class="badge self-contained">🏡 Self Contained</span>' : '';
-    const featuredBadge = house.featured ? '<br><span class="badge featured">⭐ FEATURED</span>' : '';
+    const selfContainedBadge = house.selfContained ? '<br><span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
+    const featuredBadge = house.featured ? '<br><span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
 
     const popup = `
       <div style="width:200px">
@@ -180,7 +180,7 @@ function renderMarkers(houses) {
         ${selfContainedBadge}
         ${featuredBadge}
         <br>
-        <a href="https://wa.me/${house.phone}" target="_blank">Contact</a>
+        <a href="https://wa.me/${house.phone}" target="_blank"><i class="fab fa-whatsapp"></i> Contact</a>
       </div>
     `;
     marker.bindPopup(popup);
@@ -253,13 +253,13 @@ function renderPagination() {
     return;
   }
   let html = '';
-  html += `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${currentPage - 1})">« Prev</button>`;
+  html += `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left"></i> Prev</button>`;
   const start = Math.max(1, currentPage - 2);
   const end = Math.min(totalPages, currentPage + 2);
   for (let i = start; i <= end; i++) {
     html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
   }
-  html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})">Next »</button>`;
+  html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})">Next <i class="fas fa-chevron-right"></i></button>`;
   paginationDiv.innerHTML = html;
 }
 
@@ -355,7 +355,7 @@ function saveSearch() {
     let savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
     savedSearches.push(searchData);
     localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
-    document.getElementById('saveSearchStatus').innerHTML = '<div class="message success">Search saved! You will receive email alerts when new houses match.</div>';
+    document.getElementById('saveSearchStatus').innerHTML = '<div class="message success"><i class="fas fa-check-circle"></i> Search saved! You will receive email alerts when new houses match.</div>';
     setTimeout(() => {
       modal.style.display = 'none';
       document.getElementById('saveSearchStatus').innerHTML = '';
@@ -440,7 +440,7 @@ function initMap() {
         renderHouses(nearby);
         renderMarkers(nearby);
         map.setView([userLocation.lat, userLocation.lng], 14);
-        L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("You are here").openPopup();
+        L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("<i class='fas fa-map-pin'></i> You are here").openPopup();
       } else {
         alert("Please use 'Near Me' first to get your location.");
       }
@@ -480,7 +480,7 @@ function addToCompare(houseId) {
     comparisonList = comparisonList.filter(id => id !== houseId);
     // Update button text on the card
     const btn = document.querySelector(`.compare-btn[data-id="${houseId}"]`);
-    if (btn) btn.textContent = '➕ Compare';
+    if (btn) btn.innerHTML = '<i class="fas fa-chart-simple"></i> Compare';
   } else {
     if (comparisonList.length >= 3) {
       alert('You can compare up to 3 properties at once.');
@@ -488,7 +488,7 @@ function addToCompare(houseId) {
     }
     comparisonList.push(houseId);
     const btn = document.querySelector(`.compare-btn[data-id="${houseId}"]`);
-    if (btn) btn.textContent = '❌ Remove';
+    if (btn) btn.innerHTML = '<i class="fas fa-trash-alt"></i> Remove';
   }
   updateCompareButton();
 }
@@ -508,27 +508,26 @@ function openComparisonModal() {
   // Build comparison table
   let tableHtml = '<table style="width:100%; border-collapse: collapse; text-align: center;">';
   // Header row with house names
-  tableHtml += '<thead><tr><th style="padding: 8px;">Feature</th>';
+  tableHtml += '<thead> <th style="padding: 8px;">Feature</th>';
   housesToCompare.forEach(house => {
     tableHtml += `<th style="padding: 8px;">${house.name}</th>`;
   });
-  tableHtml += '</tr></thead><tbody>';
+  tableHtml += '</thead><tbody>';
 
-  // Rows
   const features = [
-    { label: '💰 Price', key: 'price', format: (v, house) => `MWK ${v.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}` },
-    { label: '📍 Location', key: 'location' },
-    { label: '🏠 Type', key: 'type' },
-    { label: '🛏️ Bedrooms', key: 'bedrooms', format: (v) => v || 'N/A' },
-    { label: '📋 Condition', key: 'condition' },
-    { label: '🏡 Self Contained', key: 'selfContained', format: (v) => v ? '✅ Yes' : '❌ No' },
-    { label: '📶 WiFi', key: 'wifi', format: (v) => v ? '✅' : '❌' },
-    { label: '🅿️ Parking', key: 'parking', format: (v) => v ? '✅' : '❌' },
-    { label: '🛋️ Furnished', key: 'furnished', format: (v) => v ? '✅' : '❌' },
-    { label: '🐾 Pet Friendly', key: 'petFriendly', format: (v) => v ? '✅' : '❌' },
-    { label: '🏊 Pool', key: 'pool', format: (v) => v ? '✅' : '❌' },
-    { label: '❄️ AC', key: 'ac', format: (v) => v ? '✅' : '❌' },
-    { label: '⭐ Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
+    { label: '<i class="fas fa-money-bill-wave"></i> Price', key: 'price', format: (v, house) => `MWK ${v.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}` },
+    { label: '<i class="fas fa-map-marker-alt"></i> Location', key: 'location' },
+    { label: '<i class="fas fa-home"></i> Type', key: 'type' },
+    { label: '<i class="fas fa-bed"></i> Bedrooms', key: 'bedrooms', format: (v) => v || 'N/A' },
+    { label: '<i class="fas fa-clipboard-list"></i> Condition', key: 'condition' },
+    { label: '<i class="fas fa-home"></i> Self Contained', key: 'selfContained', format: (v) => v ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No' },
+    { label: '<i class="fas fa-wifi"></i> WiFi', key: 'wifi', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
+    { label: '<i class="fas fa-parking"></i> Parking', key: 'parking', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
+    { label: '<i class="fas fa-couch"></i> Furnished', key: 'furnished', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
+    { label: '<i class="fas fa-paw"></i> Pet Friendly', key: 'petFriendly', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
+    { label: '<i class="fas fa-swimming-pool"></i> Pool', key: 'pool', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
+    { label: '<i class="fas fa-snowflake"></i> AC', key: 'ac', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
+    { label: '<i class="fas fa-star"></i> Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
   ];
 
   features.forEach(feature => {
@@ -547,7 +546,7 @@ function openComparisonModal() {
   });
 
   // Image row
-  tableHtml += '<tr><td style="padding: 8px; font-weight: bold;">📸 Image</td>';
+  tableHtml += `<tr><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
   housesToCompare.forEach(house => {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:80px; height:80px; object-fit:cover; border-radius:8px;"></td>`;
@@ -564,7 +563,7 @@ function closeComparisonModal() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS (with compare button)
+// RENDER HOUSE CARDS (with icons, no emojis)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -582,7 +581,7 @@ function renderHouses(houses) {
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
     let currentIndex = 0;
 
-    // Landlord avatar (circular 3D) – use profile picture if available
+    // Landlord avatar
     let avatarHtml = '';
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
@@ -596,22 +595,21 @@ function renderHouses(houses) {
       `;
     }
 
-    // Landlord info row (avatar + name + badges)
     let landlordInfoHtml = '';
     if (house.owner) {
       landlordInfoHtml = `<div class="landlord-info-row">
         ${avatarHtml}
         <a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>
-        ${house.owner.verificationType === "premium" ? '<span class="badge premium">⭐ Premium</span>' : ''}
-        ${house.owner.verificationType === "official" ? '<span class="badge verified">✔ Verified</span>' : ''}
+        ${house.owner.verificationType === "premium" ? '<span class="badge premium"><i class="fas fa-star"></i> Premium</span>' : ''}
+        ${house.owner.verificationType === "official" ? '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>' : ''}
       </div>`;
     }
 
-    const featuredBadge = house.featured ? '<span class="badge featured">⭐ FEATURED</span>' : '';
-    const selfContainedBadge = house.selfContained ? '<span class="badge self-contained">🏡 Self Contained</span>' : '';
+    const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
+    const selfContainedBadge = house.selfContained ? '<span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
     const ratingStars = getStarRating(house.averageRating);
     const ratingText = house.averageRating ? house.averageRating.toFixed(1) : "N/A";
-    const favIcon = favorites.includes(house._id) ? "❤️" : "🤍";
+    const favIcon = favorites.includes(house._id) ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
 
     const ratingWidget = isLoggedIn
       ? `<div class="rating-widget" data-house-id="${house._id}">
@@ -622,30 +620,30 @@ function renderHouses(houses) {
            <span class="star" data-value="5">☆</span>
            <span class="rating-message"></span>
          </div>`
-      : `<p><small><a href="login.html">Login to rate</a></small></p>`;
+      : `<p><small><a href="login.html"><i class="fas fa-sign-in-alt"></i> Login to rate</a></small></p>`;
 
     let details = '';
     if (house.type === 'Hostel') {
       details = `
-        <p>🏨 Hostel</p>
-        <p>🛏️ Vacancies: ${house.vacancies || 0} rooms</p>
-        <p>💰 MWK ${Number(house.price).toLocaleString()} / room</p>
+        <p><i class="fas fa-hotel"></i> Hostel</p>
+        <p><i class="fas fa-bed"></i> Vacancies: ${house.vacancies || 0} rooms</p>
+        <p><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / room</p>
       `;
     } else {
       details = `
-        <p>🏠 ${house.type || 'House'}</p>
-        <p>🛏️ Bedrooms: ${house.bedrooms || 'N/A'}</p>
-        <p>💰 MWK ${Number(house.price).toLocaleString()} / month</p>
+        <p><i class="fas ${house.type === 'House' ? 'fa-home' : (house.type === 'Apartment' ? 'fa-building' : 'fa-home')}"></i> ${house.type || 'House'}</p>
+        <p><i class="fas fa-bed"></i> Bedrooms: ${house.bedrooms || 'N/A'}</p>
+        <p><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / month</p>
       `;
     }
-    details += `<p>📋 Condition: ${house.condition || 'Good'}</p>`;
+    details += `<p><i class="fas fa-clipboard-list"></i> Condition: ${house.condition || 'Good'}</p>`;
 
     let genderInfo = '';
     if (house.gender && house.gender !== 'none') {
       let genderText = '';
-      if (house.gender === 'boys') genderText = '👦 Boys Only';
-      else if (house.gender === 'girls') genderText = '👧 Girls Only';
-      else if (house.gender === 'mixed') genderText = '👫 Mixed';
+      if (house.gender === 'boys') genderText = '<i class="fas fa-mars"></i> Boys Only';
+      else if (house.gender === 'girls') genderText = '<i class="fas fa-venus"></i> Girls Only';
+      else if (house.gender === 'mixed') genderText = '<i class="fas fa-venus-mars"></i> Mixed';
       genderInfo = `<p>${genderText}</p>`;
     }
 
@@ -655,37 +653,34 @@ function renderHouses(houses) {
     if (house.furnished) amenities.push('<i class="fas fa-couch"></i> Furnished');
     if (house.petFriendly) amenities.push('<i class="fas fa-paw"></i> Pet Friendly');
     if (house.pool) amenities.push('<i class="fas fa-swimming-pool"></i> Pool');
-    if (house.ac) amenities.push('<i class="fas fa-snowflake"></i> Air Conditioning');
+    if (house.ac) amenities.push('<i class="fas fa-snowflake"></i> AC');
     const amenitiesHtml = amenities.length ? `<p class="amenities-list">${amenities.join(" • ")}</p>` : '';
 
     let unavailableHtml = '';
     if (house.unavailableDates && house.unavailableDates.length > 0) {
       const dates = house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ');
-      unavailableHtml = `<p>🚫 Unavailable: ${dates}</p>`;
+      unavailableHtml = `<p><i class="fas fa-calendar-times"></i> Unavailable: ${dates}</p>`;
     }
 
     const shortDesc = house.description ? house.description.substring(0, 60) + '...' : '';
-    const readMoreBtn = house.description ? `<button class="read-more-btn" onclick="showDetails('${house._id}')">📖 Read more</button>` : '';
+    const readMoreBtn = house.description ? `<button class="read-more-btn" onclick="showDetails('${house._id}')"><i class="fas fa-book-open"></i> Read more</button>` : '';
 
     const reportBtn = isLoggedIn 
-      ? `<button class="report-btn" onclick="reportHouse('${house._id}')">🚩 Report</button>`
+      ? `<button class="report-btn" onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>`
       : '';
 
     const chatBtn = (isLoggedIn && house.owner && house.owner._id !== currentUserId) 
-      ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')">💬 Chat</button>`
+      ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')"><i class="fas fa-comment-dots"></i> Chat</button>`
       : '';
 
-    // Share button
     const shareBtn = `<button class="share-btn" onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>`;
-
-    // Compare button
     const isSelected = comparisonList.includes(house._id);
-    const compareBtn = `<button class="compare-btn" data-id="${house._id}" onclick="addToCompare('${house._id}')">${isSelected ? '❌ Remove' : '➕ Compare'}</button>`;
+    const compareBtn = `<button class="compare-btn" data-id="${house._id}" onclick="addToCompare('${house._id}')"><i class="fas fa-chart-simple"></i> ${isSelected ? 'Remove' : 'Compare'}</button>`;
 
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
-        ${images.length > 1 ? `<button class="prev">‹</button><button class="next">›</button>` : ""}
+        ${images.length > 1 ? `<button class="prev"><i class="fas fa-chevron-left"></i></button><button class="next"><i class="fas fa-chevron-right"></i></button>` : ""}
       </div>
       <div class="house-card-content">
         ${landlordInfoHtml}
@@ -698,8 +693,8 @@ function renderHouses(houses) {
           ${amenitiesHtml}
           ${unavailableHtml}
           <p>${shortDesc} ${readMoreBtn}</p>
-          <p>⭐ Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
-          <p><a href="https://wa.me/${house.phone}" target="_blank">WhatsApp Landlord</a></p>
+          <p><i class="fas fa-star"></i> Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
+          <p><a href="https://wa.me/${house.phone}" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp Landlord</a></p>
           <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
             ${chatBtn}
             <button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>
@@ -903,26 +898,26 @@ async function showLandlordProfile(landlordId) {
 
     let badgeHtml = '';
     if (landlord.verificationType === 'premium') {
-      badgeHtml = '<span class="badge premium">⭐ Premium Landlord</span>';
+      badgeHtml = '<span class="badge premium"><i class="fas fa-star"></i> Premium Landlord</span>';
     } else if (landlord.verificationType === 'official') {
-      badgeHtml = '<span class="badge verified">✔ Verified Landlord</span>';
+      badgeHtml = '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified Landlord</span>';
     } else {
-      badgeHtml = '<span class="badge none">🔒 Not Verified</span>';
+      badgeHtml = '<span class="badge none"><i class="fas fa-lock"></i> Not Verified</span>';
     }
 
-    const businessHtml = landlord.businessName ? `<div class="business-name">🏢 ${landlord.businessName}</div>` : '';
+    const businessHtml = landlord.businessName ? `<div class="business-name"><i class="fas fa-building"></i> ${landlord.businessName}</div>` : '';
     const addressHtml = landlord.address ? `<div class="info-row"><i class="fas fa-map-marker-alt"></i> ${landlord.address}</div>` : '';
     const phoneHtml = `<div class="info-row"><i class="fas fa-phone-alt"></i> ${landlord.phone || 'Not provided'}</div>`;
     const emailHtml = `<div class="info-row"><i class="fas fa-envelope"></i> ${landlord.email}</div>`;
     const joinedHtml = `<div class="info-row"><i class="fas fa-calendar-alt"></i> Joined ${new Date(landlord.createdAt).toLocaleDateString()}</div>`;
     const responseRateHtml = `<div class="info-row"><i class="fas fa-reply-all"></i> Response Rate: ${landlord.profile?.responseRate || 0}%</div>`;
-    const bioHtml = landlord.bio ? `<div class="bio">${landlord.bio}</div>` : '';
+    const bioHtml = landlord.bio ? `<div class="bio"><i class="fas fa-quote-left"></i> ${landlord.bio}</div>` : '';
 
     let housesPreview = '';
     if (houses && houses.length) {
       housesPreview = `
         <div class="houses-preview">
-          <h4>🏠 Properties (${houses.length})</h4>
+          <h4><i class="fas fa-home"></i> Properties (${houses.length})</h4>
           <div class="houses-list">
             ${houses.slice(0, 6).map(house => `
               <img class="house-thumb" src="${house.images?.[0] || 'placeholder.jpg'}" alt="${house.name}" onclick="openLightbox(['${house.images?.[0]}'], 0); event.stopPropagation();">
@@ -947,7 +942,7 @@ async function showLandlordProfile(landlordId) {
         ${bioHtml}
         ${housesPreview}
         <div style="margin-top: 1rem;">
-          <button class="fav-btn" onclick="closeLandlordModal(); window.location.href='profile.html?id=${landlordId}'">View Full Profile</button>
+          <button class="fav-btn" onclick="closeLandlordModal(); window.location.href='profile.html?id=${landlordId}'"><i class="fas fa-external-link-alt"></i> View Full Profile</button>
         </div>
       </div>
     `;
@@ -970,23 +965,23 @@ function closeLandlordModal() {
 async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
   if (!insightsDiv) return;
-  insightsDiv.innerHTML = '<div style="text-align:center; padding:20px;">🔍 Scanning nearby amenities...</div>';
+  insightsDiv.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Scanning nearby amenities...</div>';
 
   const amenities = [
-    { type: 'school', label: '🏫 Schools', maxDist: 2000 },
-    { type: 'university', label: '🎓 Universities', maxDist: 3000 },
-    { type: 'hospital', label: '🏥 Hospitals', maxDist: 5000 },
-    { type: 'clinic', label: '🏨 Clinics', maxDist: 2000 },
-    { type: 'pharmacy', label: '💊 Pharmacy', maxDist: 2000 },
-    { type: 'supermarket', label: '🛒 Supermarkets', maxDist: 2000 },
-    { type: 'restaurant', label: '🍽️ Restaurants', maxDist: 1500 },
-    { type: 'cafe', label: '☕ Cafes', maxDist: 1500 },
-    { type: 'fast_food', label: '🍔 Fast Food', maxDist: 1500 },
-    { type: 'police', label: '👮 Police Station', maxDist: 3000 },
-    { type: 'marketplace', label: '📦 Markets', maxDist: 2000 },
-    { type: 'bank', label: '🏦 Banks', maxDist: 2000 },
-    { type: 'atm', label: '🏧 ATMs', maxDist: 1000 },
-    { type: 'fuel', label: '⛽ Fuel Station', maxDist: 3000 }
+    { type: 'school', label: '<i class="fas fa-school"></i> Schools', maxDist: 2000 },
+    { type: 'university', label: '<i class="fas fa-university"></i> Universities', maxDist: 3000 },
+    { type: 'hospital', label: '<i class="fas fa-hospital"></i> Hospitals', maxDist: 5000 },
+    { type: 'clinic', label: '<i class="fas fa-clinic-medical"></i> Clinics', maxDist: 2000 },
+    { type: 'pharmacy', label: '<i class="fas fa-pills"></i> Pharmacy', maxDist: 2000 },
+    { type: 'supermarket', label: '<i class="fas fa-shopping-cart"></i> Supermarkets', maxDist: 2000 },
+    { type: 'restaurant', label: '<i class="fas fa-utensils"></i> Restaurants', maxDist: 1500 },
+    { type: 'cafe', label: '<i class="fas fa-coffee"></i> Cafes', maxDist: 1500 },
+    { type: 'fast_food', label: '<i class="fas fa-hamburger"></i> Fast Food', maxDist: 1500 },
+    { type: 'police', label: '<i class="fas fa-shield-alt"></i> Police Station', maxDist: 3000 },
+    { type: 'marketplace', label: '<i class="fas fa-store"></i> Markets', maxDist: 2000 },
+    { type: 'bank', label: '<i class="fas fa-university"></i> Banks', maxDist: 2000 },
+    { type: 'atm', label: '<i class="fas fa-money-bill-wave"></i> ATMs', maxDist: 1000 },
+    { type: 'fuel', label: '<i class="fas fa-gas-pump"></i> Fuel Station', maxDist: 3000 }
   ];
 
   let allResults = [];
@@ -1033,22 +1028,22 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
   let prosText = '';
   const props = [];
   if (house) {
-    if (house.featured) props.push("⭐ featured listing");
-    if (house.wifi) props.push("📶 WiFi");
-    if (house.parking) props.push("🅿️ parking");
-    if (house.furnished) props.push("🛋️ furnished");
-    if (house.petFriendly) props.push("🐾 pet-friendly");
-    if (house.pool) props.push("🏊 pool");
-    if (house.ac) props.push("❄️ air conditioning");
-    if (house.selfContained) props.push("🏡 self-contained");
+    if (house.featured) props.push('<i class="fas fa-star"></i> featured listing');
+    if (house.wifi) props.push('<i class="fas fa-wifi"></i> WiFi');
+    if (house.parking) props.push('<i class="fas fa-parking"></i> parking');
+    if (house.furnished) props.push('<i class="fas fa-couch"></i> furnished');
+    if (house.petFriendly) props.push('<i class="fas fa-paw"></i> pet-friendly');
+    if (house.pool) props.push('<i class="fas fa-swimming-pool"></i> pool');
+    if (house.ac) props.push('<i class="fas fa-snowflake"></i> air conditioning');
+    if (house.selfContained) props.push('<i class="fas fa-home"></i> self-contained');
   }
 
-  const nearbySchools = allResults.find(r => r.label === '🏫 Schools' && r.places[0]?.dist < 1000);
-  if (nearbySchools) prosText += `🏫 Within ${Math.round(nearbySchools.places[0].dist)}m of a school. `;
-  const nearbySupermarkets = allResults.find(r => r.label === '🛒 Supermarkets' && r.places[0]?.dist < 1000);
-  if (nearbySupermarkets) prosText += `🛒 Nearby supermarket (${Math.round(nearbySupermarkets.places[0].dist)}m). `;
-  const nearbyHospitals = allResults.find(r => r.label === '🏥 Hospitals' && r.places[0]?.dist < 2000);
-  if (nearbyHospitals) prosText += `🏥 Hospital within ${Math.round(nearbyHospitals.places[0].dist)}m. `;
+  const nearbySchools = allResults.find(r => r.label.includes('Schools') && r.places[0]?.dist < 1000);
+  if (nearbySchools) prosText += `<i class="fas fa-school"></i> Within ${Math.round(nearbySchools.places[0].dist)}m of a school. `;
+  const nearbySupermarkets = allResults.find(r => r.label.includes('Supermarkets') && r.places[0]?.dist < 1000);
+  if (nearbySupermarkets) prosText += `<i class="fas fa-shopping-cart"></i> Nearby supermarket (${Math.round(nearbySupermarkets.places[0].dist)}m). `;
+  const nearbyHospitals = allResults.find(r => r.label.includes('Hospitals') && r.places[0]?.dist < 2000);
+  if (nearbyHospitals) prosText += `<i class="fas fa-hospital"></i> Hospital within ${Math.round(nearbyHospitals.places[0].dist)}m. `;
 
   if (props.length) {
     prosText = `✨ ${house?.name || 'This property'} is a ${props.join(', ')} property. ${prosText}`;
@@ -1056,12 +1051,12 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
     prosText = `✨ ${house?.name || 'This property'} is a comfortable property in a convenient location. ${prosText}`;
   }
 
-  let insightsHtml = `<h3>🔍 Neighbourhood Insights</h3>`;
+  let insightsHtml = `<h3><i class="fas fa-city"></i> Neighbourhood Insights</h3>`;
   insightsHtml += `<div class="insight-pros" style="background:rgba(0,0,0,0.05); padding:12px; border-radius:12px; margin-bottom:16px;">${prosText}</div>`;
 
   if (allResults.length === 0) {
     const mapsUrl = `https://www.google.com/maps/search/amenities/@${houseLat},${houseLng},15z`;
-    insightsHtml += `<p>No nearby amenities found in OpenStreetMap data. But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">explore the area on Google Maps</a> to see what's around.</p>`;
+    insightsHtml += `<p>No nearby amenities found in OpenStreetMap data. But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> explore the area on Google Maps</a> to see what's around.</p>`;
   } else {
     insightsHtml += `<div style="display:grid; gap:12px;">`;
     allResults.forEach(cat => {
@@ -1083,7 +1078,7 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
 // ======================================
 function loadStreetView(lat, lng) {
   const container = document.getElementById('modalStreetView');
-  container.innerHTML = '<div style="text-align:center; padding:20px;">Loading street view...</div>';
+  container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Loading street view...</div>';
 
   const apiKey = window.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
@@ -1102,7 +1097,7 @@ function loadStreetView(lat, lng) {
   };
   img.onerror = () => {
     const mapsUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-    container.innerHTML = `<p style="text-align:center; padding:20px;">Street view not available in this image.<br>But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">open Google Maps Street View</a> to see the area.</p>`;
+    container.innerHTML = `<p style="text-align:center; padding:20px;">Street view not available in this image.<br>But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> open Google Maps Street View</a> to see the area.</p>`;
   };
   img.src = url;
 }
@@ -1118,12 +1113,12 @@ async function loadPriceInsights(houseId) {
     if (!res.ok) throw new Error('Failed');
     const data = await res.json();
     container.innerHTML = `
-      <h3>💡 Price Insights</h3>
+      <h3><i class="fas fa-chart-line"></i> Price Insights</h3>
       <p><strong>Based on ${data.similarCount} similar properties nearby:</strong></p>
       <ul style="margin: 1rem 0;">
-        <li>💰 Average price: MWK ${data.averagePrice.toLocaleString()}</li>
-        <li>📊 Median price: MWK ${data.medianPrice.toLocaleString()}</li>
-        <li>📈 Price range: MWK ${data.priceRange.min.toLocaleString()} – ${data.priceRange.max.toLocaleString()}</li>
+        <li><i class="fas fa-chart-simple"></i> Average price: MWK ${data.averagePrice.toLocaleString()}</li>
+        <li><i class="fas fa-chart-line"></i> Median price: MWK ${data.medianPrice.toLocaleString()}</li>
+        <li><i class="fas fa-arrows-up-down"></i> Price range: MWK ${data.priceRange.min.toLocaleString()} – ${data.priceRange.max.toLocaleString()}</li>
       </ul>
       <div class="insight-pros" style="background:rgba(0,0,0,0.05); padding:12px; border-radius:12px;">
         🤖 <strong>AI Recommendation:</strong> ${data.recommendation}
@@ -1173,11 +1168,11 @@ function copyShareLink() {
   const url = getShareUrl();
   navigator.clipboard.writeText(url).then(() => {
     const statusDiv = document.getElementById('shareStatus');
-    statusDiv.innerHTML = '<span style="color:green;">✅ Link copied to clipboard!</span>';
+    statusDiv.innerHTML = '<span style="color:green;"><i class="fas fa-check-circle"></i> Link copied to clipboard!</span>';
     setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
   }).catch(() => {
     const statusDiv = document.getElementById('shareStatus');
-    statusDiv.innerHTML = '<span style="color:red;">❌ Failed to copy link.</span>';
+    statusDiv.innerHTML = '<span style="color:red;"><i class="fas fa-times-circle"></i> Failed to copy link.</span>';
     setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
   });
 }
@@ -1191,18 +1186,18 @@ function showDetails(houseId) {
 
   const detailsHtml = `
     <h2>${house.name}</h2>
-    <p><strong>Type:</strong> ${house.type}</p>
-    <p><strong>Location:</strong> ${house.location}</p>
-    <p><strong>Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
-    <p><strong>Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
-    <p><strong>Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
-    <p><strong>Condition:</strong> ${house.condition}</p>
-    <p><strong>Self Contained:</strong> ${house.selfContained ? '✅ Yes' : '❌ No'}</p>
-    <p><strong>Description:</strong> ${house.description || 'No description'}</p>
-    <p><strong>Amenities:</strong> ${house.wifi ? '📶 WiFi ' : ''}${house.parking ? '🅿️ Parking ' : ''}${house.furnished ? '🛋️ Furnished ' : ''}${house.petFriendly ? '🐾 Pet Friendly ' : ''}${house.pool ? '🏊 Pool ' : ''}${house.ac ? '❄️ AC ' : ''}</p>
-    <p><strong>Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender}</p>
-    <p><strong>Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
-    <p><strong>Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>
+    <p><strong><i class="fas fa-home"></i> Type:</strong> ${house.type}</p>
+    <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p>
+    <p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
+    <p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
+    <p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
+    <p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p>
+    <p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p>
+    <p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p>
+    <p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p>
+    <p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p>
+    <p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
+    <p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>
   `;
 
   document.getElementById('modalDetails').innerHTML = detailsHtml;
@@ -1307,7 +1302,7 @@ if (nearBtn) {
     navigator.geolocation.getCurrentPosition(pos => {
       userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       map.setView([userLocation.lat, userLocation.lng], 14);
-      L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("You are here").openPopup();
+      L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("<i class='fas fa-map-pin'></i> You are here").openPopup();
 
       const nearby = allHouses.filter(h => {
         if (!h.lat || !h.lng) return false;
@@ -1325,14 +1320,14 @@ if (gpsBtn) {
   gpsBtn.addEventListener("click", () => {
     const status = document.getElementById("gpsStatus");
     if (navigator.geolocation) {
-      status.innerHTML = "Getting location...";
+      status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Getting location...";
       navigator.geolocation.getCurrentPosition(
         pos => {
           document.getElementById("latitude").value = pos.coords.latitude;
           document.getElementById("longitude").value = pos.coords.longitude;
-          status.innerHTML = `✅ Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`;
+          status.innerHTML = `<i class="fas fa-check-circle"></i> Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`;
         },
-        () => { status.innerHTML = "⚠️ Allow location access"; },
+        () => { status.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Allow location access"; },
         { enableHighAccuracy: true }
       );
     } else {

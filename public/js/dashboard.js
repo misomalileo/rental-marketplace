@@ -13,7 +13,6 @@ let currentHouseId = null;
 // Chart variables
 let viewsChart, earningsChart, conversionChart;
 
-// ========== LOADING INDICATOR ==========
 function showLoading() {
   document.getElementById('loadingOverlay').style.display = 'flex';
 }
@@ -21,7 +20,6 @@ function hideLoading() {
   document.getElementById('loadingOverlay').style.display = 'none';
 }
 
-// ========== FETCH USER & PROFILE CHECK ==========
 async function fetchUser() {
   try {
     const res = await fetch("/api/auth/me", {
@@ -47,7 +45,6 @@ function updateProfileCard() {
   document.getElementById('profileDisplayBusiness').innerHTML = currentUser.businessName ? `<strong>${currentUser.businessName}</strong>` : '';
 }
 
-// ========== PROFILE MODAL ==========
 function showProfileModal() {
   document.getElementById('profileName').value = currentUser.name || '';
   document.getElementById('profilePhone').value = currentUser.phone || '';
@@ -162,7 +159,6 @@ document.getElementById('profilePicture').addEventListener('change', function(e)
   }
 });
 
-// ========== VERIFICATION UI ==========
 function updateVerificationUI() {
   const container = document.getElementById("verification-status");
   if (!container || !currentUser) return;
@@ -180,22 +176,21 @@ function updateVerificationUI() {
   }
 
   if (currentUser.verificationType === "premium") {
-    container.innerHTML = `<span class="premium-badge">⭐ You are a PREMIUM Landlord${daysLeft}</span>`;
+    container.innerHTML = `<span class="premium-badge"><i class="fas fa-star"></i> You are a PREMIUM Landlord${daysLeft}</span>`;
   } else if (currentUser.verificationType === "official") {
     container.innerHTML = `
-      <span class="official-badge">✔ You are an OFFICIAL Landlord${daysLeft}</span>
+      <span class="official-badge"><i class="fas fa-check-circle"></i> You are an OFFICIAL Landlord${daysLeft}</span>
       <button class="payment-btn premium" onclick="payForVerification('premium')">Upgrade to PREMIUM (K5000)</button>
     `;
   } else {
     container.innerHTML = `
-      <span class="none-badge">Your account is not verified${daysLeft}</span>
+      <span class="none-badge"><i class="fas fa-lock"></i> Your account is not verified${daysLeft}</span>
       <button class="payment-btn official" onclick="payForVerification('official')">Become OFFICIAL (K2500)</button>
       <button class="payment-btn premium" onclick="payForVerification('premium')">Become PREMIUM (K5000)</button>
     `;
   }
 }
 
-// ========== PAYMENT FUNCTIONS ==========
 function payForVerification(type) {
   currentPaymentAction = type === 'official' ? 'verifyOfficial' : 'verifyPremium';
   currentHouseId = null;
@@ -286,7 +281,6 @@ function closePaymentModal() {
   currentHouseId = null;
 }
 
-// ========== CHAT NOTIFICATION BADGE ==========
 async function loadUnreadCount() {
   try {
     const res = await fetch("/api/chat/my", {
@@ -316,7 +310,6 @@ async function loadUnreadCount() {
 
 setInterval(loadUnreadCount, 30000);
 
-// ========== MAP FUNCTIONS ==========
 function initMap() {
   map = L.map('map').setView([-15.7861, 35.0058], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
@@ -342,7 +335,6 @@ function getLocation() {
   });
 }
 
-// ========== HOUSES ==========
 async function loadMyHouses() {
   try {
     const res = await fetch("/api/houses/my-houses", {
@@ -361,22 +353,21 @@ async function loadMyHouses() {
 
     renderHouses(houses);
     loadBookingRequests();
-    loadHouseStats(); // fetch analytics
+    loadHouseStats();
   } catch (err) {
     console.error("Error loading houses:", err);
   }
 }
 
-// ========== ANALYTICS: CHARTS & INSIGHTS ==========
 async function loadHouseStats() {
   if (!myHouses.length) return;
-  const house = myHouses[0]; // For demo, use the first house
+  const house = myHouses[0];
   try {
     const res = await fetch(`/api/houses/stats/${house._id}`, {
       headers: { Authorization: "Bearer " + token }
     });
     const data = await res.json();
-    const viewsData = data.views; // array of { date, views }
+    const viewsData = data.views;
 
     const labels = viewsData.map(d => d.date);
     const views = viewsData.map(d => d.views);
@@ -399,7 +390,6 @@ async function loadHouseStats() {
       options: { responsive: true, maintainAspectRatio: true }
     });
 
-    // Mock earnings and conversion data (replace with real data)
     const earningsData = [10000, 15000, 8000, 20000];
     const conversionData = [5, 10, 8, 12];
 
@@ -421,7 +411,6 @@ async function loadHouseStats() {
       }
     });
 
-    // Generate insight
     const avgViews = views.reduce((a,b)=>a+b,0)/views.length;
     const insightText = `📈 Your listing is viewed ${avgViews > 20 ? '30% more' : '20% less'} than similar houses in your area. ${avgViews > 20 ? 'Great job! Consider adding more photos.' : 'Try adding better descriptions to improve visibility.'}`;
     document.getElementById('insightText').innerText = insightText;
@@ -439,19 +428,19 @@ function renderHouses(houses) {
     const card = document.createElement("div");
     card.className = "house-card";
     const featureButton = house.featured 
-      ? '<span class="featured-badge">⭐ Featured</span>' 
-      : `<button class="feature-btn" onclick="featureHouse('${house._id}')">⭐ Feature (K5000)</button>`;
+      ? '<span class="featured-badge"><i class="fas fa-star"></i> Featured</span>' 
+      : `<button class="feature-btn" onclick="featureHouse('${house._id}')"><i class="fas fa-crown"></i> Feature (K5000)</button>`;
     card.innerHTML = `
       <img src="${img}">
       <div class="house-content">
         <h3>${house.name}</h3>
-        <p>📍 ${house.location || 'N/A'}</p>
-        <p>💰 MWK ${house.price?.toLocaleString()}</p>
-        <p>👁️ Views: ${house.views || 0}</p>
-        <p>⭐ Rating: ${house.averageRating ? house.averageRating.toFixed(1) : 'No ratings'}</p>
+        <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
+        <p><i class="fas fa-money-bill-wave"></i> MWK ${house.price?.toLocaleString()}</p>
+        <p><i class="fas fa-eye"></i> Views: ${house.views || 0}</p>
+        <p><i class="fas fa-star"></i> Rating: ${house.averageRating ? house.averageRating.toFixed(1) : 'No ratings'}</p>
         <div class="house-actions">
-          <button class="edit" onclick="openEditModal('${house._id}')">✏️ Edit</button>
-          <button class="delete" onclick="deleteHouse('${house._id}')">🗑️ Delete</button>
+          <button class="edit" onclick="openEditModal('${house._id}')"><i class="fas fa-edit"></i> Edit</button>
+          <button class="delete" onclick="deleteHouse('${house._id}')"><i class="fas fa-trash-alt"></i> Delete</button>
           ${featureButton}
         </div>
       </div>
@@ -589,7 +578,6 @@ document.getElementById("editForm").addEventListener("submit", async e => {
   }
 });
 
-// ========== IMAGE PREVIEW & FORM VALIDATION ==========
 document.querySelector('input[name="images"]').addEventListener('change', function(e) {
   const preview = document.getElementById('imagePreview');
   preview.innerHTML = '';
@@ -655,7 +643,6 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
   }
 });
 
-// ========== BOOKING REQUESTS ==========
 async function loadBookingRequests() {
   try {
     let allBookings = [];
@@ -693,8 +680,8 @@ function renderBookings(bookings) {
       <p><strong>Status:</strong> <span class="booking-status ${b.status}">${b.status}</span></p>
       ${b.status === 'pending' ? `
         <div class="booking-actions">
-          <button class="approve-btn" onclick="updateBooking('${b._id}', 'approved')">✅ Approve</button>
-          <button class="reject-btn" onclick="updateBooking('${b._id}', 'rejected')">❌ Reject</button>
+          <button class="approve-btn" onclick="updateBooking('${b._id}', 'approved')"><i class="fas fa-check"></i> Approve</button>
+          <button class="reject-btn" onclick="updateBooking('${b._id}', 'rejected')"><i class="fas fa-times"></i> Reject</button>
         </div>
       ` : ''}
     `;

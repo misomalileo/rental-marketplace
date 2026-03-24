@@ -4,10 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Rental Marketplace | Blantyre Houses</title>
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="apple-touch-icon" href="/favicon.png">
-  <!-- Google Fonts & Leaflet CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,7 +16,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* ========== THEME VARIABLES ========== */
+    /* ========== THEME VARIABLES (unchanged) ========== */
     :root {
       --primary: #3b82f6;
       --primary-dark: #2563eb;
@@ -415,7 +411,7 @@
       color: var(--text-color);
     }
 
-    /* Badges */
+    /* Badges (unchanged) */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.5rem;
@@ -788,7 +784,6 @@
       margin-bottom: 6px;
     }
 
-    /* Floating Compare Button */
     #compareFloatingBtn {
       position: fixed;
       bottom: 100px;
@@ -931,11 +926,11 @@
 
     <div class="category-tabs">
       <button class="tab-btn active" data-type="all">All</button>
-      <button class="tab-btn" data-type="House">🏠 Houses</button>
-      <button class="tab-btn" data-type="Hostel">🏨 Hostels</button>
-      <button class="tab-btn" data-type="Apartment">🏢 Apartments</button>
-      <button class="tab-btn" data-type="Room">🛏️ Rooms</button>
-      <button class="tab-btn" data-type="Office">🏢 Offices</button>
+      <button class="tab-btn" data-type="House"><i class="fas fa-home"></i> Houses</button>
+      <button class="tab-btn" data-type="Hostel"><i class="fas fa-hotel"></i> Hostels</button>
+      <button class="tab-btn" data-type="Apartment"><i class="fas fa-building"></i> Apartments</button>
+      <button class="tab-btn" data-type="Room"><i class="fas fa-bed"></i> Rooms</button>
+      <button class="tab-btn" data-type="Office"><i class="fas fa-briefcase"></i> Offices</button>
     </div>
 
     <h2 style="margin: 1rem 0 0 1rem;" data-i18n="availableProperties">Available Properties</h2>
@@ -944,12 +939,12 @@
     <div class="pagination" id="pagination"></div>
 
     <section class="map-section" id="map-section">
-      <h2 data-i18n="mapView">📍 Map View</h2>
+      <h2 data-i18n="mapView"><i class="fas fa-map"></i> Map View</h2>
       <div class="map-controls">
-        <button id="drawAreaBtn" class="save-search-btn">✏️ Draw Area to Search</button>
-        <button id="clearDrawBtn" class="save-search-btn" style="background: #e74c3c;">🗑️ Clear Drawing</button>
+        <button id="drawAreaBtn" class="save-search-btn"><i class="fas fa-draw-polygon"></i> Draw Area to Search</button>
+        <button id="clearDrawBtn" class="save-search-btn" style="background: #e74c3c;"><i class="fas fa-trash-alt"></i> Clear Drawing</button>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <label>Near Me Radius:</label>
+          <label><i class="fas fa-location-dot"></i> Near Me Radius:</label>
           <input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2">
           <span id="radiusValueControl">2 km</span>
           <button id="applyRadiusBtn" class="save-search-btn">Find Nearby</button>
@@ -959,7 +954,7 @@
     </section>
 
     <section class="gps-section">
-      <h2 data-i18n="gpsLocator">📍 Property GPS Locator</h2>
+      <h2 data-i18n="gpsLocator"><i class="fas fa-location-dot"></i> Property GPS Locator</h2>
       <button id="getLocationBtn" data-i18n="captureLocation"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
       <p id="gpsStatus"></p>
       <input type="hidden" id="latitude">
@@ -983,10 +978,10 @@
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
       <div id="propertyModalContent"></div>
       <div class="modal-tabs" style="display:flex; gap:10px; margin-top:15px;">
-        <button class="modal-tab active" data-tab="details">🏠 Details</button>
-        <button class="modal-tab" data-tab="insights">🏙️ Neighbourhood Insights</button>
-        <button class="modal-tab" data-tab="streetview">🌆 Street View</button>
-        <button class="modal-tab" data-tab="pricing">💡 Price Insights</button>
+        <button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button>
+        <button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Neighbourhood Insights</button>
+        <button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button>
+        <button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button>
       </div>
       <div id="modalDetails" style="display:block;"></div>
       <div id="modalInsights" style="display:none;">
@@ -1070,7 +1065,7 @@
   <div id="shareModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width: 400px;">
       <span class="close-btn" onclick="closeShareModal()">&times;</span>
-      <h3 style="margin-bottom: 1rem;">📤 Share this property</h3>
+      <h3 style="margin-bottom: 1rem;"><i class="fas fa-share-alt"></i> Share this property</h3>
       <div style="display: flex; justify-content: space-around; gap: 1rem; flex-wrap: wrap;">
         <button onclick="shareOnFacebook()" class="share-platform" style="background:#1877f2; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fab fa-facebook-f"></i> Facebook</button>
         <button onclick="shareOnWhatsApp()" class="share-platform" style="background:#25D366; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fab fa-whatsapp"></i> WhatsApp</button>
@@ -1085,7 +1080,7 @@
   <div id="comparisonModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width: 900px;">
       <span class="close-btn" onclick="closeComparisonModal()">&times;</span>
-      <h2>🏠 Compare Properties</h2>
+      <h2><i class="fas fa-chart-simple"></i> Compare Properties</h2>
       <div id="comparisonTable" style="overflow-x: auto;">
         <p style="text-align:center;">Select up to 3 houses to compare.</p>
       </div>
