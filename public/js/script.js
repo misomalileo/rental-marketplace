@@ -794,10 +794,8 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
   if (!insightsDiv) return;
 
-  // Show loading state
   insightsDiv.innerHTML = '<div style="text-align:center; padding:20px;">🔍 Scanning nearby amenities...</div>';
 
-  // Expanded list of amenities with sensible search radii
   const amenities = [
     { type: 'school', label: '🏫 Schools', maxDist: 2000 },
     { type: 'university', label: '🎓 Universities', maxDist: 3000 },
@@ -819,7 +817,6 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
 
   for (let amenity of amenities) {
     const radius = amenity.maxDist;
-    // Improved Overpass query: uses "around" radius, searches both nodes and ways, and includes shops
     const query = `
       [out:json][timeout:25];
       (
@@ -840,7 +837,7 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
             const lat = el.lat || el.center?.lat;
             const lng = el.lon || el.center?.lon;
             if (!lat || !lng) return null;
-            const dist = getDistance(houseLat, houseLng, lat, lng) * 1000; // meters
+            const dist = getDistance(houseLat, houseLng, lat, lng) * 1000;
             return { name: el.tags?.name || `${amenity.label} (nearby)`, dist };
           })
           .filter(el => el && el.dist <= amenity.maxDist)
@@ -857,7 +854,6 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
     }
   }
 
-  // Find the house object (approximate)
   const house = allHouses.find(h => Math.abs(h.lat - houseLat) < 0.001 && Math.abs(h.lng - houseLng) < 0.001);
   let prosText = '';
   const props = [];
@@ -872,7 +868,6 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
     if (house.selfContained) props.push("🏡 self-contained");
   }
 
-  // Add amenities to pros text if any are found within 1000m
   const nearbySchools = allResults.find(r => r.label === '🏫 Schools' && r.places[0]?.dist < 1000);
   if (nearbySchools) prosText += `🏫 Within ${Math.round(nearbySchools.places[0].dist)}m of a school. `;
   const nearbySupermarkets = allResults.find(r => r.label === '🛒 Supermarkets' && r.places[0]?.dist < 1000);
@@ -890,7 +885,6 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
   insightsHtml += `<div class="insight-pros" style="background:rgba(0,0,0,0.05); padding:12px; border-radius:12px; margin-bottom:16px;">${prosText}</div>`;
 
   if (allResults.length === 0) {
-    // Provide a fallback link to Google Maps
     const mapsUrl = `https://www.google.com/maps/search/amenities/@${houseLat},${houseLng},15z`;
     insightsHtml += `<p>No nearby amenities found in OpenStreetMap data. But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">explore the area on Google Maps</a> to see what's around.</p>`;
   } else {
@@ -898,7 +892,7 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
     allResults.forEach(cat => {
       insightsHtml += `<div><strong>${cat.label}</strong><ul style="margin:5px 0 0 20px;">`;
       cat.places.forEach(place => {
-        const walkMinutes = Math.round(place.dist / 80); // 80 m/min ≈ 5 km/h
+        const walkMinutes = Math.round(place.dist / 80);
         insightsHtml += `<li>${place.name} – ${Math.round(place.dist)}m (about ${walkMinutes} min walk)</li>`;
       });
       insightsHtml += `</ul></div>`;
@@ -908,6 +902,7 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
 
   insightsDiv.innerHTML = insightsHtml;
 }
+
 // ======================================
 // STREET VIEW
 // ======================================
@@ -931,15 +926,40 @@ function loadStreetView(lat, lng) {
     container.innerHTML = `<img src="${url}" style="width:100%; border-radius:12px;" alt="Street View">`;
   };
   img.onerror = () => {
-    // If static image fails, provide a link to Google Maps Street View
     const mapsUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-    container.innerHTML = `
-      <p style="text-align:center; padding:20px;">Street view not available in this image. 
-      <br>But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">open Google Maps Street View</a> to see the area.</p>
-    `;
+    container.innerHTML = `<p style="text-align:center; padding:20px;">Street view not available in this image.<br>But you can <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">open Google Maps Street View</a> to see the area.</p>`;
   };
   img.src = url;
 }
+
+// ======================================
+// PRICE INSIGHTS
+// ======================================
+async function loadPriceInsights(houseId) {
+  const container = document.getElementById('modalPricing');
+  container.innerHTML = '<div style="text-align:center; padding:20px;">Fetching market data...</div>';
+  try {
+    const res = await fetch(`/api/houses/price-insights/${houseId}`);
+    if (!res.ok) throw new Error('Failed');
+    const data = await res.json();
+
+    container.innerHTML = `
+      <h3>💡 Price Insights</h3>
+      <p><strong>Based on ${data.similarCount} similar properties nearby:</strong></p>
+      <ul style="margin: 1rem 0;">
+        <li>💰 Average price: MWK ${data.averagePrice.toLocaleString()}</li>
+        <li>📊 Median price: MWK ${data.medianPrice.toLocaleString()}</li>
+        <li>📈 Price range: MWK ${data.priceRange.min.toLocaleString()} – ${data.priceRange.max.toLocaleString()}</li>
+      </ul>
+      <div class="insight-pros" style="background:rgba(0,0,0,0.05); padding:12px; border-radius:12px;">
+        🤖 <strong>AI Recommendation:</strong> ${data.recommendation}
+      </div>
+    `;
+  } catch (err) {
+    container.innerHTML = '<p>Market insights temporarily unavailable.</p>';
+  }
+}
+
 // ======================================
 // SHOW DETAILS (with tabs)
 // ======================================
@@ -973,11 +993,13 @@ function showDetails(houseId) {
     document.getElementById('modalInsights').innerHTML = '<p>No location data available for insights.</p>';
     document.getElementById('modalStreetView').innerHTML = '<p>No location data for street view.</p>';
   }
+  loadPriceInsights(house._id);
 
   const tabs = document.querySelectorAll('.modal-tab');
   const detailsPanel = document.getElementById('modalDetails');
   const insightsPanel = document.getElementById('modalInsights');
   const streetViewPanel = document.getElementById('modalStreetView');
+  const pricingPanel = document.getElementById('modalPricing');
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -988,14 +1010,22 @@ function showDetails(houseId) {
         detailsPanel.style.display = 'block';
         insightsPanel.style.display = 'none';
         streetViewPanel.style.display = 'none';
+        pricingPanel.style.display = 'none';
       } else if (target === 'insights') {
         detailsPanel.style.display = 'none';
         insightsPanel.style.display = 'block';
         streetViewPanel.style.display = 'none';
+        pricingPanel.style.display = 'none';
       } else if (target === 'streetview') {
         detailsPanel.style.display = 'none';
         insightsPanel.style.display = 'none';
         streetViewPanel.style.display = 'block';
+        pricingPanel.style.display = 'none';
+      } else if (target === 'pricing') {
+        detailsPanel.style.display = 'none';
+        insightsPanel.style.display = 'none';
+        streetViewPanel.style.display = 'none';
+        pricingPanel.style.display = 'block';
       }
     });
   });
