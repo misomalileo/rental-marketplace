@@ -13,6 +13,20 @@ const {
 } = require("../middleware/validator");
 
 // ======================================
+// HELPER: DISTANCE (Haversine) – used by price insights
+// ======================================
+function getDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// ======================================
 // CLOUDINARY CONFIGURATION
 // ======================================
 console.log("🔧 Configuring Cloudinary...");
@@ -467,6 +481,84 @@ router.get("/stats/:id", auth, async (req, res) => {
     }
     res.json({ views: viewsData });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// PRICE INSIGHTS (AI‑powered market comparison)
+// ======================================
+router.get("/price-insights/:id", async (req, res) => {
+  try {
+    const house = await House.findById(req.params.id);
+    if (!house) return res.status(404).json({ message: "House not found" });
+
+    // If no coordinates, we cannot do radius search
+    if (!house.lat || !house.lng) {
+      return res.json({
+        similarCount: 0,
+        averagePrice: house.price,
+        medianPrice: house.price,
+        priceRange: { min: house.price, max: house.price },
+        recommendation: "No location data – price comparison unavailable."
+      });
+    }
+
+    // Find similar houses within 5 km radius, same type, ±1 bedroom, excluding itself
+    const similarHouses = await House.find({
+      _id: { $ne: house._id },
+      type: house.type,
+      bedrooms: { $gte: house.bedrooms - 1, $lte: house.bedrooms + 1 },
+      price: { $gt: 0 },
+      lat: { $exists: true, $ne: null },
+      lng: { $exists: true, $ne: null }
+    }).lean();
+
+    // Filter by distance
+    const radius = 5; // km
+    const nearby = similarHouses.filter(h => {
+      const dist = getDistance(house.lat, house.lng, h.lat, h.lng);
+      return dist <= radius;
+    });
+
+    const prices = nearby.map(h => h.price);
+    const count = prices.length;
+    if (count === 0) {
+      return res.json({
+        similarCount: 0,
+        averagePrice: house.price,
+        medianPrice: house.price,
+        priceRange: { min: house.price, max: house.price },
+        recommendation: "No comparable properties nearby – price may be set by the landlord."
+      });
+    }
+
+    const avg = prices.reduce((a,b) => a+b, 0) / count;
+    const sorted = [...prices].sort((a,b) => a-b);
+    const median = sorted[Math.floor(sorted.length/2)];
+    const min = sorted[0];
+    const max = sorted[sorted.length-1];
+
+    let recommendation = "";
+    if (house.price > avg * 1.2) {
+      const over = Math.round(house.price - avg);
+      recommendation = `⚠️ Price seems high for this area. Consider lowering by up to MWK ${over.toLocaleString()} to attract more interest.`;
+    } else if (house.price < avg * 0.8) {
+      const under = Math.round(avg - house.price);
+      recommendation = `💰 Price is below market average. You could increase by MWK ${under.toLocaleString()} and still stay competitive.`;
+    } else {
+      recommendation = "✅ Price is in line with similar properties nearby.";
+    }
+
+    res.json({
+      similarCount: count,
+      averagePrice: avg,
+      medianPrice: median,
+      priceRange: { min, max },
+      recommendation
+    });
+  } catch (err) {
+    console.error("❌ Price insights error:", err);
     res.status(500).json({ error: err.message });
   }
 });

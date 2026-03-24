@@ -56,7 +56,7 @@ app.use(
           "https://*.tile.openstreetmap.org",
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
-          "https://res.cloudinary.com",   // <-- FIX: added Cloudinary
+          "https://res.cloudinary.com",
         ],
         connectSrc: [
           "'self'",
@@ -171,6 +171,7 @@ const reportRoutes = require("./routes/report");
 const chatRoutes = require("./routes/chat");
 const paymentRoutes = require("./routes/payment");
 const bookingRoutes = require("./routes/booking");
+const chatbotRoutes = require("./routes/chatbot"); // NEW
 
 app.use("/api/auth", authRoutes);
 app.use("/api/houses", houseRoutes);
@@ -181,6 +182,7 @@ app.use("/api/report", reportRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/chatbot", chatbotRoutes); // NEW
 
 // ===============================
 // DEBUG ENDPOINT – TEST MONGODB CONNECTION
@@ -212,6 +214,7 @@ require('./utils/cron');
 app.get("/", (req, res) => {
   res.send("🏠 House Marketplace API Running");
 });
+
 // ======================================
 // HOUSE SHARE PAGE (for social media previews)
 // ======================================
