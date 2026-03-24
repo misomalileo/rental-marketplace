@@ -14,6 +14,7 @@ let radius = 2; // km
 let drawnPolygon = null;
 let drawnItems;
 let currentShareHouseId = null;
+let comparisonList = []; // array of house IDs (max 3)
 
 // ======================================
 // HELPER FUNCTIONS
@@ -461,7 +462,109 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS (with avatar, share, blur)
+// COMPARISON FUNCTIONS
+// ======================================
+function updateCompareButton() {
+  const btn = document.getElementById('compareFloatingBtn');
+  const countSpan = document.getElementById('compareCount');
+  if (btn && countSpan) {
+    const count = comparisonList.length;
+    countSpan.textContent = count;
+    btn.style.display = count > 0 ? 'flex' : 'none';
+  }
+}
+
+function addToCompare(houseId) {
+  if (comparisonList.includes(houseId)) {
+    // Already in list – remove it
+    comparisonList = comparisonList.filter(id => id !== houseId);
+    // Update button text on the card
+    const btn = document.querySelector(`.compare-btn[data-id="${houseId}"]`);
+    if (btn) btn.textContent = '➕ Compare';
+  } else {
+    if (comparisonList.length >= 3) {
+      alert('You can compare up to 3 properties at once.');
+      return;
+    }
+    comparisonList.push(houseId);
+    const btn = document.querySelector(`.compare-btn[data-id="${houseId}"]`);
+    if (btn) btn.textContent = '❌ Remove';
+  }
+  updateCompareButton();
+}
+
+function openComparisonModal() {
+  if (comparisonList.length === 0) return;
+  const housesToCompare = allHouses.filter(h => comparisonList.includes(h._id));
+  const container = document.getElementById('comparisonTable');
+  if (!container) return;
+
+  if (housesToCompare.length === 0) {
+    container.innerHTML = '<p>No houses selected.</p>';
+    document.getElementById('comparisonModal').style.display = 'block';
+    return;
+  }
+
+  // Build comparison table
+  let tableHtml = '<table style="width:100%; border-collapse: collapse; text-align: center;">';
+  // Header row with house names
+  tableHtml += '<thead><tr><th style="padding: 8px;">Feature</th>';
+  housesToCompare.forEach(house => {
+    tableHtml += `<th style="padding: 8px;">${house.name}</th>`;
+  });
+  tableHtml += '</tr></thead><tbody>';
+
+  // Rows
+  const features = [
+    { label: '💰 Price', key: 'price', format: (v, house) => `MWK ${v.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}` },
+    { label: '📍 Location', key: 'location' },
+    { label: '🏠 Type', key: 'type' },
+    { label: '🛏️ Bedrooms', key: 'bedrooms', format: (v) => v || 'N/A' },
+    { label: '📋 Condition', key: 'condition' },
+    { label: '🏡 Self Contained', key: 'selfContained', format: (v) => v ? '✅ Yes' : '❌ No' },
+    { label: '📶 WiFi', key: 'wifi', format: (v) => v ? '✅' : '❌' },
+    { label: '🅿️ Parking', key: 'parking', format: (v) => v ? '✅' : '❌' },
+    { label: '🛋️ Furnished', key: 'furnished', format: (v) => v ? '✅' : '❌' },
+    { label: '🐾 Pet Friendly', key: 'petFriendly', format: (v) => v ? '✅' : '❌' },
+    { label: '🏊 Pool', key: 'pool', format: (v) => v ? '✅' : '❌' },
+    { label: '❄️ AC', key: 'ac', format: (v) => v ? '✅' : '❌' },
+    { label: '⭐ Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
+  ];
+
+  features.forEach(feature => {
+    tableHtml += `<tr><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
+    housesToCompare.forEach(house => {
+      let value = house[feature.key];
+      if (feature.format) {
+        if (feature.key === 'price') value = feature.format(value, house);
+        else value = feature.format(value);
+      } else {
+        value = value || 'N/A';
+      }
+      tableHtml += `<td style="padding: 8px;">${value}</td>`;
+    });
+    tableHtml += '</tr>';
+  });
+
+  // Image row
+  tableHtml += '<tr><td style="padding: 8px; font-weight: bold;">📸 Image</td>';
+  housesToCompare.forEach(house => {
+    const imgUrl = house.images?.[0] || 'placeholder.jpg';
+    tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:80px; height:80px; object-fit:cover; border-radius:8px;"></td>`;
+  });
+  tableHtml += '</tr>';
+
+  tableHtml += '</tbody></table>';
+  container.innerHTML = tableHtml;
+  document.getElementById('comparisonModal').style.display = 'block';
+}
+
+function closeComparisonModal() {
+  document.getElementById('comparisonModal').style.display = 'none';
+}
+
+// ======================================
+// RENDER HOUSE CARDS (with compare button)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -575,6 +678,10 @@ function renderHouses(houses) {
     // Share button
     const shareBtn = `<button class="share-btn" onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>`;
 
+    // Compare button
+    const isSelected = comparisonList.includes(house._id);
+    const compareBtn = `<button class="compare-btn" data-id="${house._id}" onclick="addToCompare('${house._id}')">${isSelected ? '❌ Remove' : '➕ Compare'}</button>`;
+
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
@@ -597,6 +704,7 @@ function renderHouses(houses) {
             ${chatBtn}
             <button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>
             ${shareBtn}
+            ${compareBtn}
           </div>
           ${ratingWidget}
           ${reportBtn}
@@ -1233,6 +1341,12 @@ if (gpsBtn) {
   });
 }
 
+// Floating compare button event
+const compareFloatingBtn = document.getElementById('compareFloatingBtn');
+if (compareFloatingBtn) {
+  compareFloatingBtn.addEventListener('click', openComparisonModal);
+}
+
 // ======================================
 // INITIALIZATION
 // ======================================
@@ -1269,3 +1383,5 @@ window.shareOnFacebook = shareOnFacebook;
 window.shareOnWhatsApp = shareOnWhatsApp;
 window.shareOnTwitter = shareOnTwitter;
 window.copyShareLink = copyShareLink;
+window.addToCompare = addToCompare;
+window.closeComparisonModal = closeComparisonModal;
