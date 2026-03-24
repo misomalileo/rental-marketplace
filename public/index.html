@@ -16,7 +16,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* ========== THEME VARIABLES (unchanged) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #3b82f6;
       --primary-dark: #2563eb;
@@ -59,6 +59,42 @@
       --button-bg: #ff6b6b;
       --button-hover: #ee5253;
       background-image: url('https://images.pexels.com/photos/2121121/pexels-photo-2121121.jpeg?auto=compress&cs=tinysrgb&w=1600');
+    }
+    /* NEW THEME: Minimal */
+    body.theme-minimal {
+      --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+      --navbar-bg: rgba(255,255,255,0.95);
+      --text-color: #2c3e50;
+      --card-bg: rgba(255,255,255,0.9);
+      --footer-bg: rgba(255,255,255,0.95);
+      --input-bg: white;
+      --input-border: #e0e0e0;
+      --button-bg: #2c3e50;
+      --button-hover: #1a252f;
+      background-image: url('https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=1600');
+    }
+    /* NEW THEME: Luxury */
+    body.theme-luxury {
+      --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+      --navbar-bg: rgba(0,0,0,0.85);
+      --text-color: #f8f9fa;
+      --card-bg: rgba(0,0,0,0.7);
+      --footer-bg: rgba(0,0,0,0.8);
+      --input-bg: #2c2c2c;
+      --input-border: #ffd700;
+      --button-bg: #ffd700;
+      --button-hover: #e6c300;
+      background-image: url('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      --primary: #ffd700;
+      --primary-dark: #e6c300;
+    }
+    body.theme-luxury .badge.premium {
+      background: #ffd700;
+      color: #1a1a1a;
+    }
+    body.theme-luxury .badge.verified {
+      background: #ffd700;
+      color: #1a1a1a;
     }
 
     * {
@@ -136,7 +172,7 @@
     .hero h1 {
       font-size: 3.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, #3b82f6, #10b981);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -159,7 +195,7 @@
       padding: 0 0.5rem;
     }
 
-    /* Filters row – same as before */
+    /* Filters row */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -230,6 +266,7 @@
       cursor: pointer;
     }
 
+    /* Amenities */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -820,9 +857,11 @@
         <option value="ny">Chichewa</option>
       </select>
       <select class="theme-select" onchange="setTheme(this.value)">
-        <option value="light" data-i18n="light">Light</option>
-        <option value="dark" data-i18n="dark">Dark</option>
-        <option value="aquatic" data-i18n="aquatic">Aquatic</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="aquatic">Aquatic</option>
+        <option value="minimal">Minimal</option>
+        <option value="luxury">Luxury</option>
       </select>
     </div>
   </nav>
@@ -1019,7 +1058,7 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox functions (same as before)
+    // Lightbox functions (unchanged)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 

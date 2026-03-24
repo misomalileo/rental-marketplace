@@ -50,21 +50,57 @@ function getDistance(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
+// ======================================
+// CUSTOM MARKER ICON (Font Awesome)
+// ======================================
 function getMarkerIcon(house) {
-  let iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
-  if (house.type === 'Hostel') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/green-dot.png';
-  else if (house.type === 'Apartment') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png';
-  else if (house.type === 'Room') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png';
-  else if (house.type === 'Office') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png';
+  let iconClass = 'fa-house';
+  let bgColor = '#3b82f6'; // default blue
+  if (house.type === 'Hostel') {
+    iconClass = 'fa-hotel';
+    bgColor = '#10b981';
+  } else if (house.type === 'Apartment') {
+    iconClass = 'fa-building';
+    bgColor = '#8b5cf6';
+  } else if (house.type === 'Room') {
+    iconClass = 'fa-bed';
+    bgColor = '#f59e0b';
+  } else if (house.type === 'Office') {
+    iconClass = 'fa-briefcase';
+    bgColor = '#6b7280';
+  }
 
-  if (house.owner?.verificationType === 'premium') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
-  else if (house.owner?.verificationType === 'official') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/lightblue-dot.png';
+  if (house.owner?.verificationType === 'premium') {
+    bgColor = '#f1c40f'; // gold
+    iconClass = 'fa-crown';
+  } else if (house.owner?.verificationType === 'official') {
+    bgColor = '#2ecc71'; // green
+    iconClass = 'fa-check-circle';
+  }
 
-  return L.icon({
-    iconUrl: iconUrl,
+  const html = `
+    <div style="
+      background-color: ${bgColor};
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      border: 2px solid white;
+    ">
+      <i class="fas ${iconClass}"></i>
+    </div>
+  `;
+
+  return L.divIcon({
+    html: html,
     iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
+    popupAnchor: [0, -16],
+    className: 'custom-marker'
   });
 }
 
@@ -150,6 +186,9 @@ function renderMarkers(houses) {
   });
 }
 
+// ... (all other functions remain exactly the same as before – loadHouses, renderHouses, etc.)
+// Keep the rest of your script.js unchanged. The only change is the getMarkerIcon function above.
+// I will not repeat the entire file for brevity, but ensure that all other functions (loadHouses, renderHouses, showDetails, etc.) are present exactly as in the final version we provided earlier.
 // ======================================
 // FETCH HOUSES (with filters, sorting, and share link)
 // ======================================
