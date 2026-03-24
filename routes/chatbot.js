@@ -1,13 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const OpenAI = require("openai");
 const House = require("../models/House");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Helper: search houses based on extracted filters
+// Helper: search houses based on filters
 async function searchHouses(filters) {
   const query = {};
   if (filters.type && filters.type !== "any") query.type = filters.type;
@@ -28,7 +23,67 @@ async function searchHouses(filters) {
   return houses;
 }
 
-// Main chatbot endpoint
+// Simple keyword parser
+function parseIntent(message) {
+  const lower = message.toLowerCase();
+  const filters = {};
+
+  // Property type
+  if (lower.includes("house")) filters.type = "House";
+  else if (lower.includes("hostel")) filters.type = "Hostel";
+  else if (lower.includes("apartment")) filters.type = "Apartment";
+  else if (lower.includes("room")) filters.type = "Room";
+  else if (lower.includes("office")) filters.type = "Office";
+
+  // Price
+  const priceMatch = lower.match(/(\d+)\s*(k|thousand|million)?/);
+  if (priceMatch) {
+    let price = parseInt(priceMatch[1]);
+    if (priceMatch[2] === "k") price *= 1000;
+    else if (priceMatch[2] === "million") price *= 1000000;
+    if (lower.includes("under") || lower.includes("below")) {
+      filters.maxPrice = price;
+    } else if (lower.includes("over") || lower.includes("above")) {
+      filters.minPrice = price;
+    } else {
+      // Default: treat as max price
+      filters.maxPrice = price;
+    }
+  }
+
+  // Bedrooms
+  const bedMatch = lower.match(/(\d+)\s*(bed|bedroom)/);
+  if (bedMatch) filters.bedrooms = parseInt(bedMatch[1]);
+
+  // Location (simple: look for known areas)
+  const areas = ["manja", "chichiri", "soche", "ndirande", "bangwe", "blantyre", "limbe"];
+  for (let area of areas) {
+    if (lower.includes(area)) {
+      filters.location = area;
+      break;
+    }
+  }
+
+  // Amenities
+  if (lower.includes("wifi")) filters.wifi = true;
+  if (lower.includes("parking")) filters.parking = true;
+  if (lower.includes("furnished")) filters.furnished = true;
+  if (lower.includes("pet")) filters.petFriendly = true;
+  if (lower.includes("pool")) filters.pool = true;
+  if (lower.includes("ac") || lower.includes("aircon")) filters.ac = true;
+
+  // If no filters were extracted, treat as general help
+  if (Object.keys(filters).length === 0) {
+    return {
+      action: "answer",
+      text: "I can help you find houses. Try saying things like:\n- 'cheap houses under 500k'\n- 'houses with pool in Manja'\n- 'hostels near Chichiri'\n- 'furnished apartments'\n\nOr ask about the platform: 'How do I list a property?'"
+    };
+  }
+
+  return { action: "search", filters };
+}
+
+// Main chatbot endpoint (free, no OpenAI)
 router.post("/", async (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -36,65 +91,16 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // System prompt to guide the AI
-    const systemPrompt = `
-You are an AI concierge for a house rental marketplace in Blantyre, Malawi.
-Your job is to help users find properties or answer questions about the platform.
+    const intent = parseIntent(message);
 
-If the user asks to search for houses, extract the filters and respond with a JSON object in the following format:
-{
-  "action": "search",
-  "filters": {
-    "type": "house" | "hostel" | "apartment" | "room" | "office" | null,
-    "minPrice": number | null,
-    "maxPrice": number | null,
-    "bedrooms": number | null,
-    "location": string | null,
-    "wifi": boolean | null,
-    "parking": boolean | null,
-    "furnished": boolean | null,
-    "petFriendly": boolean | null,
-    "pool": boolean | null,
-    "ac": boolean | null
-  }
-}
-If the user asks a general question (e.g., "How do I list a property?"), respond with a JSON object:
-{
-  "action": "answer",
-  "text": "Your helpful answer here."
-}
-Only output JSON. No extra text.
-    `;
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: message },
-      ],
-      temperature: 0.3,
-      max_tokens: 300,
-    });
-
-    let aiResponse = completion.choices[0].message.content;
-    // Parse the JSON response
-    let parsed;
-    try {
-      parsed = JSON.parse(aiResponse);
-    } catch (e) {
-      // Fallback: if AI doesn't return valid JSON, treat as answer
-      parsed = { action: "answer", text: "I'm sorry, I couldn't understand that. Please try again." };
-    }
-
-    if (parsed.action === "search") {
-      const houses = await searchHouses(parsed.filters);
+    if (intent.action === "search") {
+      const houses = await searchHouses(intent.filters);
       if (houses.length === 0) {
         return res.json({
           action: "answer",
           text: "Sorry, I couldn't find any houses matching your criteria. Try adjusting your filters.",
         });
       }
-      // Build a friendly list of houses with links
       const houseList = houses.map(h => ({
         name: h.name,
         price: h.price,
@@ -104,7 +110,7 @@ Only output JSON. No extra text.
       }));
       return res.json({ action: "searchResults", houses: houseList });
     } else {
-      return res.json(parsed);
+      return res.json(intent);
     }
   } catch (err) {
     console.error("Chatbot error:", err);
@@ -113,6 +119,11 @@ Only output JSON. No extra text.
       text: "I'm having trouble connecting right now. Please try again later.",
     });
   }
+});
+
+// Simple test endpoint
+router.get("/test", (req, res) => {
+  res.json({ message: "Chatbot route is working (free version)" });
 });
 
 module.exports = router;
