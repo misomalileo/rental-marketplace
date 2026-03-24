@@ -2,9 +2,7 @@ const express = require("express");
 const router = express.Router();
 const House = require("../models/House");
 
-// ======================================
-// HELPER: Search houses
-// ======================================
+// Helper: search houses based on extracted filters
 async function searchHouses(filters) {
   const query = {};
   if (filters.type && filters.type !== "any") query.type = filters.type;
@@ -20,7 +18,7 @@ async function searchHouses(filters) {
   if (filters.ac) query.ac = true;
 
   const houses = await House.find(query)
-    .limit(8) // show up to 8 results
+    .limit(8)
     .select("name location price images type _id");
   return houses;
 }
@@ -32,18 +30,23 @@ function extractFilters(message) {
   const msg = message.toLowerCase();
   const filters = {};
 
-  // 1. Property type (with synonyms)
+  // 1. Property type with synonyms (including room variations)
   const typeMap = {
     house: "House",
     houses: "House",
+    home: "House",
     hostel: "Hostel",
     hostels: "Hostel",
+    dorm: "Hostel",
+    dormitory: "Hostel",
     apartment: "Apartment",
     apartments: "Apartment",
     flat: "Apartment",
     flats: "Apartment",
     room: "Room",
     rooms: "Room",
+    studio: "Room",
+    bedsitter: "Room",
     office: "Office",
     offices: "Office"
   };
@@ -59,13 +62,12 @@ function extractFilters(message) {
     /(?:under|below|less than|max|max price|up to|not exceed)\s*(\d+(?:[.,]\d+)?)\s*(?:k|k?mw)?/i,
     /(\d+(?:[.,]\d+)?)\s*(?:k|k?mw)?\s*(?:or less|and under)/i,
     /(?:for|under|at)\s*(\d+(?:[.,]\d+)?)\s*(?:k|k?mw)/i,
-    /(\d+(?:[.,]\d+)?)\s*(?:k|k?mw)(?=\s|$)/i // standalone like "500k"
+    /(\d+(?:[.,]\d+)?)\s*(?:k|k?mw)(?=\s|$)/i
   ];
   for (const pattern of pricePatterns) {
     const match = msg.match(pattern);
     if (match) {
       let price = parseFloat(match[1].replace(',', '.'));
-      // If it's something like "500k" (match includes k)
       if (match[0].includes('k') || match[0].includes('K')) price *= 1000;
       filters.maxPrice = price;
       break;
@@ -87,7 +89,6 @@ function extractFilters(message) {
     if (match) {
       let num = parseInt(match[1]);
       if (isNaN(num)) {
-        // word number
         const word = match[1].toLowerCase();
         num = numberWords[word] || 0;
       }
@@ -113,9 +114,6 @@ function extractFilters(message) {
   for (const [key, words] of Object.entries(amenityMap)) {
     if (words.some(word => msg.includes(word))) filters[key] = true;
   }
-
-  // 6. Check for negation (e.g., "no parking" – we don't support negation, but could skip)
-  // For now, ignore.
 
   return filters;
 }
@@ -184,16 +182,20 @@ router.post("/", async (req, res) => {
   if (Object.keys(filters).length === 0) {
     return res.json({
       action: "answer",
-      text: "I can help you find houses. Try saying things like:\n- 'cheap houses under 500k'\n- 'houses with pool in Manja'\n- 'hostels near Chichiri'\n- 'furnished apartments'\nOr ask me: 'How do I list a property?'"
+      text: "I can help you find properties. Try saying things like:\n- 'rooms under 200k'\n- 'hostels near Chichiri'\n- 'furnished apartments with pool'\n- 'offices in town'\nOr ask me: 'How do I list a property?'"
     });
   }
 
   const houses = await searchHouses(filters);
   if (houses.length === 0) {
-    return res.json({
-      action: "answer",
-      text: "Sorry, I couldn't find any houses matching your criteria. Try adjusting your filters or use different words."
-    });
+    // Suggest a more helpful message based on what they asked
+    let suggestion = "Sorry, I couldn't find any";
+    if (filters.type) suggestion += ` ${filters.type.toLowerCase()}s`;
+    else suggestion += " properties";
+    if (filters.location) suggestion += ` in ${filters.location}`;
+    if (filters.maxPrice) suggestion += ` under MWK ${filters.maxPrice.toLocaleString()}`;
+    suggestion += ". Try adjusting your filters or use different words.";
+    return res.json({ action: "answer", text: suggestion });
   }
 
   const houseList = houses.map(h => ({
@@ -201,7 +203,8 @@ router.post("/", async (req, res) => {
     price: h.price,
     location: h.location,
     id: h._id,
-    image: h.images?.[0] || ""
+    image: h.images?.[0] || "",
+    type: h.type
   }));
   res.json({ action: "searchResults", houses: houseList });
 });
