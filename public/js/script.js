@@ -10,7 +10,7 @@ let currentType = 'all';
 let currentFilters = {};
 let currentSort = 'default';
 let userLocation = null;
-let radius = 2; // km
+let radius = 2;
 let drawnPolygon = null;
 let drawnItems;
 
@@ -69,7 +69,7 @@ function getMarkerIcon(house) {
 }
 
 // ======================================
-// RENDER MARKERS WITH CLUSTERING
+// RENDER MARKERS (clustering)
 // ======================================
 function renderMarkers(houses) {
   if (!markersLayer) return;
@@ -79,8 +79,6 @@ function renderMarkers(houses) {
     if (!house.lat || !house.lng) return;
     const icon = getMarkerIcon(house);
     const marker = L.marker([house.lat, house.lng], { icon });
-
-    // Popup content (same as before)
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     let badge = "";
     if (house.owner?.verificationType === "premium") {
@@ -153,7 +151,7 @@ function renderMarkers(houses) {
 }
 
 // ======================================
-// FETCH HOUSES (with filters and sorting)
+// FETCH HOUSES
 // ======================================
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
@@ -286,7 +284,7 @@ function handleSortChange() {
 }
 
 // ======================================
-// SAVE SEARCH (localStorage)
+// SAVE SEARCH
 // ======================================
 function saveSearch() {
   const modal = document.getElementById('saveSearchModal');
@@ -317,7 +315,7 @@ function saveSearch() {
 }
 
 // ======================================
-// MAP INITIALIZATION (clustering, drawing, radius)
+// MAP INIT
 // ======================================
 function initMap() {
   map = L.map("map").setView([-15.786, 35.005], 12);
@@ -415,7 +413,7 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS (with blur and landlord click)
+// RENDER HOUSE CARDS
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -788,12 +786,11 @@ function closeLandlordModal() {
 }
 
 // ======================================
-// NEIGHBOURHOOD INSIGHTS
+// NEIGHBOURHOOD INSIGHTS (enhanced)
 // ======================================
 async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
   if (!insightsDiv) return;
-
   insightsDiv.innerHTML = '<div style="text-align:center; padding:20px;">🔍 Scanning nearby amenities...</div>';
 
   const amenities = [
@@ -814,7 +811,6 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
   ];
 
   let allResults = [];
-
   for (let amenity of amenities) {
     const radius = amenity.maxDist;
     const query = `
@@ -937,12 +933,11 @@ function loadStreetView(lat, lng) {
 // ======================================
 async function loadPriceInsights(houseId) {
   const container = document.getElementById('modalPricing');
-  container.innerHTML = '<div style="text-align:center; padding:20px;">Fetching market data...</div>';
+  container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-chart-line fa-spin"></i> Fetching market data...</div>';
   try {
     const res = await fetch(`/api/houses/price-insights/${houseId}`);
     if (!res.ok) throw new Error('Failed');
     const data = await res.json();
-
     container.innerHTML = `
       <h3>💡 Price Insights</h3>
       <p><strong>Based on ${data.similarCount} similar properties nearby:</strong></p>

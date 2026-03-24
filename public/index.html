@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Rental Marketplace | Blantyre Houses</title>
   <!-- Google Fonts & Leaflet CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
@@ -19,54 +19,49 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* ========== THEME VARIABLES ========== */
+    /* ========== GLOBAL THEME VARIABLES ========== */
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --secondary: #10b981;
+      --accent: #f59e0b;
+    }
+
     body.theme-light {
       --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      --navbar-bg: rgba(255,255,255,0.95);
-      --text-color: #2c3e50;
-      --card-bg: rgba(255,255,255,0.92);
-      --footer-bg: rgba(255,255,255,0.95);
+      --navbar-bg: rgba(255,255,255,0.9);
+      --text-color: #1e293b;
+      --card-bg: rgba(255,255,255,0.85);
+      --footer-bg: rgba(255,255,255,0.9);
       --input-bg: white;
-      --input-border: #ddd;
-      --button-bg: #3498db;
-      --button-hover: #2980b9;
+      --input-border: #e2e8f0;
+      --button-bg: var(--primary);
+      --button-hover: var(--primary-dark);
       background-image: url('https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1600');
-      background-size: cover;
-      background-attachment: fixed;
-      background-position: center;
-      background-blend-mode: overlay;
     }
     body.theme-dark {
-      --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
-      --navbar-bg: rgba(30,43,58,0.95);
-      --text-color: #ecf0f1;
-      --card-bg: rgba(44,62,80,0.92);
-      --footer-bg: rgba(30,43,58,0.95);
-      --input-bg: #34495e;
-      --input-border: #4a6782;
-      --button-bg: #3498db;
-      --button-hover: #2980b9;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --navbar-bg: rgba(15,23,42,0.9);
+      --text-color: #e2e8f0;
+      --card-bg: rgba(30,41,59,0.85);
+      --footer-bg: rgba(15,23,42,0.9);
+      --input-bg: #1e293b;
+      --input-border: #334155;
+      --button-bg: var(--primary);
+      --button-hover: var(--primary-dark);
       background-image: url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1600');
-      background-size: cover;
-      background-attachment: fixed;
-      background-position: center;
-      background-blend-mode: overlay;
     }
     body.theme-aquatic {
       --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      --navbar-bg: rgba(74,163,162,0.95);
+      --navbar-bg: rgba(74,163,162,0.9);
       --text-color: #1e4a4b;
-      --card-bg: rgba(255,255,255,0.88);
-      --footer-bg: rgba(74,163,162,0.95);
+      --card-bg: rgba(255,255,255,0.85);
+      --footer-bg: rgba(74,163,162,0.9);
       --input-bg: #e0f7fa;
       --input-border: #4aa3a2;
       --button-bg: #ff6b6b;
       --button-hover: #ee5253;
       background-image: url('https://images.pexels.com/photos/2121121/pexels-photo-2121121.jpeg?auto=compress&cs=tinysrgb&w=1600');
-      background-size: cover;
-      background-attachment: fixed;
-      background-position: center;
-      background-blend-mode: overlay;
     }
 
     * {
@@ -81,16 +76,19 @@
       color: var(--text-color);
       min-height: 100vh;
       transition: background 0.3s, color 0.3s;
+      background-attachment: fixed;
+      background-size: cover;
     }
 
-    /* ---------- NAVBAR ---------- */
+    /* Glassmorphic navbar */
     .navbar {
+      background: var(--navbar-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 1rem 2rem;
-      background: var(--navbar-bg);
-      backdrop-filter: blur(5px);
       box-shadow: 0 4px 20px rgba(0,0,0,0.05);
       position: sticky;
       top: 0;
@@ -130,31 +128,43 @@
       font-size: 0.9rem;
     }
 
-    /* ---------- HERO ---------- */
+    /* 3D Hero with floating effect */
     .hero {
       text-align: center;
-      padding: 3rem 1rem;
-      background: linear-gradient(135deg, #3498db, #2c3e50);
-      color: white;
+      padding: 5rem 1rem;
+      background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(16,185,129,0.2));
+      border-radius: 0 0 50px 50px;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      margin-bottom: 2rem;
     }
     .hero h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
+      font-size: 3.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
     }
     .hero p {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       opacity: 0.9;
     }
 
-    /* ---------- MAIN CONTAINER ---------- */
+    /* Main container */
     .main-container {
       max-width: 1300px;
       margin: 2rem auto;
       padding: 0 2rem;
     }
 
-    /* ---------- FILTER ROW (price slider, sort, save) ---------- */
+    /* Filters row */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -170,9 +180,7 @@
       justify-content: center;
       flex: 1;
     }
-    .filters input,
-    .filters select,
-    .filters button {
+    .filters input, .filters select, .filters button {
       border: 1px solid var(--input-border);
       border-radius: 40px;
       padding: 0.6rem 1.2rem;
@@ -181,11 +189,6 @@
       color: var(--text-color);
       transition: all 0.2s;
       outline: none;
-    }
-    .filters input:focus,
-    .filters select:focus {
-      border-color: #3498db;
-      box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
     }
     .filters button {
       background: var(--button-bg);
@@ -232,7 +235,7 @@
       cursor: pointer;
     }
 
-    /* Amenities filter checkboxes (iconized) */
+    /* Amenities filters */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -307,39 +310,44 @@
       border-color: var(--button-bg);
     }
 
-    /* ---------- HOUSE GRID ---------- */
+    /* Houses grid – glassmorphic cards with 3D tilt */
     #houses-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.5rem;
       margin: 2rem 0;
     }
 
     .house-card {
       background: var(--card-bg);
-      backdrop-filter: blur(4px);
-      border-radius: 16px;
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1), box-shadow 0.3s;
+      transform-style: preserve-3d;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.02);
       cursor: pointer;
     }
     .house-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+      transform: translateY(-10px) rotateX(2deg) rotateY(2deg);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
     }
 
     .slider {
       position: relative;
       width: 100%;
-      height: 160px;
+      height: 180px;
       overflow: hidden;
     }
     .slider img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transition: transform 0.3s;
       cursor: pointer;
+    }
+    .house-card:hover .slider img {
+      transform: scale(1.02);
     }
     .slider button {
       position: absolute;
@@ -571,7 +579,7 @@
       text-decoration: underline;
     }
 
-    /* Modal styles */
+    /* Modal */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -590,6 +598,7 @@
       width: 90%;
       max-width: 600px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      backdrop-filter: blur(8px);
     }
     .close-btn {
       color: #aaa;
@@ -605,9 +614,10 @@
     /* Tabs inside modal */
     .modal-tab {
       background: var(--card-bg);
-      border: 1px solid var(--input-border);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
       padding: 8px 16px;
-      border-radius: 30px;
+      border-radius: 40px;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -617,7 +627,7 @@
       border-color: var(--button-bg);
     }
 
-    /* Lightbox */
+    /* Lightbox (unchanged) */
     .lightbox-modal {
       position: fixed;
       top: 0;
@@ -717,9 +727,6 @@
       pointer-events: none;
       backdrop-filter: blur(2px);
     }
-    .house-details-blurred:hover::after {
-      background: rgba(0,0,0,0.8);
-    }
 
     @media (max-width: 768px) {
       .navbar {
@@ -788,13 +795,14 @@
     </div>
   </nav>
 
-  <!-- Hero -->
+  <!-- Hero with 3D floating effect -->
   <header class="hero">
     <h1 data-i18n="heroTitle">Find Houses & Hostels in Blantyre</h1>
     <p data-i18n="heroSubtitle">Explore verified rentals posted by landlords</p>
   </header>
 
   <main class="main-container">
+
     <!-- Filter row -->
     <div class="filters-row">
       <div class="price-range">
@@ -820,7 +828,7 @@
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);">Apply Filters</button>
     </div>
 
-    <!-- Amenities filter checkboxes (with icons) -->
+    <!-- Amenities filter checkboxes -->
     <section class="amenities-filters">
       <label><input type="checkbox" id="filterWifi"> <i class="fas fa-wifi"></i> WiFi</label>
       <label><input type="checkbox" id="filterParking"> <i class="fas fa-parking"></i> Parking</label>
@@ -831,7 +839,7 @@
     </section>
 
     <!-- SEARCH -->
-    <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by area or name...">
+    <input type="text" id="searchInput" placeholder="Search by area or name...">
 
     <!-- Category Tabs -->
     <div class="category-tabs">
@@ -845,7 +853,7 @@
 
     <!-- HOUSES GRID -->
     <h2 style="margin: 1rem 0;" data-i18n="availableProperties">Available Properties</h2>
-    <div id="houses-container" data-i18n="loading">Loading houses...</div>
+    <div id="houses-container">Loading houses...</div>
 
     <!-- Pagination -->
     <div class="pagination" id="pagination"></div>
@@ -886,7 +894,7 @@
     <a href="contact.html" data-i18n="contact">Contact</a>
   </footer>
 
-  <!-- Property Details Modal (with tabs) -->
+  <!-- Property Modal (with 4 tabs) -->
   <div id="propertyModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:600px;">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
@@ -905,7 +913,7 @@
         <div id="streetViewLoader" style="text-align:center; padding:20px;">Loading street view...</div>
       </div>
       <div id="modalPricing" style="display:none;">
-        <div id="pricingLoader" style="text-align:center; padding:20px;">Loading market data...</div>
+        <div id="pricingLoader" style="text-align:center; padding:20px;">Fetching market data...</div>
       </div>
     </div>
   </div>
@@ -975,7 +983,6 @@
     </div>
   </div>
 
-  <!-- Google Maps API key -->
   <script>
     window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';
   </script>
@@ -989,7 +996,7 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox functions
+    // Lightbox and booking functions (same as before)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
@@ -1042,7 +1049,6 @@
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
 
-    // Booking modal functions
     window.openBookingModal = function(houseId, houseName) {
       window.currentBookingHouseId = houseId;
       document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
