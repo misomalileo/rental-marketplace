@@ -10,7 +10,7 @@ let currentType = 'all';
 let currentFilters = {};
 let currentSort = 'default';
 let userLocation = null;
-let radius = 2;
+let radius = 2; // km
 let drawnPolygon = null;
 let drawnItems;
 
@@ -151,7 +151,7 @@ function renderMarkers(houses) {
 }
 
 // ======================================
-// FETCH HOUSES
+// FETCH HOUSES (with filters, sorting, and share link)
 // ======================================
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
@@ -173,8 +173,10 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     const res = await fetch(`/api/houses?${params.toString()}`);
     const data = await res.json();
     allHouses = data.houses;
+    currentPage = data.page;
+    totalPages = data.pages;
 
-    // ✅ SHARE LINK HANDLER
+    // Handle share link: if URL contains ?house=ID, open that house modal
     const urlParams = new URLSearchParams(window.location.search);
     const houseId = urlParams.get('house');
     if (houseId) {
@@ -183,22 +185,7 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
         setTimeout(() => showDetails(houseId), 500);
       }
     }
-    // ✅ END
 
-    currentPage = data.page;
-    totalPages = data.pages;
-    renderHouses(allHouses);
-    renderMarkers(allHouses);
-    renderPagination();
-    updateURL();
-  } catch (err) {
-    console.error("Failed loading houses:", err);
-    const container = document.getElementById("houses-container");
-    if (container) container.innerHTML = "<p>Failed to load houses.</p>";
-  }
-}
-    currentPage = data.page;
-    totalPages = data.pages;
     renderHouses(allHouses);
     renderMarkers(allHouses);
     renderPagination();
@@ -437,7 +424,7 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS
+// RENDER HOUSE CARDS (with blur and landlord click)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -810,7 +797,7 @@ function closeLandlordModal() {
 }
 
 // ======================================
-// NEIGHBOURHOOD INSIGHTS (enhanced)
+// NEIGHBOURHOOD INSIGHTS
 // ======================================
 async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
