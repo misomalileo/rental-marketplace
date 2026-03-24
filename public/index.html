@@ -18,6 +18,18 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
+  <!-- OneSignal (optional – push notifications) -->
+  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function() {
+      OneSignal.init({
+        appId: "YOUR_ONESIGNAL_APP_ID", // Replace with your actual App ID if you use OneSignal
+        notifyButton: { enable: true },
+        allowLocalhostAsSecureOrigin: true,
+      });
+    });
+  </script>
   <style>
     /* ========== GLOBAL THEME VARIABLES ========== */
     :root {
@@ -80,7 +92,6 @@
       background-size: cover;
     }
 
-    /* Glassmorphic navbar */
     .navbar {
       background: var(--navbar-bg);
       backdrop-filter: blur(12px);
@@ -128,7 +139,6 @@
       font-size: 0.9rem;
     }
 
-    /* 3D Hero with floating effect */
     .hero {
       text-align: center;
       padding: 5rem 1rem;
@@ -157,14 +167,12 @@
       opacity: 0.9;
     }
 
-    /* Main container */
     .main-container {
       max-width: 1300px;
       margin: 2rem auto;
       padding: 0 2rem;
     }
 
-    /* Filters row */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -235,7 +243,6 @@
       cursor: pointer;
     }
 
-    /* Amenities filters */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -310,7 +317,6 @@
       border-color: var(--button-bg);
     }
 
-    /* Houses grid – glassmorphic cards with 3D tilt */
     #houses-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -386,7 +392,6 @@
       color: var(--text-color);
     }
 
-    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -462,7 +467,6 @@
       color: #2980b9;
     }
 
-    /* Pagination */
     .pagination {
       display: flex;
       flex-wrap: wrap;
@@ -495,7 +499,6 @@
       pointer-events: none;
     }
 
-    /* Map section */
     .map-section {
       margin: 2rem 0;
     }
@@ -529,7 +532,6 @@
       width: 150px;
     }
 
-    /* GPS Section */
     .gps-section {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -579,7 +581,6 @@
       text-decoration: underline;
     }
 
-    /* Modal */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -611,7 +612,6 @@
       color: black;
     }
 
-    /* Tabs inside modal */
     .modal-tab {
       background: var(--card-bg);
       backdrop-filter: blur(8px);
@@ -627,7 +627,6 @@
       border-color: var(--button-bg);
     }
 
-    /* Lightbox (unchanged) */
     .lightbox-modal {
       position: fixed;
       top: 0;
@@ -704,7 +703,6 @@
       pointer-events: none;
     }
 
-    /* Blur for unverified landlords */
     .house-details-blurred {
       filter: blur(4px);
       pointer-events: none;
@@ -776,7 +774,6 @@
 </head>
 <body>
 
-  <!-- Navbar -->
   <nav class="navbar">
     <div class="logo" data-i18n="home">🏠 Rental Marketplace</div>
     <div class="nav-links">
@@ -795,7 +792,6 @@
     </div>
   </nav>
 
-  <!-- Hero with 3D floating effect -->
   <header class="hero">
     <h1 data-i18n="heroTitle">Find Houses & Hostels in Blantyre</h1>
     <p data-i18n="heroSubtitle">Explore verified rentals posted by landlords</p>
@@ -803,7 +799,6 @@
 
   <main class="main-container">
 
-    <!-- Filter row -->
     <div class="filters-row">
       <div class="price-range">
         <div class="range-values">
@@ -828,7 +823,6 @@
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);">Apply Filters</button>
     </div>
 
-    <!-- Amenities filter checkboxes -->
     <section class="amenities-filters">
       <label><input type="checkbox" id="filterWifi"> <i class="fas fa-wifi"></i> WiFi</label>
       <label><input type="checkbox" id="filterParking"> <i class="fas fa-parking"></i> Parking</label>
@@ -838,10 +832,8 @@
       <label><input type="checkbox" id="filterAC"> <i class="fas fa-snowflake"></i> Air Conditioning</label>
     </section>
 
-    <!-- SEARCH -->
     <input type="text" id="searchInput" placeholder="Search by area or name...">
 
-    <!-- Category Tabs -->
     <div class="category-tabs">
       <button class="tab-btn active" data-type="all">All</button>
       <button class="tab-btn" data-type="House">🏠 Houses</button>
@@ -851,14 +843,11 @@
       <button class="tab-btn" data-type="Office">🏢 Offices</button>
     </div>
 
-    <!-- HOUSES GRID -->
     <h2 style="margin: 1rem 0;" data-i18n="availableProperties">Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
 
-    <!-- Pagination -->
     <div class="pagination" id="pagination"></div>
 
-    <!-- MAP SECTION -->
     <section class="map-section" id="map-section">
       <h2 data-i18n="mapView">📍 Map View</h2>
       <div class="map-controls">
@@ -874,7 +863,6 @@
       <div id="map"></div>
     </section>
 
-    <!-- GPS LOCATOR -->
     <section class="gps-section">
       <h2 data-i18n="gpsLocator">📍 Property GPS Locator</h2>
       <button id="getLocationBtn" data-i18n="captureLocation"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
@@ -894,7 +882,7 @@
     <a href="contact.html" data-i18n="contact">Contact</a>
   </footer>
 
-  <!-- Property Modal (with 4 tabs) -->
+  <!-- Property Modal -->
   <div id="propertyModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:600px;">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
@@ -996,7 +984,7 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox and booking functions (same as before)
+    // Lightbox functions (same as before)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
@@ -1103,6 +1091,16 @@
     window.closeSaveSearchModal = function() {
       document.getElementById('saveSearchModal').style.display = 'none';
     };
+  </script>
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered'))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
   </script>
 </body>
 </html>

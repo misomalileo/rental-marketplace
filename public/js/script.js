@@ -173,6 +173,30 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     const res = await fetch(`/api/houses?${params.toString()}`);
     const data = await res.json();
     allHouses = data.houses;
+
+    // ✅ SHARE LINK HANDLER
+    const urlParams = new URLSearchParams(window.location.search);
+    const houseId = urlParams.get('house');
+    if (houseId) {
+      const house = allHouses.find(h => h._id === houseId);
+      if (house) {
+        setTimeout(() => showDetails(houseId), 500);
+      }
+    }
+    // ✅ END
+
+    currentPage = data.page;
+    totalPages = data.pages;
+    renderHouses(allHouses);
+    renderMarkers(allHouses);
+    renderPagination();
+    updateURL();
+  } catch (err) {
+    console.error("Failed loading houses:", err);
+    const container = document.getElementById("houses-container");
+    if (container) container.innerHTML = "<p>Failed to load houses.</p>";
+  }
+}
     currentPage = data.page;
     totalPages = data.pages;
     renderHouses(allHouses);

@@ -212,6 +212,80 @@ require('./utils/cron');
 app.get("/", (req, res) => {
   res.send("🏠 House Marketplace API Running");
 });
+// ======================================
+// HOUSE SHARE PAGE (for social media previews)
+// ======================================
+app.get('/house/:id', async (req, res) => {
+  try {
+    const House = require('./models/House');
+    const house = await House.findById(req.params.id).populate('owner', 'name');
+    if (!house) return res.status(404).send('House not found');
+
+    const title = `${house.name} - ${house.location}`;
+    const description = house.description || `MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? 'per room' : 'per month'}. ${house.bedrooms} bedrooms.`;
+    const imageUrl = house.images?.[0] || 'https://rental-marketplace-irmj.onrender.com/default-house.jpg';
+    const pageUrl = `https://rental-marketplace-irmj.onrender.com/house/${house._id}`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <meta property="og:title" content="${title}" />
+        <meta property="og:description" content="${description}" />
+        <meta property="og:image" content="${imageUrl}" />
+        <meta property="og:url" content="${pageUrl}" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="${title}" />
+        <meta name="twitter:description" content="${description}" />
+        <meta name="twitter:image" content="${imageUrl}" />
+        <meta http-equiv="refresh" content="0; url=/?house=${house._id}" />
+      </head>
+      <body>
+        <p>Redirecting to <a href="/?house=${house._id}">${title}</a>...</p>
+      </body>
+      </html>
+    `;
+    res.send(html);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error');
+  }
+});
+
+// ======================================
+// SITEMAP.XML
+// ======================================
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const House = require('./models/House');
+    const houses = await House.find().select('_id updatedAt');
+    const urls = houses.map(h => `
+    <url>
+      <loc>https://rental-marketplace-irmj.onrender.com/house/${h._id}</loc>
+      <lastmod>${h.updatedAt.toISOString().split('T')[0]}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+    </url>
+    `).join('');
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <url>
+        <loc>https://rental-marketplace-irmj.onrender.com/</loc>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+      </url>
+      ${urls}
+    </urlset>`;
+    res.header('Content-Type', 'application/xml');
+    res.send(sitemap);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error generating sitemap');
+  }
+});
 
 // ===============================
 // START SERVER
