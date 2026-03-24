@@ -1,20 +1,18 @@
-// Theme definitions
-const themes = ['light', 'dark', 'aquatic'];
-let currentTheme = localStorage.getItem('theme') || 'light';
-
+// Theme management
 function setTheme(theme) {
-  if (themes.includes(theme)) {
-    currentTheme = theme;
-    localStorage.setItem('theme', theme);
-    document.body.className = '';
-    document.body.classList.add(`theme-${theme}`);
-  }
+  if (!theme) theme = localStorage.getItem('theme') || 'light';
+  document.body.classList.remove('theme-light', 'theme-dark', 'theme-aquatic', 'theme-minimal', 'theme-luxury');
+  document.body.classList.add(`theme-${theme}`);
+  localStorage.setItem('theme', theme);
 }
 
-// Expose globally
-window.setTheme = setTheme;
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  setTheme(savedTheme);
+  const themeSelect = document.querySelector('.theme-select');
+  if (themeSelect) themeSelect.value = savedTheme;
+}
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  setTheme(currentTheme);
-});
+// Called when theme select changes
+window.setTheme = setTheme;
+loadTheme();

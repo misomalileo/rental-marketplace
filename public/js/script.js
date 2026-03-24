@@ -13,6 +13,7 @@ let userLocation = null;
 let radius = 2; // km
 let drawnPolygon = null;
 let drawnItems;
+let currentShareHouseId = null;
 
 // ======================================
 // HELPER FUNCTIONS
@@ -186,9 +187,6 @@ function renderMarkers(houses) {
   });
 }
 
-// ... (all other functions remain exactly the same as before – loadHouses, renderHouses, etc.)
-// Keep the rest of your script.js unchanged. The only change is the getMarkerIcon function above.
-// I will not repeat the entire file for brevity, but ensure that all other functions (loadHouses, renderHouses, showDetails, etc.) are present exactly as in the final version we provided earlier.
 // ======================================
 // FETCH HOUSES (with filters, sorting, and share link)
 // ======================================
@@ -463,7 +461,7 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS (with 3D landlord avatar & real profile picture)
+// RENDER HOUSE CARDS (with avatar, share, blur)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -574,6 +572,9 @@ function renderHouses(houses) {
       ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')">💬 Chat</button>`
       : '';
 
+    // Share button
+    const shareBtn = `<button class="share-btn" onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>`;
+
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
@@ -592,8 +593,11 @@ function renderHouses(houses) {
           <p>${shortDesc} ${readMoreBtn}</p>
           <p>⭐ Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
           <p><a href="https://wa.me/${house.phone}" target="_blank">WhatsApp Landlord</a></p>
-          ${chatBtn}
-          <button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>
+          <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+            ${chatBtn}
+            <button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>
+            ${shareBtn}
+          </div>
           ${ratingWidget}
           ${reportBtn}
         </div>
@@ -675,7 +679,6 @@ function renderHouses(houses) {
     });
   });
 
-  // Reattach click events for landlord name links
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
@@ -854,7 +857,7 @@ function closeLandlordModal() {
 }
 
 // ======================================
-// NEIGHBOURHOOD INSIGHTS
+// NEIGHBOURHOOD INSIGHTS (enhanced)
 // ======================================
 async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
@@ -968,7 +971,7 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
 }
 
 // ======================================
-// STREET VIEW
+// STREET VIEW (with fallback)
 // ======================================
 function loadStreetView(lat, lng) {
   const container = document.getElementById('modalStreetView');
@@ -1021,6 +1024,54 @@ async function loadPriceInsights(houseId) {
   } catch (err) {
     container.innerHTML = '<p>Market insights temporarily unavailable.</p>';
   }
+}
+
+// ======================================
+// SHARE FUNCTIONS
+// ======================================
+function shareHouse(houseId, houseName) {
+  currentShareHouseId = houseId;
+  document.getElementById('shareModal').style.display = 'block';
+}
+
+function closeShareModal() {
+  document.getElementById('shareModal').style.display = 'none';
+  document.getElementById('shareStatus').innerHTML = '';
+}
+
+function getShareUrl() {
+  return `${window.location.origin}/house/${currentShareHouseId}`;
+}
+
+function shareOnFacebook() {
+  const url = getShareUrl();
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'width=600,height=400');
+  closeShareModal();
+}
+
+function shareOnWhatsApp() {
+  const url = getShareUrl();
+  window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this property: ${url}`)}`, '_blank');
+  closeShareModal();
+}
+
+function shareOnTwitter() {
+  const url = getShareUrl();
+  window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`, '_blank', 'width=600,height=400');
+  closeShareModal();
+}
+
+function copyShareLink() {
+  const url = getShareUrl();
+  navigator.clipboard.writeText(url).then(() => {
+    const statusDiv = document.getElementById('shareStatus');
+    statusDiv.innerHTML = '<span style="color:green;">✅ Link copied to clipboard!</span>';
+    setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
+  }).catch(() => {
+    const statusDiv = document.getElementById('shareStatus');
+    statusDiv.innerHTML = '<span style="color:red;">❌ Failed to copy link.</span>';
+    setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
+  });
 }
 
 // ======================================
@@ -1212,3 +1263,9 @@ window.closePropertyModal = closePropertyModal;
 window.toggleFavorite = toggleFavorite;
 window.reportHouse = reportHouse;
 window.startChat = startChat;
+window.shareHouse = shareHouse;
+window.closeShareModal = closeShareModal;
+window.shareOnFacebook = shareOnFacebook;
+window.shareOnWhatsApp = shareOnWhatsApp;
+window.shareOnTwitter = shareOnTwitter;
+window.copyShareLink = copyShareLink;

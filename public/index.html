@@ -60,7 +60,6 @@
       --button-hover: #ee5253;
       background-image: url('https://images.pexels.com/photos/2121121/pexels-photo-2121121.jpeg?auto=compress&cs=tinysrgb&w=1600');
     }
-    /* NEW THEME: Minimal */
     body.theme-minimal {
       --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
       --navbar-bg: rgba(255,255,255,0.95);
@@ -73,7 +72,6 @@
       --button-hover: #1a252f;
       background-image: url('https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=1600');
     }
-    /* NEW THEME: Luxury */
     body.theme-luxury {
       --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
       --navbar-bg: rgba(0,0,0,0.85);
@@ -188,14 +186,12 @@
       opacity: 0.9;
     }
 
-    /* Main container – reduced padding */
     .main-container {
       max-width: 1400px;
       margin: 2rem auto;
       padding: 0 0.5rem;
     }
 
-    /* Filters row */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -266,7 +262,6 @@
       cursor: pointer;
     }
 
-    /* Amenities */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -341,7 +336,6 @@
       border-color: var(--button-bg);
     }
 
-    /* Houses grid – smaller min width to fit more per row */
     #houses-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -349,7 +343,6 @@
       margin: 2rem 0;
     }
 
-    /* Glassmorphic cards with 3D tilt */
     .house-card {
       background: var(--card-bg);
       backdrop-filter: blur(8px);
@@ -418,7 +411,6 @@
       color: var(--text-color);
     }
 
-    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.5rem;
@@ -443,7 +435,7 @@
       font-size: 0.7rem;
     }
 
-    .fav-btn, .chat-btn, .report-btn, .booking-btn {
+    .fav-btn, .chat-btn, .report-btn, .booking-btn, .share-btn {
       background: var(--button-bg);
       color: white;
       border: none;
@@ -454,7 +446,7 @@
       margin-right: 3px;
       transition: background 0.2s;
     }
-    .fav-btn:hover, .chat-btn:hover, .report-btn:hover, .booking-btn:hover {
+    .fav-btn:hover, .chat-btn:hover, .report-btn:hover, .booking-btn:hover, .share-btn:hover {
       background: var(--button-hover);
     }
     .fav-btn {
@@ -497,7 +489,6 @@
       color: #2980b9;
     }
 
-    /* Pagination */
     .pagination {
       display: flex;
       flex-wrap: wrap;
@@ -530,7 +521,6 @@
       pointer-events: none;
     }
 
-    /* Map section */
     .map-section {
       margin: 2rem 0;
     }
@@ -564,7 +554,6 @@
       width: 150px;
     }
 
-    /* GPS section */
     .gps-section {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -614,7 +603,6 @@
       text-decoration: underline;
     }
 
-    /* Modal */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -661,7 +649,6 @@
       border-color: var(--button-bg);
     }
 
-    /* Lightbox */
     .lightbox-modal {
       position: fixed;
       top: 0;
@@ -738,7 +725,6 @@
       pointer-events: none;
     }
 
-    /* Blur for unverified landlords */
     .house-details-blurred {
       filter: blur(4px);
       pointer-events: none;
@@ -762,7 +748,6 @@
       backdrop-filter: blur(2px);
     }
 
-    /* 3D Landlord Avatar */
     .landlord-avatar {
       width: 36px;
       height: 36px;
@@ -1045,6 +1030,21 @@
     </div>
   </div>
 
+  <!-- Share Modal -->
+  <div id="shareModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width: 400px;">
+      <span class="close-btn" onclick="closeShareModal()">&times;</span>
+      <h3 style="margin-bottom: 1rem;">📤 Share this property</h3>
+      <div style="display: flex; justify-content: space-around; gap: 1rem; flex-wrap: wrap;">
+        <button onclick="shareOnFacebook()" class="share-platform" style="background:#1877f2; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fab fa-facebook-f"></i> Facebook</button>
+        <button onclick="shareOnWhatsApp()" class="share-platform" style="background:#25D366; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+        <button onclick="shareOnTwitter()" class="share-platform" style="background:#1DA1F2; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fab fa-twitter"></i> Twitter</button>
+        <button onclick="copyShareLink()" class="share-platform" style="background:#6c757d; border:none; border-radius:40px; padding:10px 20px; color:white; cursor:pointer;"><i class="fas fa-link"></i> Copy Link</button>
+      </div>
+      <div id="shareStatus" style="margin-top:1rem; text-align:center; font-size:0.9rem;"></div>
+    </div>
+  </div>
+
   <script>
     window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';
   </script>
@@ -1058,7 +1058,7 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox functions (unchanged)
+    // Lightbox functions (same)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
