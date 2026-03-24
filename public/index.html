@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Rental Marketplace | Blantyre Houses</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <!-- Google Fonts & Leaflet CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -186,17 +190,18 @@
       opacity: 0.9;
     }
 
+    /* Main container – edge to edge */
     .main-container {
       max-width: 1400px;
       margin: 2rem auto;
-      padding: 0 0.5rem;
+      padding: 0;
     }
 
     .filters-row {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
-      margin: 1.5rem 0;
+      margin: 1.5rem 1rem;
       justify-content: space-between;
       align-items: center;
     }
@@ -267,7 +272,7 @@
       flex-wrap: wrap;
       gap: 1rem;
       justify-content: center;
-      margin: 1rem 0;
+      margin: 1rem 1rem;
     }
     .amenities-filters label {
       display: flex;
@@ -311,7 +316,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin: 20px 0;
+      margin: 20px 1rem;
       justify-content: center;
     }
     .tab-btn {
@@ -340,7 +345,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 1.2rem;
-      margin: 2rem 0;
+      margin: 2rem 1rem;
     }
 
     .house-card {
@@ -411,6 +416,7 @@
       color: var(--text-color);
     }
 
+    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.5rem;
@@ -522,7 +528,7 @@
     }
 
     .map-section {
-      margin: 2rem 0;
+      margin: 2rem 1rem;
     }
     .map-section h2 {
       margin-bottom: 1rem;
@@ -559,7 +565,7 @@
       backdrop-filter: blur(4px);
       border-radius: 24px;
       padding: 2rem;
-      margin: 2rem 0;
+      margin: 2rem 1rem;
       text-align: center;
       box-shadow: 0 8px 20px rgba(0,0,0,0.05);
     }
@@ -798,6 +804,7 @@
       .filters-row {
         flex-direction: column;
         align-items: stretch;
+        margin: 1.5rem 0.5rem;
       }
       .filters {
         flex-direction: column;
@@ -806,13 +813,16 @@
       .amenities-filters {
         flex-direction: column;
         align-items: center;
+        margin: 1rem 0.5rem;
       }
       .category-tabs {
         flex-direction: column;
         align-items: center;
+        margin: 20px 0.5rem;
       }
       #houses-container {
         grid-template-columns: 1fr;
+        margin: 2rem 0.5rem;
       }
       #map {
         height: 300px;
@@ -902,7 +912,7 @@
       <button class="tab-btn" data-type="Office">🏢 Offices</button>
     </div>
 
-    <h2 style="margin: 1rem 0;" data-i18n="availableProperties">Available Properties</h2>
+    <h2 style="margin: 1rem 0 0 1rem;" data-i18n="availableProperties">Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
 
     <div class="pagination" id="pagination"></div>
@@ -1058,7 +1068,7 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox functions (same)
+    // Lightbox functions (unchanged)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 

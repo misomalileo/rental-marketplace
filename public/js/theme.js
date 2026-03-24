@@ -1,4 +1,3 @@
-// Theme management
 function setTheme(theme) {
   if (!theme) theme = localStorage.getItem('theme') || 'light';
   document.body.classList.remove('theme-light', 'theme-dark', 'theme-aquatic', 'theme-minimal', 'theme-luxury');
@@ -13,6 +12,5 @@ function loadTheme() {
   if (themeSelect) themeSelect.value = savedTheme;
 }
 
-// Called when theme select changes
 window.setTheme = setTheme;
 loadTheme();
