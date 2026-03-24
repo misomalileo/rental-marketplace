@@ -424,7 +424,7 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS (with 3D landlord avatar)
+// RENDER HOUSE CARDS (with 3D landlord avatar & real profile picture)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -442,7 +442,7 @@ function renderHouses(houses) {
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
     let currentIndex = 0;
 
-    // Landlord avatar (circular 3D)
+    // Landlord avatar (circular 3D) – use profile picture if available
     let avatarHtml = '';
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
@@ -748,8 +748,8 @@ async function showLandlordProfile(landlordId) {
     const houses = data.houses;
 
     const avatarHtml = landlord.profilePicture
-      ? `<img class="avatar" src="${landlord.profilePicture}" alt="${landlord.name}">`
-      : `<div class="avatar" style="background: #3498db; display: flex; align-items: center; justify-content: center; font-size: 2rem;">${landlord.name.charAt(0)}</div>`;
+      ? `<img class="avatar" src="${landlord.profilePicture}" alt="${landlord.name}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;">`
+      : `<div class="avatar" style="background: #3498db; display: flex; align-items: center; justify-content: center; font-size: 2rem; width:100px;height:100px;border-radius:50%;">${landlord.name.charAt(0)}</div>`;
 
     let badgeHtml = '';
     if (landlord.verificationType === 'premium') {
