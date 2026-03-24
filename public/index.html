@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Rental Marketplace | Blantyre Houses</title>
-  <!-- Google Fonts & Leaflet CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,14 +11,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- noUiSlider -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* ========== GLOBAL THEME VARIABLES ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #3b82f6;
       --primary-dark: #2563eb;
@@ -80,6 +77,7 @@
       background-size: cover;
     }
 
+    /* Navbar */
     .navbar {
       background: var(--navbar-bg);
       backdrop-filter: blur(12px);
@@ -127,6 +125,7 @@
       font-size: 0.9rem;
     }
 
+    /* Hero */
     .hero {
       text-align: center;
       padding: 5rem 1rem;
@@ -155,12 +154,14 @@
       opacity: 0.9;
     }
 
+    /* Main container – layout fix */
     .main-container {
-      max-width: 1300px;
+      max-width: 1400px;
       margin: 2rem auto;
-      padding: 0 2rem;
+      padding: 0 1rem;
     }
 
+    /* Filters row */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -231,6 +232,7 @@
       cursor: pointer;
     }
 
+    /* Amenities */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -276,6 +278,7 @@
       font-size: 1rem;
     }
 
+    /* Category tabs */
     .category-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -305,13 +308,15 @@
       border-color: var(--button-bg);
     }
 
+    /* Houses grid – wider cards */
     #houses-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1.5rem;
       margin: 2rem 0;
     }
 
+    /* Glassmorphic cards with 3D tilt */
     .house-card {
       background: var(--card-bg);
       backdrop-filter: blur(8px);
@@ -380,6 +385,7 @@
       color: var(--text-color);
     }
 
+    /* Badges */
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -401,6 +407,7 @@
       margin: 0.5rem 0;
     }
 
+    /* Buttons */
     .fav-btn, .chat-btn, .report-btn, .booking-btn {
       background: var(--button-bg);
       color: white;
@@ -455,6 +462,7 @@
       color: #2980b9;
     }
 
+    /* Pagination */
     .pagination {
       display: flex;
       flex-wrap: wrap;
@@ -487,6 +495,7 @@
       pointer-events: none;
     }
 
+    /* Map section */
     .map-section {
       margin: 2rem 0;
     }
@@ -520,6 +529,7 @@
       width: 150px;
     }
 
+    /* GPS section */
     .gps-section {
       background: var(--card-bg);
       backdrop-filter: blur(4px);
@@ -569,6 +579,7 @@
       text-decoration: underline;
     }
 
+    /* Modal */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -615,6 +626,7 @@
       border-color: var(--button-bg);
     }
 
+    /* Lightbox */
     .lightbox-modal {
       position: fixed;
       top: 0;
@@ -691,6 +703,7 @@
       pointer-events: none;
     }
 
+    /* Blur for unverified landlords */
     .house-details-blurred {
       filter: blur(4px);
       pointer-events: none;
@@ -712,6 +725,41 @@
       z-index: 10;
       pointer-events: none;
       backdrop-filter: blur(2px);
+    }
+
+    /* 3D Landlord Avatar */
+    .landlord-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      margin-right: 8px;
+      transform: translateZ(0);
+    }
+    .landlord-avatar:hover {
+      transform: scale(1.05) rotateZ(2deg);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+    .landlord-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .landlord-info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
     @media (max-width: 768px) {
@@ -972,7 +1020,7 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script>
-    // Lightbox functions (same as before)
+    // Lightbox functions
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 

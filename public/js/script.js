@@ -176,7 +176,7 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     currentPage = data.page;
     totalPages = data.pages;
 
-    // Handle share link: if URL contains ?house=ID, open that house modal
+    // Handle share link
     const urlParams = new URLSearchParams(window.location.search);
     const houseId = urlParams.get('house');
     if (houseId) {
@@ -424,7 +424,7 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// RENDER HOUSE CARDS (with blur and landlord click)
+// RENDER HOUSE CARDS (with 3D landlord avatar)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -442,15 +442,29 @@ function renderHouses(houses) {
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
     let currentIndex = 0;
 
-    let landlordInfo = '';
+    // Landlord avatar (circular 3D)
+    let avatarHtml = '';
     if (house.owner) {
-      landlordInfo = `<p><a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a> `;
-      if (house.owner.verificationType === "premium") {
-        landlordInfo += `<span class="badge premium">⭐ Premium</span>`;
-      } else if (house.owner.verificationType === "official") {
-        landlordInfo += `<span class="badge verified">✔ Verified</span>`;
-      }
-      landlordInfo += '</p>';
+      const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
+      const avatarStyle = house.owner.profilePicture 
+        ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}">`
+        : `<span style="font-size:1rem;">${initial}</span>`;
+      avatarHtml = `
+        <div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">
+          ${avatarStyle}
+        </div>
+      `;
+    }
+
+    // Landlord info row (avatar + name + badges)
+    let landlordInfoHtml = '';
+    if (house.owner) {
+      landlordInfoHtml = `<div class="landlord-info-row">
+        ${avatarHtml}
+        <a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>
+        ${house.owner.verificationType === "premium" ? '<span class="badge premium">⭐ Premium</span>' : ''}
+        ${house.owner.verificationType === "official" ? '<span class="badge verified">✔ Verified</span>' : ''}
+      </div>`;
     }
 
     const featuredBadge = house.featured ? '<span class="badge featured">⭐ FEATURED</span>' : '';
@@ -527,7 +541,7 @@ function renderHouses(houses) {
         ${images.length > 1 ? `<button class="prev">‹</button><button class="next">›</button>` : ""}
       </div>
       <div class="house-card-content">
-        ${landlordInfo}
+        ${landlordInfoHtml}
         ${featuredBadge}
         ${selfContainedBadge}
         <div class="house-details-content">
@@ -549,6 +563,7 @@ function renderHouses(houses) {
 
     container.appendChild(card);
 
+    // Apply blur if landlord unverified
     const detailsDiv = card.querySelector('.house-details-content');
     if (house.owner && house.owner.verificationType === "none") {
       detailsDiv.classList.add('house-details-blurred');
@@ -556,6 +571,7 @@ function renderHouses(houses) {
       detailsDiv.classList.remove('house-details-blurred');
     }
 
+    // Slider and lightbox
     const img = card.querySelector(`#img-${house._id}`);
     if (images.length > 1) {
       const prevBtn = card.querySelector(".prev");
@@ -584,6 +600,7 @@ function renderHouses(houses) {
       }
     });
 
+    // Rating widget
     if (isLoggedIn) {
       const widget = card.querySelector(".rating-widget");
       if (widget) {
@@ -619,6 +636,7 @@ function renderHouses(houses) {
     });
   });
 
+  // Reattach click events for landlord name links
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
