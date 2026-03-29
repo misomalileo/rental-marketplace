@@ -1,28 +1,30 @@
 // ======================================
-// AI Concierge Chatbot Widget – Enhanced UI
+// AI Concierge Chatbot Widget – Compact & Professional
 // ======================================
 (function() {
-  // Create the widget elements
+  // Create the widget elements (smaller, rounded, modern)
   const widgetHtml = `
     <div id="chatbot-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: 'Inter', sans-serif;">
-      <div id="chatbot-toggle" style="width: 60px; height: 60px; background: #3498db; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.2s;">
-        <i class="fas fa-robot" style="color: white; font-size: 28px;"></i>
+      <div id="chatbot-toggle" style="width: 52px; height: 52px; background: linear-gradient(135deg, #2563eb, #10b981); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: all 0.2s;">
+        <i class="fas fa-robot" style="color: white; font-size: 24px;"></i>
       </div>
-      <div id="chatbot-panel" style="display: none; position: absolute; bottom: 70px; right: 0; width: 350px; height: 500px; background: var(--card-bg, white); border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--input-border, #ddd);">
-        <div style="background: var(--button-bg, #3498db); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-          <span><i class="fas fa-robot"></i> AI Concierge</span>
-          <span id="chatbot-close" style="cursor: pointer;">&times;</span>
+      <div id="chatbot-panel" style="display: none; position: absolute; bottom: 70px; right: 0; width: 300px; height: 420px; background: var(--card-bg, white); border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--input-border, #e2e8f0);">
+        <div style="background: linear-gradient(135deg, #2563eb, #1e40af); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <span><i class="fas fa-robot" style="margin-right: 6px;"></i> AI Concierge</span>
+          <span id="chatbot-close" style="cursor: pointer; font-size: 20px;">&times;</span>
         </div>
-        <div id="chatbot-messages" style="flex: 1; overflow-y: auto; padding: 12px; background: var(--input-bg, #f9f9f9);">
+        <div id="chatbot-messages" style="flex: 1; overflow-y: auto; padding: 12px; background: var(--input-bg, #f9fafb); font-size: 0.8rem;">
           <div style="margin-bottom: 8px; text-align: left;">
-            <div style="display: inline-block; background: var(--card-bg, white); padding: 8px 12px; border-radius: 18px; max-width: 80%; font-size: 0.85rem;">
-              👋 Hi! I'm your AI concierge. Ask me anything about houses, rooms, hostels, apartments, or offices.
+            <div style="display: inline-block; background: var(--card-bg, white); padding: 8px 12px; border-radius: 18px; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+              <i class="fas fa-smile-wink" style="color: #f59e0b; margin-right: 4px;"></i> Hi! Ask me about houses, rooms, hostels, or anything.
             </div>
           </div>
         </div>
-        <div style="padding: 12px; border-top: 1px solid var(--input-border, #ddd); display: flex; gap: 8px;">
-          <input type="text" id="chatbot-input" placeholder="Ask me about properties..." style="flex: 1; padding: 8px 12px; border: 1px solid var(--input-border, #ddd); border-radius: 30px; background: var(--input-bg, white); color: var(--text-color, #333); outline: none; font-size: 0.85rem;">
-          <button id="chatbot-send" style="background: var(--button-bg, #3498db); color: white; border: none; border-radius: 30px; padding: 8px 16px; cursor: pointer; font-size: 0.85rem;">Send</button>
+        <div style="padding: 10px; border-top: 1px solid var(--input-border, #e2e8f0); display: flex; gap: 8px;">
+          <input type="text" id="chatbot-input" placeholder="Type your question..." style="flex: 1; padding: 8px 12px; border: 1px solid var(--input-border, #cbd5e1); border-radius: 40px; background: var(--input-bg, white); color: var(--text-color, #1e293b); outline: none; font-size: 0.8rem;">
+          <button id="chatbot-send" style="background: #2563eb; color: white; border: none; border-radius: 40px; padding: 6px 14px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+            <i class="fas fa-paper-plane" style="font-size: 0.7rem;"></i> Send
+          </button>
         </div>
       </div>
     </div>
@@ -44,7 +46,7 @@
     msgDiv.style.marginBottom = '8px';
     msgDiv.style.textAlign = isUser ? 'right' : 'left';
     const content = isHtml ? text : escapeHtml(text);
-    msgDiv.innerHTML = `<div style="display: inline-block; background: ${isUser ? 'var(--button-bg, #3498db)' : 'var(--card-bg, white)'}; color: ${isUser ? 'white' : 'var(--text-color, #333)'}; padding: 8px 12px; border-radius: 18px; max-width: 80%; font-size: 0.85rem; word-wrap: break-word;">${content}</div>`;
+    msgDiv.innerHTML = `<div style="display: inline-block; background: ${isUser ? '#2563eb' : 'var(--card-bg, white)'}; color: ${isUser ? 'white' : 'var(--text-color, #1e293b)'}; padding: 8px 12px; border-radius: 18px; max-width: 85%; font-size: 0.8rem; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${content}</div>`;
     messagesDiv.appendChild(msgDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
@@ -55,29 +57,24 @@
       if (m === '<') return '&lt;';
       if (m === '>') return '&gt;';
       return m;
-    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-      return c;
     });
   }
 
-  // Map property type to emoji
   function getTypeEmoji(type) {
     const map = {
       'House': '🏠',
       'Hostel': '🏨',
       'Apartment': '🏢',
       'Room': '🛏️',
-      'Office': '🏢'
+      'Office': '💼'
     };
     return map[type] || '🏠';
   }
 
-  // Format search results with correct emojis and wording
   function formatSearchResults(houses) {
     if (!houses || houses.length === 0) {
-      return 'Sorry, I couldn’t find any properties matching your request.';
+      return 'Sorry, no properties found. Try different words.';
     }
-    // Determine the property type from the first result (if all same type)
     let typeLabel = 'properties';
     if (houses.length > 0) {
       const firstType = houses[0].type;
@@ -89,12 +86,12 @@
         else if (firstType === 'Office') typeLabel = 'offices';
       }
     }
-    let html = `<div style="font-size: 0.8rem;"><strong>Here are some ${typeLabel} that match your request:</strong><ul style="margin: 8px 0 0 16px; padding-left: 0;">`;
+    let html = `<div style="font-size: 0.75rem;"><strong>${houses.length} ${typeLabel} found:</strong><ul style="margin: 6px 0 0 16px; padding-left: 0;">`;
     houses.forEach(house => {
       const emoji = getTypeEmoji(house.type);
       const linkUrl = `/?house=${house.id}`;
-      html += `<li style="margin-bottom: 6px; line-height: 1.3;">
-        ${emoji} <a href="${linkUrl}" target="_blank" style="color: var(--button-bg, #3498db); text-decoration: none; font-weight: 500;">${escapeHtml(house.name)}</a> – MWK ${house.price.toLocaleString()} (${escapeHtml(house.location)})
+      html += `<li style="margin-bottom: 4px; line-height: 1.3;">
+        ${emoji} <a href="${linkUrl}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">${escapeHtml(house.name)}</a> – MWK ${house.price.toLocaleString()} (${escapeHtml(house.location)})
       </li>`;
     });
     html += '</ul></div>';
@@ -113,7 +110,7 @@
     typingDiv.id = 'typing-indicator';
     typingDiv.style.marginBottom = '8px';
     typingDiv.style.textAlign = 'left';
-    typingDiv.innerHTML = `<div style="display: inline-block; background: var(--card-bg, white); padding: 8px 12px; border-radius: 18px; font-size: 0.8rem;">🤖 typing...</div>`;
+    typingDiv.innerHTML = `<div style="display: inline-block; background: var(--card-bg, white); padding: 8px 12px; border-radius: 18px; font-size: 0.7rem;"><i class="fas fa-ellipsis-h"></i> typing...</div>`;
     messagesDiv.appendChild(typingDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
@@ -134,7 +131,7 @@
       }
     } catch (err) {
       typingDiv.remove();
-      addMessage("Sorry, I'm having trouble connecting. Please try again later.");
+      addMessage("Sorry, I'm having trouble connecting. Try again later.");
     } finally {
       isLoading = false;
     }
