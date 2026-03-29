@@ -4,12 +4,10 @@ const mongoose = require('mongoose');
 const Chat = require('../models/Chat');
 const auth = require('../middleware/auth');
 
-// Helper to safely get string from ObjectId or null
-function safeToString(id) {
-  if (!id) return '';
-  if (typeof id === 'string') return id;
-  if (id.toString) return id.toString();
-  return '';
+// Helper to safely convert any value to string
+function safeToString(value) {
+  if (value == null) return null;
+  return value.toString();
 }
 
 // GET /api/chat/my – all chats for current user
@@ -21,14 +19,14 @@ router.get('/my', auth, async (req, res) => {
       .sort({ lastMessage: -1 });
 
     const enriched = chats.map(chat => {
-      // Filter out any null/undefined participants
-      const safeParticipants = (chat.participants || []).filter(p => p && p._id);
+      // Filter out null participants and ensure each has _id
+      const validParticipants = (chat.participants || []).filter(p => p && p._id);
       const lastMsg = chat.messages[chat.messages.length - 1];
-      const unreadCount = chat.messages.filter(m => 
-        m && m.sender && safeToString(m.sender) !== safeToString(userId) && !m.read
+      const unreadCount = chat.messages.filter(
+        m => m.sender && safeToString(m.sender) !== safeToString(userId) && !m.read
       ).length;
 
-      const messages = (chat.messages || []).filter(m => m).map(m => ({
+      const messages = (chat.messages || []).map(m => ({
         _id: m._id,
         text: m.content || m.text || '',
         sender: m.sender,
@@ -39,7 +37,7 @@ router.get('/my', auth, async (req, res) => {
 
       return {
         _id: chat._id,
-        participants: safeParticipants,
+        participants: validParticipants,
         messages,
         lastMessage: lastMsg ? (lastMsg.content || lastMsg.text || '') : '',
         lastMessageAt: lastMsg ? lastMsg.createdAt : chat.updatedAt,
@@ -69,14 +67,14 @@ router.get('/:chatId', auth, async (req, res) => {
       return res.status(404).json({ message: 'Chat not found' });
     }
 
-    // Filter participants and check authorization
-    const safeParticipants = (chat.participants || []).filter(p => p && p._id);
-    const isAuthorized = safeParticipants.some(p => safeToString(p._id) === safeToString(req.user._id));
-    if (!isAuthorized) {
+    // Filter out null participants
+    const validParticipants = (chat.participants || []).filter(p => p && p._id);
+    // Check authorization
+    if (!validParticipants.some(p => safeToString(p._id) === safeToString(req.user._id))) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const messages = (chat.messages || []).filter(m => m).map(m => ({
+    const messages = (chat.messages || []).map(m => ({
       _id: m._id,
       text: m.content || m.text || '',
       sender: m.sender,
@@ -87,7 +85,7 @@ router.get('/:chatId', auth, async (req, res) => {
 
     res.json({
       _id: chat._id,
-      participants: safeParticipants,
+      participants: validParticipants,
       messages
     });
   } catch (err) {
@@ -96,7 +94,7 @@ router.get('/:chatId', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/send
+// POST /api/chat/send – send a message
 router.post('/send', auth, async (req, res) => {
   try {
     const { chatId, text } = req.body;
@@ -135,8 +133,9 @@ router.post('/send', auth, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       chat.participants.forEach(participantId => {
-        if (participantId && safeToString(participantId) !== safeToString(req.user._id)) {
-          io.to(safeToString(participantId)).emit('newMessage', {
+        const participantStr = safeToString(participantId);
+        if (participantStr && participantStr !== safeToString(req.user._id)) {
+          io.to(participantStr).emit('newMessage', {
             chatId: chat._id,
             message: {
               ...responseMessage,
@@ -155,7 +154,7 @@ router.post('/send', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/:chatId/read
+// POST /api/chat/:chatId/read – mark messages as read
 router.post('/:chatId/read', auth, async (req, res) => {
   try {
     const chatId = req.params.chatId;
@@ -170,7 +169,7 @@ router.post('/:chatId/read', auth, async (req, res) => {
 
     let updated = false;
     chat.messages.forEach(msg => {
-      if (msg && msg.sender && safeToString(msg.sender) !== safeToString(userId) && !msg.read) {
+      if (msg.sender && safeToString(msg.sender) !== safeToString(userId) && !msg.read) {
         msg.read = true;
         updated = true;
       }
@@ -180,8 +179,9 @@ router.post('/:chatId/read', auth, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       chat.participants.forEach(participantId => {
-        if (participantId && safeToString(participantId) !== safeToString(userId)) {
-          io.to(safeToString(participantId)).emit('messagesRead', {
+        const participantStr = safeToString(participantId);
+        if (participantStr && participantStr !== safeToString(userId)) {
+          io.to(participantStr).emit('messagesRead', {
             chatId,
             readBy: userId,
             readAt: new Date()
@@ -196,7 +196,7 @@ router.post('/:chatId/read', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/start
+// POST /api/chat/start – start a new chat
 router.post('/start', auth, async (req, res) => {
   try {
     const { recipientId, houseId } = req.body;
