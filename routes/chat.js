@@ -161,4 +161,46 @@ router.post('/:chatId/read', auth, async (req, res) => {
   }
 });
 
+// NEW: POST /api/chat/start – start a new chat with another user
+router.post('/start', auth, async (req, res) => {
+  try {
+    const { recipientId, houseId } = req.body;
+    if (!recipientId) {
+      return res.status(400).json({ message: 'recipientId is required' });
+    }
+
+    // Check if a chat already exists
+    let chat;
+    if (houseId) {
+      chat = await Chat.findOne({
+        participants: { $all: [req.user._id, recipientId], $size: 2 },
+        house: houseId
+      });
+    } else {
+      chat = await Chat.findOne({
+        participants: { $all: [req.user._id, recipientId], $size: 2 },
+        house: { $exists: false }
+      });
+    }
+
+    if (chat) {
+      return res.json({ chatId: chat._id });
+    }
+
+    // Create new chat
+    chat = new Chat({
+      participants: [req.user._id, recipientId],
+      house: houseId || null,
+      messages: [],
+      lastMessage: new Date()
+    });
+    await chat.save();
+
+    res.status(201).json({ chatId: chat._id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
