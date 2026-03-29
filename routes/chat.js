@@ -13,12 +13,14 @@ router.get('/my', auth, async (req, res) => {
       .sort({ lastMessage: -1 });
 
     const enriched = chats.map(chat => {
+      // Filter out any null participants (if a user was deleted)
+      const participants = (chat.participants || []).filter(p => p && p._id);
       const lastMsg = chat.messages[chat.messages.length - 1];
       const unreadCount = chat.messages.filter(
-        m => m.sender.toString() !== userId.toString() && !m.read
+        m => m.sender && m.sender.toString() !== userId.toString() && !m.read
       ).length;
 
-      const messages = chat.messages.map(m => ({
+      const messages = (chat.messages || []).map(m => ({
         _id: m._id,
         text: m.content || m.text || '',
         sender: m.sender,
@@ -29,7 +31,7 @@ router.get('/my', auth, async (req, res) => {
 
       return {
         _id: chat._id,
-        participants: chat.participants,
+        participants,
         messages,
         lastMessage: lastMsg ? (lastMsg.content || lastMsg.text || '') : '',
         lastMessageAt: lastMsg ? lastMsg.createdAt : chat.updatedAt,
@@ -48,24 +50,21 @@ router.get('/my', auth, async (req, res) => {
 router.get('/:chatId', auth, async (req, res) => {
   try {
     const chatId = req.params.chatId;
-
-    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(chatId)) {
       return res.status(400).json({ message: 'Invalid chat ID format' });
     }
 
     const chat = await Chat.findById(chatId)
       .populate('participants', 'name profilePicture');
-    if (!chat) {
-      return res.status(404).json({ message: 'Chat not found' });
-    }
+    if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
-    // Check authorization
-    if (!chat.participants.some(p => p._id.toString() === req.user._id.toString())) {
+    // Filter participants to remove any null entries
+    const participants = (chat.participants || []).filter(p => p && p._id);
+    // Check if user is participant
+    if (!participants.some(p => p._id.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    // Map messages safely
     const messages = (chat.messages || []).map(m => ({
       _id: m._id,
       text: m.content || m.text || '',
@@ -77,7 +76,7 @@ router.get('/:chatId', auth, async (req, res) => {
 
     res.json({
       _id: chat._id,
-      participants: chat.participants,
+      participants,
       messages
     });
   } catch (err) {
@@ -98,7 +97,10 @@ router.post('/send', auth, async (req, res) => {
 
     const chat = await Chat.findById(chatId);
     if (!chat) return res.status(404).json({ message: 'Chat not found' });
-    if (!chat.participants.includes(req.user._id)) {
+
+    // Check if user is participant (using raw participant IDs)
+    const participants = chat.participants || [];
+    if (!participants.some(p => p && p.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -124,15 +126,17 @@ router.post('/send', auth, async (req, res) => {
 
     const io = req.app.get('io');
     if (io) {
-      chat.participants.forEach(participantId => {
-        io.to(participantId.toString()).emit('newMessage', {
-          chatId: chat._id,
-          message: {
-            ...responseMessage,
-            senderId: savedMessage.sender,
-            senderName: req.user.name
-          }
-        });
+      participants.forEach(participantId => {
+        if (participantId && participantId.toString() !== req.user._id.toString()) {
+          io.to(participantId.toString()).emit('newMessage', {
+            chatId: chat._id,
+            message: {
+              ...responseMessage,
+              senderId: savedMessage.sender,
+              senderName: req.user.name
+            }
+          });
+        }
       });
     }
 
@@ -157,8 +161,8 @@ router.post('/:chatId/read', auth, async (req, res) => {
     if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
     let updated = false;
-    chat.messages.forEach(msg => {
-      if (msg.sender.toString() !== userId.toString() && !msg.read) {
+    (chat.messages || []).forEach(msg => {
+      if (msg.sender && msg.sender.toString() !== userId.toString() && !msg.read) {
         msg.read = true;
         updated = true;
       }
@@ -167,8 +171,8 @@ router.post('/:chatId/read', auth, async (req, res) => {
 
     const io = req.app.get('io');
     if (io) {
-      chat.participants.forEach(participantId => {
-        if (participantId.toString() !== userId.toString()) {
+      (chat.participants || []).forEach(participantId => {
+        if (participantId && participantId.toString() !== userId.toString()) {
           io.to(participantId.toString()).emit('messagesRead', {
             chatId,
             readBy: userId,
@@ -196,24 +200,21 @@ router.post('/start', auth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid recipient ID format' });
     }
 
-    // Check if chat already exists
+    // Check if a chat already exists
     let chat;
-    if (houseId) {
-      chat = await Chat.findOne({
-        participants: { $all: [req.user._id, recipientId], $size: 2 },
-        house: houseId
-      });
-    } else {
-      chat = await Chat.findOne({
-        participants: { $all: [req.user._id, recipientId], $size: 2 },
-        house: { $exists: false }
-      });
-    }
+    const query = {
+      participants: { $all: [req.user._id, recipientId], $size: 2 }
+    };
+    if (houseId) query.house = houseId;
+    else query.house = { $exists: false };
+
+    chat = await Chat.findOne(query);
 
     if (chat) {
       return res.json({ chatId: chat._id });
     }
 
+    // Create new chat
     chat = new Chat({
       participants: [req.user._id, recipientId],
       house: houseId || null,

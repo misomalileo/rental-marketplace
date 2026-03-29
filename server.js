@@ -20,14 +20,8 @@ const io = socketIo(server, {
   cors: { origin: "*" } // Restrict in production
 });
 
-// ===============================
-// PROXY TRUST (for Render / reverse proxies)
-// ===============================
 app.set("trust proxy", 1);
 
-// ===============================
-// SECURITY MIDDLEWARE (custom CSP)
-// ===============================
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -74,8 +68,8 @@ app.use(
           "https://*.tile.openstreetmap.org",
           "https://fonts.googleapis.com",
           "https://fonts.gstatic.com",
-          "https://rental-marketplace-irmj.onrender.com",   // Add live domain
-          "wss://rental-marketplace-irmj.onrender.com",      // Add WebSocket domain
+          "https://rental-marketplace-irmj.onrender.com",
+          "wss://rental-marketplace-irmj.onrender.com",
         ],
         upgradeInsecureRequests: [],
       },
@@ -84,9 +78,6 @@ app.use(
 );
 app.use(cookieParser());
 
-// ===============================
-// OTHER MIDDLEWARE
-// ===============================
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -105,16 +96,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ===============================
-// DATABASE CONNECTION
-// ===============================
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
-// ===============================
-// SOCKET.IO – Real‑time chat (FULL FEATURED)
-// ===============================
+// Socket.io with safe checks
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error("Authentication error"));
@@ -135,7 +121,8 @@ io.on("connection", (socket) => {
       const { chatId, text, messageId } = data;
       const chat = await Chat.findById(chatId);
       if (!chat) return;
-      const otherParticipant = chat.participants.find(p => p.toString() !== socket.userId);
+      const participants = chat.participants || [];
+      const otherParticipant = participants.find(p => p.toString() !== socket.userId);
       if (otherParticipant) {
         io.to(otherParticipant.toString()).emit("newMessage", {
           chatId,
@@ -143,7 +130,7 @@ io.on("connection", (socket) => {
             _id: messageId,
             text,
             senderId: socket.userId,
-            senderName: "User", // can be fetched if needed
+            senderName: "User",
             createdAt: new Date()
           }
         });
@@ -158,7 +145,8 @@ io.on("connection", (socket) => {
       const userId = socket.userId;
       const chat = await Chat.findById(chatId);
       if (!chat) return;
-      const otherParticipant = chat.participants.find(p => p.toString() !== userId);
+      const participants = chat.participants || [];
+      const otherParticipant = participants.find(p => p.toString() !== userId);
       if (otherParticipant) {
         io.to(otherParticipant.toString()).emit("messagesRead", {
           chatId,
@@ -174,7 +162,8 @@ io.on("connection", (socket) => {
   socket.on("typing", ({ chatId, isTyping }) => {
     Chat.findById(chatId).then(chat => {
       if (!chat) return;
-      const otherParticipant = chat.participants.find(p => p.toString() !== socket.userId);
+      const participants = chat.participants || [];
+      const otherParticipant = participants.find(p => p.toString() !== socket.userId);
       if (otherParticipant) {
         io.to(otherParticipant.toString()).emit("typing", {
           chatId,
@@ -191,12 +180,9 @@ io.on("connection", (socket) => {
   });
 });
 
-// Attach io to app so routes can use it
 app.set('io', io);
 
-// ===============================
-// ROUTES
-// ===============================
+// Routes
 const authRoutes = require("./routes/auth");
 const houseRoutes = require("./routes/houses");
 const adminRoutes = require("./routes/admin");
@@ -219,9 +205,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 
-// ===============================
-// DEBUG ENDPOINT – TEST MONGODB CONNECTION
-// ===============================
+// Debug endpoint
 app.get("/api/db-test", async (req, res) => {
   try {
     const admin = mongoose.connection.db.admin();
@@ -238,21 +222,13 @@ app.get("/api/db-test", async (req, res) => {
   }
 });
 
-// ===============================
-// CRON JOB FOR SUBSCRIPTION EXPIRY
-// ===============================
 require('./utils/cron');
 
-// ===============================
-// TEST ROUTE
-// ===============================
 app.get("/", (req, res) => {
   res.send("🏠 House Marketplace API Running");
 });
 
-// ======================================
-// HOUSE SHARE PAGE (for social media previews)
-// ======================================
+// House share page
 app.get('/house/:id', async (req, res) => {
   try {
     const House = require('./models/House');
@@ -293,9 +269,7 @@ app.get('/house/:id', async (req, res) => {
   }
 });
 
-// ======================================
-// SITEMAP.XML
-// ======================================
+// Sitemap
 app.get('/sitemap.xml', async (req, res) => {
   try {
     const House = require('./models/House');
@@ -325,9 +299,6 @@ app.get('/sitemap.xml', async (req, res) => {
   }
 });
 
-// ===============================
-// START SERVER
-// ===============================
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log("🚀 Server running on port " + PORT);
