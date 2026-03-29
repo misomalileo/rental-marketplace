@@ -4,27 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Khomo Lathu | Rent Houses, Rooms & Hostels Across Malawi</title>
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
-  <!-- Modern fonts: Inter with light weights -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Icon Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://unpkg.com/lucide-css@latest/dist/lucide.min.css" rel="stylesheet">
   <!-- Leaflet & plugins -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- noUiSlider -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
   <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
   <style>
-    /* ========== MODERN THEME VARIABLES (no background images) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -104,7 +104,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', sans-serif;
     }
 
     body {
@@ -114,11 +114,70 @@
       transition: background 0.2s, color 0.2s;
     }
 
-    /* Navbar – clean, minimal */
+    h1, h2, h3, .logo, .stat-card .value {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    /* ========== ICON STYLES (colourful & interactive) ========== */
+    i, [class*="ri-"], [class*="lucide-"] {
+      transition: all 0.2s ease;
+    }
+
+    /* Default gradient for all icons (fallback) */
+    i.fas, i.far, i.fab, i.ri, .lucide {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Category‑specific colours (override) */
+    .fa-wifi, .ri-wifi-line, .lucide-wifi { background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; }
+    .fa-parking, .ri-parking-line, .lucide-parking-circle { background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; }
+    .fa-couch, .ri-sofa-line, .lucide-sofa { background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; }
+    .fa-paw, .ri-paw-line, .lucide-paw { background: linear-gradient(135deg, #ec489a, #f472b6); -webkit-background-clip: text; }
+    .fa-swimming-pool, .ri-swimming-line, .lucide-swimming { background: linear-gradient(135deg, #06b6d4, #22d3ee); -webkit-background-clip: text; }
+    .fa-snowflake, .ri-snowflake-line, .lucide-snowflake { background: linear-gradient(135deg, #8b5cf6, #a78bfa); -webkit-background-clip: text; }
+    .fa-home, .ri-home-line, .lucide-home { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; }
+    .fa-hotel, .ri-hotel-line, .lucide-hotel { background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; }
+    .fa-building, .ri-building-line, .lucide-building2 { background: linear-gradient(135deg, #64748b, #94a3b8); -webkit-background-clip: text; }
+    .fa-bed, .ri-bed-line, .lucide-bed { background: linear-gradient(135deg, #f43f5e, #fb7185); -webkit-background-clip: text; }
+    .fa-briefcase, .ri-briefcase-line, .lucide-briefcase { background: linear-gradient(135deg, #4b5563, #6b7280); -webkit-background-clip: text; }
+    .fa-star, .ri-star-line, .lucide-star { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; }
+    .fa-map-marker-alt, .ri-map-pin-line, .lucide-map-pin { background: linear-gradient(135deg, #ef4444, #f97316); -webkit-background-clip: text; }
+    .fa-money-bill-wave, .ri-money-dollar-circle-line, .lucide-dollar-sign { background: linear-gradient(135deg, #2ecc71, #27ae60); -webkit-background-clip: text; }
+    .fa-calendar-check, .ri-calendar-check-line, .lucide-calendar-check { background: linear-gradient(135deg, #3498db, #2980b9); -webkit-background-clip: text; }
+    .fa-eye, .ri-eye-line, .lucide-eye { background: linear-gradient(135deg, #95a5a6, #7f8c8d); -webkit-background-clip: text; }
+
+    /* Hover effect – slight lift and brighter gradient */
+    i:hover, [class*="ri-"]:hover, [class*="lucide-"]:hover {
+      transform: translateY(-2px);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+
+    /* ========== TYPOGRAPHY (high contrast for small text) ========== */
+    .house-card-content p, .house-card-content .amenities-list, .house-card-content .rating-stars, .house-card-content small {
+      color: var(--gray-700);
+      opacity: 1;
+    }
+    body.theme-dark .house-card-content p,
+    body.theme-dark .house-card-content .amenities-list,
+    body.theme-dark .house-card-content .rating-stars {
+      color: var(--gray-300);
+    }
+    body.theme-luxury .house-card-content p,
+    body.theme-luxury .house-card-content .amenities-list {
+      color: #f5e7d9;
+      opacity: 0.9;
+    }
+
+    /* ========== NAVBAR (glass) ========== */
     .navbar {
       background: var(--navbar-bg);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--input-border);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.3);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -127,7 +186,6 @@
       top: 0;
       z-index: 1000;
     }
-
     .logo {
       font-size: 1.4rem;
       font-weight: 600;
@@ -137,16 +195,17 @@
     .logo i {
       margin-right: 6px;
       font-size: 1.2rem;
-      color: var(--primary);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
-
     .nav-links {
       display: flex;
       align-items: center;
       gap: 1.2rem;
       flex-wrap: wrap;
     }
-
     .nav-links a {
       color: var(--text-color);
       text-decoration: none;
@@ -157,7 +216,6 @@
     .nav-links a:hover {
       color: var(--primary);
     }
-
     .lang-select, .theme-select {
       padding: 0.25rem 0.6rem;
       border-radius: 30px;
@@ -168,12 +226,17 @@
       font-size: 0.8rem;
     }
 
-    /* Hero – subtle, floating, clean */
+    /* ========== HERO (gradient) ========== */
     .hero {
       text-align: center;
       padding: 3rem 1rem 2.5rem 1rem;
-      background: transparent;
-      margin-bottom: 1rem;
+      background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(16,185,129,0.03) 100%);
+      border-radius: 48px;
+      margin: 1rem;
+      transition: background 0.3s;
+    }
+    .hero:hover {
+      background: linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(16,185,129,0.06) 100%);
     }
     .hero h1 {
       font-size: 2.5rem;
@@ -185,16 +248,13 @@
       gap: 0.5rem;
       flex-wrap: wrap;
       color: var(--text-color);
-      background: none;
-      -webkit-background-clip: unset;
-      background-clip: unset;
-      text-shadow: none;
-      animation: none;
     }
     .hero h1 i {
       font-size: 2rem;
-      color: var(--primary);
-      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
     .hero p {
       font-size: 1rem;
@@ -206,12 +266,8 @@
       gap: 0.5rem;
       margin-top: 0.5rem;
     }
-    .hero p i {
-      font-size: 0.9rem;
-      color: var(--accent);
-    }
 
-    /* Main container */
+    /* ========== MAIN CONTAINER ========== */
     .main-container {
       max-width: 1400px;
       margin: 0 auto;
@@ -243,7 +299,6 @@
     #priceSlider {
       margin: 0.4rem 0;
     }
-
     .sort-select, .save-search-btn {
       padding: 0.4rem 1rem;
       border-radius: 40px;
@@ -262,7 +317,7 @@
       background: var(--button-hover);
     }
 
-    /* Amenities filters (icon pills) */
+    /* Amenities filters */
     .amenities-filters {
       display: flex;
       flex-wrap: wrap;
@@ -340,16 +395,16 @@
 
     .house-card {
       background: var(--card-bg);
-      border-radius: 20px;
+      border-radius: 24px;
       overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.03);
       cursor: pointer;
       border: 1px solid var(--input-border);
     }
     .house-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 20px 30px -10px rgba(0,0,0,0.15);
     }
 
     .slider {
@@ -395,8 +450,7 @@
     .house-card-content p {
       margin: 0.2rem 0;
       font-size: 0.8rem;
-      color: var(--text-color);
-      opacity: 0.85;
+      line-height: 1.4;
     }
 
     /* Badges */
@@ -534,7 +588,7 @@
       margin-top: 2rem;
     }
 
-    /* Modal (unchanged structure) */
+    /* Modals */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -592,7 +646,6 @@
       border-radius: 8px;
     }
 
-    /* Landlord avatar */
     .landlord-avatar {
       width: 32px;
       height: 32px;
@@ -615,7 +668,6 @@
       margin-bottom: 6px;
     }
 
-    /* Compare button */
     #compareFloatingBtn {
       position: fixed;
       bottom: 90px;
@@ -898,7 +950,7 @@
   <script src="js/script.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
-    // Lightbox functions (keep as before)
+    // Lightbox functions
     let currentLightboxImages = [];
     let currentImageIndex = 0;
 
