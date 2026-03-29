@@ -1,58 +1,366 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Register | Rental Marketplace</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
+  <title>Register | Khomo Lathu</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    body { font-family: 'Inter', sans-serif; background: #f4f4f4; }
-    .form-container { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .form-container h2 { text-align: center; margin-bottom: 20px; color: #2c3e50; }
-    .form-container input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
-    .form-container button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    .form-container button:hover { background: #2980b9; }
-    .google-btn { background: white; border: 1px solid #e0e0e0; color: #2c3e50; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    .google-btn:hover { background: #f8f9fa; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background shapes (same as login) */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      top: -100px;
+      left: -100px;
+      animation: float 20s infinite;
+    }
+    body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      bottom: -150px;
+      right: -150px;
+      animation: float 25s infinite reverse;
+    }
+    @keyframes float {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(30px, 20px) rotate(10deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    .register-container {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+      padding: 2rem;
+      transition: transform 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.3);
+      position: relative;
+      z-index: 10;
+    }
+    .register-container:hover {
+      transform: translateY(-5px);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .logo i {
+      font-size: 3rem;
+      background: linear-gradient(135deg, #2563eb, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .logo h2 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1.8rem;
+      margin-top: 0.5rem;
+      background: linear-gradient(135deg, #2c3e50, #3498db);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: #2c3e50;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      background: #fff;
+      outline: none;
+    }
+    .input-group input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    .register-btn {
+      width: 100%;
+      padding: 0.8rem;
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 0.5rem;
+    }
+    .register-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    }
+    .register-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 1.5rem 0;
+      color: #94a3b8;
+      font-size: 0.8rem;
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .divider span {
+      margin: 0 0.8rem;
+    }
+
+    .social-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #2c3e50;
+      text-decoration: none;
+    }
+    .social-btn i {
+      font-size: 1.2rem;
+    }
+    .social-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .google-btn i { background: linear-gradient(135deg, #DB4437, #F4B400, #0F9D58, #4285F4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .apple-btn i { color: #000; }
+    .facebook-btn i { color: #1877f2; }
+
+    .login-link {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #4b5563;
+    }
+    .login-link a {
+      color: #2563eb;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    .message {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+    .message.error {
+      background: #fee2e2;
+      color: #b91c1c;
+      display: block;
+    }
+    .message.success {
+      background: #dcfce7;
+      color: #15803d;
+      display: block;
+    }
+
+    @media (max-width: 640px) {
+      .register-container {
+        padding: 1.5rem;
+      }
+    }
   </style>
 </head>
 <body>
-<div class="form-container">
-  <h2>Create Landlord Account</h2>
-  <form id="registerForm">
-    <input type="text" placeholder="Full Name" id="name" required>
-    <input type="email" placeholder="Email" id="email" required>
-    <input type="text" placeholder="WhatsApp Number (265...)" id="phone" required>
-    <input type="password" placeholder="Password" id="password" required>
-    <input type="password" placeholder="Confirm Password" id="confirmPassword" required>
-    <button type="submit">Register</button>
-  </form>
-  <a href="/api/auth/google">
-    <button class="google-btn" type="button">
-      <i class="fab fa-google" style="font-size: 1.2rem;"></i> Sign up with Google
-    </button>
-  </a>
-  <p style="text-align:center; margin-top:20px;">Already have an account? <a href="login.html">Login</a></p>
-</div>
-<script>
-document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const data = {
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value,
-        phone: document.getElementById("phone").value,
-        password: document.getElementById("password").value,
-        confirmPassword: document.getElementById("confirmPassword").value
-    };
-    const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+  <div class="register-container">
+    <div class="logo">
+      <i class="fas fa-home"></i>
+      <h2>Join Khomo Lathu</h2>
+    </div>
+    <form id="registerForm">
+      <div class="input-group">
+        <label><i class="fas fa-user"></i> Full Name</label>
+        <input type="text" id="name" placeholder="John Doe" required>
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-envelope"></i> Email Address</label>
+        <input type="email" id="email" placeholder="your@email.com" required>
+      </div>
+      <div class="input-group">
+        <label><i class="fab fa-whatsapp"></i> WhatsApp Number</label>
+        <input type="tel" id="phone" placeholder="265XXXXXXXXX" pattern="265[0-9]{9}" required>
+        <small style="font-size: 0.7rem; color: #6b7280;">Format: 265 followed by 9 digits</small>
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-check-circle"></i> Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="register-btn" id="registerBtn">
+        <i class="fas fa-user-plus"></i> Create Account
+      </button>
+    </form>
+    <div id="message" class="message"></div>
+
+    <div class="divider">
+      <span>or sign up with</span>
+    </div>
+
+    <div class="social-buttons">
+      <a href="/api/auth/google" class="social-btn google-btn">
+        <i class="fab fa-google"></i> Continue with Google
+      </a>
+      <a href="/api/auth/apple" class="social-btn apple-btn">
+        <i class="fab fa-apple"></i> Continue with Apple
+      </a>
+      <a href="/api/auth/facebook" class="social-btn facebook-btn">
+        <i class="fab fa-facebook-f"></i> Continue with Facebook
+      </a>
+    </div>
+
+    <div class="login-link">
+      Already have an account? <a href="login.html">Log in</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const registerBtn = document.getElementById('registerBtn');
+    const messageDiv = document.getElementById('message');
+
+    function showMessage(text, type) {
+      messageDiv.textContent = text;
+      messageDiv.className = 'message ' + type;
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      // Basic validation
+      if (!name || !email || !phone || !password || !confirmPassword) {
+        showMessage('Please fill in all fields.', 'error');
+        return;
+      }
+      if (!/^265[0-9]{9}$/.test(phone)) {
+        showMessage('Phone number must be 265 followed by 9 digits (e.g., 265881535985).', 'error');
+        return;
+      }
+      if (password !== confirmPassword) {
+        showMessage('Passwords do not match.', 'error');
+        return;
+      }
+      if (password.length < 6) {
+        showMessage('Password must be at least 6 characters.', 'error');
+        return;
+      }
+
+      registerBtn.disabled = true;
+      registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, password, confirmPassword })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showMessage('Account created! Please check your email to verify your account.', 'success');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 2000);
+        } else {
+          showMessage(data.message || 'Registration failed.', 'error');
+          registerBtn.disabled = false;
+          registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+        }
+      } catch (err) {
+        showMessage('Network error. Please try again.', 'error');
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+      }
     });
-    const result = await res.json();
-    alert(result.message);
-    if (res.ok) window.location.href = "login.html";
-});
-</script>
+  </script>
 </body>
 </html>
