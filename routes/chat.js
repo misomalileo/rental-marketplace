@@ -18,18 +18,21 @@ router.get('/my', auth, async (req, res) => {
         m => m.sender.toString() !== userId.toString() && !m.read
       ).length;
 
+      // Map messages: convert `content` to `text`
+      const messages = chat.messages.map(m => ({
+        _id: m._id,
+        text: m.content || m.text || '',  // fallback for old messages
+        sender: m.sender,
+        read: m.read,
+        delivered: true,
+        createdAt: m.createdAt
+      }));
+
       return {
         _id: chat._id,
         participants: chat.participants,
-        messages: chat.messages.map(m => ({
-          _id: m._id,
-          text: m.content,
-          sender: m.sender,
-          read: m.read,
-          delivered: true,
-          createdAt: m.createdAt
-        })),
-        lastMessage: lastMsg ? lastMsg.content : '',
+        messages,
+        lastMessage: lastMsg ? (lastMsg.content || lastMsg.text || '') : '',
         lastMessageAt: lastMsg ? lastMsg.createdAt : chat.updatedAt,
         unreadCount,
         online: false
@@ -37,8 +40,8 @@ router.get('/my', auth, async (req, res) => {
     });
     res.json(enriched);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in /my:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
@@ -48,13 +51,16 @@ router.get('/:chatId', auth, async (req, res) => {
     const chat = await Chat.findById(req.params.chatId)
       .populate('participants', 'name profilePicture');
     if (!chat) return res.status(404).json({ message: 'Chat not found' });
+
+    // Check if user is participant
     if (!chat.participants.some(p => p._id.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
+    // Map messages: convert `content` to `text`
     const messages = chat.messages.map(m => ({
       _id: m._id,
-      text: m.content,
+      text: m.content || m.text || '',
       sender: m.sender,
       read: m.read,
       delivered: true,
@@ -67,8 +73,8 @@ router.get('/:chatId', auth, async (req, res) => {
       messages
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in GET /:chatId:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
@@ -120,8 +126,8 @@ router.post('/send', auth, async (req, res) => {
 
     res.status(201).json(responseMessage);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in POST /send:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
@@ -156,12 +162,12 @@ router.post('/:chatId/read', auth, async (req, res) => {
     }
     res.json({ message: 'Marked as read' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in POST /:chatId/read:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-// NEW: POST /api/chat/start – start a new chat with another user
+// POST /api/chat/start – start a new chat with another user
 router.post('/start', auth, async (req, res) => {
   try {
     const { recipientId, houseId } = req.body;
@@ -198,8 +204,8 @@ router.post('/start', auth, async (req, res) => {
 
     res.status(201).json({ chatId: chat._id });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in POST /start:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
