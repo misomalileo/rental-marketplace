@@ -541,7 +541,7 @@ function openComparisonModal() {
   ];
 
   features.forEach(feature => {
-    tableHtml += `<td><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
+    tableHtml += `<tr><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
     housesToCompare.forEach(house => {
       let value = house[feature.key];
       if (feature.format) {
@@ -593,7 +593,7 @@ function renderHouses(houses) {
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
       const avatarStyle = house.owner.profilePicture 
-        ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}">`
+        ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}" style="width:100%;height:100%;object-fit:cover;">`
         : `<span style="font-size:1rem;">${initial}</span>`;
       avatarHtml = `
         <div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">
@@ -676,8 +676,9 @@ function renderHouses(houses) {
       ? `<button class="report-btn" onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>`
       : '';
 
+    // CHAT BUTTON - fixed to use correct function and parameters
     const chatBtn = (isLoggedIn && house.owner && house.owner._id !== currentUserId) 
-      ? `<button class="chat-btn" onclick="startChat('${house._id}', '${house.owner._id}')"><i class="fas fa-comment-dots"></i> Chat</button>`
+      ? `<button class="chat-btn" onclick="startChat('${house.owner._id}', '${house._id}')"><i class="fas fa-comment-dots"></i> Chat</button>`
       : '';
 
     const shareBtn = `<button class="share-btn" onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>`;
@@ -858,22 +859,37 @@ async function reportHouse(houseId) {
   }
 }
 
-async function startChat(houseId, landlordId) {
+// ======================================
+// START CHAT – FIXED to match backend
+// ======================================
+async function startChat(recipientId, houseId = null) {
   const token = localStorage.getItem("token");
   if (!token) {
-    alert("Please login to chat.");
+    alert("Please log in to message the landlord.");
+    window.location = "login.html";
     return;
   }
+
   try {
-    const res = await fetch("/api/chat/start", {
+    const response = await fetch("/api/chat/start", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-      body: JSON.stringify({ otherUserId: landlordId, houseId })
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ recipientId, houseId })
     });
-    const chat = await res.json();
-    window.location.href = `/chat.html?chatId=${chat._id}`;
-  } catch (err) {
-    alert("Failed to start chat");
+
+    const data = await response.json();
+    if (response.ok) {
+      // Redirect to chat page with the chat ID
+      window.location = `chat.html?chatId=${data.chatId}`;
+    } else {
+      alert("Could not start chat: " + (data.message || "Unknown error"));
+    }
+  } catch (error) {
+    console.error("Error starting chat:", error);
+    alert("Network error. Please try again.");
   }
 }
 
@@ -1358,3 +1374,5 @@ window.shareOnTwitter = shareOnTwitter;
 window.copyShareLink = copyShareLink;
 window.addToCompare = addToCompare;
 window.closeComparisonModal = closeComparisonModal;
+window.showLandlordProfile = showLandlordProfile;
+window.closeLandlordModal = closeLandlordModal;
