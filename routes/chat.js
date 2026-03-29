@@ -4,6 +4,14 @@ const mongoose = require('mongoose');
 const Chat = require('../models/Chat');
 const auth = require('../middleware/auth');
 
+// Helper to safely get string from ObjectId or null
+function safeToString(id) {
+  if (!id) return '';
+  if (typeof id === 'string') return id;
+  if (id.toString) return id.toString();
+  return '';
+}
+
 // GET /api/chat/my – all chats for current user
 router.get('/my', auth, async (req, res) => {
   try {
@@ -13,12 +21,14 @@ router.get('/my', auth, async (req, res) => {
       .sort({ lastMessage: -1 });
 
     const enriched = chats.map(chat => {
+      // Filter out any null/undefined participants
+      const safeParticipants = (chat.participants || []).filter(p => p && p._id);
       const lastMsg = chat.messages[chat.messages.length - 1];
-      const unreadCount = chat.messages.filter(
-        m => m.sender.toString() !== userId.toString() && !m.read
+      const unreadCount = chat.messages.filter(m => 
+        m && m.sender && safeToString(m.sender) !== safeToString(userId) && !m.read
       ).length;
 
-      const messages = chat.messages.map(m => ({
+      const messages = (chat.messages || []).filter(m => m).map(m => ({
         _id: m._id,
         text: m.content || m.text || '',
         sender: m.sender,
@@ -29,7 +39,7 @@ router.get('/my', auth, async (req, res) => {
 
       return {
         _id: chat._id,
-        participants: (chat.participants || []).filter(p => p && p._id), // filter out nulls
+        participants: safeParticipants,
         messages,
         lastMessage: lastMsg ? (lastMsg.content || lastMsg.text || '') : '',
         lastMessageAt: lastMsg ? lastMsg.createdAt : chat.updatedAt,
@@ -59,13 +69,14 @@ router.get('/:chatId', auth, async (req, res) => {
       return res.status(404).json({ message: 'Chat not found' });
     }
 
-    // Filter out null participants and check authorization
-    const validParticipants = (chat.participants || []).filter(p => p && p._id);
-    if (!validParticipants.some(p => p._id.toString() === req.user._id.toString())) {
+    // Filter participants and check authorization
+    const safeParticipants = (chat.participants || []).filter(p => p && p._id);
+    const isAuthorized = safeParticipants.some(p => safeToString(p._id) === safeToString(req.user._id));
+    if (!isAuthorized) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const messages = (chat.messages || []).map(m => ({
+    const messages = (chat.messages || []).filter(m => m).map(m => ({
       _id: m._id,
       text: m.content || m.text || '',
       sender: m.sender,
@@ -76,7 +87,7 @@ router.get('/:chatId', auth, async (req, res) => {
 
     res.json({
       _id: chat._id,
-      participants: validParticipants,
+      participants: safeParticipants,
       messages
     });
   } catch (err) {
@@ -85,7 +96,7 @@ router.get('/:chatId', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/send – send a message
+// POST /api/chat/send
 router.post('/send', auth, async (req, res) => {
   try {
     const { chatId, text } = req.body;
@@ -97,7 +108,7 @@ router.post('/send', auth, async (req, res) => {
 
     const chat = await Chat.findById(chatId);
     if (!chat) return res.status(404).json({ message: 'Chat not found' });
-    if (!chat.participants.includes(req.user._id)) {
+    if (!chat.participants.some(p => safeToString(p) === safeToString(req.user._id))) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -124,8 +135,8 @@ router.post('/send', auth, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       chat.participants.forEach(participantId => {
-        if (participantId && participantId.toString() !== req.user._id.toString()) {
-          io.to(participantId.toString()).emit('newMessage', {
+        if (participantId && safeToString(participantId) !== safeToString(req.user._id)) {
+          io.to(safeToString(participantId)).emit('newMessage', {
             chatId: chat._id,
             message: {
               ...responseMessage,
@@ -144,7 +155,7 @@ router.post('/send', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/:chatId/read – mark messages as read
+// POST /api/chat/:chatId/read
 router.post('/:chatId/read', auth, async (req, res) => {
   try {
     const chatId = req.params.chatId;
@@ -159,7 +170,7 @@ router.post('/:chatId/read', auth, async (req, res) => {
 
     let updated = false;
     chat.messages.forEach(msg => {
-      if (msg.sender && msg.sender.toString() !== userId.toString() && !msg.read) {
+      if (msg && msg.sender && safeToString(msg.sender) !== safeToString(userId) && !msg.read) {
         msg.read = true;
         updated = true;
       }
@@ -169,8 +180,8 @@ router.post('/:chatId/read', auth, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       chat.participants.forEach(participantId => {
-        if (participantId && participantId.toString() !== userId.toString()) {
-          io.to(participantId.toString()).emit('messagesRead', {
+        if (participantId && safeToString(participantId) !== safeToString(userId)) {
+          io.to(safeToString(participantId)).emit('messagesRead', {
             chatId,
             readBy: userId,
             readAt: new Date()
@@ -185,7 +196,7 @@ router.post('/:chatId/read', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/start – start a new chat
+// POST /api/chat/start
 router.post('/start', auth, async (req, res) => {
   try {
     const { recipientId, houseId } = req.body;
