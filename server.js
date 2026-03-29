@@ -74,6 +74,8 @@ app.use(
           "https://*.tile.openstreetmap.org",
           "https://fonts.googleapis.com",
           "https://fonts.gstatic.com",
+          "https://rental-marketplace-irmj.onrender.com",   // Add live domain
+          "wss://rental-marketplace-irmj.onrender.com",      // Add WebSocket domain
         ],
         upgradeInsecureRequests: [],
       },

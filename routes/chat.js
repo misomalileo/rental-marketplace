@@ -49,7 +49,7 @@ router.get('/:chatId', auth, async (req, res) => {
   try {
     const chatId = req.params.chatId;
 
-    // Validate chatId format
+    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(chatId)) {
       return res.status(400).json({ message: 'Invalid chat ID format' });
     }
@@ -60,12 +60,12 @@ router.get('/:chatId', auth, async (req, res) => {
       return res.status(404).json({ message: 'Chat not found' });
     }
 
-    // Check if user is participant
+    // Check authorization
     if (!chat.participants.some(p => p._id.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    // Map messages
+    // Map messages safely
     const messages = (chat.messages || []).map(m => ({
       _id: m._id,
       text: m.content || m.text || '',
@@ -86,7 +86,7 @@ router.get('/:chatId', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/send – send a message
+// POST /api/chat/send
 router.post('/send', auth, async (req, res) => {
   try {
     const { chatId, text } = req.body;
@@ -143,7 +143,7 @@ router.post('/send', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/:chatId/read – mark messages as read
+// POST /api/chat/:chatId/read
 router.post('/:chatId/read', auth, async (req, res) => {
   try {
     const chatId = req.params.chatId;
@@ -184,7 +184,7 @@ router.post('/:chatId/read', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/start – start a new chat
+// POST /api/chat/start
 router.post('/start', auth, async (req, res) => {
   try {
     const { recipientId, houseId } = req.body;
@@ -196,7 +196,7 @@ router.post('/start', auth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid recipient ID format' });
     }
 
-    // Check if a chat already exists
+    // Check if chat already exists
     let chat;
     if (houseId) {
       chat = await Chat.findOne({
@@ -214,7 +214,6 @@ router.post('/start', auth, async (req, res) => {
       return res.json({ chatId: chat._id });
     }
 
-    // Create new chat
     chat = new Chat({
       participants: [req.user._id, recipientId],
       house: houseId || null,
