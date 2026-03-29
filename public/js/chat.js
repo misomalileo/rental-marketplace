@@ -1,172 +1,350 @@
-const token = localStorage.getItem("token");
-if (!token) {
-  console.log("No token, redirecting to login");
-  window.location = "login.html";
-}
-
-console.log("Token found, user ID:", getUserIdFromToken());
+// chat.js – enhanced with real‑time, read receipts, typing, online status
 
 let socket;
 let currentChatId = null;
+let currentOtherUser = null;
 let chats = [];
+let typingTimeout = null;
 
-const chatListEl = document.getElementById("chatList");
-const mainChatEl = document.getElementById("mainChat");
-
-const urlParams = new URLSearchParams(window.location.search);
-const urlChatId = urlParams.get('chatId');
-console.log("URL chatId:", urlChatId);
-
-function connectSocket() {
-  console.log("Connecting socket with token...");
-  socket = io({
-    auth: { token },
-    transports: ['websocket']
-  });
-  socket.on("connect", () => console.log("✅ Socket connected, ID:", socket.id));
-  socket.on("connect_error", (err) => {
-    console.error("❌ Socket connection error:", err.message);
-  });
-  socket.on("newMessage", (data) => {
-    console.log("New message received:", data);
-    if (data.chatId === currentChatId) {
-      appendMessage(data.message, true);
-      // 🔊 Play notification sound
-      const audio = new Audio('/sounds/notification.mp3');
-      audio.play().catch(e => console.log("Audio play failed:", e));
-    }
-    loadChats(); // refresh list
-  });
-}
-connectSocket();
-
-async function loadChats() {
-  console.log("Loading chats...");
-  try {
-    const res = await fetch("/api/chat/my", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    console.log("Chats response status:", res.status);
-    if (!res.ok) throw new Error("Failed to load chats");
-    chats = await res.json();
-    console.log("Chats loaded:", chats.length);
-    renderChatList();
-
-    if (urlChatId) {
-      console.log("Loading chat from URL:", urlChatId);
-      loadChat(urlChatId);
-    } else if (chats.length > 0) {
-      currentChatId = chats[0]._id;
-      loadChat(currentChatId);
-    } else {
-      mainChatEl.innerHTML = '<div class="no-chat">No conversations yet</div>';
-    }
-  } catch (err) {
-    console.error("Failed to load chats:", err);
-    mainChatEl.innerHTML = '<div class="no-chat">Error loading chats</div>';
-  }
+// Helper: get JWT token
+function getToken() {
+  return localStorage.getItem("token");
 }
 
-function renderChatList() {
-  chatListEl.innerHTML = "";
-  chats.forEach(chat => {
-    const other = chat.participants.find(p => p._id !== getUserIdFromToken());
-    const lastMsg = chat.messages.length ? chat.messages[chat.messages.length-1] : null;
-    const item = document.createElement("li");
-    item.className = `chat-item ${chat._id === currentChatId ? 'active' : ''}`;
-    item.onclick = () => loadChat(chat._id);
-    item.innerHTML = `
-      <h4>${other ? other.name : 'Unknown'}</h4>
-      <p>${lastMsg ? lastMsg.content.substring(0,30) + '...' : 'No messages'}</p>
-      <small>${chat.house ? chat.house.name : 'General'}</small>
-    `;
-    chatListEl.appendChild(item);
-  });
-}
-
-async function loadChat(chatId) {
-  console.log("Loading chat:", chatId);
-  try {
-    const res = await fetch("/api/chat/" + chatId, {
-      headers: { Authorization: "Bearer " + token }
-    });
-    console.log("Load chat response status:", res.status);
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Chat not found: ${err}`);
-    }
-    const chat = await res.json();
-    console.log("Chat loaded:", chat);
-    currentChatId = chat._id;
-    renderChat(chat);
-  } catch (err) {
-    console.error("Failed to load chat:", err);
-    mainChatEl.innerHTML = '<div class="no-chat">Conversation not found</div>';
-  }
-}
-
-function renderChat(chat) {
-  const other = chat.participants.find(p => p._id !== getUserIdFromToken());
-  mainChatEl.innerHTML = `
-    <div class="chat-header">Chat with ${other ? other.name : 'Unknown'} about ${chat.house ? chat.house.name : 'property'}</div>
-    <div class="messages" id="messages"></div>
-    <div class="input-area">
-      <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
-      <button id="sendBtn">Send</button>
-    </div>
-  `;
-  const messagesEl = document.getElementById("messages");
-  chat.messages.forEach(msg => {
-    appendMessage(msg, false);
-  });
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-
-  document.getElementById("sendBtn").onclick = sendMessage;
-  document.getElementById("messageInput").onkeypress = (e) => {
-    if (e.key === "Enter") sendMessage();
-  };
-}
-
-function appendMessage(msg, fromSocket) {
-  const messagesEl = document.getElementById("messages");
-  if (!messagesEl) return;
-  const userId = getUserIdFromToken();
-  const isSent = msg.sender._id === userId;
-  const div = document.createElement("div");
-  div.className = `message ${isSent ? 'sent' : 'received'}`;
-  div.innerHTML = `
-    <div>${msg.content}</div>
-    <small>${new Date(msg.createdAt).toLocaleTimeString()}</small>
-  `;
-  messagesEl.appendChild(div);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-async function sendMessage() {
-  const input = document.getElementById("messageInput");
-  const content = input.value.trim();
-  if (!content || !currentChatId) return;
-  console.log("Sending message:", content);
-  input.value = "";
-  const tempMsg = { content, sender: { _id: getUserIdFromToken() }, createdAt: new Date() };
-  appendMessage(tempMsg, false);
-  socket.emit("sendMessage", { chatId: currentChatId, content });
-}
-
-function getUserIdFromToken() {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.id;
-  } catch (e) {
-    console.error("Failed to decode token", e);
-    return null;
-  }
-}
-
-function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("role");
+// Check token
+if (!getToken()) {
   window.location = "login.html";
 }
 
-loadChats();
+// Initialize Socket.io with JWT authentication
+function initSocket() {
+  socket = io({
+    auth: { token: getToken() }
+  });
+
+  socket.on("connect", () => {
+    console.log("Socket connected");
+  });
+
+  // Listen for new messages
+  socket.on("newMessage", (msg) => {
+    if (currentChatId === msg.chatId) {
+      appendMessage(msg, false);
+      markMessagesAsRead(currentChatId);
+    }
+    // Update sidebar preview
+    updateChatList();
+    // Play notification sound (optional)
+    if (msg.senderId !== currentUser?._id && currentChatId !== msg.chatId) {
+      // Could show browser notification
+      if (Notification.permission === "granted") {
+        new Notification("New message from " + msg.senderName, { body: msg.text });
+      }
+    }
+  });
+
+  // Listen for read receipts
+  socket.on("messagesRead", ({ chatId, readBy, readAt }) => {
+    if (chatId === currentChatId) {
+      updateReadStatus();
+    }
+    updateChatList();
+  });
+
+  // Listen for typing events
+  socket.on("typing", ({ chatId, userId, isTyping }) => {
+    if (chatId === currentChatId && userId !== currentUser._id) {
+      const typingDiv = document.querySelector(".typing-indicator");
+      if (typingDiv) {
+        typingDiv.style.display = isTyping ? "block" : "none";
+      }
+    }
+  });
+
+  // Listen for online status changes
+  socket.on("userOnline", ({ userId, online }) => {
+    updateOnlineStatus(userId, online);
+  });
+}
+
+// Fetch all chats for the current user
+async function loadChats() {
+  try {
+    const res = await fetch("/api/chat/my", {
+      headers: { Authorization: "Bearer " + getToken() }
+    });
+    if (!res.ok) throw new Error("Failed to load chats");
+    chats = await res.json();
+    updateChatList();
+    if (currentChatId) {
+      // If current chat still exists, keep it selected
+      const stillExists = chats.some(c => c._id === currentChatId);
+      if (!stillExists) {
+        currentChatId = null;
+        currentOtherUser = null;
+        document.getElementById("mainChat").innerHTML = '<div class="no-chat"><i class="fas fa-comment-dots"></i><p>Select a conversation</p></div>';
+      } else {
+        loadMessages(currentChatId);
+      }
+    }
+  } catch (err) {
+    console.error("Error loading chats:", err);
+  }
+}
+
+// Render the sidebar with chats
+function updateChatList() {
+  const container = document.getElementById("chatList");
+  if (!container) return;
+  container.innerHTML = "";
+  if (!chats.length) {
+    container.innerHTML = '<li style="padding:1rem; text-align:center; color:#94a3b8;">No conversations yet</li>';
+    return;
+  }
+  chats.forEach(chat => {
+    const other = chat.participants.find(p => p._id !== currentUser._id);
+    if (!other) return;
+    const lastMsg = chat.messages[chat.messages.length - 1];
+    const unread = chat.messages.filter(m => !m.read && m.sender !== currentUser._id).length;
+    const item = document.createElement("li");
+    item.className = "chat-item" + (chat._id === currentChatId ? " active" : "");
+    item.onclick = () => selectChat(chat._id, other);
+    item.innerHTML = `
+      <div class="chat-avatar">
+        <span>${other.name?.charAt(0) || "?"}</span>
+        <span class="online-dot" style="display: ${chat.online ? 'block' : 'none'}"></span>
+      </div>
+      <div class="chat-info">
+        <h4>${other.name || "User"}</h4>
+        <p>${lastMsg ? (lastMsg.text.length > 30 ? lastMsg.text.substring(0,30)+"…" : lastMsg.text) : "No messages yet"}</p>
+      </div>
+      <div class="chat-time">
+        ${lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
+        ${unread ? `<span class="badge" style="background:#2563eb; color:white; border-radius:12px; padding:2px 6px; margin-left:5px;">${unread}</span>` : ""}
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+// Select a chat and load messages
+async function selectChat(chatId, otherUser) {
+  currentChatId = chatId;
+  currentOtherUser = otherUser;
+  await loadMessages(chatId);
+  updateChatList();
+  // Emit that we've entered the chat – server will mark messages as read
+  markMessagesAsRead(chatId);
+}
+
+// Load messages for a chat
+async function loadMessages(chatId) {
+  try {
+    const res = await fetch(`/api/chat/${chatId}`, {
+      headers: { Authorization: "Bearer " + getToken() }
+    });
+    if (!res.ok) throw new Error("Failed to load messages");
+    const chat = await res.json();
+    renderMessages(chat.messages);
+    renderChatHeader(chat);
+    // After loading, scroll to bottom
+    const messagesDiv = document.querySelector(".messages");
+    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  } catch (err) {
+    console.error("Error loading messages:", err);
+  }
+}
+
+// Render the chat header (name, online status)
+function renderChatHeader(chat) {
+  const other = chat.participants.find(p => p._id !== currentUser._id);
+  const mainChatDiv = document.getElementById("mainChat");
+  if (!mainChatDiv) return;
+  const isOnline = chat.online || false;
+  mainChatDiv.innerHTML = `
+    <div class="chat-header">
+      <div class="avatar">
+        <span>${other.name?.charAt(0) || "?"}</span>
+        <span class="online-dot" style="display: ${isOnline ? 'block' : 'none'}"></span>
+      </div>
+      <div class="chat-header-info">
+        <h3>${other.name || "User"}</h3>
+        <p class="typing-indicator">Typing...</p>
+      </div>
+    </div>
+    <div class="messages" id="messagesContainer"></div>
+    <div class="input-area">
+      <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
+      <button id="sendBtn"><i class="fas fa-paper-plane"></i> Send</button>
+    </div>
+  `;
+  const input = document.getElementById("messageInput");
+  const sendBtn = document.getElementById("sendBtn");
+  if (input && sendBtn) {
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+    input.addEventListener("input", () => {
+      // Send typing event
+      socket.emit("typing", { chatId: currentChatId, isTyping: true });
+      if (typingTimeout) clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        socket.emit("typing", { chatId: currentChatId, isTyping: false });
+      }, 1000);
+    });
+    sendBtn.onclick = sendMessage;
+  }
+}
+
+// Render messages in the main area
+function renderMessages(messages) {
+  const container = document.getElementById("messagesContainer");
+  if (!container) return;
+  container.innerHTML = "";
+  messages.forEach(msg => appendMessageToDOM(msg, container));
+}
+
+// Append a single message to DOM
+function appendMessageToDOM(msg, container) {
+  const isSent = msg.sender === currentUser._id;
+  const div = document.createElement("div");
+  div.className = `message ${isSent ? "sent" : "received"}`;
+  div.setAttribute("data-id", msg._id);
+  div.innerHTML = `
+    <div class="message-text">${escapeHtml(msg.text)}</div>
+    <div class="message-time">
+      ${new Date(msg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+      ${isSent ? `<span class="message-status">${getStatusIcon(msg)}</span>` : ""}
+    </div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// Helper: get status icon (sent, delivered, read)
+function getStatusIcon(msg) {
+  if (msg.read) return '<i class="fas fa-check-double" style="color:#34b7f1;"></i>';
+  if (msg.delivered) return '<i class="fas fa-check-double"></i>';
+  return '<i class="fas fa-check"></i>';
+}
+
+// Send a message
+async function sendMessage() {
+  const input = document.getElementById("messageInput");
+  const text = input.value.trim();
+  if (!text) return;
+  input.disabled = true;
+  const sendBtn = document.getElementById("sendBtn");
+  if (sendBtn) sendBtn.disabled = true;
+
+  try {
+    const res = await fetch("/api/chat/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + getToken()
+      },
+      body: JSON.stringify({ chatId: currentChatId, text })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      // Append message optimistically
+      const tempMsg = {
+        _id: Date.now().toString(),
+        text,
+        sender: currentUser._id,
+        createdAt: new Date().toISOString(),
+        read: false,
+        delivered: false
+      };
+      appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
+      input.value = "";
+      // Emit via socket for real-time to other user
+      socket.emit("sendMessage", { chatId: currentChatId, text, messageId: tempMsg._id });
+    } else {
+      alert("Failed to send: " + data.message);
+    }
+  } catch (err) {
+    console.error("Error sending message:", err);
+    alert("Network error. Please try again.");
+  } finally {
+    input.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+// Mark messages as read when chat is opened
+async function markMessagesAsRead(chatId) {
+  try {
+    await fetch(`/api/chat/${chatId}/read`, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + getToken() }
+    });
+    // Emit socket event to notify other user
+    socket.emit("readMessages", { chatId });
+    updateChatList(); // update unread badges
+  } catch (err) {
+    console.error("Error marking read:", err);
+  }
+}
+
+// Update read status for messages in current chat (called when read receipt received)
+function updateReadStatus() {
+  const messages = document.querySelectorAll(".message.sent .message-status");
+  messages.forEach(statusSpan => {
+    // In a real scenario, we would know which messages got read, but for simplicity, we mark all as read
+    statusSpan.innerHTML = '<i class="fas fa-check-double" style="color:#34b7f1;"></i>';
+  });
+}
+
+// Update online status for a user
+function updateOnlineStatus(userId, online) {
+  if (currentOtherUser && currentOtherUser._id === userId) {
+    const dot = document.querySelector(".chat-header .online-dot");
+    if (dot) dot.style.display = online ? "block" : "none";
+  }
+  // Also update in sidebar
+  const chatItem = Array.from(document.querySelectorAll(".chat-item")).find(item => {
+    // Need a way to map, but we'll refresh sidebar when status changes
+  });
+  updateChatList(); // quick refresh
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === "&") return "&amp;";
+    if (m === "<") return "&lt;";
+    if (m === ">") return "&gt;";
+    return m;
+  });
+}
+
+// Load current user
+let currentUser = null;
+async function loadCurrentUser() {
+  try {
+    const res = await fetch("/api/auth/me", {
+      headers: { Authorization: "Bearer " + getToken() }
+    });
+    if (res.ok) {
+      currentUser = await res.json();
+      initSocket();
+      loadChats();
+    } else {
+      throw new Error("Not authenticated");
+    }
+  } catch (err) {
+    console.error("Failed to load user:", err);
+    window.location = "login.html";
+  }
+}
+
+loadCurrentUser();
+
+// Request notification permission (optional)
+if ("Notification" in window) {
+  Notification.requestPermission();
+}
