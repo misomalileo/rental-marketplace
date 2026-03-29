@@ -10,7 +10,6 @@ let currentUser = null;
 let currentPaymentAction = null;
 let currentHouseId = null;
 
-// Chart variables
 let viewsChart, earningsChart, conversionChart;
 
 function showLoading() {
@@ -195,7 +194,7 @@ function payForVerification(type) {
   currentPaymentAction = type === 'official' ? 'verifyOfficial' : 'verifyPremium';
   currentHouseId = null;
   const amount = type === 'official' ? 2500 : 5000;
-  document.getElementById('paymentTitle').innerText = type === 'official' ? 'Become Official Landlord' : 'Become Premium Landlord';
+  document.getElementById('paymentTitle').innerHTML = type === 'official' ? '<i class="fas fa-check-circle"></i> Become Official Landlord' : '<i class="fas fa-crown"></i> Become Premium Landlord';
   document.getElementById('paymentAmount').innerText = `Amount: MWK ${amount}`;
   document.getElementById('paymentModal').style.display = 'block';
   document.getElementById('paymentStatus').innerHTML = '';
@@ -205,7 +204,7 @@ function payForVerification(type) {
 function featureHouse(id) {
   currentPaymentAction = 'feature';
   currentHouseId = id;
-  document.getElementById('paymentTitle').innerText = 'Feature This House';
+  document.getElementById('paymentTitle').innerHTML = '<i class="fas fa-star"></i> Feature This House';
   document.getElementById('paymentAmount').innerText = 'Amount: MWK 5000';
   document.getElementById('paymentModal').style.display = 'block';
   document.getElementById('paymentStatus').innerHTML = '';
@@ -224,7 +223,7 @@ async function processPayment(method) {
   }
 
   const statusDiv = document.getElementById('paymentStatus');
-  statusDiv.innerHTML = '⏳ Initiating payment...';
+  statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Initiating payment...';
 
   let endpoint, httpMethod, body;
   if (currentPaymentAction === 'verifyOfficial') {
@@ -246,7 +245,7 @@ async function processPayment(method) {
       method: httpMethod,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
+        Authorization: 'Bearer ' + token
       },
       body: JSON.stringify(body)
     });
@@ -256,7 +255,7 @@ async function processPayment(method) {
         statusDiv.innerHTML = 'Redirecting to payment page...';
         window.location.href = data.payment_url;
       } else {
-        statusDiv.innerHTML = '✅ Payment initiated! Please check your phone for a prompt to approve.';
+        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Payment initiated! Please check your phone for a prompt to approve.';
         setTimeout(() => {
           closePaymentModal();
           if (currentPaymentAction.includes('verify')) {
@@ -267,10 +266,10 @@ async function processPayment(method) {
         }, 5000);
       }
     } else {
-      statusDiv.innerHTML = '❌ Payment initiation failed: ' + (data.message || 'Unknown error');
+      statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Payment initiation failed: ' + (data.message || 'Unknown error');
     }
   } catch (err) {
-    statusDiv.innerHTML = '❌ Network error. Please try again.';
+    statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Network error. Please try again.';
     console.error(err);
   }
 }
@@ -412,8 +411,8 @@ async function loadHouseStats() {
     });
 
     const avgViews = views.reduce((a,b)=>a+b,0)/views.length;
-    const insightText = `📈 Your listing is viewed ${avgViews > 20 ? '30% more' : '20% less'} than similar houses in your area. ${avgViews > 20 ? 'Great job! Consider adding more photos.' : 'Try adding better descriptions to improve visibility.'}`;
-    document.getElementById('insightText').innerText = insightText;
+    const insightText = `<i class="fas fa-chart-line" style="margin-right:0.5rem;"></i> Your listing is viewed ${avgViews > 20 ? '30% more' : '20% less'} than similar houses in your area. ${avgViews > 20 ? 'Great job! Consider adding more photos.' : 'Try adding better descriptions to improve visibility.'}`;
+    document.getElementById('insightText').innerHTML = insightText;
   } catch (err) {
     console.error("Error loading stats:", err);
   }
@@ -673,11 +672,11 @@ function renderBookings(bookings) {
     const card = document.createElement("div");
     card.className = "booking-card";
     card.innerHTML = `
-      <p><strong>House:</strong> ${b.houseName || b.house?.name || 'Unknown'}</p>
-      <p><strong>Guest:</strong> ${b.tenantName} (${b.tenantEmail})</p>
-      <p><strong>Dates:</strong> ${new Date(b.startDate).toLocaleDateString()} - ${new Date(b.endDate).toLocaleDateString()}</p>
-      <p><strong>Message:</strong> ${b.message || 'No message'}</p>
-      <p><strong>Status:</strong> <span class="booking-status ${b.status}">${b.status}</span></p>
+      <p><strong><i class="fas fa-home"></i> House:</strong> ${b.houseName || b.house?.name || 'Unknown'}</p>
+      <p><strong><i class="fas fa-user"></i> Guest:</strong> ${b.tenantName} (${b.tenantEmail})</p>
+      <p><strong><i class="fas fa-calendar-alt"></i> Dates:</strong> ${new Date(b.startDate).toLocaleDateString()} - ${new Date(b.endDate).toLocaleDateString()}</p>
+      <p><strong><i class="fas fa-comment"></i> Message:</strong> ${b.message || 'No message'}</p>
+      <p><strong><i class="fas fa-flag-checkered"></i> Status:</strong> <span class="booking-status ${b.status}">${b.status}</span></p>
       ${b.status === 'pending' ? `
         <div class="booking-actions">
           <button class="approve-btn" onclick="updateBooking('${b._id}', 'approved')"><i class="fas fa-check"></i> Approve</button>

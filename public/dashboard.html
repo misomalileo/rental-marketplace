@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Khomo Lathu | Landlord Dashboard</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khomo Lathu | Landlord Dashboard</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Leaflet & Chart.js & Flatpickr -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ========== MODERN THEME VARIABLES (no background images) ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -99,6 +101,9 @@
       background: var(--bg-gradient);
       color: var(--text-color);
       transition: background 0.2s, color 0.2s;
+      font-weight: 400;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
     .navbar {
@@ -139,6 +144,9 @@
       font-size: 0.85rem;
       transition: color 0.2s;
     }
+    .nav-links a i {
+      margin-right: 0.3rem;
+    }
     .nav-links a:hover {
       color: var(--primary);
     }
@@ -162,6 +170,13 @@
       font-size: 1.8rem;
       font-weight: 600;
       margin-bottom: 1rem;
+      letter-spacing: -0.01em;
+    }
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin: 1rem 0 0.5rem;
+      letter-spacing: -0.01em;
     }
 
     .stats-grid {
@@ -186,9 +201,9 @@
       opacity: 0.7;
     }
     .stat-card .value {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: var(--text-color);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
     }
 
     .chart-container {
@@ -514,16 +529,14 @@
 </head>
 <body>
 
-  <!-- Loading Overlay -->
   <div id="loadingOverlay">
-    <div>Processing... <i class="fas fa-spinner fa-spin"></i></div>
+    <div><i class="fas fa-spinner fa-pulse"></i> Processing...</div>
   </div>
 
-  <!-- Profile Setup Modal -->
   <div id="profileModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeProfileModal()">&times;</span>
-      <h2>Complete Your Profile</h2>
+      <h2><i class="fas fa-user-edit"></i> Complete Your Profile</h2>
       <p>Please fill in your business details to continue.</p>
       <form id="profileForm">
         <div class="form-group"><label>Full Name *</label><input type="text" id="profileName" required></div>
@@ -532,7 +545,7 @@
         <div class="form-group"><label>Address / Location</label><input type="text" id="profileAddress"></div>
         <div class="form-group"><label>Bio / Description</label><textarea id="profileBio" rows="2"></textarea></div>
         <div class="form-group"><label>Profile Picture (optional)</label><input type="file" id="profilePicture" accept="image/*"><div id="profilePreview" style="margin-top:5px;"></div></div>
-        <button type="submit" class="upload-btn">Save Profile</button>
+        <button type="submit" class="upload-btn"><i class="fas fa-save"></i> Save Profile</button>
       </form>
     </div>
   </div>
@@ -542,9 +555,9 @@
       <i class="fas fa-home"></i> Khomo Lathu
     </div>
     <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="#" onclick="logout()">Logout</a>
-      <a href="chat.html">💬 Messages <span id="messageBadge" class="badge" style="display:none;">0</span></a>
+      <a href="index.html"><i class="fas fa-globe"></i> Home</a>
+      <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      <a href="chat.html"><i class="fas fa-comments"></i> Messages <span id="messageBadge" class="badge" style="display:none;">0</span></a>
       <select class="lang-select" onchange="setLanguage(this.value)">
         <option value="en">English</option>
         <option value="ny">Chichewa</option>
@@ -560,49 +573,43 @@
   </nav>
 
   <div class="main-container">
-    <h1>Welcome, Landlord</h1>
+    <h1><i class="fas fa-tachometer-alt"></i> Landlord Dashboard</h1>
 
-    <!-- Profile Card -->
     <div class="profile-card" id="profileCard">
       <div style="display: flex; align-items: center; gap: 0.8rem;">
-        <img id="profileAvatar" src="">
+        <img id="profileAvatar" src="default-avatar.png">
         <div><h3 id="profileDisplayName"></h3><p id="profileDisplayBusiness"></p></div>
       </div>
-      <button onclick="openEditProfile()" class="edit">Edit Profile</button>
+      <button onclick="openEditProfile()" class="edit"><i class="fas fa-edit"></i> Edit Profile</button>
     </div>
 
-    <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="stat-card"><h3>Total Houses</h3><div class="value" id="totalHouses">0</div></div>
-      <div class="stat-card"><h3>Total Views</h3><div class="value" id="totalViews">0</div></div>
-      <div class="stat-card"><h3>Avg Rating</h3><div class="value" id="avgRating">0.0</div></div>
-      <div class="stat-card"><h3>Bookings</h3><div class="value" id="totalBookings">0</div></div>
+      <div class="stat-card"><h3><i class="fas fa-building"></i> Total Houses</h3><div class="value" id="totalHouses">0</div></div>
+      <div class="stat-card"><h3><i class="fas fa-eye"></i> Total Views</h3><div class="value" id="totalViews">0</div></div>
+      <div class="stat-card"><h3><i class="fas fa-star"></i> Avg Rating</h3><div class="value" id="avgRating">0.0</div></div>
+      <div class="stat-card"><h3><i class="fas fa-calendar-check"></i> Bookings</h3><div class="value" id="totalBookings">0</div></div>
     </div>
 
-    <!-- Insight Card -->
     <div class="insight-card" id="insightCard">
-      <i class="fas fa-lightbulb"></i>
+      <i class="fas fa-chart-line"></i>
       <div><h3>AI Insight</h3><p id="insightText">Analyzing your listings...</p></div>
     </div>
 
-    <!-- Charts Row -->
     <div class="chart-container">
-      <h3>Views Per Day (Last 30 Days)</h3>
+      <h3><i class="fas fa-chart-simple"></i> Views Per Day (Last 30 Days)</h3>
       <canvas id="viewsChart"></canvas>
     </div>
     <div class="stats-grid" style="grid-template-columns: repeat(2,1fr);">
-      <div class="chart-container"><h3>Earnings (MWK)</h3><canvas id="earningsChart"></canvas></div>
-      <div class="chart-container"><h3>Booking Conversion Rate</h3><canvas id="conversionChart"></canvas></div>
+      <div class="chart-container"><h3><i class="fas fa-coins"></i> Earnings (MWK)</h3><canvas id="earningsChart"></canvas></div>
+      <div class="chart-container"><h3><i class="fas fa-percent"></i> Booking Conversion Rate</h3><canvas id="conversionChart"></canvas></div>
     </div>
 
-    <!-- Verification Section -->
     <div id="verification-section" class="verification-card">
-      <h3>Account Verification</h3>
+      <h3><i class="fas fa-shield-alt"></i> Account Verification</h3>
       <div id="verification-status">Loading...</div>
     </div>
 
-    <!-- Upload Form -->
-    <h2>Upload New House</h2>
+    <h2><i class="fas fa-upload"></i> Upload New House</h2>
     <form id="houseForm" enctype="multipart/form-data">
       <div class="form-group"><label>House Name</label><input type="text" name="name" placeholder="e.g., Sunny 3-Bedroom House" required></div>
       <div class="form-group"><label>Location (Area)</label><input type="text" name="location" placeholder="e.g., Bangwe, Ndirande, Chichiri" required></div>
@@ -615,30 +622,29 @@
       <div class="form-group"><label>Condition</label><select name="condition"><option value="Good">Good</option><option value="Fair">Fair</option><option value="Needs renovation">Needs renovation</option></select></div>
       <div class="form-group"><label>Gender Restriction (for hostels/rooms)</label><select name="gender"><option value="none">None</option><option value="boys">Boys Only</option><option value="girls">Girls Only</option><option value="mixed">Mixed (Boys & Girls)</option></select></div>
       <div class="form-group"><label><input type="checkbox" name="selfContained"> Self Contained (private bathroom & kitchen)</label></div>
-      <div class="form-group"><label>Amenities</label><div class="amenities-group"><label><input type="checkbox" name="wifi"> WiFi</label><label><input type="checkbox" name="parking"> Parking</label><label><input type="checkbox" name="furnished"> Furnished</label><label><input type="checkbox" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" name="pool"> Pool</label><label><input type="checkbox" name="ac"> Air Conditioning</label></div></div>
+      <div class="form-group"><label>Amenities</label><div class="amenities-group"><label><input type="checkbox" name="wifi"> <i class="fas fa-wifi"></i> WiFi</label><label><input type="checkbox" name="parking"> <i class="fas fa-parking"></i> Parking</label><label><input type="checkbox" name="furnished"> <i class="fas fa-couch"></i> Furnished</label><label><input type="checkbox" name="petFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label><label><input type="checkbox" name="pool"> <i class="fas fa-swimming-pool"></i> Pool</label><label><input type="checkbox" name="ac"> <i class="fas fa-snowflake"></i> Air Conditioning</label></div></div>
       <div class="form-group"><label>Photos (up to 5)</label><input type="file" name="images" multiple accept="image/*" required></div>
       <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 0.5rem;"></div>
       <div class="form-group"><label>Latitude</label><input type="text" name="lat" id="latitude" readonly></div>
       <div class="form-group"><label>Longitude</label><input type="text" name="lng" id="longitude" readonly></div>
-      <button type="button" class="gps-btn" onclick="getLocation()">📍 Use My GPS Location</button>
+      <button type="button" class="gps-btn" onclick="getLocation()"><i class="fas fa-location-dot"></i> Use My GPS Location</button>
       <div id="map"></div>
-      <button type="submit" class="upload-btn">🏠 Upload House</button>
+      <button type="submit" class="upload-btn"><i class="fas fa-home"></i> Upload House</button>
     </form>
 
     <hr style="margin: 1.5rem 0; border-color: var(--input-border);">
 
-    <h2>My Houses</h2>
+    <h2><i class="fas fa-list"></i> My Houses</h2>
     <div id="my-houses"></div>
 
-    <h2>Booking Requests</h2>
+    <h2><i class="fas fa-calendar-alt"></i> Booking Requests</h2>
     <div id="bookingRequests"></div>
   </div>
 
-  <!-- Edit Modal -->
   <div id="editModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeEditModal()">&times;</span>
-      <h2>✏️ Edit House</h2>
+      <h2><i class="fas fa-edit"></i> Edit House</h2>
       <form id="editForm" enctype="multipart/form-data">
         <input type="hidden" id="editHouseId" name="houseId">
         <div class="form-group"><label>House Name</label><input type="text" id="editName" name="name" required></div>
@@ -652,23 +658,22 @@
         <div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option value="Good">Good</option><option value="Fair">Fair</option><option value="Needs renovation">Needs renovation</option></select></div>
         <div class="form-group"><label>Gender Restriction</label><select id="editGender" name="gender"><option value="none">None</option><option value="boys">Boys Only</option><option value="girls">Girls Only</option><option value="mixed">Mixed</option></select></div>
         <div class="form-group"><label><input type="checkbox" id="editSelfContained" name="selfContained"> Self Contained</label></div>
-        <div class="form-group"><label>Amenities</label><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> Pool</label><label><input type="checkbox" id="editAC" name="ac"> Air Conditioning</label></div></div>
+        <div class="form-group"><label>Amenities</label><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> <i class="fas fa-wifi"></i> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> <i class="fas fa-parking"></i> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> <i class="fas fa-couch"></i> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> <i class="fas fa-swimming-pool"></i> Pool</label><label><input type="checkbox" id="editAC" name="ac"> <i class="fas fa-snowflake"></i> Air Conditioning</label></div></div>
         <div class="form-group"><label>Unavailable Dates (Booked)</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly><small>Select dates that are already booked.</small></div>
         <div class="form-group"><label>Photos (leave empty to keep current)</label><input type="file" name="images" multiple accept="image/*"><small>Current images will be replaced if you upload new ones.</small></div>
         <div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div>
         <div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div>
-        <button type="button" class="gps-btn" onclick="getEditLocation()">📍 Use GPS</button>
+        <button type="button" class="gps-btn" onclick="getEditLocation()"><i class="fas fa-location-dot"></i> Use GPS</button>
         <div id="editMap" style="height: 180px; margin-bottom: 10px;"></div>
-        <button type="submit" class="upload-btn">💾 Save Changes</button>
+        <button type="submit" class="upload-btn"><i class="fas fa-save"></i> Save Changes</button>
       </form>
     </div>
   </div>
 
-  <!-- Payment Modal -->
   <div id="paymentModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:400px;">
       <span class="close-btn" onclick="closePaymentModal()">&times;</span>
-      <h2 id="paymentTitle">Select Payment Method</h2>
+      <h2 id="paymentTitle"><i class="fas fa-credit-card"></i> Select Payment Method</h2>
       <p id="paymentAmount" style="font-size:1.2rem; margin:10px 0;"></p>
       <div id="paymentPhone" style="margin:15px 0;"><label for="phoneNumber" style="display:block; margin-bottom:5px;">Mobile Money Number:</label><input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;"></div>
       <div class="payment-options" style="display: flex; flex-direction: column; gap:10px; margin:20px 0;">
