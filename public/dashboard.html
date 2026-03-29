@@ -7,7 +7,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
 
-  <!-- Google Fonts: Inter + Poppins for headings -->
+  <!-- Google Fonts: Inter + Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -137,7 +137,6 @@
       top: 0;
       z-index: 1000;
     }
-
     .logo {
       font-size: 1.4rem;
       font-weight: 700;
@@ -152,7 +151,6 @@
       background-clip: text;
       color: transparent;
     }
-
     .nav-links {
       display: flex;
       align-items: center;
@@ -289,6 +287,55 @@
       margin-left: 5px;
     }
 
+    /* Upload Wizard */
+    .upload-wizard {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border: 1px solid var(--input-border);
+    }
+    .wizard-step {
+      display: none;
+    }
+    .wizard-step.active {
+      display: block;
+    }
+    .wizard-nav {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--input-border);
+      padding-bottom: 0.5rem;
+    }
+    .wizard-nav button {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-color);
+      opacity: 0.6;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .wizard-nav button.active {
+      opacity: 1;
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+    }
+    .load-more-btn {
+      display: block;
+      width: 200px;
+      margin: 1rem auto;
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.6rem;
+      cursor: pointer;
+    }
+
+    /* House grid */
     #my-houses {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -296,7 +343,6 @@
       margin-top: 1rem;
       margin-bottom: 2rem;
     }
-
     .house-card img {
       width: 100%;
       height: 180px;
@@ -659,34 +705,57 @@
       </div>
     </div>
 
-    <!-- Upload House Form -->
-    <h2><i class="fas fa-upload"></i> Upload New House</h2>
-    <form id="houseForm" enctype="multipart/form-data">
-      <div class="form-group"><label>House Name</label><input type="text" name="name" placeholder="e.g., Sunny 3-Bedroom House" required></div>
-      <div class="form-group"><label>Location (Area)</label><input type="text" name="location" placeholder="e.g., Bangwe, Ndirande, Chichiri" required></div>
-      <div class="form-group"><label>Price (MWK)</label><input type="number" name="price" placeholder="e.g., 150000" required></div>
-      <div class="form-group"><label>WhatsApp Number</label><input type="text" name="phone" placeholder="e.g., 265888123456" required pattern="265[0-9]{9}" title="Must be 265 followed by 9 digits"></div>
-      <div class="form-group"><label>Description</label><textarea name="description" placeholder="Describe the house..."></textarea></div>
-      <div class="form-group"><label>Property Type</label><select name="type" id="propertyType" required><option value="House">House</option><option value="Hostel">Hostel</option><option value="Apartment">Apartment</option><option value="Room">Room</option><option value="Office">Office</option></select></div>
-      <div class="form-group" id="bedroomsGroup"><label>Bedrooms</label><input type="number" name="bedrooms" value="0"></div>
-      <div class="form-group" id="vacanciesGroup" style="display:none;"><label>Vacancies (available rooms)</label><input type="number" name="vacancies" value="0"></div>
-      <div class="form-group"><label>Condition</label><select name="condition"><option value="Good">Good</option><option value="Fair">Fair</option><option value="Needs renovation">Needs renovation</option></select></div>
-      <div class="form-group"><label>Gender Restriction (for hostels/rooms)</label><select name="gender"><option value="none">None</option><option value="boys">Boys Only</option><option value="girls">Girls Only</option><option value="mixed">Mixed (Boys & Girls)</option></select></div>
-      <div class="form-group"><label><input type="checkbox" name="selfContained"> Self Contained (private bathroom & kitchen)</label></div>
-      <div class="form-group"><label>Amenities</label><div class="amenities-group"><label><input type="checkbox" name="wifi"> <i class="fas fa-wifi"></i> WiFi</label><label><input type="checkbox" name="parking"> <i class="fas fa-parking"></i> Parking</label><label><input type="checkbox" name="furnished"> <i class="fas fa-couch"></i> Furnished</label><label><input type="checkbox" name="petFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label><label><input type="checkbox" name="pool"> <i class="fas fa-swimming-pool"></i> Pool</label><label><input type="checkbox" name="ac"> <i class="fas fa-snowflake"></i> Air Conditioning</label></div></div>
-      <div class="form-group"><label>Photos (up to 5)</label><input type="file" name="images" multiple accept="image/*" required></div>
-      <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 0.5rem;"></div>
-      <div class="form-group"><label>Latitude</label><input type="text" name="lat" id="latitude" readonly></div>
-      <div class="form-group"><label>Longitude</label><input type="text" name="lng" id="longitude" readonly></div>
-      <button type="button" class="gps-btn" onclick="getLocation()"><i class="fas fa-location-dot"></i> Use My GPS Location</button>
-      <div id="map"></div>
-      <button type="submit" class="upload-btn"><i class="fas fa-home"></i> Upload House</button>
-    </form>
+    <!-- Upload House Wizard -->
+    <div class="upload-wizard">
+      <div class="wizard-nav">
+        <button class="wizard-nav-btn active" data-step="1">Basic Info</button>
+        <button class="wizard-nav-btn" data-step="2">Location & GPS</button>
+        <button class="wizard-nav-btn" data-step="3">Amenities & Details</button>
+        <button class="wizard-nav-btn" data-step="4">Photos & Virtual Tour</button>
+      </div>
+      <form id="houseForm" enctype="multipart/form-data">
+        <div id="step1" class="wizard-step active">
+          <div class="form-group"><label>House Name</label><input type="text" name="name" placeholder="e.g., Sunny 3-Bedroom House" required></div>
+          <div class="form-group"><label>Location (Area)</label><input type="text" name="location" placeholder="e.g., Bangwe, Ndirande, Chichiri" required></div>
+          <div class="form-group"><label>Price (MWK)</label><input type="number" name="price" placeholder="e.g., 150000" required></div>
+          <div class="form-group"><label>WhatsApp Number</label><input type="text" name="phone" placeholder="e.g., 265888123456" required pattern="265[0-9]{9}" title="Must be 265 followed by 9 digits"></div>
+          <div class="form-group"><label>Description</label><textarea name="description" placeholder="Describe the house..."></textarea></div>
+        </div>
+        <div id="step2" class="wizard-step">
+          <div class="form-group"><label>Property Type</label><select name="type" id="propertyType" required><option value="House">House</option><option value="Hostel">Hostel</option><option value="Apartment">Apartment</option><option value="Room">Room</option><option value="Office">Office</option></select></div>
+          <div class="form-group" id="bedroomsGroup"><label>Bedrooms</label><input type="number" name="bedrooms" value="0"></div>
+          <div class="form-group" id="vacanciesGroup" style="display:none;"><label>Vacancies (available rooms)</label><input type="number" name="vacancies" value="0"></div>
+          <div class="form-group"><label>Condition</label><select name="condition"><option value="Good">Good</option><option value="Fair">Fair</option><option value="Needs renovation">Needs renovation</option></select></div>
+          <div class="form-group"><label>Gender Restriction (for hostels/rooms)</label><select name="gender"><option value="none">None</option><option value="boys">Boys Only</option><option value="girls">Girls Only</option><option value="mixed">Mixed</option></select></div>
+          <div class="form-group"><label><input type="checkbox" name="selfContained"> Self Contained (private bathroom & kitchen)</label></div>
+          <div class="form-group"><label>Latitude</label><input type="text" name="lat" id="latitude" readonly></div>
+          <div class="form-group"><label>Longitude</label><input type="text" name="lng" id="longitude" readonly></div>
+          <button type="button" class="gps-btn" onclick="getLocation()"><i class="fas fa-location-dot"></i> Use My GPS Location</button>
+          <div id="map"></div>
+        </div>
+        <div id="step3" class="wizard-step">
+          <div class="form-group"><label>Amenities</label><div class="amenities-group"><label><input type="checkbox" name="wifi"> <i class="fas fa-wifi"></i> WiFi</label><label><input type="checkbox" name="parking"> <i class="fas fa-parking"></i> Parking</label><label><input type="checkbox" name="furnished"> <i class="fas fa-couch"></i> Furnished</label><label><input type="checkbox" name="petFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label><label><input type="checkbox" name="pool"> <i class="fas fa-swimming-pool"></i> Pool</label><label><input type="checkbox" name="ac"> <i class="fas fa-snowflake"></i> Air Conditioning</label></div></div>
+        </div>
+        <div id="step4" class="wizard-step">
+          <div class="form-group"><label>Photos (up to 5)</label><input type="file" name="images" multiple accept="image/*" required></div>
+          <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 0.5rem;"></div>
+          <div class="form-group"><label><i class="fas fa-vr-cardboard"></i> Virtual Tour (360° image or video URL)</label><input type="text" name="virtualTourUrl" placeholder="e.g., https://your-cloudinary.com/360-image.jpg or YouTube link"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+          <button type="button" id="prevBtn" class="gps-btn" style="width: auto; padding: 0.4rem 1rem;">Previous</button>
+          <button type="button" id="nextBtn" class="gps-btn" style="width: auto; padding: 0.4rem 1rem;">Next</button>
+          <button type="submit" id="submitBtn" class="upload-btn" style="width: auto; padding: 0.4rem 1rem; display: none;">Upload House</button>
+        </div>
+      </form>
+    </div>
 
     <hr style="margin: 1.5rem 0; border-color: var(--input-border);">
 
     <h2><i class="fas fa-list"></i> My Houses</h2>
     <div id="my-houses"></div>
+    <div id="houses-pagination" style="text-align: center;">
+      <button id="loadMoreHousesBtn" class="load-more-btn">Load More</button>
+    </div>
 
     <h2><i class="fas fa-calendar-alt"></i> Booking Requests</h2>
     <div id="bookingRequests"></div>
@@ -713,6 +782,7 @@
         <div class="form-group"><label>Amenities</label><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> <i class="fas fa-wifi"></i> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> <i class="fas fa-parking"></i> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> <i class="fas fa-couch"></i> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> <i class="fas fa-swimming-pool"></i> Pool</label><label><input type="checkbox" id="editAC" name="ac"> <i class="fas fa-snowflake"></i> Air Conditioning</label></div></div>
         <div class="form-group"><label>Unavailable Dates (Booked)</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly><small>Select dates that are already booked.</small></div>
         <div class="form-group"><label>Photos (leave empty to keep current)</label><input type="file" name="images" multiple accept="image/*"><small>Current images will be replaced if you upload new ones.</small></div>
+        <div class="form-group"><label>Virtual Tour URL</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl" placeholder="360° image or video link"></div>
         <div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div>
         <div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div>
         <button type="button" class="gps-btn" onclick="getEditLocation()"><i class="fas fa-location-dot"></i> Use GPS</button>
@@ -778,6 +848,52 @@
     });
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
+
+    // Wizard navigation
+    let currentStep = 1;
+    const steps = document.querySelectorAll('.wizard-step');
+    const navBtns = document.querySelectorAll('.wizard-nav-btn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function updateWizard() {
+      steps.forEach((step, idx) => {
+        step.classList.toggle('active', idx + 1 === currentStep);
+      });
+      navBtns.forEach((btn, idx) => {
+        btn.classList.toggle('active', idx + 1 === currentStep);
+      });
+      if (currentStep === 1) prevBtn.style.visibility = 'hidden';
+      else prevBtn.style.visibility = 'visible';
+      if (currentStep === 4) {
+        nextBtn.style.display = 'none';
+        submitBtn.style.display = 'inline-block';
+      } else {
+        nextBtn.style.display = 'inline-block';
+        submitBtn.style.display = 'none';
+      }
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentStep > 1) {
+        currentStep--;
+        updateWizard();
+      }
+    });
+    nextBtn.addEventListener('click', () => {
+      if (currentStep < 4) {
+        currentStep++;
+        updateWizard();
+      }
+    });
+    navBtns.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        currentStep = idx + 1;
+        updateWizard();
+      });
+    });
+    updateWizard();
   </script>
 </body>
 </html>

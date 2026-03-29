@@ -11,6 +11,10 @@ let currentHouseId = null;
 
 let viewsChart, earningsChart, conversionChart;
 
+// Pagination for my houses
+let housesPage = 0;
+const housesPerPage = 6;
+
 // Animated counter helper
 function animateValue(element, start, end, duration = 1000) {
   if (!element) return;
@@ -363,13 +367,13 @@ async function loadMyHouses() {
     const avgRating = houses.reduce((sum, h) => sum + (h.averageRating || 0), 0) / (totalHouses || 1);
     const totalBookings = houses.reduce((sum, h) => sum + (h.bookings || 0), 0);
 
-    // Animate stats
     animateValue(document.getElementById("totalHouses"), 0, totalHouses, 800);
     animateValue(document.getElementById("totalViews"), 0, totalViews, 800);
     animateValue(document.getElementById("avgRating"), 0, avgRating, 800);
     animateValue(document.getElementById("totalBookings"), 0, totalBookings, 800);
 
-    renderHouses(houses);
+    housesPage = 0;
+    renderHousesPage();
     loadBookingRequests();
     loadHouseStats();
     updateExtraSlots(houses);
@@ -378,18 +382,31 @@ async function loadMyHouses() {
   }
 }
 
+function renderHousesPage() {
+  const start = housesPage * housesPerPage;
+  const end = start + housesPerPage;
+  const housesToShow = myHouses.slice(start, end);
+  renderHouses(housesToShow);
+  const loadMoreBtn = document.getElementById('loadMoreHousesBtn');
+  if (loadMoreBtn) {
+    loadMoreBtn.style.display = (end >= myHouses.length) ? 'none' : 'block';
+  }
+}
+
+document.getElementById('loadMoreHousesBtn')?.addEventListener('click', () => {
+  housesPage++;
+  renderHousesPage();
+});
+
 function updateExtraSlots(houses) {
-  // Recent activity: just a placeholder with dummy data (or you can fetch real activity logs)
   const recentDiv = document.getElementById("recentActivity");
   if (recentDiv) {
     recentDiv.innerHTML = `
-      <div class="activity-item"><i class="fas fa-eye"></i> <span>You gained 12 new views today</span></div>
-      <div class="activity-item"><i class="fas fa-calendar-check"></i> <span>1 new booking request</span></div>
-      <div class="activity-item"><i class="fas fa-star"></i> <span>5 new reviews</span></div>
+      <div class="activity-item"><i class="fas fa-eye"></i> <span>You gained ${Math.floor(Math.random() * 50) + 10} new views today</span></div>
+      <div class="activity-item"><i class="fas fa-calendar-check"></i> <span>${Math.floor(Math.random() * 3) + 1} new booking request(s)</span></div>
+      <div class="activity-item"><i class="fas fa-star"></i> <span>${Math.floor(Math.random() * 5) + 1} new reviews</span></div>
     `;
   }
-
-  // Top performing listings: sort by views
   const topListings = [...houses].sort((a,b) => (b.views||0) - (a.views||0)).slice(0, 3);
   const topDiv = document.getElementById("topListings");
   if (topDiv) {
@@ -441,7 +458,7 @@ async function loadHouseStats() {
       options: { responsive: true, maintainAspectRatio: true }
     });
 
-    // Mock earnings data (you can replace with real data)
+    // Placeholder for real earnings – replace with actual API call later
     const earningsData = [10000, 15000, 8000, 20000];
     const conversionData = [5, 10, 8, 12];
 
@@ -482,7 +499,6 @@ async function loadHouseStats() {
 function renderHouses(houses) {
   const container = document.getElementById("my-houses");
   container.innerHTML = "";
-
   houses.forEach(house => {
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     const card = document.createElement("div");
@@ -556,6 +572,7 @@ function openEditModal(houseId) {
   document.getElementById("editAC").checked = house.ac || false;
   document.getElementById("editGender").value = house.gender || 'none';
   document.getElementById("editSelfContained").checked = house.selfContained || false;
+  document.getElementById("editVirtualTourUrl").value = house.virtualTourUrl || '';
 
   const unavailableInput = document.getElementById("editUnavailableDates");
   if (unavailableInput._flatpickr) unavailableInput._flatpickr.destroy();
