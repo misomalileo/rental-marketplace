@@ -124,7 +124,7 @@
       letter-spacing: -0.01em;
     }
 
-    /* Glass navbar */
+    /* Glass navbar (unchanged) */
     .navbar {
       background: var(--navbar-bg);
       backdrop-filter: blur(12px);
@@ -191,7 +191,7 @@
       padding: 0 1rem;
     }
 
-    /* 3D cards */
+    /* 3D cards (unchanged) */
     .stat-card, .chart-container, .insight-card, .verification-card, .profile-card, .house-card {
       background: var(--card-bg);
       backdrop-filter: blur(8px);
@@ -287,7 +287,7 @@
       margin-left: 5px;
     }
 
-    /* Upload Wizard */
+    /* Upload Wizard (unchanged) */
     .upload-wizard {
       background: var(--card-bg);
       border-radius: 28px;
@@ -392,7 +392,7 @@
       transform: scale(1.05);
     }
 
-    /* Map and forms */
+    /* Map and forms (unchanged) */
     #map, #editMap {
       height: 280px;
       margin: 1rem 0;
@@ -478,26 +478,140 @@
       cursor: pointer;
     }
 
-    /* Payment buttons */
-    .payment-option {
-      border: none;
-      padding: 10px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      margin: 5px 0;
-      border-radius: 40px;
+    /* ========== PREMIUM PAYMENT MODAL ========== */
+    #paymentModal .modal-content {
+      max-width: 480px;
+      border-radius: 32px;
+      overflow: hidden;
+      background: var(--card-bg-solid);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .payment-header {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      padding: 1.2rem;
+      text-align: center;
+      margin: -1.2rem -1.2rem 1rem -1.2rem;
+    }
+    .payment-header h2 {
+      font-size: 1.3rem;
+      margin: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      transition: transform 0.2s;
+      gap: 10px;
     }
-    .payment-option.airtel { background: #E50000; color: white; }
-    .payment-option.tnm { background: #00A651; color: white; }
-    .payment-option.standard { background: #0077B6; color: white; }
-    .payment-option:hover { transform: scale(1.02); }
+    .payment-header p {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-top: 5px;
+    }
+    .payment-amount {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 1rem 0;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .payment-phone {
+      margin: 1rem 0;
+    }
+    .payment-phone label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .payment-phone input {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 40px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .payment-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 1.5rem 0;
+    }
+    .payment-option {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 60px;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .payment-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      border-color: var(--primary);
+    }
+    .payment-option-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .airtel-icon {
+      background: #E50000;
+      color: white;
+    }
+    .tnm-icon {
+      background: #00A651;
+      color: white;
+    }
+    .bank-icon {
+      background: #0077B6;
+      color: white;
+    }
+    .payment-option-details {
+      flex: 1;
+    }
+    .payment-option-details h4 {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .payment-option-details p {
+      margin: 0;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+    .payment-status {
+      text-align: center;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      display: none;
+    }
+    .payment-status.show {
+      display: block;
+    }
+    .payment-status.loading {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    .payment-status.success {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .payment-status.error {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
 
     .booking-card {
       background: var(--card-bg);
@@ -534,7 +648,7 @@
       margin-top: 2rem;
     }
 
-    /* Loading overlay */
+    /* Loading overlay (unchanged) */
     #loadingOverlay {
       position: fixed;
       top: 0;
@@ -552,7 +666,6 @@
       display: none;
     }
 
-    /* Extra slots: Recent Activity & Top Listings */
     .extra-slots {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -601,6 +714,14 @@
       #my-houses {
         grid-template-columns: 1fr;
       }
+      .payment-option {
+        padding: 10px 15px;
+      }
+      .payment-option-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
     }
   </style>
 </head>
@@ -610,7 +731,7 @@
     <div><i class="fas fa-spinner fa-pulse"></i> Processing...</div>
   </div>
 
-  <!-- Profile Modal (same as before) -->
+  <!-- Profile Modal (unchanged) -->
   <div id="profileModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeProfileModal()">&times;</span>
@@ -705,7 +826,7 @@
       </div>
     </div>
 
-    <!-- Upload House Wizard -->
+    <!-- Upload House Wizard (unchanged) -->
     <div class="upload-wizard">
       <div class="wizard-nav">
         <button class="wizard-nav-btn active" data-step="1">Basic Info</button>
@@ -761,7 +882,7 @@
     <div id="bookingRequests"></div>
   </div>
 
-  <!-- Edit Modal -->
+  <!-- Edit Modal (unchanged) -->
   <div id="editModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeEditModal()">&times;</span>
@@ -792,19 +913,43 @@
     </div>
   </div>
 
-  <!-- Payment Modal -->
+  <!-- ========== PREMIUM PAYMENT MODAL (REDESIGNED) ========== -->
   <div id="paymentModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:400px;">
+    <div class="modal-content">
       <span class="close-btn" onclick="closePaymentModal()">&times;</span>
-      <h2 id="paymentTitle"><i class="fas fa-credit-card"></i> Select Payment Method</h2>
-      <p id="paymentAmount" style="font-size:1.2rem; margin:10px 0;"></p>
-      <div id="paymentPhone" style="margin:15px 0;"><label for="phoneNumber" style="display:block; margin-bottom:5px;">Mobile Money Number:</label><input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;"></div>
-      <div class="payment-options" style="display: flex; flex-direction: column; gap:10px; margin:20px 0;">
-        <button class="payment-option airtel" onclick="processPayment('Airtel Money')"><i class="fas fa-mobile-alt"></i> Airtel Money</button>
-        <button class="payment-option tnm" onclick="processPayment('TNM Mpamba')"><i class="fas fa-mobile-alt"></i> TNM Mpamba</button>
-        <button class="payment-option standard" onclick="processPayment('Standard Bank')"><i class="fas fa-university"></i> Standard Bank</button>
+      <div class="payment-header">
+        <h2><i class="fas fa-home"></i> Khomo Lathu Payments</h2>
+        <p>Secure payment via PayChangu</p>
       </div>
-      <div id="paymentStatus" style="text-align:center; font-weight:bold;"></div>
+      <div class="payment-amount" id="paymentAmountDisplay">MWK 0</div>
+      <div class="payment-phone">
+        <label><i class="fas fa-mobile-alt"></i> Mobile Money Number</label>
+        <input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX" value="">
+      </div>
+      <div class="payment-options">
+        <div class="payment-option" onclick="processPayment('Airtel Money')">
+          <div class="payment-option-icon airtel-icon"><i class="fas fa-mobile-alt"></i></div>
+          <div class="payment-option-details">
+            <h4>Airtel Money</h4>
+            <p>Pay instantly with Airtel</p>
+          </div>
+        </div>
+        <div class="payment-option" onclick="processPayment('TNM Mpamba')">
+          <div class="payment-option-icon tnm-icon"><i class="fas fa-mobile-alt"></i></div>
+          <div class="payment-option-details">
+            <h4>TNM Mpamba</h4>
+            <p>Fast & secure</p>
+          </div>
+        </div>
+        <div class="payment-option" onclick="processPayment('Bank Transfer')">
+          <div class="payment-option-icon bank-icon"><i class="fas fa-university"></i></div>
+          <div class="payment-option-details">
+            <h4>Bank Transfer</h4>
+            <p>All major banks</p>
+          </div>
+        </div>
+      </div>
+      <div id="paymentStatus" class="payment-status"></div>
     </div>
   </div>
 
