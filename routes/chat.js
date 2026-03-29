@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Chat = require('../models/Chat');
-const User = require('../models/User');
 const auth = require('../middleware/auth');
 
 // GET /api/chat/my – all chats for current user
@@ -18,10 +18,9 @@ router.get('/my', auth, async (req, res) => {
         m => m.sender.toString() !== userId.toString() && !m.read
       ).length;
 
-      // Map messages: convert `content` to `text`
       const messages = chat.messages.map(m => ({
         _id: m._id,
-        text: m.content || m.text || '',  // fallback for old messages
+        text: m.content || m.text || '',
         sender: m.sender,
         read: m.read,
         delivered: true,
@@ -48,17 +47,26 @@ router.get('/my', auth, async (req, res) => {
 // GET /api/chat/:chatId
 router.get('/:chatId', auth, async (req, res) => {
   try {
-    const chat = await Chat.findById(req.params.chatId)
+    const chatId = req.params.chatId;
+
+    // Validate chatId format
+    if (!mongoose.Types.ObjectId.isValid(chatId)) {
+      return res.status(400).json({ message: 'Invalid chat ID format' });
+    }
+
+    const chat = await Chat.findById(chatId)
       .populate('participants', 'name profilePicture');
-    if (!chat) return res.status(404).json({ message: 'Chat not found' });
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
+    }
 
     // Check if user is participant
     if (!chat.participants.some(p => p._id.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    // Map messages: convert `content` to `text`
-    const messages = chat.messages.map(m => ({
+    // Map messages
+    const messages = (chat.messages || []).map(m => ({
       _id: m._id,
       text: m.content || m.text || '',
       sender: m.sender,
@@ -83,6 +91,10 @@ router.post('/send', auth, async (req, res) => {
   try {
     const { chatId, text } = req.body;
     if (!chatId || !text) return res.status(400).json({ message: 'chatId and text required' });
+
+    if (!mongoose.Types.ObjectId.isValid(chatId)) {
+      return res.status(400).json({ message: 'Invalid chat ID format' });
+    }
 
     const chat = await Chat.findById(chatId);
     if (!chat) return res.status(404).json({ message: 'Chat not found' });
@@ -136,6 +148,11 @@ router.post('/:chatId/read', auth, async (req, res) => {
   try {
     const chatId = req.params.chatId;
     const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(chatId)) {
+      return res.status(400).json({ message: 'Invalid chat ID format' });
+    }
+
     const chat = await Chat.findById(chatId);
     if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
@@ -167,12 +184,16 @@ router.post('/:chatId/read', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/start – start a new chat with another user
+// POST /api/chat/start – start a new chat
 router.post('/start', auth, async (req, res) => {
   try {
     const { recipientId, houseId } = req.body;
     if (!recipientId) {
       return res.status(400).json({ message: 'recipientId is required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(recipientId)) {
+      return res.status(400).json({ message: 'Invalid recipient ID format' });
     }
 
     // Check if a chat already exists
