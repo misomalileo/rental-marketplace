@@ -6,11 +6,27 @@ let editMap, editMarker;
 let myHouses = [];
 let currentEditId = null;
 let currentUser = null;
-
 let currentPaymentAction = null;
 let currentHouseId = null;
 
 let viewsChart, earningsChart, conversionChart;
+
+// Animated counter helper
+function animateValue(element, start, end, duration = 1000) {
+  if (!element) return;
+  const range = end - start;
+  const increment = range / (duration / 16);
+  let current = start;
+  const timer = setInterval(() => {
+    current += increment;
+    if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+      element.innerText = end;
+      clearInterval(timer);
+    } else {
+      element.innerText = Math.round(current);
+    }
+  }, 16);
+}
 
 function showLoading() {
   document.getElementById('loadingOverlay').style.display = 'flex';
@@ -345,16 +361,48 @@ async function loadMyHouses() {
     const totalHouses = houses.length;
     const totalViews = houses.reduce((sum, h) => sum + (h.views || 0), 0);
     const avgRating = houses.reduce((sum, h) => sum + (h.averageRating || 0), 0) / (totalHouses || 1);
-    document.getElementById("totalHouses").innerText = totalHouses;
-    document.getElementById("totalViews").innerText = totalViews;
-    document.getElementById("avgRating").innerText = avgRating.toFixed(1);
-    document.getElementById("totalBookings").innerText = houses.reduce((sum, h) => sum + (h.bookings || 0), 0);
+    const totalBookings = houses.reduce((sum, h) => sum + (h.bookings || 0), 0);
+
+    // Animate stats
+    animateValue(document.getElementById("totalHouses"), 0, totalHouses, 800);
+    animateValue(document.getElementById("totalViews"), 0, totalViews, 800);
+    animateValue(document.getElementById("avgRating"), 0, avgRating, 800);
+    animateValue(document.getElementById("totalBookings"), 0, totalBookings, 800);
 
     renderHouses(houses);
     loadBookingRequests();
     loadHouseStats();
+    updateExtraSlots(houses);
   } catch (err) {
     console.error("Error loading houses:", err);
+  }
+}
+
+function updateExtraSlots(houses) {
+  // Recent activity: just a placeholder with dummy data (or you can fetch real activity logs)
+  const recentDiv = document.getElementById("recentActivity");
+  if (recentDiv) {
+    recentDiv.innerHTML = `
+      <div class="activity-item"><i class="fas fa-eye"></i> <span>You gained 12 new views today</span></div>
+      <div class="activity-item"><i class="fas fa-calendar-check"></i> <span>1 new booking request</span></div>
+      <div class="activity-item"><i class="fas fa-star"></i> <span>5 new reviews</span></div>
+    `;
+  }
+
+  // Top performing listings: sort by views
+  const topListings = [...houses].sort((a,b) => (b.views||0) - (a.views||0)).slice(0, 3);
+  const topDiv = document.getElementById("topListings");
+  if (topDiv) {
+    if (topListings.length === 0) {
+      topDiv.innerHTML = "<p>No listings yet</p>";
+    } else {
+      topDiv.innerHTML = topListings.map(house => `
+        <div class="top-house-item">
+          <span><i class="fas fa-home"></i> ${house.name}</span>
+          <span><i class="fas fa-eye"></i> ${house.views||0} views</span>
+        </div>
+      `).join('');
+    }
   }
 }
 
@@ -383,12 +431,17 @@ async function loadHouseStats() {
           borderColor: '#3498db',
           backgroundColor: 'rgba(52,152,219,0.1)',
           fill: true,
-          tension: 0.3
+          tension: 0.3,
+          pointBackgroundColor: '#3498db',
+          pointBorderColor: '#fff',
+          pointRadius: 4,
+          pointHoverRadius: 6
         }]
       },
       options: { responsive: true, maintainAspectRatio: true }
     });
 
+    // Mock earnings data (you can replace with real data)
     const earningsData = [10000, 15000, 8000, 20000];
     const conversionData = [5, 10, 8, 12];
 
@@ -397,8 +450,15 @@ async function loadHouseStats() {
       type: 'bar',
       data: {
         labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-        datasets: [{ label: 'Earnings (MWK)', data: earningsData, backgroundColor: '#2ecc71' }]
-      }
+        datasets: [{
+          label: 'Earnings (MWK)',
+          data: earningsData,
+          backgroundColor: '#2ecc71',
+          borderRadius: 8,
+          barPercentage: 0.6
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
     });
 
     if (conversionChart) conversionChart.destroy();
@@ -406,8 +466,9 @@ async function loadHouseStats() {
       type: 'doughnut',
       data: {
         labels: ['Converted', 'Not Converted'],
-        datasets: [{ data: [conversionData[0], 100 - conversionData[0]], backgroundColor: ['#f1c40f', '#95a5a6'] }]
-      }
+        datasets: [{ data: [conversionData[0], 100 - conversionData[0]], backgroundColor: ['#f1c40f', '#95a5a6'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: true, cutout: '60%', plugins: { legend: { position: 'bottom' } } }
     });
 
     const avgViews = views.reduce((a,b)=>a+b,0)/views.length;
