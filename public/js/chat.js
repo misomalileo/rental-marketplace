@@ -1,27 +1,48 @@
-// chat.js – fully functional with real‑time, read receipts, typing indicator
-
+// chat.js – fully working with debug logging
 let socket;
 let currentChatId = null;
 let currentOtherUser = null;
 let chats = [];
 let typingTimeout = null;
+let currentUser = null;
 
 function getToken() {
   return localStorage.getItem("token");
 }
 
-if (!getToken()) {
+// Check token
+const token = getToken();
+if (!token) {
+  console.error("No token found, redirecting to login");
   window.location = "login.html";
 }
 
+// Debug: log token existence
+console.log("Token found:", !!token);
+
 function initSocket() {
+  console.log("Initializing socket...");
   socket = io({
-    auth: { token: getToken() }
+    auth: { token: token },
+    transports: ['websocket', 'polling'] // fallback
   });
 
-  socket.on("connect", () => console.log("Socket connected"));
+  socket.on("connect", () => {
+    console.log("Socket connected successfully");
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error("Socket connection error:", err.message);
+    document.getElementById("mainChat").innerHTML = `
+      <div class="no-chat">
+        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c;"></i>
+        <p>Unable to connect to chat server. Please refresh or try again later.</p>
+      </div>
+    `;
+  });
 
   socket.on("newMessage", (data) => {
+    console.log("Received newMessage", data);
     const { chatId, message } = data;
     if (currentChatId === chatId) {
       appendMessageToDOM(message, document.getElementById("messagesContainer"));
@@ -38,6 +59,7 @@ function initSocket() {
   });
 
   socket.on("messagesRead", ({ chatId }) => {
+    console.log("Messages read event for chat", chatId);
     if (chatId === currentChatId) {
       updateReadStatus();
     }
@@ -52,17 +74,23 @@ function initSocket() {
   });
 
   socket.on("userOnline", ({ userId, online }) => {
+    console.log("User online status", userId, online);
     updateOnlineStatus(userId, online);
   });
 }
 
 async function loadChats() {
+  console.log("Loading chats...");
   try {
     const res = await fetch("/api/chat/my", {
-      headers: { Authorization: "Bearer " + getToken() }
+      headers: { Authorization: "Bearer " + token }
     });
-    if (!res.ok) throw new Error("Failed to load chats");
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errText}`);
+    }
     chats = await res.json();
+    console.log("Chats loaded:", chats.length);
     updateChatList();
     if (currentChatId) {
       const stillExists = chats.some(c => c._id === currentChatId);
@@ -76,6 +104,13 @@ async function loadChats() {
     }
   } catch (err) {
     console.error("Error loading chats:", err);
+    document.getElementById("mainChat").innerHTML = `
+      <div class="no-chat">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Failed to load conversations. Please refresh the page.</p>
+        <small>${err.message}</small>
+      </div>
+    `;
   }
 }
 
@@ -114,6 +149,7 @@ function updateChatList() {
 }
 
 async function selectChat(chatId, otherUser) {
+  console.log("Selecting chat", chatId);
   currentChatId = chatId;
   currentOtherUser = otherUser;
   await loadMessages(chatId);
@@ -122,9 +158,10 @@ async function selectChat(chatId, otherUser) {
 }
 
 async function loadMessages(chatId) {
+  console.log("Loading messages for chat", chatId);
   try {
     const res = await fetch(`/api/chat/${chatId}`, {
-      headers: { Authorization: "Bearer " + getToken() }
+      headers: { Authorization: "Bearer " + token }
     });
     if (!res.ok) throw new Error("Failed to load messages");
     const chat = await res.json();
@@ -134,6 +171,12 @@ async function loadMessages(chatId) {
     if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
   } catch (err) {
     console.error("Error loading messages:", err);
+    document.getElementById("mainChat").innerHTML = `
+      <div class="no-chat">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Failed to load messages.</p>
+      </div>
+    `;
   }
 }
 
@@ -218,7 +261,7 @@ async function sendMessage() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + getToken()
+        Authorization: "Bearer " + token
       },
       body: JSON.stringify({ chatId: currentChatId, text })
     });
@@ -252,7 +295,7 @@ async function markMessagesAsRead(chatId) {
   try {
     await fetch(`/api/chat/${chatId}/read`, {
       method: "POST",
-      headers: { Authorization: "Bearer " + getToken() }
+      headers: { Authorization: "Bearer " + token }
     });
     socket.emit("readMessages", { chatId });
     updateChatList();
@@ -286,14 +329,14 @@ function escapeHtml(str) {
   });
 }
 
-let currentUser = null;
 async function loadCurrentUser() {
   try {
     const res = await fetch("/api/auth/me", {
-      headers: { Authorization: "Bearer " + getToken() }
+      headers: { Authorization: "Bearer " + token }
     });
     if (res.ok) {
       currentUser = await res.json();
+      console.log("Current user loaded:", currentUser.name);
       initSocket();
       loadChats();
     } else {
