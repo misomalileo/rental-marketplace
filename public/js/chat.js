@@ -1,4 +1,4 @@
-// chat.js – enhanced with real‑time, read receipts, typing, online status
+// chat.js – fully functional with real‑time, read receipts, typing indicator
 
 let socket;
 let currentChatId = null;
@@ -6,68 +6,56 @@ let currentOtherUser = null;
 let chats = [];
 let typingTimeout = null;
 
-// Helper: get JWT token
 function getToken() {
   return localStorage.getItem("token");
 }
 
-// Check token
 if (!getToken()) {
   window.location = "login.html";
 }
 
-// Initialize Socket.io with JWT authentication
 function initSocket() {
   socket = io({
     auth: { token: getToken() }
   });
 
-  socket.on("connect", () => {
-    console.log("Socket connected");
-  });
+  socket.on("connect", () => console.log("Socket connected"));
 
-  // Listen for new messages
-  socket.on("newMessage", (msg) => {
-    if (currentChatId === msg.chatId) {
-      appendMessage(msg, false);
+  socket.on("newMessage", (data) => {
+    const { chatId, message } = data;
+    if (currentChatId === chatId) {
+      appendMessageToDOM(message, document.getElementById("messagesContainer"));
       markMessagesAsRead(currentChatId);
     }
-    // Update sidebar preview
     updateChatList();
-    // Play notification sound (optional)
-    if (msg.senderId !== currentUser?._id && currentChatId !== msg.chatId) {
-      // Could show browser notification
+    if (message.senderId !== currentUser?._id && currentChatId !== chatId) {
       if (Notification.permission === "granted") {
-        new Notification("New message from " + msg.senderName, { body: msg.text });
+        new Notification("New message from " + (message.senderName || "Someone"), {
+          body: message.text
+        });
       }
     }
   });
 
-  // Listen for read receipts
-  socket.on("messagesRead", ({ chatId, readBy, readAt }) => {
+  socket.on("messagesRead", ({ chatId }) => {
     if (chatId === currentChatId) {
       updateReadStatus();
     }
     updateChatList();
   });
 
-  // Listen for typing events
   socket.on("typing", ({ chatId, userId, isTyping }) => {
     if (chatId === currentChatId && userId !== currentUser._id) {
       const typingDiv = document.querySelector(".typing-indicator");
-      if (typingDiv) {
-        typingDiv.style.display = isTyping ? "block" : "none";
-      }
+      if (typingDiv) typingDiv.style.display = isTyping ? "block" : "none";
     }
   });
 
-  // Listen for online status changes
   socket.on("userOnline", ({ userId, online }) => {
     updateOnlineStatus(userId, online);
   });
 }
 
-// Fetch all chats for the current user
 async function loadChats() {
   try {
     const res = await fetch("/api/chat/my", {
@@ -77,7 +65,6 @@ async function loadChats() {
     chats = await res.json();
     updateChatList();
     if (currentChatId) {
-      // If current chat still exists, keep it selected
       const stillExists = chats.some(c => c._id === currentChatId);
       if (!stillExists) {
         currentChatId = null;
@@ -92,7 +79,6 @@ async function loadChats() {
   }
 }
 
-// Render the sidebar with chats
 function updateChatList() {
   const container = document.getElementById("chatList");
   if (!container) return;
@@ -105,7 +91,7 @@ function updateChatList() {
     const other = chat.participants.find(p => p._id !== currentUser._id);
     if (!other) return;
     const lastMsg = chat.messages[chat.messages.length - 1];
-    const unread = chat.messages.filter(m => !m.read && m.sender !== currentUser._id).length;
+    const unread = chat.unreadCount || 0;
     const item = document.createElement("li");
     item.className = "chat-item" + (chat._id === currentChatId ? " active" : "");
     item.onclick = () => selectChat(chat._id, other);
@@ -127,17 +113,14 @@ function updateChatList() {
   });
 }
 
-// Select a chat and load messages
 async function selectChat(chatId, otherUser) {
   currentChatId = chatId;
   currentOtherUser = otherUser;
   await loadMessages(chatId);
   updateChatList();
-  // Emit that we've entered the chat – server will mark messages as read
   markMessagesAsRead(chatId);
 }
 
-// Load messages for a chat
 async function loadMessages(chatId) {
   try {
     const res = await fetch(`/api/chat/${chatId}`, {
@@ -147,7 +130,6 @@ async function loadMessages(chatId) {
     const chat = await res.json();
     renderMessages(chat.messages);
     renderChatHeader(chat);
-    // After loading, scroll to bottom
     const messagesDiv = document.querySelector(".messages");
     if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
   } catch (err) {
@@ -155,7 +137,6 @@ async function loadMessages(chatId) {
   }
 }
 
-// Render the chat header (name, online status)
 function renderChatHeader(chat) {
   const other = chat.participants.find(p => p._id !== currentUser._id);
   const mainChatDiv = document.getElementById("mainChat");
@@ -185,7 +166,6 @@ function renderChatHeader(chat) {
       if (e.key === "Enter") sendMessage();
     });
     input.addEventListener("input", () => {
-      // Send typing event
       socket.emit("typing", { chatId: currentChatId, isTyping: true });
       if (typingTimeout) clearTimeout(typingTimeout);
       typingTimeout = setTimeout(() => {
@@ -196,7 +176,6 @@ function renderChatHeader(chat) {
   }
 }
 
-// Render messages in the main area
 function renderMessages(messages) {
   const container = document.getElementById("messagesContainer");
   if (!container) return;
@@ -204,7 +183,6 @@ function renderMessages(messages) {
   messages.forEach(msg => appendMessageToDOM(msg, container));
 }
 
-// Append a single message to DOM
 function appendMessageToDOM(msg, container) {
   const isSent = msg.sender === currentUser._id;
   const div = document.createElement("div");
@@ -221,14 +199,12 @@ function appendMessageToDOM(msg, container) {
   container.scrollTop = container.scrollHeight;
 }
 
-// Helper: get status icon (sent, delivered, read)
 function getStatusIcon(msg) {
   if (msg.read) return '<i class="fas fa-check-double" style="color:#34b7f1;"></i>';
   if (msg.delivered) return '<i class="fas fa-check-double"></i>';
   return '<i class="fas fa-check"></i>';
 }
 
-// Send a message
 async function sendMessage() {
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
@@ -248,19 +224,17 @@ async function sendMessage() {
     });
     const data = await res.json();
     if (res.ok) {
-      // Append message optimistically
       const tempMsg = {
-        _id: Date.now().toString(),
-        text,
-        sender: currentUser._id,
-        createdAt: new Date().toISOString(),
+        _id: data._id,
+        text: data.text,
+        sender: data.sender,
+        createdAt: data.createdAt,
         read: false,
         delivered: false
       };
       appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
       input.value = "";
-      // Emit via socket for real-time to other user
-      socket.emit("sendMessage", { chatId: currentChatId, text, messageId: tempMsg._id });
+      socket.emit("sendMessage", { chatId: currentChatId, text, messageId: data._id });
     } else {
       alert("Failed to send: " + data.message);
     }
@@ -274,44 +248,34 @@ async function sendMessage() {
   }
 }
 
-// Mark messages as read when chat is opened
 async function markMessagesAsRead(chatId) {
   try {
     await fetch(`/api/chat/${chatId}/read`, {
       method: "POST",
       headers: { Authorization: "Bearer " + getToken() }
     });
-    // Emit socket event to notify other user
     socket.emit("readMessages", { chatId });
-    updateChatList(); // update unread badges
+    updateChatList();
   } catch (err) {
     console.error("Error marking read:", err);
   }
 }
 
-// Update read status for messages in current chat (called when read receipt received)
 function updateReadStatus() {
   const messages = document.querySelectorAll(".message.sent .message-status");
-  messages.forEach(statusSpan => {
-    // In a real scenario, we would know which messages got read, but for simplicity, we mark all as read
-    statusSpan.innerHTML = '<i class="fas fa-check-double" style="color:#34b7f1;"></i>';
+  messages.forEach(span => {
+    span.innerHTML = '<i class="fas fa-check-double" style="color:#34b7f1;"></i>';
   });
 }
 
-// Update online status for a user
 function updateOnlineStatus(userId, online) {
   if (currentOtherUser && currentOtherUser._id === userId) {
     const dot = document.querySelector(".chat-header .online-dot");
     if (dot) dot.style.display = online ? "block" : "none";
   }
-  // Also update in sidebar
-  const chatItem = Array.from(document.querySelectorAll(".chat-item")).find(item => {
-    // Need a way to map, but we'll refresh sidebar when status changes
-  });
-  updateChatList(); // quick refresh
+  updateChatList();
 }
 
-// Escape HTML to prevent XSS
 function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/[&<>]/g, function(m) {
@@ -322,7 +286,6 @@ function escapeHtml(str) {
   });
 }
 
-// Load current user
 let currentUser = null;
 async function loadCurrentUser() {
   try {
@@ -344,7 +307,6 @@ async function loadCurrentUser() {
 
 loadCurrentUser();
 
-// Request notification permission (optional)
 if ("Notification" in window) {
   Notification.requestPermission();
 }

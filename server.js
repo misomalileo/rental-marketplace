@@ -16,7 +16,9 @@ const { limiter } = require("./middleware/rateLimiter");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, { cors: { origin: "*" } });
+const io = socketIo(server, {
+  cors: { origin: "*" } // Restrict in production
+});
 
 // ===============================
 // PROXY TRUST (for Render / reverse proxies)
@@ -38,7 +40,7 @@ app.use(
           "https://cdnjs.cloudflare.com",
           "https://cdn.socket.io",
           "'unsafe-inline'",
-          "'unsafe-eval'",   // <-- ADDED for noUiSlider and other libraries
+          "'unsafe-eval'",
         ],
         scriptSrcAttr: null,
         styleSrc: [
@@ -58,7 +60,7 @@ app.use(
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
           "https://res.cloudinary.com",
-          "https://images.pexels.com",   // <-- ADDED for hero background images
+          "https://images.pexels.com",
         ],
         connectSrc: [
           "'self'",
@@ -109,7 +111,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.log("❌ MongoDB Error:", err));
 
 // ===============================
-// SOCKET.IO – Real‑time chat
+// SOCKET.IO – Real‑time chat (FULL FEATURED)
 // ===============================
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
@@ -124,42 +126,71 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   console.log("🟢 User connected:", socket.userId);
   socket.join(socket.userId);
+  socket.broadcast.emit("userOnline", { userId: socket.userId, online: true });
 
   socket.on("sendMessage", async (data) => {
     try {
-      const { chatId, content } = data;
+      const { chatId, text, messageId } = data;
       const chat = await Chat.findById(chatId);
       if (!chat) return;
-      if (!chat.participants.includes(socket.userId)) return;
-
-      const message = {
-        sender: socket.userId,
-        content,
-        read: false,
-        createdAt: new Date(),
-      };
-      chat.messages.push(message);
-      chat.lastMessage = new Date();
-      await chat.save();
-
-      chat.participants.forEach(participantId => {
-        io.to(participantId.toString()).emit("newMessage", {
+      const otherParticipant = chat.participants.find(p => p.toString() !== socket.userId);
+      if (otherParticipant) {
+        io.to(otherParticipant.toString()).emit("newMessage", {
           chatId,
           message: {
-            ...message,
-            sender: { _id: socket.userId, name: "You" }
+            _id: messageId,
+            text,
+            senderId: socket.userId,
+            senderName: "User", // can be fetched if needed
+            createdAt: new Date()
           }
         });
-      });
+      }
     } catch (err) {
-      console.error("Socket message error:", err);
+      console.error("Socket sendMessage error:", err);
     }
+  });
+
+  socket.on("readMessages", async ({ chatId }) => {
+    try {
+      const userId = socket.userId;
+      const chat = await Chat.findById(chatId);
+      if (!chat) return;
+      const otherParticipant = chat.participants.find(p => p.toString() !== userId);
+      if (otherParticipant) {
+        io.to(otherParticipant.toString()).emit("messagesRead", {
+          chatId,
+          readBy: userId,
+          readAt: new Date()
+        });
+      }
+    } catch (err) {
+      console.error("Socket readMessages error:", err);
+    }
+  });
+
+  socket.on("typing", ({ chatId, isTyping }) => {
+    Chat.findById(chatId).then(chat => {
+      if (!chat) return;
+      const otherParticipant = chat.participants.find(p => p.toString() !== socket.userId);
+      if (otherParticipant) {
+        io.to(otherParticipant.toString()).emit("typing", {
+          chatId,
+          userId: socket.userId,
+          isTyping
+        });
+      }
+    }).catch(err => console.error("Socket typing error:", err));
   });
 
   socket.on("disconnect", () => {
     console.log("🔴 User disconnected:", socket.userId);
+    socket.broadcast.emit("userOnline", { userId: socket.userId, online: false });
   });
 });
+
+// Attach io to app so routes can use it
+app.set('io', io);
 
 // ===============================
 // ROUTES
