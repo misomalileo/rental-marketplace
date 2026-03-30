@@ -6,23 +6,20 @@
   <title>Khomo Lathu | Rent Houses, Rooms & Hostels Across Malawi</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Icon Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://unpkg.com/lucide-css@latest/dist/lucide.min.css" rel="stylesheet">
-  <!-- Leaflet & plugins -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
-  <!-- noUiSlider -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
-  <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
+  <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
   <style>
     /* ========== THEME VARIABLES ========== */
     :root {
@@ -100,40 +97,13 @@
       --primary-dark: #c5a028;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg-gradient); color: var(--text-color); min-height: 100vh; transition: background 0.2s, color 0.2s; }
+    h1, h2, h3, .logo, .stat-card .value { font-family: 'Poppins', 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; }
 
-    body {
-      background: var(--bg-gradient);
-      color: var(--text-color);
-      min-height: 100vh;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    h1, h2, h3, .logo, .stat-card .value {
-      font-family: 'Poppins', 'Inter', sans-serif;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    /* ========== ICON STYLES (colourful & interactive) ========== */
-    i, [class*="ri-"], [class*="lucide-"] {
-      transition: all 0.2s ease;
-    }
-
-    /* Default gradient for all icons (fallback) */
-    i.fas, i.far, i.fab, i.ri, .lucide {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    /* Category‑specific colours (override) */
+    /* ========== ICON STYLES ========== */
+    i, [class*="ri-"], [class*="lucide-"] { transition: all 0.2s ease; }
+    i.fas, i.far, i.fab, i.ri, .lucide { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .fa-wifi, .ri-wifi-line, .lucide-wifi { background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; }
     .fa-parking, .ri-parking-line, .lucide-parking-circle { background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; }
     .fa-couch, .ri-sofa-line, .lucide-sofa { background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; }
@@ -150,634 +120,330 @@
     .fa-money-bill-wave, .ri-money-dollar-circle-line, .lucide-dollar-sign { background: linear-gradient(135deg, #2ecc71, #27ae60); -webkit-background-clip: text; }
     .fa-calendar-check, .ri-calendar-check-line, .lucide-calendar-check { background: linear-gradient(135deg, #3498db, #2980b9); -webkit-background-clip: text; }
     .fa-eye, .ri-eye-line, .lucide-eye { background: linear-gradient(135deg, #95a5a6, #7f8c8d); -webkit-background-clip: text; }
+    i:hover, [class*="ri-"]:hover, [class*="lucide-"]:hover { transform: translateY(-2px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
 
-    /* Hover effect – slight lift and brighter gradient */
-    i:hover, [class*="ri-"]:hover, [class*="lucide-"]:hover {
-      transform: translateY(-2px);
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-    }
-
-    /* ========== TYPOGRAPHY (high contrast for small text) ========== */
-    .house-card-content p, .house-card-content .amenities-list, .house-card-content .rating-stars, .house-card-content small {
-      color: var(--gray-700);
-      opacity: 1;
-    }
-    body.theme-dark .house-card-content p,
-    body.theme-dark .house-card-content .amenities-list,
-    body.theme-dark .house-card-content .rating-stars {
-      color: var(--gray-300);
-    }
-    body.theme-luxury .house-card-content p,
-    body.theme-luxury .house-card-content .amenities-list {
-      color: #f5e7d9;
-      opacity: 0.9;
-    }
+    /* ========== TYPOGRAPHY (high contrast) ========== */
+    .house-card-content p, .house-card-content .amenities-list, .house-card-content .rating-stars, .house-card-content small { color: var(--gray-700); opacity: 1; }
+    body.theme-dark .house-card-content p, body.theme-dark .house-card-content .amenities-list, body.theme-dark .house-card-content .rating-stars { color: var(--gray-300); }
+    body.theme-luxury .house-card-content p, body.theme-luxury .house-card-content .amenities-list { color: #f5e7d9; opacity: 0.9; }
 
     /* ========== NAVBAR (glass) ========== */
-    .navbar {
-      background: var(--navbar-bg);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255,255,255,0.3);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.8rem 2rem;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-    .logo {
-      font-size: 1.4rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      color: var(--text-color);
-    }
-    .logo i {
-      margin-right: 6px;
-      font-size: 1.2rem;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-      flex-wrap: wrap;
-    }
-    .nav-links a {
-      color: var(--text-color);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.85rem;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover {
-      color: var(--primary);
-    }
-    .lang-select, .theme-select {
-      padding: 0.25rem 0.6rem;
-      border-radius: 30px;
-      border: 1px solid var(--input-border);
-      background: var(--input-bg);
-      color: var(--text-color);
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
+    .navbar { background: var(--navbar-bg); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.3); display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000; }
+    .logo { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; color: var(--text-color); }
+    .logo i { margin-right: 6px; font-size: 1.2rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-links { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+    .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--primary); }
+    .lang-select, .theme-select { padding: 0.25rem 0.6rem; border-radius: 30px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; }
 
-    /* ========== HERO (gradient) ========== */
-    .hero {
-      text-align: center;
-      padding: 3rem 1rem 2.5rem 1rem;
-      background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(16,185,129,0.03) 100%);
-      border-radius: 48px;
-      margin: 1rem;
-      transition: background 0.3s;
-    }
-    .hero:hover {
-      background: linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(16,185,129,0.06) 100%);
-    }
-    .hero h1 {
-      font-size: 2.5rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      color: var(--text-color);
-    }
-    .hero h1 i {
-      font-size: 2rem;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .hero p {
-      font-size: 1rem;
-      font-weight: 400;
-      color: var(--gray-500);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
+    /* ========== HERO (enlarged icon) ========== */
+    .hero { text-align: center; padding: 3rem 1rem 2.5rem 1rem; background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(16,185,129,0.03) 100%); border-radius: 48px; margin: 1rem; transition: background 0.3s; }
+    .hero:hover { background: linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(16,185,129,0.06) 100%); }
+    .hero h1 { font-size: 2.5rem; font-weight: 600; letter-spacing: -0.02em; display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; color: var(--text-color); }
+    .hero h1 i { font-size: 4rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    .hero p { font-size: 1rem; font-weight: 400; color: var(--gray-500); display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.5rem; }
 
     /* ========== MAIN CONTAINER ========== */
-    .main-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 1rem;
-    }
+    .main-container { max-width: 1400px; margin: 0 auto; padding: 0 1rem; }
 
-    /* Filters row */
-    .filters-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin: 1.5rem 0;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .price-range {
-      min-width: 200px;
-      background: var(--input-bg);
-      border-radius: 40px;
-      padding: 0.3rem 1rem;
-      border: 1px solid var(--input-border);
-    }
-    .price-range .range-values {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      margin-top: 0.2rem;
-    }
-    #priceSlider {
-      margin: 0.4rem 0;
-    }
-    .sort-select, .save-search-btn {
-      padding: 0.4rem 1rem;
-      border-radius: 40px;
-      border: 1px solid var(--input-border);
-      background: var(--input-bg);
-      color: var(--text-color);
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-    .save-search-btn {
-      background: var(--button-bg);
-      color: white;
-      border: none;
-    }
-    .save-search-btn:hover {
-      background: var(--button-hover);
-    }
-
-    /* Amenities filters */
-    .amenities-filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      justify-content: center;
-      margin: 1rem 0;
-    }
-    .amenities-filters label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.8rem;
-      color: var(--text-color);
-      background: var(--input-bg);
-      padding: 0.3rem 0.8rem;
-      border-radius: 30px;
-      border: 1px solid var(--input-border);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .amenities-filters label:hover {
-      background: var(--button-bg);
-      color: white;
-      border-color: var(--button-bg);
-    }
-
-    #searchInput {
-      width: 100%;
-      max-width: 480px;
-      display: block;
-      margin: 1rem auto;
-      padding: 0.6rem 1.2rem;
-      border: 1px solid var(--input-border);
-      border-radius: 40px;
-      background: var(--input-bg);
-      color: var(--text-color);
-      font-size: 0.9rem;
-    }
-
-    .category-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 20px 0;
-      justify-content: center;
-    }
-    .tab-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--input-border);
-      border-radius: 40px;
-      padding: 6px 16px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: var(--text-color);
-    }
-    .tab-btn:hover {
-      background: var(--button-bg);
-      color: white;
-      border-color: var(--button-bg);
-    }
-    .tab-btn.active {
-      background: var(--button-bg);
-      color: white;
-      border-color: var(--button-bg);
-    }
-
+    /* ========== GRID (6-7 cards per row) ========== */
     #houses-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 1.2rem;
       margin: 2rem 0;
     }
-
-    .house-card {
-      background: var(--card-bg);
-      border-radius: 24px;
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.03);
-      cursor: pointer;
-      border: 1px solid var(--input-border);
+    @media (min-width: 1800px) {
+      #houses-container { grid-template-columns: repeat(7, 1fr); }
     }
-    .house-card:hover {
-      transform: translateY(-6px) scale(1.01);
-      box-shadow: 0 20px 30px -10px rgba(0,0,0,0.15);
+    @media (min-width: 1400px) and (max-width: 1799px) {
+      #houses-container { grid-template-columns: repeat(6, 1fr); }
+    }
+    @media (min-width: 1100px) and (max-width: 1399px) {
+      #houses-container { grid-template-columns: repeat(5, 1fr); }
+    }
+    @media (max-width: 768px) {
+      #houses-container { grid-template-columns: 1fr; }
     }
 
-    .slider {
-      position: relative;
-      width: 100%;
-      height: 160px;
-      overflow: hidden;
-    }
-    .slider img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.2s;
-    }
-    .house-card:hover .slider img {
-      transform: scale(1.02);
-    }
-    .slider button {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.8);
-      border: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    /* ========== HOUSE CARD (slightly smaller) ========== */
+    .house-card { background: var(--card-bg); border-radius: 24px; overflow: hidden; transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); box-shadow: 0 8px 20px rgba(0,0,0,0.03); cursor: pointer; border: 1px solid var(--input-border); }
+    .house-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.15); }
+    .slider { position: relative; width: 100%; height: 160px; overflow: hidden; }
+    .slider img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+    .house-card:hover .slider img { transform: scale(1.02); }
+    .slider button { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .house-card-content { padding: 0.8rem; }
+    .house-card-content h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; color: var(--text-color); }
+    .house-card-content p { margin: 0.2rem 0; font-size: 0.8rem; line-height: 1.4; }
 
-    .house-card-content {
-      padding: 0.8rem;
-    }
-    .house-card-content h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-      color: var(--text-color);
-    }
-    .house-card-content p {
-      margin: 0.2rem 0;
-      font-size: 0.8rem;
-      line-height: 1.4;
-    }
-
-    /* Badges */
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      font-size: 0.7rem;
-      font-weight: 500;
-      border-radius: 30px;
-      margin-right: 0.3rem;
-      text-transform: uppercase;
-    }
+    /* ========== BADGES ========== */
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.7rem; font-weight: 500; border-radius: 30px; margin-right: 0.3rem; text-transform: uppercase; }
     .badge.verified { background: #2ecc71; color: white; }
     .badge.premium { background: #f1c40f; color: #2c3e50; }
     .badge.featured { background: #f1c40f; color: #2c3e50; }
     .badge.self-contained { background: #9b59b6; color: white; }
 
-    .amenities-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin: 0.4rem 0;
-    }
+    .amenities-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0; }
 
-    /* Buttons */
-    .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn {
-      background: var(--button-bg);
-      color: white;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .fav-btn {
-      background: none;
-      border: 1px solid var(--input-border);
-      color: var(--text-color);
-    }
-    .fav-btn:hover {
-      background: rgba(0,0,0,0.05);
-    }
-    .chat-btn:hover, .report-btn:hover, .share-btn:hover, .compare-btn:hover {
-      background: var(--button-hover);
-    }
+    /* ========== BUTTONS ========== */
+    .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn { background: var(--button-bg); color: white; border: none; padding: 4px 10px; border-radius: 30px; font-size: 0.7rem; cursor: pointer; transition: background 0.2s; }
+    .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
+    .fav-btn:hover { background: rgba(0,0,0,0.05); }
+    .chat-btn:hover, .report-btn:hover, .share-btn:hover, .compare-btn:hover { background: var(--button-hover); }
 
-    /* Rating stars */
-    .rating-widget {
-      margin-top: 0.4rem;
-    }
-    .star {
-      font-size: 0.9rem;
-      cursor: pointer;
-      color: #f39c12;
-    }
+    .rating-widget { margin-top: 0.4rem; }
+    .star { font-size: 0.9rem; cursor: pointer; color: #f39c12; }
 
-    /* Pagination */
-    .pagination {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin: 30px 0;
-    }
-    .page-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--input-border);
-      border-radius: 30px;
-      padding: 6px 12px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: var(--text-color);
-    }
-    .page-btn:hover, .page-btn.active {
-      background: var(--button-bg);
-      color: white;
-      border-color: var(--button-bg);
-    }
+    .pagination { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 30px 0; }
+    .page-btn { background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 30px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; color: var(--text-color); }
+    .page-btn:hover, .page-btn.active { background: var(--button-bg); color: white; border-color: var(--button-bg); }
 
-    /* Map */
-    .map-section {
-      margin: 2rem 0;
-    }
-    #map {
-      height: 380px;
-      width: 100%;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid var(--input-border);
-    }
-    .map-controls {
-      margin: 10px 0;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .map-controls button, .map-controls label {
-      background: var(--card-bg);
-      border: 1px solid var(--input-border);
-      border-radius: 30px;
-      padding: 5px 12px;
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
+    /* ========== MAP & GPS ========== */
+    .map-section { margin: 2rem 0; }
+    #map { height: 380px; width: 100%; border-radius: 20px; overflow: hidden; border: 1px solid var(--input-border); }
+    .map-controls { margin: 10px 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .map-controls button, .map-controls label { background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 30px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
+    .gps-section { background: var(--card-bg); border-radius: 20px; padding: 1.5rem; margin: 2rem 0; text-align: center; border: 1px solid var(--input-border); }
+    #getLocationBtn { background: var(--button-bg); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 40px; font-size: 0.85rem; cursor: pointer; }
 
-    /* GPS section */
-    .gps-section {
-      background: var(--card-bg);
-      border-radius: 20px;
-      padding: 1.5rem;
-      margin: 2rem 0;
-      text-align: center;
-      border: 1px solid var(--input-border);
-    }
-    #getLocationBtn {
-      background: var(--button-bg);
-      color: white;
-      border: none;
-      padding: 0.5rem 1.2rem;
-      border-radius: 40px;
+    /* ========== MODALS ========== */
+    .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+    .modal-content { background-color: var(--card-bg); margin: 20px auto; padding: 20px; border-radius: 20px; width: 90%; max-width: 600px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .close-btn { color: #aaa; float: right; font-size: 24px; font-weight: bold; cursor: pointer; }
+    .modal-tab { background: var(--card-bg); border: 1px solid var(--input-border); padding: 6px 14px; border-radius: 40px; cursor: pointer; }
+    .modal-tab.active { background: var(--button-bg); color: white; }
+
+    /* Modal description – thin, elegant */
+    #modalDetails p {
       font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    footer {
-      text-align: center;
-      padding: 1.5rem;
-      background: var(--footer-bg);
+      font-weight: 400;
       color: var(--text-color);
+      line-height: 1.5;
+      opacity: 0.85;
+    }
+    #modalDetails h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    #modalDetails strong {
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    .lightbox-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .lightbox-content img { max-width: 90%; max-height: 90%; border-radius: 8px; }
+    .landlord-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: inline-flex; align-items: center; justify-content: center; font-weight: 500; color: white; font-size: 0.9rem; cursor: pointer; margin-right: 6px; overflow: hidden; }
+    .landlord-info-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    #compareFloatingBtn { position: fixed; bottom: 90px; right: 20px; background: var(--button-bg); color: white; border-radius: 40px; padding: 8px 16px; display: none; align-items: center; gap: 6px; cursor: pointer; z-index: 9998; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 0.8rem; }
+
+    /* ========== FOOTER (modern, WhatsApp-inspired) ========== */
+    .footer {
+      background: var(--footer-bg);
       border-top: 1px solid var(--input-border);
-      font-size: 0.8rem;
-      margin-top: 2rem;
+      margin-top: 3rem;
+      padding: 2rem 1rem 1rem;
+      font-size: 0.85rem;
     }
-
-    /* Modals */
-    .modal {
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.5);
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
     }
-    .modal-content {
-      background-color: var(--card-bg);
-      margin: 20px auto;
-      padding: 20px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 600px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    .footer-logo {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-color);
     }
-    .close-btn {
-      color: #aaa;
-      float: right;
-      font-size: 24px;
-      font-weight: bold;
-      cursor: pointer;
+    .footer-logo i {
+      color: var(--primary);
+      margin-right: 0.3rem;
     }
-    .modal-tab {
-      background: var(--card-bg);
-      border: 1px solid var(--input-border);
-      padding: 6px 14px;
-      border-radius: 40px;
-      cursor: pointer;
+    .footer-tagline {
+      color: var(--text-color);
+      opacity: 0.7;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
     }
-    .modal-tab.active {
-      background: var(--button-bg);
-      color: white;
+    .footer-copyright {
+      color: var(--text-color);
+      opacity: 0.5;
+      font-size: 0.7rem;
+      margin-top: 0.5rem;
     }
-
-    .lightbox-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      z-index: 10000;
+    .footer-col h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      color: var(--text-color);
+    }
+    .footer-col ul {
+      list-style: none;
+      padding: 0;
+    }
+    .footer-col ul li {
+      margin-bottom: 0.5rem;
+    }
+    .footer-col ul li a {
+      color: var(--text-color);
+      text-decoration: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .footer-col ul li a:hover {
+      opacity: 1;
+      color: var(--primary);
+    }
+    .social-links {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
-    .lightbox-content img {
-      max-width: 90%;
-      max-height: 90%;
-      border-radius: 8px;
-    }
-
-    .landlord-avatar {
+    .social-links a {
+      color: var(--text-color);
+      background: var(--input-bg);
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-weight: 500;
-      color: white;
-      font-size: 0.9rem;
-      cursor: pointer;
-      margin-right: 6px;
-      overflow: hidden;
+      transition: all 0.2s;
+      border: 1px solid var(--input-border);
     }
-    .landlord-info-row {
+    .social-links a:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .contact-info p {
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
+      gap: 0.5rem;
     }
-
-    #compareFloatingBtn {
-      position: fixed;
-      bottom: 90px;
-      right: 20px;
-      background: var(--button-bg);
-      color: white;
-      border-radius: 40px;
-      padding: 8px 16px;
-      display: none;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      z-index: 9998;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    .contact-info i {
+      width: 20px;
+      color: var(--primary);
+    }
+    .contact-info a {
+      color: var(--text-color);
+      text-decoration: none;
+      opacity: 0.7;
+    }
+    .contact-info a:hover {
+      opacity: 1;
+      color: var(--primary);
+    }
+    .footer-newsletter {
+      max-width: 500px;
+      margin: 0 auto 2rem;
+      text-align: center;
+      padding: 1rem;
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1px solid var(--input-border);
+    }
+    .footer-newsletter h3 {
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+    }
+    .footer-newsletter p {
       font-size: 0.8rem;
+      opacity: 0.7;
+      margin-bottom: 0.8rem;
+    }
+    .footer-newsletter form {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .footer-newsletter input {
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      width: 250px;
+    }
+    .footer-newsletter button {
+      background: #25D366;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.5rem 1.2rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .footer-newsletter button:hover {
+      background: #128C7E;
+    }
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--input-border);
+      font-size: 0.75rem;
+      color: var(--text-color);
+      opacity: 0.7;
+    }
+    .footer-bottom-left select {
+      background: transparent;
+      border: 1px solid var(--input-border);
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
+      color: var(--text-color);
+    }
+    .footer-bottom-right i {
+      margin: 0 0.2rem;
     }
 
     @media (max-width: 768px) {
-      .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .hero h1 {
-        font-size: 1.8rem;
-      }
-      .hero h1 i {
-        font-size: 1.6rem;
-      }
-      .hero p {
-        font-size: 0.9rem;
-      }
-      .filters-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      #houses-container {
-        grid-template-columns: 1fr;
-      }
-      #map {
-        height: 280px;
-      }
+      .navbar { flex-direction: column; align-items: flex-start; }
+      .hero h1 { font-size: 1.8rem; }
+      .hero h1 i { font-size: 3rem; }
+      .hero p { font-size: 0.9rem; }
+      .filters-row { flex-direction: column; align-items: stretch; }
+      #houses-container { grid-template-columns: 1fr; }
+      #map { height: 280px; }
+      .footer-container { grid-template-columns: 1fr; text-align: center; }
+      .social-links { justify-content: center; }
+      .contact-info p { justify-content: center; }
+      .footer-newsletter form { flex-direction: column; align-items: center; }
+      .footer-newsletter input { width: 100%; }
+      .footer-bottom { flex-direction: column; text-align: center; }
     }
   </style>
 </head>
 <body>
-
   <nav class="navbar">
-    <div class="logo">
-      <i class="fas fa-home"></i> Khomo Lathu
-    </div>
+    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
     <div class="nav-links">
       <a href="#">Home</a>
       <a href="#map">Explore Map</a>
       <a href="login.html">Landlord Login</a>
-      <select class="lang-select" onchange="setLanguage(this.value)">
-        <option value="en">English</option>
-        <option value="ny">Chichewa</option>
-      </select>
-      <select class="theme-select" onchange="setTheme(this.value)">
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-        <option value="aquatic">Aquatic</option>
-        <option value="minimal">Minimal</option>
-        <option value="luxury">Luxury</option>
-      </select>
+      <select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select>
+      <select class="theme-select" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="aquatic">Aquatic</option><option value="minimal">Minimal</option><option value="luxury">Luxury</option></select>
     </div>
   </nav>
 
-  <header class="hero">
-    <div class="hero-content">
-      <h1>
-        <i class="fas fa-home"></i>
-        Khomo Lathu
-      </h1>
-      <p>
-        <i class="fas fa-lightbulb"></i>
-        Explore verified rentals posted by landlords
-      </p>
-    </div>
-  </header>
+  <header class="hero"><div class="hero-content"><h1><i class="fas fa-home"></i> Khomo Lathu</h1><p><i class="fas fa-lightbulb"></i> Explore verified rentals posted by landlords</p></div></header>
 
   <main class="main-container">
-
     <div class="filters-row">
-      <div class="price-range">
-        <div class="range-values">
-          <span id="priceMinLabel">Min: 0</span>
-          <span id="priceMaxLabel">Max: 2,000,000</span>
-        </div>
-        <div id="priceSlider"></div>
-        <input type="hidden" id="priceMin" value="0">
-        <input type="hidden" id="priceMax" value="2000000">
-      </div>
-
-      <select id="regionFilter" class="sort-select" style="min-width: 120px;">
-        <option value="">All Regions</option>
-        <option value="Northern">Northern Region</option>
-        <option value="Central">Central Region</option>
-        <option value="Southern">Southern Region</option>
-      </select>
-
-      <select id="sortSelect" class="sort-select">
-        <option value="default">Sort by: Default</option>
-        <option value="price_asc">Price: Low to High</option>
-        <option value="price_desc">Price: High to Low</option>
-        <option value="newest">Newest First</option>
-        <option value="rating">Highest Rated</option>
-        <option value="distance">Nearest to Me</option>
-      </select>
-
+      <div class="price-range"><div class="range-values"><span id="priceMinLabel">Min: 0</span><span id="priceMaxLabel">Max: 2,000,000</span></div><div id="priceSlider"></div><input type="hidden" id="priceMin" value="0"><input type="hidden" id="priceMax" value="2000000"></div>
+      <select id="regionFilter" class="sort-select" style="min-width: 120px;"><option value="">All Regions</option><option value="Northern">Northern Region</option><option value="Central">Central Region</option><option value="Southern">Southern Region</option></select>
+      <select id="sortSelect" class="sort-select"><option value="default">Sort by: Default</option><option value="price_asc">Price: Low to High</option><option value="price_desc">Price: High to Low</option><option value="newest">Newest First</option><option value="rating">Highest Rated</option><option value="distance">Nearest to Me</option></select>
       <button id="saveSearchBtn" class="save-search-btn"><i class="fas fa-save"></i> Save Search</button>
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);"><i class="fas fa-filter"></i> Apply Filters</button>
     </div>
@@ -804,7 +470,6 @@
 
     <h2 style="margin: 1rem 0 0.5rem 0;"><i class="fas fa-list"></i> Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
-
     <div class="pagination" id="pagination"></div>
 
     <section class="map-section" id="map-section">
@@ -812,37 +477,80 @@
       <div class="map-controls">
         <button id="drawAreaBtn" class="save-search-btn"><i class="fas fa-draw-polygon"></i> Draw Area</button>
         <button id="clearDrawBtn" class="save-search-btn" style="background: #e74c3c;"><i class="fas fa-trash-alt"></i> Clear</button>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <label><i class="fas fa-location-dot"></i> Near Me Radius:</label>
-          <input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2">
-          <span id="radiusValueControl">2 km</span>
-          <button id="applyRadiusBtn" class="save-search-btn">Find</button>
-        </div>
+        <div style="display: flex; align-items: center; gap: 10px;"><label><i class="fas fa-location-dot"></i> Near Me Radius:</label><input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2"><span id="radiusValueControl">2 km</span><button id="applyRadiusBtn" class="save-search-btn">Find</button></div>
       </div>
       <div id="map"></div>
     </section>
 
-    <section class="gps-section">
-      <h2><i class="fas fa-location-dot"></i> Property GPS Locator</h2>
-      <button id="getLocationBtn"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
-      <p id="gpsStatus"></p>
-      <input type="hidden" id="latitude">
-      <input type="hidden" id="longitude">
-    </section>
-
+    <section class="gps-section"><h2><i class="fas fa-location-dot"></i> Property GPS Locator</h2><button id="getLocationBtn"><i class="fas fa-location-dot"></i> Capture My Property Location</button><p id="gpsStatus"></p><input type="hidden" id="latitude"><input type="hidden" id="longitude"></section>
   </main>
 
-  <footer>
-    <span>© 2026 Khomo Lathu – Connecting Renters Across the Nation</span>
-    <br><br>
-    <a href="terms.html">Terms</a> | 
-    <a href="privacy.html">Privacy</a> | 
-    <a href="faq.html">FAQ</a> | 
-    <a href="contact.html">Contact</a>
+  <!-- ========== MODERN FOOTER ========== -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="footer-logo"><i class="fas fa-home"></i> Khomo Lathu</div>
+        <div class="footer-tagline">Find your perfect home in Malawi</div>
+        <div class="footer-copyright">© 2026 Khomo Lathu</div>
+      </div>
+      <div class="footer-col">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="#">Browse Properties</a></li>
+          <li><a href="#">Become a Landlord</a></li>
+          <li><a href="#">How It Works</a></li>
+          <li><a href="#">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>Support</h3>
+        <ul>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="#">Report a Problem</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>Connect With Us</h3>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-whatsapp"></i></a>
+        </div>
+        <div class="contact-info">
+          <p><i class="fas fa-envelope"></i> <a href="mailto:socratesghambi99@gmail.com">socratesghambi99@gmail.com</a></p>
+          <p><i class="fas fa-phone-alt"></i> <a href="tel:+265996726966">0996726966</a></p>
+          <p><i class="fas fa-map-marker-alt"></i> Blantyre, Malawi</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-newsletter">
+      <h3>Stay Updated</h3>
+      <p>Get the latest listings and offers straight to your inbox.</p>
+      <form id="footerNewsletterForm">
+        <input type="email" placeholder="Your email address" required>
+        <button type="submit"><i class="fab fa-whatsapp"></i> Subscribe</button>
+      </form>
+      <p id="newsletterStatus" style="font-size:0.75rem; margin-top:0.5rem;"></p>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-bottom-left">
+        <select class="lang-select" onchange="setLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="ny">Chichewa</option>
+        </select>
+      </div>
+      <div class="footer-bottom-right">
+        <span>Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</span>
+      </div>
+    </div>
   </footer>
 
   <!-- ========== MODALS ========== -->
-  <!-- Property Modal -->
   <div id="propertyModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
@@ -852,94 +560,31 @@
         <button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button>
         <button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button>
         <button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button>
+        <button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button>
       </div>
       <div id="modalDetails" style="display:block;"></div>
       <div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div>
       <div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div>
       <div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div>
+      <div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div>
     </div>
   </div>
 
-  <!-- Booking Modal -->
-  <div id="bookingModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeBookingModal()">&times;</span>
-      <h2>Request Booking</h2>
-      <div id="bookingHouseInfo"></div>
-      <form id="bookingForm">
-        <div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div>
-        <div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div>
-        <div class="form-group"><label>Message (optional)</label><textarea id="bookingMessage" rows="2"></textarea></div>
-        <button type="submit" class="save-search-btn">Send Request</button>
-      </form>
-      <div id="bookingStatus"></div>
-    </div>
-  </div>
+  <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message (optional)</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
 
-  <!-- Lightbox Modal -->
-  <div id="lightboxModal" class="lightbox-modal" style="display: none;">
-    <span class="lightbox-close">&times;</span>
-    <span class="lightbox-prev">&#10094;</span>
-    <span class="lightbox-next">&#10095;</span>
-    <div class="lightbox-content"><img id="lightboxImage" src=""></div>
-    <div class="lightbox-counter" id="lightboxCounter"></div>
-  </div>
+  <div id="lightboxModal" class="lightbox-modal" style="display: none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
 
-  <!-- Save Search Modal -->
-  <div id="saveSearchModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeSaveSearchModal()">&times;</span>
-      <h2>Save This Search</h2>
-      <p>Get email alerts when new houses match.</p>
-      <form id="saveSearchForm">
-        <div class="form-group"><label>Your Email</label><input type="email" id="searchEmail" required></div>
-        <div class="form-group"><label>Search Name (optional)</label><input type="text" id="searchName"></div>
-        <button type="submit" class="save-search-btn">Save & Get Alerts</button>
-      </form>
-      <div id="saveSearchStatus"></div>
-    </div>
-  </div>
+  <div id="saveSearchModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeSaveSearchModal()">&times;</span><h2>Save This Search</h2><p>Get email alerts when new houses match.</p><form id="saveSearchForm"><div class="form-group"><label>Your Email</label><input type="email" id="searchEmail" required></div><div class="form-group"><label>Search Name (optional)</label><input type="text" id="searchName"></div><button type="submit" class="save-search-btn">Save & Get Alerts</button></form><div id="saveSearchStatus"></div></div></div>
 
-  <!-- Landlord Profile Modal -->
-  <div id="landlordModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:500px;">
-      <span class="close-btn" onclick="closeLandlordModal()">&times;</span>
-      <div id="landlordModalContent"></div>
-    </div>
-  </div>
+  <div id="landlordModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:500px;"><span class="close-btn" onclick="closeLandlordModal()">&times;</span><div id="landlordModalContent"></div></div></div>
 
-  <!-- Share Modal -->
-  <div id="shareModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:400px;">
-      <span class="close-btn" onclick="closeShareModal()">&times;</span>
-      <h3><i class="fas fa-share-alt"></i> Share this property</h3>
-      <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;">
-        <button onclick="shareOnFacebook()" style="background:#1877f2;">Facebook</button>
-        <button onclick="shareOnWhatsApp()" style="background:#25D366;">WhatsApp</button>
-        <button onclick="shareOnTwitter()" style="background:#1DA1F2;">Twitter</button>
-        <button onclick="copyShareLink()" style="background:#6c757d;">Copy Link</button>
-      </div>
-      <div id="shareStatus"></div>
-    </div>
-  </div>
+  <div id="shareModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:400px;"><span class="close-btn" onclick="closeShareModal()">&times;</span><h3><i class="fas fa-share-alt"></i> Share this property</h3><div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;"><button onclick="shareOnFacebook()" style="background:#1877f2;">Facebook</button><button onclick="shareOnWhatsApp()" style="background:#25D366;">WhatsApp</button><button onclick="shareOnTwitter()" style="background:#1DA1F2;">Twitter</button><button onclick="copyShareLink()" style="background:#6c757d;">Copy Link</button></div><div id="shareStatus"></div></div></div>
 
-  <!-- Comparison Modal -->
-  <div id="comparisonModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:900px;">
-      <span class="close-btn" onclick="closeComparisonModal()">&times;</span>
-      <h2><i class="fas fa-chart-simple"></i> Compare Properties</h2>
-      <div id="comparisonTable">Select up to 3 houses to compare.</div>
-    </div>
-  </div>
+  <div id="comparisonModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:900px;"><span class="close-btn" onclick="closeComparisonModal()">&times;</span><h2><i class="fas fa-chart-simple"></i> Compare Properties</h2><div id="comparisonTable">Select up to 3 houses to compare.</div></div></div>
 
-  <div id="compareFloatingBtn">
-    <i class="fas fa-chart-simple"></i> Compare (<span id="compareCount">0</span>/3)
-  </div>
+  <div id="compareFloatingBtn"><i class="fas fa-chart-simple"></i> Compare (<span id="compareCount">0</span>/3)</div>
 
-  <script>
-    window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';
-  </script>
-
+  <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -949,114 +594,44 @@
   <script src="js/theme.js"></script>
   <script src="js/script.js"></script>
   <script src="js/chatbot.js"></script>
+  <script src="js/lease.js"></script>
   <script>
-    // Lightbox functions
     let currentLightboxImages = [];
     let currentImageIndex = 0;
-
-    function openLightbox(images, startIndex = 0) {
-      if (!images || images.length === 0) return;
-      currentLightboxImages = images;
-      currentImageIndex = startIndex;
-      const modal = document.getElementById('lightboxModal');
-      const imgElement = document.getElementById('lightboxImage');
-      const counter = document.getElementById('lightboxCounter');
-      imgElement.src = images[startIndex];
-      counter.textContent = `${startIndex + 1} / ${images.length}`;
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeLightbox() {
-      document.getElementById('lightboxModal').style.display = 'none';
-      document.body.style.overflow = '';
-    }
-
-    function showPrevImage() {
-      if (currentLightboxImages.length === 0) return;
-      currentImageIndex = (currentImageIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
-      document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex];
-      document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`;
-    }
-
-    function showNextImage() {
-      if (currentLightboxImages.length === 0) return;
-      currentImageIndex = (currentImageIndex + 1) % currentLightboxImages.length;
-      document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex];
-      document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`;
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const modal = document.getElementById('lightboxModal');
-      const closeBtn = document.querySelector('.lightbox-close');
-      const prevBtn = document.querySelector('.lightbox-prev');
-      const nextBtn = document.querySelector('.lightbox-next');
-
-      if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
-      if (prevBtn) prevBtn.addEventListener('click', showPrevImage);
-      if (nextBtn) nextBtn.addEventListener('click', showNextImage);
-      if (modal) modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeLightbox();
-      });
-    });
-
+    function openLightbox(images, startIndex = 0) { if (!images || images.length === 0) return; currentLightboxImages = images; currentImageIndex = startIndex; const modal = document.getElementById('lightboxModal'); const imgElement = document.getElementById('lightboxImage'); const counter = document.getElementById('lightboxCounter'); imgElement.src = images[startIndex]; counter.textContent = `${startIndex + 1} / ${images.length}`; modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    function closeLightbox() { document.getElementById('lightboxModal').style.display = 'none'; document.body.style.overflow = ''; }
+    function showPrevImage() { if (currentLightboxImages.length === 0) return; currentImageIndex = (currentImageIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length; document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex]; document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`; }
+    function showNextImage() { if (currentLightboxImages.length === 0) return; currentImageIndex = (currentImageIndex + 1) % currentLightboxImages.length; document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex]; document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`; }
+    document.addEventListener('DOMContentLoaded', () => { const modal = document.getElementById('lightboxModal'); const closeBtn = document.querySelector('.lightbox-close'); const prevBtn = document.querySelector('.lightbox-prev'); const nextBtn = document.querySelector('.lightbox-next'); if (closeBtn) closeBtn.addEventListener('click', closeLightbox); if (prevBtn) prevBtn.addEventListener('click', showPrevImage); if (nextBtn) nextBtn.addEventListener('click', showNextImage); if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeLightbox(); }); });
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
-
-    window.openBookingModal = function(houseId, houseName) {
-      window.currentBookingHouseId = houseId;
-      document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
-      document.getElementById("bookingStart").value = '';
-      document.getElementById("bookingEnd").value = '';
-      document.getElementById("bookingMessage").value = '';
-      document.getElementById("bookingStatus").innerHTML = '';
-      document.getElementById("bookingModal").style.display = "block";
-    };
-    window.closeBookingModal = function() {
-      document.getElementById("bookingModal").style.display = "none";
-      window.currentBookingHouseId = null;
-    };
-    document.getElementById("bookingForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please login to book");
-        return;
-      }
-      const start = document.getElementById("bookingStart").value;
-      const end = document.getElementById("bookingEnd").value;
-      const message = document.getElementById("bookingMessage").value;
-      if (!start || !end) {
-        alert("Please select both dates");
-        return;
-      }
-      const statusDiv = document.getElementById("bookingStatus");
-      statusDiv.innerHTML = "Sending...";
-      try {
-        const res = await fetch("/api/bookings", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token
-          },
-          body: JSON.stringify({ houseId: window.currentBookingHouseId, startDate: start, endDate: end, message })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          statusDiv.innerHTML = "✅ Booking request sent!";
-          setTimeout(() => window.closeBookingModal(), 2000);
-        } else {
-          statusDiv.innerHTML = "❌ " + (data.message || "Error");
-        }
-      } catch (err) {
-        statusDiv.innerHTML = "❌ Network error";
-      }
-    });
-
+    window.openBookingModal = function(houseId, houseName) { window.currentBookingHouseId = houseId; document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`; document.getElementById("bookingStart").value = ''; document.getElementById("bookingEnd").value = ''; document.getElementById("bookingMessage").value = ''; document.getElementById("bookingStatus").innerHTML = ''; document.getElementById("bookingModal").style.display = "block"; };
+    window.closeBookingModal = function() { document.getElementById("bookingModal").style.display = "none"; window.currentBookingHouseId = null; };
+    document.getElementById("bookingForm").addEventListener("submit", async e => { e.preventDefault(); const token = localStorage.getItem("token"); if (!token) { alert("Please login to book"); return; } const start = document.getElementById("bookingStart").value; const end = document.getElementById("bookingEnd").value; const message = document.getElementById("bookingMessage").value; if (!start || !end) { alert("Please select both dates"); return; } const statusDiv = document.getElementById("bookingStatus"); statusDiv.innerHTML = "Sending..."; try { const res = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ houseId: window.currentBookingHouseId, startDate: start, endDate: end, message }) }); const data = await res.json(); if (res.ok) { statusDiv.innerHTML = "✅ Booking request sent!"; setTimeout(() => window.closeBookingModal(), 2000); } else { statusDiv.innerHTML = "❌ " + (data.message || "Error"); } } catch (err) { statusDiv.innerHTML = "❌ Network error"; } });
     window.openLightbox = openLightbox;
-    window.closeSaveSearchModal = function() {
-      document.getElementById('saveSearchModal').style.display = 'none';
-    };
+    window.closeSaveSearchModal = function() { document.getElementById('saveSearchModal').style.display = 'none'; };
+
+    // Newsletter signup
+    const newsletterForm = document.getElementById('footerNewsletterForm');
+    if (newsletterForm) {
+      newsletterForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = newsletterForm.querySelector('input').value.trim();
+        const statusDiv = document.getElementById('newsletterStatus');
+        if (!email) return;
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Subscribing...';
+        try {
+          // Simulate API call (replace with actual endpoint later)
+          setTimeout(() => {
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Thanks for subscribing!';
+            newsletterForm.reset();
+            setTimeout(() => { statusDiv.innerHTML = ''; }, 3000);
+          }, 500);
+        } catch (err) {
+          statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Something went wrong. Try again.';
+        }
+      });
+    }
   </script>
 </body>
 </html>
