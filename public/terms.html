@@ -3,65 +3,179 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms of Service | Rental Marketplace</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Terms of Service | Khomo Lathu</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    .legal-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .legal-container h1 { color: #2c3e50; margin-bottom: 1rem; }
-    .legal-container h2 { color: #34495e; margin: 1.5rem 0 0.5rem; }
-    .legal-container p, .legal-container li { color: #555; line-height: 1.6; }
-    .legal-container ul { margin-left: 1.5rem; }
-    .legal-container .last-updated { color: #7f8c8d; font-style: italic; margin-bottom: 2rem; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
+      color: #1e293b;
+      min-height: 100vh;
+    }
+    /* Glass navbar */
+    .navbar {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #1e293b;
+    }
+    .logo i {
+      margin-right: 6px;
+      background: linear-gradient(135deg, #2563eb, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: #1e293b;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #2563eb; }
+    .legal-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 32px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #2563eb, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .last-updated {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+    }
+    h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.8rem;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    p, li {
+      color: #334155;
+      line-height: 1.6;
+      margin-bottom: 0.8rem;
+    }
+    ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    li {
+      margin-bottom: 0.4rem;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.8);
+      margin-top: 2rem;
+      color: #475569;
+      font-size: 0.8rem;
+    }
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .legal-container { margin: 1rem; padding: 1.2rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; }
+    }
   </style>
 </head>
 <body>
   <nav class="navbar">
-    <div class="logo">🏠 Rental Marketplace</div>
+    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
     <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="login.html">Login</a>
+      <a href="index.html"><i class="fas fa-globe"></i> Home</a>
+      <a href="login.html"><i class="fas fa-sign-in-alt"></i> Login</a>
     </div>
   </nav>
 
   <div class="legal-container">
-    <h1>Terms of Service</h1>
-    <p class="last-updated">Last updated: March 17, 2026</p>
+    <h1><i class="fas fa-gavel"></i> Terms of Service</h1>
+    <p class="last-updated"><i class="far fa-calendar-alt"></i> Last updated: March 28, 2026</p>
 
-    <h2>1. Acceptance of Terms</h2>
-    <p>By accessing or using the Rental Marketplace platform, you agree to be bound by these Terms of Service. If you do not agree, you may not use our services.</p>
+    <h2><i class="fas fa-check-circle"></i> 1. Acceptance of Terms</h2>
+    <p>By accessing or using Khomo Lathu, you agree to be bound by these Terms. If you do not agree, please do not use our services.</p>
 
-    <h2>2. Description of Service</h2>
-    <p>Rental Marketplace connects landlords with potential tenants. Landlords may list properties; users may search, view, and inquire about listings. We do not participate in any transactions and are not responsible for the condition of properties or the conduct of users.</p>
+    <h2><i class="fas fa-info-circle"></i> 2. Description of Service</h2>
+    <p>Khomo Lathu connects landlords and tenants in Malawi. Landlords may list properties; users may search, view, and inquire about listings. We are not a party to any rental transaction and do not guarantee the accuracy of listings or the conduct of users.</p>
 
-    <h2>3. User Accounts</h2>
-    <p>You must be at least 18 years old to register. You are responsible for maintaining the confidentiality of your account credentials. You agree to provide accurate and complete information.</p>
+    <h2><i class="fas fa-user-check"></i> 3. User Accounts</h2>
+    <p>You must be at least 18 years old to register. You are responsible for keeping your login credentials secure. You agree to provide accurate information and to update it as needed.</p>
 
-    <h2>4. Landlord Responsibilities</h2>
-    <p>Landlords warrant that they have the right to list the property and that all information provided is accurate and not misleading. Landlords must comply with all applicable laws.</p>
+    <h2><i class="fas fa-landmark"></i> 4. Landlord Responsibilities</h2>
+    <p>Landlords warrant that they have the legal right to list the property and that all information provided is truthful. Landlords must comply with all applicable laws and regulations.</p>
 
-    <h2>5. Prohibited Conduct</h2>
+    <h2><i class="fas fa-ban"></i> 5. Prohibited Conduct</h2>
     <ul>
-      <li>Posting false, misleading, or fraudulent listings.</li>
-      <li>Harassing or harming other users.</li>
-      <li>Using the platform for any illegal purpose.</li>
-      <li>Attempting to interfere with the proper functioning of the site.</li>
+      <li><i class="fas fa-times-circle"></i> Posting false, misleading, or fraudulent listings.</li>
+      <li><i class="fas fa-comment-slash"></i> Harassing or harming other users.</li>
+      <li><i class="fas fa-skull-crossbones"></i> Using the platform for illegal purposes.</li>
+      <li><i class="fas fa-bug"></i> Attempting to interfere with the proper functioning of the site.</li>
     </ul>
 
-    <h2>6. Intellectual Property</h2>
-    <p>All content on the site, including logos, text, and software, is the property of Rental Marketplace and may not be used without permission.</p>
+    <h2><i class="fas fa-copyright"></i> 6. Intellectual Property</h2>
+    <p>All content on the site – including logos, text, graphics, and software – is the property of Khomo Lathu and may not be used without written permission.</p>
 
-    <h2>7. Limitation of Liability</h2>
-    <p>Rental Marketplace is not liable for any damages arising from your use of the platform. We do not guarantee that listings are accurate or that properties are available.</p>
+    <h2><i class="fas fa-shield-alt"></i> 7. Limitation of Liability</h2>
+    <p>Khomo Lathu is not liable for any damages arising from your use of the platform. We do not guarantee that listings are accurate or that properties are available.</p>
 
-    <h2>8. Changes to Terms</h2>
-    <p>We may modify these Terms at any time. Continued use of the platform after changes constitutes acceptance.</p>
+    <h2><i class="fas fa-sync-alt"></i> 8. Changes to Terms</h2>
+    <p>We may update these Terms at any time. Continued use after changes constitutes acceptance.</p>
 
-    <h2>9. Contact</h2>
-    <p>If you have questions, please <a href="contact.html">contact us</a>.</p>
+    <h2><i class="fas fa-envelope"></i> 9. Contact</h2>
+    <p>If you have questions, please <a href="contact.html">contact us</a> or email <a href="mailto:socratesghambi99@gmail.com">socratesghambi99@gmail.com</a>.</p>
   </div>
 
-  <footer style="text-align:center; padding:2rem; background:white; color:#2c3e50;">
-    © 2026 Rental Marketplace Malawi
+  <footer>
+    <i class="fas fa-heart" style="color:#e74c3c;"></i> © 2026 Khomo Lathu – Connecting Renters Across the Nation
   </footer>
 </body>
 </html>

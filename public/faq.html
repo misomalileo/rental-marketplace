@@ -3,67 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FAQ | Rental Marketplace</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>FAQ | Khomo Lathu</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    .faq-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .faq-container h1 { color: #2c3e50; margin-bottom: 1rem; }
-    .faq-item { margin-bottom: 1.5rem; border-bottom: 1px solid #ecf0f1; padding-bottom: 1rem; }
-    .faq-item h3 { color: #3498db; cursor: pointer; margin: 0; }
-    .faq-item p { display: none; margin-top: 0.5rem; color: #555; }
-    .faq-item.active p { display: block; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
+      color: #1e293b;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05);
+      display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000;
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; color: #1e293b; }
+    .logo i { margin-right: 6px; background: linear-gradient(135deg, #2563eb, #10b981); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-links { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+    .nav-links a { color: #1e293b; text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: color 0.2s; }
+    .nav-links a:hover { color: #2563eb; }
+    .faq-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 32px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #2563eb, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .faq-item {
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.8rem;
+    }
+    .faq-question {
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      color: #0f172a;
+      transition: color 0.2s;
+    }
+    .faq-question:hover { color: #2563eb; }
+    .faq-question i {
+      transition: transform 0.2s;
+      color: #64748b;
+    }
+    .faq-item.active .faq-question i {
+      transform: rotate(180deg);
+    }
+    .faq-answer {
+      display: none;
+      padding: 0.5rem 0 1rem 1.5rem;
+      color: #334155;
+      line-height: 1.6;
+      border-left: 3px solid #2563eb;
+      margin-left: 0.5rem;
+    }
+    .faq-item.active .faq-answer {
+      display: block;
+    }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.8);
+      margin-top: 2rem;
+      color: #475569;
+      font-size: 0.8rem;
+    }
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .faq-container { margin: 1rem; padding: 1.2rem; }
+      h1 { font-size: 1.6rem; }
+    }
   </style>
 </head>
 <body>
   <nav class="navbar">
-    <div class="logo">🏠 Rental Marketplace</div>
+    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
     <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="login.html">Login</a>
+      <a href="index.html"><i class="fas fa-globe"></i> Home</a>
+      <a href="login.html"><i class="fas fa-sign-in-alt"></i> Login</a>
     </div>
   </nav>
 
   <div class="faq-container">
-    <h1>Frequently Asked Questions</h1>
+    <h1><i class="fas fa-question-circle"></i> Frequently Asked Questions</h1>
 
     <div class="faq-item">
-      <h3 onclick="toggleFAQ(this)">❓ How do I list a property?</h3>
-      <p>Log in to your landlord account, go to the dashboard, fill in the property details (name, location, price, photos, etc.), and click "Upload House". Your listing will appear on the public page after admin approval (or immediately if auto‑approved).</p>
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How do I list a property? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        Log in to your landlord account, go to the dashboard, fill in the property details (name, location, price, photos, etc.), and click "Upload House". Your listing will appear on the public page after approval (or instantly if auto‑approved).
+      </div>
     </div>
 
     <div class="faq-item">
-      <h3 onclick="toggleFAQ(this)">❓ Is there a fee to list?</h3>
-      <p>Basic listing is free. You can pay to become a verified landlord (official or premium) or to feature a house for better visibility.</p>
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        Is there a fee to list? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        Basic listing is free. You can pay to become a verified landlord (official or premium) for added trust badges. You may also pay to feature a house for better visibility.
+      </div>
     </div>
 
     <div class="faq-item">
-      <h3 onclick="toggleFAQ(this)">❓ How do tenants contact me?</h3>
-      <p>Each listing displays your WhatsApp number. Tenants can click the link to chat directly. We also have an in‑app messaging system (coming soon).</p>
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How do tenants contact me? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        Each listing displays your WhatsApp number – tenants can click the link to chat directly. We also have an in‑app messaging system (accessible from the chat page) for logged‑in users.
+      </div>
     </div>
 
     <div class="faq-item">
-      <h3 onclick="toggleFAQ(this)">❓ How do I reset my password?</h3>
-      <p>On the login page, click "Forgot password?" and follow the instructions. A reset link will be sent to your email.</p>
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How do I reset my password? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        On the login page, click "Forgot password?" and follow the instructions. A reset link will be sent to your registered email.
+      </div>
     </div>
 
     <div class="faq-item">
-      <h3 onclick="toggleFAQ(this)">❓ How do I report a fake listing?</h3>
-      <p>If you are logged in, click the "Report" button on the property card, provide a reason, and the admin will review it.</p>
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How do I report a fake listing? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        If you are logged in, click the "Report" button on the property card, provide a reason, and the admin will review it promptly.
+      </div>
     </div>
 
     <div class="faq-item">
-      <h3 onclick="toggleFAQ(this)">❓ I'm an admin – how do I manage the site?</h3>
-      <p>Use the admin login page with your credentials. You'll see a dashboard with stats, and you can verify landlords, delete houses, and resolve reports.</p>
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        I'm an admin – how do I manage the site? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        Use the admin login page with your credentials. You'll see a dashboard with stats, and you can verify landlords, delete houses, and resolve reports.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        Can I pay with Airtel Money or TNM Mpamba? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        Yes! We support Airtel Money, TNM Mpamba, and Standard Bank. Payments are processed securely through PayChangu.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How do I generate a digital lease agreement? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        After a booking is confirmed, both landlord and tenant can generate a lease agreement from the booking details. You can sign it digitally using the signature pad.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        What is a virtual tour and how do I add one? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        Virtual tours let tenants explore your property in 360°. You can upload a 360° image or a YouTube/Vimeo walkthrough video when creating or editing a listing. Tenants will see a "Virtual Tour" tab on the property modal.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        Still need help? <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-answer">
+        Contact us via the <a href="contact.html">contact form</a>, email <a href="mailto:socratesghambi99@gmail.com">socratesghambi99@gmail.com</a>, or call <a href="tel:+265996726966">0996726966</a>.
+      </div>
     </div>
   </div>
 
-  <footer style="text-align:center; padding:2rem; background:white; color:#2c3e50;">
-    © 2026 Rental Marketplace Malawi
+  <footer>
+    <i class="fas fa-heart" style="color:#e74c3c;"></i> © 2026 Khomo Lathu – Connecting Renters Across the Nation
   </footer>
 
   <script>
-    function toggleFAQ(el) {
-      const item = el.closest('.faq-item');
+    function toggleFAQ(element) {
+      const item = element.closest('.faq-item');
       item.classList.toggle('active');
     }
   </script>

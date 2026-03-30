@@ -1,57 +1,216 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Contact Admin | Rental Marketplace</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us | Khomo Lathu</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    .form-container { max-width: 500px; margin: 60px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .form-container h2 { text-align: center; margin-bottom: 20px; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-    .form-group textarea { height: 120px; }
-    button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    button:hover { background: #2980b9; }
-    .message { margin-top: 15px; text-align: center; padding: 10px; border-radius: 6px; display: none; }
-    .message.success { background: #d4edda; color: #155724; display: block; }
-    .message.error { background: #f8d7da; color: #721c24; display: block; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
+      color: #1e293b;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05);
+      display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000;
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; color: #1e293b; }
+    .logo i { margin-right: 6px; background: linear-gradient(135deg, #2563eb, #10b981); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-links { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+    .nav-links a { color: #1e293b; text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: color 0.2s; }
+    .nav-links a:hover { color: #2563eb; }
+    .contact-container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 32px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #2563eb, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .subtitle {
+      color: #475569;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+    }
+    .contact-info {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .info-card {
+      flex: 1;
+      background: rgba(255,255,255,0.7);
+      border-radius: 20px;
+      padding: 1rem;
+      text-align: center;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .info-card i {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #2563eb, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    .info-card h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .info-card p, .info-card a {
+      font-size: 0.85rem;
+      color: #334155;
+      text-decoration: none;
+    }
+    .info-card a:hover { text-decoration: underline; }
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      background: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    button:hover { transform: scale(1.02); }
+    .message {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border-radius: 40px;
+      text-align: center;
+      font-size: 0.8rem;
+      display: none;
+    }
+    .message.success {
+      background: #dcfce7;
+      color: #166534;
+      display: block;
+    }
+    .message.error {
+      background: #fee2e2;
+      color: #b91c1c;
+      display: block;
+    }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.8);
+      margin-top: 2rem;
+      color: #475569;
+      font-size: 0.8rem;
+    }
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .contact-container { margin: 1rem; padding: 1.2rem; }
+      .contact-info { flex-direction: column; }
+      h1 { font-size: 1.6rem; }
+    }
   </style>
 </head>
 <body>
   <nav class="navbar">
-    <div class="logo">🏠 Rental Marketplace</div>
+    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
     <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="login.html">Login</a>
+      <a href="index.html"><i class="fas fa-globe"></i> Home</a>
+      <a href="login.html"><i class="fas fa-sign-in-alt"></i> Login</a>
     </div>
   </nav>
 
-  <div class="form-container">
-    <h2>Contact Admin</h2>
+  <div class="contact-container">
+    <h1><i class="fas fa-envelope"></i> Contact Us</h1>
+    <div class="subtitle">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</div>
+
+    <div class="contact-info">
+      <div class="info-card">
+        <i class="fas fa-phone-alt"></i>
+        <h3>Call us</h3>
+        <a href="tel:+265996726966">0996726966</a>
+      </div>
+      <div class="info-card">
+        <i class="fas fa-envelope"></i>
+        <h3>Email</h3>
+        <a href="mailto:socratesghambi99@gmail.com">socratesghambi99@gmail.com</a>
+      </div>
+      <div class="info-card">
+        <i class="fas fa-clock"></i>
+        <h3>Response time</h3>
+        <p>Within 24 hours</p>
+      </div>
+    </div>
+
     <form id="contactForm">
       <div class="form-group">
-        <label>Your Name</label>
+        <label><i class="fas fa-user"></i> Your Name</label>
         <input type="text" id="name" required>
       </div>
       <div class="form-group">
-        <label>Your Email</label>
+        <label><i class="fas fa-envelope"></i> Your Email</label>
         <input type="email" id="email" required>
       </div>
       <div class="form-group">
-        <label>Subject</label>
+        <label><i class="fas fa-tag"></i> Subject</label>
         <input type="text" id="subject" required>
       </div>
       <div class="form-group">
-        <label>Message</label>
-        <textarea id="message" required></textarea>
+        <label><i class="fas fa-comment"></i> Message</label>
+        <textarea id="message" rows="4" required></textarea>
       </div>
-      <button type="submit">Send Message</button>
+      <button type="submit"><i class="fas fa-paper-plane"></i> Send Message</button>
     </form>
     <div id="statusMessage" class="message"></div>
   </div>
 
-  <footer style="text-align:center; padding:2rem; background:white; color:#2c3e50;">
-    © 2026 Rental Marketplace Malawi
+  <footer>
+    <i class="fas fa-heart" style="color:#e74c3c;"></i> © 2026 Khomo Lathu – Connecting Renters Across the Nation
   </footer>
 
   <script>
@@ -65,6 +224,7 @@
 
       statusDiv.className = "message";
       statusDiv.textContent = "Sending...";
+      statusDiv.style.display = "block";
 
       try {
         const res = await fetch("/api/contact", {
@@ -85,6 +245,8 @@
         statusDiv.className = "message error";
         statusDiv.textContent = "Network error. Please try again.";
       }
+
+      setTimeout(() => { statusDiv.style.display = "none"; }, 5000);
     });
   </script>
 </body>

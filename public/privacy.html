@@ -3,67 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy | Rental Marketplace</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Privacy Policy | Khomo Lathu</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    .legal-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .legal-container h1 { color: #2c3e50; margin-bottom: 1rem; }
-    .legal-container h2 { color: #34495e; margin: 1.5rem 0 0.5rem; }
-    .legal-container p, .legal-container li { color: #555; line-height: 1.6; }
-    .legal-container ul { margin-left: 1.5rem; }
-    .legal-container .last-updated { color: #7f8c8d; font-style: italic; margin-bottom: 2rem; }
+    /* same as terms.html – copy the style from above */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%); color: #1e293b; min-height: 100vh; }
+    .navbar {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05);
+      display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000;
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; color: #1e293b; }
+    .logo i { margin-right: 6px; background: linear-gradient(135deg, #2563eb, #10b981); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-links { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+    .nav-links a { color: #1e293b; text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: color 0.2s; }
+    .nav-links a:hover { color: #2563eb; }
+    .legal-container { max-width: 900px; margin: 2rem auto; padding: 2rem; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border-radius: 32px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.3); }
+    h1 { font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #2563eb, #10b981); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-flex; align-items: center; gap: 10px; }
+    .last-updated { color: #64748b; font-size: 0.85rem; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h2 { font-family: 'Poppins', sans-serif; font-size: 1.3rem; font-weight: 600; margin: 1.5rem 0 0.8rem; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    p, li { color: #334155; line-height: 1.6; margin-bottom: 0.8rem; }
+    ul { margin-left: 1.5rem; margin-bottom: 1rem; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer { text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.8); margin-top: 2rem; color: #475569; font-size: 0.8rem; }
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .legal-container { margin: 1rem; padding: 1.2rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; }
+    }
   </style>
 </head>
 <body>
   <nav class="navbar">
-    <div class="logo">🏠 Rental Marketplace</div>
+    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
     <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="login.html">Login</a>
+      <a href="index.html"><i class="fas fa-globe"></i> Home</a>
+      <a href="login.html"><i class="fas fa-sign-in-alt"></i> Login</a>
     </div>
   </nav>
 
   <div class="legal-container">
-    <h1>Privacy Policy</h1>
-    <p class="last-updated">Last updated: March 17, 2026</p>
+    <h1><i class="fas fa-lock"></i> Privacy Policy</h1>
+    <p class="last-updated"><i class="far fa-calendar-alt"></i> Last updated: March 28, 2026</p>
 
-    <h2>1. Information We Collect</h2>
+    <h2><i class="fas fa-database"></i> 1. Information We Collect</h2>
     <p>We collect information you provide directly, such as name, email, phone number, and property details. We also automatically collect usage data (IP address, browser type, pages visited).</p>
 
-    <h2>2. How We Use Information</h2>
+    <h2><i class="fas fa-chart-line"></i> 2. How We Use Information</h2>
     <ul>
-      <li>To provide and improve our services.</li>
-      <li>To communicate with you (e.g., verification, password reset).</li>
-      <li>To personalise your experience.</li>
-      <li>To ensure security and prevent fraud.</li>
+      <li><i class="fas fa-cogs"></i> To provide and improve our services.</li>
+      <li><i class="fas fa-envelope"></i> To communicate with you (e.g., verification, password reset).</li>
+      <li><i class="fas fa-user-check"></i> To personalise your experience.</li>
+      <li><i class="fas fa-shield-alt"></i> To ensure security and prevent fraud.</li>
     </ul>
 
-    <h2>3. Sharing of Information</h2>
+    <h2><i class="fas fa-share-alt"></i> 3. Sharing of Information</h2>
     <p>We do not sell your personal information. We may share information with:</p>
     <ul>
-      <li>Other users (e.g., landlords see inquiries; tenants see landlord profiles).</li>
-      <li>Service providers who assist in operating the platform.</li>
-      <li>Law enforcement if required by law.</li>
+      <li><i class="fas fa-users"></i> Other users (e.g., landlords see inquiries; tenants see landlord profiles).</li>
+      <li><i class="fas fa-tools"></i> Service providers who assist in operating the platform.</li>
+      <li><i class="fas fa-gavel"></i> Law enforcement if required by law.</li>
     </ul>
 
-    <h2>4. Data Security</h2>
+    <h2><i class="fas fa-shield-virus"></i> 4. Data Security</h2>
     <p>We implement reasonable security measures to protect your information. However, no method of transmission over the Internet is 100% secure.</p>
 
-    <h2>5. Your Choices</h2>
+    <h2><i class="fas fa-user-edit"></i> 5. Your Choices</h2>
     <p>You may update your account information at any time. You can also request deletion of your account by contacting us.</p>
 
-    <h2>6. Cookies</h2>
+    <h2><i class="fas fa-cookie-bite"></i> 6. Cookies</h2>
     <p>We use cookies to enhance your experience. You can set your browser to refuse cookies, but some features may not function properly.</p>
 
-    <h2>7. Changes to Policy</h2>
+    <h2><i class="fas fa-sync-alt"></i> 7. Changes to Policy</h2>
     <p>We may update this Privacy Policy. We will notify you of material changes via email or a notice on the site.</p>
 
-    <h2>8. Contact</h2>
-    <p>If you have questions, please <a href="contact.html">contact us</a>.</p>
+    <h2><i class="fas fa-envelope"></i> 8. Contact</h2>
+    <p>If you have questions, please <a href="contact.html">contact us</a> or email <a href="mailto:socratesghambi99@gmail.com">socratesghambi99@gmail.com</a>.</p>
   </div>
 
-  <footer style="text-align:center; padding:2rem; background:white; color:#2c3e50;">
-    © 2026 Rental Marketplace Malawi
+  <footer>
+    <i class="fas fa-heart" style="color:#e74c3c;"></i> © 2026 Khomo Lathu – Connecting Renters Across the Nation
   </footer>
 </body>
 </html>
