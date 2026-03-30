@@ -7,9 +7,9 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
 
-  <!-- Google Fonts: Inter + Poppins -->
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- Leaflet, Chart.js, Flatpickr -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -478,26 +478,123 @@
       cursor: pointer;
     }
 
-    /* Payment buttons (original working style) */
-    .payment-option {
-      border: none;
-      padding: 10px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
+    /* ========== UPGRADED PAYMENT MODAL ========== */
+    .payment-modal-header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .payment-modal-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .payment-amount {
+      background: var(--card-bg);
+      border-radius: 60px;
+      padding: 0.8rem;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 1rem 0;
+      border: 1px solid var(--input-border);
+    }
+    .payment-phone {
+      margin: 1rem 0;
+    }
+    .payment-phone label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+    .payment-phone input {
       width: 100%;
-      margin: 5px 0;
-      border-radius: 40px;
+      padding: 0.8rem;
+      border-radius: 60px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .payment-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 1.5rem 0;
+    }
+    .payment-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 60px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .payment-option:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .payment-option-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      transition: transform 0.2s;
+      font-size: 1.2rem;
+      color: white;
     }
-    .payment-option.airtel { background: #E50000; color: white; }
-    .payment-option.tnm { background: #00A651; color: white; }
-    .payment-option.standard { background: #0077B6; color: white; }
-    .payment-option:hover { transform: scale(1.02); }
+    .airtel-bg { background: #E50000; }
+    .tnm-bg { background: #00A651; }
+    .bank-bg { background: #0077B6; }
+    .payment-option-details {
+      flex: 1;
+    }
+    .payment-option-details h4 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .payment-option-details p {
+      margin: 0;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+    .payment-status {
+      text-align: center;
+      margin-top: 1rem;
+      padding: 0.6rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: none;
+    }
+    .payment-status.show {
+      display: block;
+    }
+    .payment-status.loading {
+      background: rgba(37,99,235,0.1);
+      color: var(--primary);
+    }
+    .payment-status.success {
+      background: rgba(16,185,129,0.1);
+      color: #10b981;
+    }
+    .payment-status.error {
+      background: rgba(239,68,68,0.1);
+      color: #ef4444;
+    }
 
     .booking-card {
       background: var(--card-bg);
@@ -534,7 +631,6 @@
       margin-top: 2rem;
     }
 
-    /* Loading overlay */
     #loadingOverlay {
       position: fixed;
       top: 0;
@@ -552,7 +648,6 @@
       display: none;
     }
 
-    /* Extra slots: Recent Activity & Top Listings */
     .extra-slots {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -601,6 +696,11 @@
       #my-houses {
         grid-template-columns: 1fr;
       }
+      .payment-option-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
@@ -610,7 +710,7 @@
     <div><i class="fas fa-spinner fa-pulse"></i> Processing...</div>
   </div>
 
-  <!-- Profile Modal -->
+  <!-- Profile Modal (unchanged) -->
   <div id="profileModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeProfileModal()">&times;</span>
@@ -761,7 +861,7 @@
     <div id="bookingRequests"></div>
   </div>
 
-  <!-- Edit Modal -->
+  <!-- Edit Modal (unchanged) -->
   <div id="editModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeEditModal()">&times;</span>
@@ -792,19 +892,42 @@
     </div>
   </div>
 
-  <!-- ========== PAYMENT MODAL (WORKING) ========== -->
+  <!-- ========== UPGRADED PAYMENT MODAL (beautiful) ========== -->
   <div id="paymentModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:400px;">
+    <div class="modal-content">
       <span class="close-btn" onclick="closePaymentModal()">&times;</span>
-      <h2 id="paymentTitle"><i class="fas fa-credit-card"></i> Select Payment Method</h2>
-      <p id="paymentAmount" style="font-size:1.2rem; margin:10px 0;"></p>
-      <div id="paymentPhone" style="margin:15px 0;"><label for="phoneNumber" style="display:block; margin-bottom:5px;">Mobile Money Number:</label><input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;"></div>
-      <div class="payment-options" style="display: flex; flex-direction: column; gap:10px; margin:20px 0;">
-        <button class="payment-option airtel" onclick="processPayment('Airtel Money')"><i class="fas fa-mobile-alt"></i> Airtel Money</button>
-        <button class="payment-option tnm" onclick="processPayment('TNM Mpamba')"><i class="fas fa-mobile-alt"></i> TNM Mpamba</button>
-        <button class="payment-option standard" onclick="processPayment('Standard Bank')"><i class="fas fa-university"></i> Standard Bank</button>
+      <div class="payment-modal-header">
+        <h2><i class="fas fa-credit-card"></i> <span id="paymentTitle">Select Payment Method</span></h2>
       </div>
-      <div id="paymentStatus" style="text-align:center; font-weight:bold;"></div>
+      <div class="payment-amount" id="paymentAmount">MWK 0</div>
+      <div class="payment-phone">
+        <label><i class="fas fa-mobile-alt"></i> Mobile Money Number</label>
+        <input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX" value="">
+      </div>
+      <div class="payment-options">
+        <div class="payment-option" onclick="processPayment('Airtel Money')">
+          <div class="payment-option-icon airtel-bg"><i class="fas fa-mobile-alt"></i></div>
+          <div class="payment-option-details">
+            <h4>Airtel Money</h4>
+            <p>Pay instantly with Airtel</p>
+          </div>
+        </div>
+        <div class="payment-option" onclick="processPayment('TNM Mpamba')">
+          <div class="payment-option-icon tnm-bg"><i class="fas fa-mobile-alt"></i></div>
+          <div class="payment-option-details">
+            <h4>TNM Mpamba</h4>
+            <p>Fast & secure</p>
+          </div>
+        </div>
+        <div class="payment-option" onclick="processPayment('Standard Bank')">
+          <div class="payment-option-icon bank-bg"><i class="fas fa-university"></i></div>
+          <div class="payment-option-details">
+            <h4>Bank Transfer</h4>
+            <p>All major banks</p>
+          </div>
+        </div>
+      </div>
+      <div id="paymentStatus" class="payment-status"></div>
     </div>
   </div>
 
@@ -849,7 +972,7 @@
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
 
-    // Wizard navigation
+    // Wizard navigation (unchanged)
     let currentStep = 1;
     const steps = document.querySelectorAll('.wizard-step');
     const navBtns = document.querySelectorAll('.wizard-nav-btn');
