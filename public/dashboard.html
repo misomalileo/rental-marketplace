@@ -7,9 +7,9 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3498db">
 
-  <!-- Google Fonts -->
+  <!-- Google Fonts: Inter + Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome -->
+  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- Leaflet, Chart.js, Flatpickr -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ========== THEME VARIABLES (same as before) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -102,122 +102,506 @@
       --primary-dark: #c5a028;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg-gradient); color: var(--text-color); transition: background 0.3s, color 0.3s; font-weight: 400; line-height: 1.5; -webkit-font-smoothing: antialiased; }
-    h1, h2, h3, .stat-card .value, .insight-card h3, .profile-card h3 { font-family: 'Poppins', 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; }
-
-    /* Navbar, stats, cards etc. (unchanged from your working version) */
-    /* ... (I'm skipping the rest of the CSS because it's identical to the previous working version. I'll include only the changed payment modal styles and ensure the rest is present.) */
-
-    /* ========== PREMIUM PAYMENT MODAL ========== */
-    #paymentModal .modal-content {
-      max-width: 480px;
-      border-radius: 32px;
-      overflow: hidden;
-      background: var(--card-bg-solid);
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    .payment-header {
-      background: linear-gradient(135deg, #2563eb, #1e40af);
-      color: white;
-      padding: 1.2rem;
-      text-align: center;
-      margin: -1.2rem -1.2rem 1rem -1.2rem;
-    }
-    .payment-header h2 {
-      font-size: 1.3rem;
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      transition: background 0.3s, color 0.3s;
+      font-weight: 400;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, .stat-card .value, .insight-card h3, .profile-card h3 {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    /* Glass navbar */
+    .navbar {
+      background: var(--navbar-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
+      padding: 0.8rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
-    .payment-header p {
-      font-size: 0.8rem;
-      opacity: 0.9;
-      margin-top: 5px;
-    }
-    .payment-amount {
-      text-align: center;
-      font-size: 2rem;
+    .logo {
+      font-size: 1.4rem;
       font-weight: 700;
-      margin: 1rem 0;
+      letter-spacing: -0.02em;
+      color: var(--text-color);
+    }
+    .logo i {
+      margin-right: 6px;
+      font-size: 1.2rem;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
-    .payment-phone {
-      margin: 1rem 0;
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
     }
-    .payment-phone label {
-      display: block;
-      margin-bottom: 0.5rem;
+    .nav-links a {
+      color: var(--text-color);
+      text-decoration: none;
       font-weight: 500;
+      font-size: 0.85rem;
+      transition: all 0.2s;
     }
-    .payment-phone input {
-      width: 100%;
-      padding: 0.8rem;
-      border-radius: 40px;
+    .nav-links a i {
+      margin-right: 0.3rem;
+      transition: transform 0.2s;
+    }
+    .nav-links a:hover i {
+      transform: translateY(-2px);
+    }
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+    .lang-select, .theme-select {
+      padding: 0.25rem 0.6rem;
+      border-radius: 30px;
       border: 1px solid var(--input-border);
       background: var(--input-bg);
       color: var(--text-color);
-      font-size: 0.9rem;
-      outline: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      backdrop-filter: blur(4px);
     }
-    .payment-options {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin: 1.5rem 0;
+
+    .main-container {
+      max-width: 1400px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
     }
-    .payment-option {
+
+    /* 3D cards */
+    .stat-card, .chart-container, .insight-card, .verification-card, .profile-card, .house-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: var(--shadow);
+    }
+    .stat-card:hover, .chart-container:hover, .house-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      padding: 1.2rem;
+      text-align: center;
+    }
+    .stat-card h3 {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      opacity: 0.8;
+    }
+    .stat-card .value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.2;
+    }
+    .stat-card i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      display: block;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .chart-container {
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .chart-container h3 {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 0.8rem;
+    }
+
+    .insight-card {
+      padding: 1rem;
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 0.8rem;
+    }
+    .insight-card i {
+      font-size: 2rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .insight-card p {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .verification-card, .profile-card {
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      margin-left: 5px;
+    }
+
+    /* Upload Wizard */
+    .upload-wizard {
       background: var(--card-bg);
+      border-radius: 28px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
       border: 1px solid var(--input-border);
-      border-radius: 60px;
-      padding: 12px 20px;
+    }
+    .wizard-step {
+      display: none;
+    }
+    .wizard-step.active {
+      display: block;
+    }
+    .wizard-nav {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--input-border);
+      padding-bottom: 0.5rem;
+    }
+    .wizard-nav button {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-color);
+      opacity: 0.6;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .payment-option:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      border-color: var(--primary);
+    .wizard-nav button.active {
+      opacity: 1;
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
     }
-    .payment-option-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+    .load-more-btn {
+      display: block;
+      width: 200px;
+      margin: 1rem auto;
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.6rem;
+      cursor: pointer;
+    }
+
+    /* House grid */
+    #my-houses {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.2rem;
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+    }
+    .house-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+    }
+    .house-content {
+      padding: 1rem;
+    }
+    .house-content h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .house-content p {
+      margin: 0.2rem 0;
+      font-size: 0.8rem;
+    }
+    .house-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 8px;
+    }
+    .edit, .delete, .feature-btn {
+      border: none;
+      padding: 5px 10px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .edit { background: #f39c12; color: white; }
+    .delete { background: #e74c3c; color: white; }
+    .feature-btn { background: #f1c40f; color: #2c3e50; }
+    .featured-badge {
+      background: #f1c40f;
+      color: #2c3e50;
+      padding: 3px 8px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      display: inline-block;
+    }
+    .edit:hover, .delete:hover, .feature-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Map and forms */
+    #map, #editMap {
+      height: 280px;
+      margin: 1rem 0;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--input-border);
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid var(--input-border);
+      border-radius: 12px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 0.85rem;
+    }
+    .gps-btn, .upload-btn {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      padding: 0.6rem;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.5rem;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .gps-btn:hover, .upload-btn:hover {
+      background: var(--button-hover);
+      transform: scale(1.02);
+    }
+
+    .amenities-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    .amenities-group label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      font-weight: normal;
+    }
+
+    /* Modals */
+    .modal {
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background: var(--card-bg-solid);
+      margin: 20px auto;
+      padding: 1.2rem;
+      border-radius: 28px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: var(--shadow-hover);
+    }
+    .close-btn {
+      color: #aaa;
+      float: right;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Payment buttons (original working style) */
+    .payment-option {
+      border: none;
+      padding: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin: 5px 0;
+      border-radius: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      gap: 8px;
+      transition: transform 0.2s;
     }
-    .airtel-icon { background: #E50000; color: white; }
-    .tnm-icon { background: #00A651; color: white; }
-    .bank-icon { background: #0077B6; color: white; }
-    .payment-option-details { flex: 1; }
-    .payment-option-details h4 { margin: 0; font-size: 1rem; }
-    .payment-option-details p { margin: 0; font-size: 0.7rem; opacity: 0.7; }
-    .payment-status {
+    .payment-option.airtel { background: #E50000; color: white; }
+    .payment-option.tnm { background: #00A651; color: white; }
+    .payment-option.standard { background: #0077B6; color: white; }
+    .payment-option:hover { transform: scale(1.02); }
+
+    .booking-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      border: 1px solid var(--input-border);
+    }
+    .booking-status {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+    .booking-status.pending { color: #f39c12; }
+    .booking-status.approved { color: #2ecc71; }
+    .booking-status.rejected { color: #e74c3c; }
+    .booking-actions button {
+      margin-right: 0.5rem;
+      padding: 0.2rem 0.6rem;
+      border: none;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+    .approve-btn { background: #2ecc71; color: white; }
+    .reject-btn { background: #e74c3c; color: white; }
+
+    footer {
       text-align: center;
-      margin-top: 1rem;
-      padding: 0.5rem;
-      border-radius: 40px;
+      padding: 1.5rem;
+      background: var(--footer-bg);
+      border-top: 1px solid var(--input-border);
       font-size: 0.8rem;
+      margin-top: 2rem;
+    }
+
+    /* Loading overlay */
+    #loadingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 1.2rem;
       display: none;
     }
-    .payment-status.show { display: block; }
-    .payment-status.loading { background: #e2e8f0; color: #1e293b; }
-    .payment-status.success { background: #dcfce7; color: #166534; }
-    .payment-status.error { background: #fee2e2; color: #b91c1c; }
 
-    /* ... rest of your CSS (same as the working version) ... */
-    /* For brevity, I assume you have all the other styles from your previous working dashboard. 
-       If you need the full CSS again, let me know, but it's identical to what you had. */
+    /* Extra slots: Recent Activity & Top Listings */
+    .extra-slots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.2rem;
+      margin: 1.5rem 0;
+    }
+    .extra-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      padding: 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: transform 0.3s;
+    }
+    .extra-card:hover {
+      transform: translateY(-5px);
+    }
+    .extra-card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .activity-item {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .top-house-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      #my-houses {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -246,13 +630,24 @@
 
   <!-- Navbar -->
   <nav class="navbar">
-    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
+    <div class="logo">
+      <i class="fas fa-home"></i> Khomo Lathu
+    </div>
     <div class="nav-links">
       <a href="index.html"><i class="fas fa-globe"></i> Home</a>
       <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
       <a href="chat.html"><i class="fas fa-comments"></i> Messages <span id="messageBadge" class="badge" style="display:none;">0</span></a>
-      <select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select>
-      <select class="theme-select" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="aquatic">Aquatic</option><option value="minimal">Minimal</option><option value="luxury">Luxury</option></select>
+      <select class="lang-select" onchange="setLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="ny">Chichewa</option>
+      </select>
+      <select class="theme-select" onchange="setTheme(this.value)">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="aquatic">Aquatic</option>
+        <option value="minimal">Minimal</option>
+        <option value="luxury">Luxury</option>
+      </select>
     </div>
   </nav>
 
@@ -397,43 +792,19 @@
     </div>
   </div>
 
-  <!-- ========== PAYMENT MODAL (FIXED) ========== -->
+  <!-- ========== PAYMENT MODAL (WORKING) ========== -->
   <div id="paymentModal" class="modal" style="display:none;">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width:400px;">
       <span class="close-btn" onclick="closePaymentModal()">&times;</span>
-      <div class="payment-header">
-        <h2><i class="fas fa-home"></i> Khomo Lathu Payments</h2>
-        <p>Secure payment via PayChangu</p>
+      <h2 id="paymentTitle"><i class="fas fa-credit-card"></i> Select Payment Method</h2>
+      <p id="paymentAmount" style="font-size:1.2rem; margin:10px 0;"></p>
+      <div id="paymentPhone" style="margin:15px 0;"><label for="phoneNumber" style="display:block; margin-bottom:5px;">Mobile Money Number:</label><input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;"></div>
+      <div class="payment-options" style="display: flex; flex-direction: column; gap:10px; margin:20px 0;">
+        <button class="payment-option airtel" onclick="processPayment('Airtel Money')"><i class="fas fa-mobile-alt"></i> Airtel Money</button>
+        <button class="payment-option tnm" onclick="processPayment('TNM Mpamba')"><i class="fas fa-mobile-alt"></i> TNM Mpamba</button>
+        <button class="payment-option standard" onclick="processPayment('Standard Bank')"><i class="fas fa-university"></i> Standard Bank</button>
       </div>
-      <div class="payment-amount" id="paymentAmount">MWK 0</div>
-      <div class="payment-phone">
-        <label><i class="fas fa-mobile-alt"></i> Mobile Money Number</label>
-        <input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX" value="">
-      </div>
-      <div class="payment-options">
-        <div class="payment-option" onclick="processPayment('Airtel Money')">
-          <div class="payment-option-icon airtel-icon"><i class="fas fa-mobile-alt"></i></div>
-          <div class="payment-option-details">
-            <h4>Airtel Money</h4>
-            <p>Pay instantly with Airtel</p>
-          </div>
-        </div>
-        <div class="payment-option" onclick="processPayment('TNM Mpamba')">
-          <div class="payment-option-icon tnm-icon"><i class="fas fa-mobile-alt"></i></div>
-          <div class="payment-option-details">
-            <h4>TNM Mpamba</h4>
-            <p>Fast & secure</p>
-          </div>
-        </div>
-        <div class="payment-option" onclick="processPayment('Bank Transfer')">
-          <div class="payment-option-icon bank-icon"><i class="fas fa-university"></i></div>
-          <div class="payment-option-details">
-            <h4>Bank Transfer</h4>
-            <p>All major banks</p>
-          </div>
-        </div>
-      </div>
-      <div id="paymentStatus" class="payment-status"></div>
+      <div id="paymentStatus" style="text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
