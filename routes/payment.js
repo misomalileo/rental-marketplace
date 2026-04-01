@@ -5,11 +5,10 @@ const User = require("../models/User");
 const House = require("../models/House");
 const auth = require("../middleware/auth");
 
-// PayChangu configuration
 const PAYCHANGU_SECRET = process.env.PAYCHANGU_SECRET_KEY;
 const PAYCHANGU_API = process.env.PAYCHANGU_API_URL;
 
-// Helper to determine mobile money provider
+// Helper to determine mobile money provider (optional, kept for completeness)
 function getProvider(phone) {
   const digits = phone.replace(/\D/g, '');
   if (digits.startsWith('26588')) return 'airtel';
@@ -17,7 +16,7 @@ function getProvider(phone) {
   return 'airtel';
 }
 
-// Initiate payment for landlord verification
+// ========== LANDLORD VERIFICATION PAYMENT ==========
 router.post("/verify", auth, async (req, res) => {
   try {
     const { type, phone } = req.body;
@@ -81,7 +80,7 @@ router.post("/verify", auth, async (req, res) => {
   }
 });
 
-// Initiate payment for featuring a house
+// ========== FEATURE HOUSE PAYMENT ==========
 router.put("/house/:id/feature", auth, async (req, res) => {
   console.log("🔹 FEATURE ROUTE HIT – House ID:", req.params.id);
   console.log("🔹 Authenticated user ID:", req.user.id);
@@ -148,7 +147,56 @@ router.put("/house/:id/feature", auth, async (req, res) => {
   }
 });
 
-// Callback endpoint for PayChangu to notify payment status
+// ========== PREMIUM USER SUBSCRIPTION PAYMENT ==========
+router.post("/premium-user", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (user.role === 'premium_user' && user.subscriptionExpiresAt > new Date()) {
+      return res.status(400).json({ message: "You are already a premium user" });
+    }
+
+    const amount = 500;
+    const txRef = `USER_PREMIUM_${user._id}_${Date.now()}`;
+
+    const requestBody = {
+      amount: amount.toString(),
+      currency: "MWK",
+      email: user.email,
+      first_name: user.name.split(' ')[0],
+      last_name: user.name.split(' ').slice(1).join(' ') || "User",
+      callback_url: `${process.env.BASE_URL}/api/payment/callback`,
+      return_url: `${process.env.BASE_URL}/premium-dashboard.html`,
+      tx_ref: txRef,
+      customization: {
+        title: "Premium User Subscription",
+        description: "Unlock exclusive features for 30 days"
+      },
+      meta: {
+        user_id: user._id.toString(),
+        type: "user_premium"
+      }
+    };
+
+    const response = await axios.post(`${PAYCHANGU_API}/payment`, requestBody, {
+      headers: {
+        "Authorization": `Bearer ${PAYCHANGU_SECRET}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    });
+
+    if (response.data.status === "success") {
+      res.json({ payment_url: response.data.data.checkout_url });
+    } else {
+      throw new Error("Payment initiation failed");
+    }
+  } catch (err) {
+    console.error("❌ User premium payment error:", err.response?.data || err.message);
+    res.status(500).json({ message: "Payment initiation failed" });
+  }
+});
+
+// ========== PAYMENT CALLBACK (webhook) ==========
 router.post("/callback", async (req, res) => {
   try {
     const { tx_ref, status, amount, currency } = req.body;
@@ -159,11 +207,8 @@ router.post("/callback", async (req, res) => {
         const parts = tx_ref.split('_');
         const userId = parts[1];
         const type = amount === "2500" ? "official" : "premium";
-        
-        // Update user verification and set subscription expiry (30 days from now)
         const user = await User.findById(userId);
         if (user) {
-          // If already subscribed, extend from current expiry, else from now
           let expiryDate = new Date();
           if (user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date()) {
             expiryDate = new Date(user.subscriptionExpiresAt);
@@ -182,6 +227,23 @@ router.post("/callback", async (req, res) => {
         const houseId = parts[1];
         await House.findByIdAndUpdate(houseId, { featured: true });
         console.log(`✅ House ${houseId} featured`);
+      } else if (tx_ref.startsWith("USER_PREMIUM_")) {
+        const parts = tx_ref.split('_');
+        const userId = parts[2];
+        const user = await User.findById(userId);
+        if (user) {
+          let expiryDate = new Date();
+          if (user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date()) {
+            expiryDate = new Date(user.subscriptionExpiresAt);
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
+          } else {
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
+          }
+          user.role = 'premium_user';
+          user.subscriptionExpiresAt = expiryDate;
+          await user.save();
+          console.log(`✅ User ${userId} upgraded to premium, subscription until ${expiryDate}`);
+        }
       }
     }
     res.sendStatus(200);

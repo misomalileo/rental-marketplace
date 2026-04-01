@@ -210,6 +210,7 @@ const chatRoutes = require("./routes/chat");
 const paymentRoutes = require("./routes/payment");
 const bookingRoutes = require("./routes/booking");
 const chatbotRoutes = require("./routes/chatbot");
+const premiumRoutes = require("./routes/premium");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/houses", houseRoutes);
@@ -221,6 +222,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/premium", premiumRoutes);  // <-- ADDED
 
 // ===============================
 // DEBUG ENDPOINT – TEST MONGODB CONNECTION
