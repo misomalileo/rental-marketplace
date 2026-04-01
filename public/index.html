@@ -12,7 +12,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Icon Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://unpkg.com/lucide-css@latest/dist/lucide.min.css" rel="stylesheet">
   <!-- Leaflet, Draw, MarkerCluster, noUiSlider -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
@@ -113,7 +112,7 @@
       letter-spacing: -0.02em;
     }
 
-    /* ========== ICON STYLES (colourful gradients) ========== */
+    /* ========== ICON STYLES ========== */
     i, [class*="ri-"], [class*="lucide-"] { transition: all 0.2s ease; }
     i.fas, i.far, i.fab, i.ri, .lucide { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .fa-wifi, .ri-wifi-line, .lucide-wifi { background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; }
@@ -134,10 +133,20 @@
     .fa-eye, .ri-eye-line, .lucide-eye { background: linear-gradient(135deg, #95a5a6, #7f8c8d); -webkit-background-clip: text; }
     i:hover, [class*="ri-"]:hover, [class*="lucide-"]:hover { transform: translateY(-2px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
 
-    /* ========== TYPOGRAPHY (high contrast) ========== */
-    .house-card-content p, .house-card-content .amenities-list, .house-card-content .rating-stars, .house-card-content small { color: var(--gray-700); opacity: 1; }
-    body.theme-dark .house-card-content p, body.theme-dark .house-card-content .amenities-list, body.theme-dark .house-card-content .rating-stars { color: var(--gray-300); }
-    body.theme-luxury .house-card-content p, body.theme-luxury .house-card-content .amenities-list { color: #f5e7d9; opacity: 0.9; }
+    /* ========== TYPOGRAPHY ========== */
+    .house-card-content p, .house-card-content .amenities-list, .house-card-content .rating-stars, .house-card-content small {
+      color: var(--gray-700);
+      opacity: 1;
+      font-size: 0.75rem;
+      line-height: 1.3;
+    }
+    body.theme-dark .house-card-content p, body.theme-dark .house-card-content .amenities-list, body.theme-dark .house-card-content .rating-stars {
+      color: var(--gray-300);
+    }
+    body.theme-luxury .house-card-content p, body.theme-luxury .house-card-content .amenities-list {
+      color: #f5e7d9;
+      opacity: 0.9;
+    }
 
     /* ========== NAVBAR (glass) with user menu ========== */
     .navbar {
@@ -289,7 +298,7 @@
       margin-left: 0.5rem;
     }
 
-    /* ========== HERO (enlarged icon with animation) ========== */
+    /* ========== HERO ========== */
     .hero {
       text-align: center;
       padding: 4rem 2rem 3rem;
@@ -342,7 +351,7 @@
       padding: 0 1.5rem;
     }
 
-    /* ========== FILTERS ROW (modern pill design) ========== */
+    /* ========== FILTERS ========== */
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -453,44 +462,53 @@
       border-color: var(--button-bg);
     }
 
-    /* ========== PROPERTY GRID ========== */
+    /* ========== PROPERTY GRID (6 cards per row on large screens) ========== */
     #houses-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.5rem;
       margin: 2rem 0;
     }
-    @media (min-width: 1800px) {
-      #houses-container { grid-template-columns: repeat(7, 1fr); }
+    @media (min-width: 1600px) {
+      #houses-container {
+        grid-template-columns: repeat(6, 1fr);
+      }
     }
-    @media (min-width: 1400px) and (max-width: 1799px) {
-      #houses-container { grid-template-columns: repeat(6, 1fr); }
+    @media (min-width: 1400px) and (max-width: 1599px) {
+      #houses-container {
+        grid-template-columns: repeat(5, 1fr);
+      }
     }
     @media (min-width: 1100px) and (max-width: 1399px) {
-      #houses-container { grid-template-columns: repeat(5, 1fr); }
+      #houses-container {
+        grid-template-columns: repeat(4, 1fr);
+      }
     }
     @media (max-width: 768px) {
-      #houses-container { grid-template-columns: 1fr; }
+      #houses-container {
+        grid-template-columns: 1fr;
+      }
     }
 
-    /* ========== HOUSE CARD ========== */
+    /* ========== HOUSE CARD (squared, 3D hover) ========== */
     .house-card {
       background: var(--card-bg);
-      border-radius: 28px;
+      border-radius: 20px;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       cursor: pointer;
       border: 1px solid var(--input-border);
+      aspect-ratio: 1 / 1.1; /* slightly taller than square */
     }
     .house-card:hover {
-      transform: translateY(-8px) scale(1.01);
-      box-shadow: 0 24px 36px -12px rgba(0,0,0,0.2);
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 30px -8px rgba(0,0,0,0.2);
     }
     .slider {
       position: relative;
       width: 100%;
-      height: 170px;
+      height: 160px;
       overflow: hidden;
     }
     .slider img {
@@ -508,8 +526,8 @@
       transform: translateY(-50%);
       background: rgba(255,255,255,0.8);
       border: none;
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       font-size: 0.8rem;
       cursor: pointer;
@@ -524,27 +542,37 @@
       transform: translateY(-50%) scale(1.1);
     }
     .house-card-content {
-      padding: 1rem;
+      padding: 0.8rem;
     }
     .house-card-content h3 {
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.2rem;
       color: var(--text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .house-card-content p {
       margin: 0.2rem 0;
-      font-size: 0.8rem;
-      line-height: 1.4;
+      font-size: 0.7rem;
+      line-height: 1.3;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
-
-    /* ========== BUTTONS & BADGES ========== */
+    .house-card-content .price {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0.3rem 0;
+    }
     .badge {
       display: inline-block;
-      padding: 0.2rem 0.6rem;
-      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.6rem;
       font-weight: 600;
-      border-radius: 40px;
+      border-radius: 30px;
       margin-right: 0.3rem;
       text-transform: uppercase;
     }
@@ -552,19 +580,43 @@
     .badge.premium { background: #f1c40f; color: #2c3e50; }
     .badge.featured { background: #f1c40f; color: #2c3e50; }
     .badge.self-contained { background: #9b59b6; color: white; }
+    .badge.gender-boys { background: #3498db; color: white; }
+    .badge.gender-girls { background: #e84393; color: white; }
+    .badge.gender-mixed { background: #f1c40f; color: #2c3e50; }
     .amenities-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.4rem;
-      margin: 0.4rem 0;
+      gap: 0.3rem;
+      margin: 0.3rem 0;
+    }
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+    .read-more-btn {
+      background: none;
+      border: 1px solid var(--input-border);
+      border-radius: 30px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--primary);
+    }
+    .read-more-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
     }
     .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn {
       background: var(--button-bg);
       color: white;
       border: none;
-      padding: 5px 12px;
-      border-radius: 40px;
-      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
+      font-size: 0.6rem;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -580,8 +632,14 @@
       background: var(--button-hover);
       transform: translateY(-2px);
     }
-    .rating-widget { margin-top: 0.5rem; }
-    .star { font-size: 0.9rem; cursor: pointer; color: #f39c12; }
+    .rating-widget {
+      margin-top: 0.4rem;
+    }
+    .star {
+      font-size: 0.7rem;
+      cursor: pointer;
+      color: #f39c12;
+    }
 
     /* ========== PAGINATION ========== */
     .pagination {
@@ -951,11 +1009,11 @@
     <div class="nav-links">
       <a href="#">Home</a>
       <a href="#map">Explore Map</a>
-      <!-- Avatar dropdown (replaces Landlord Login) -->
+      <!-- Avatar dropdown -->
       <div class="user-menu" id="userMenu">
         <div class="user-avatar" id="userAvatar"><i class="fas fa-user-circle"></i></div>
         <div class="user-dropdown" id="userDropdown">
-          <!-- Dynamic content will be inserted by JavaScript -->
+          <!-- Dynamic content inserted by JS -->
         </div>
       </div>
       <select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select>
@@ -1181,10 +1239,6 @@
       const userInitial = userName.charAt(0).toUpperCase();
       const avatarDiv = userAvatar;
       avatarDiv.innerHTML = currentUser.profilePicture ? `<img src="${currentUser.profilePicture}">` : `<span>${userInitial}</span>`;
-      const dropdownAvatar = document.querySelector('#dropdownAvatar') || document.createElement('div');
-      if (!document.querySelector('#dropdownAvatar')) {
-        // we need to rebuild dropdown – simple approach: rebuild logged‑in menu
-      }
       userDropdown.innerHTML = `
         <div class="dropdown-header">
           <div class="avatar">${currentUser.profilePicture ? `<img src="${currentUser.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`}</div>
