@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
-const ActivityLog = require("../models/ActivityLog"); // NEW
+// const ActivityLog = require("../models/ActivityLog"); // optional – uncomment if you have this model
 const { authLimiter } = require("../middleware/rateLimiter");
 const {
   validateRegister,
@@ -19,10 +19,16 @@ function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// REGISTER – sends verification email
+// REGISTER – accepts optional role (landlord or free, default free)
 router.post("/register", authLimiter, validateRegister, handleValidationErrors, async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role = "free" } = req.body;
+
+    // Allowed roles during registration: free, landlord
+    if (!["free", "landlord"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role specified" });
+    }
+
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(400).json({ message: "Email already registered" });
@@ -39,6 +45,7 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
       authProvider: "local",
       isEmailVerified: false,
       emailVerificationToken: verificationToken,
+      role: role, // free or landlord
     });
     await user.save();
 
@@ -48,7 +55,7 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
       to: email,
       subject: "Verify your email address",
       html: `
-        <h1>Welcome to Rental Marketplace</h1>
+        <h1>Welcome to Khomo Lathu</h1>
         <p>Please click the link below to verify your email address:</p>
         <a href="${verificationUrl}">${verificationUrl}</a>
         <p>If you did not create an account, you can ignore this email.</p>
@@ -168,14 +175,14 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
       { expiresIn: "1d" }
     );
 
-    // Log the login activity
-    await ActivityLog.create({
-      user: user._id,
-      action: "login",
-      details: { method: "local" },
-      ip: req.ip,
-      userAgent: req.headers['user-agent']
-    });
+    // Optional activity log – uncomment if you have ActivityLog model
+    // await ActivityLog.create({
+    //   user: user._id,
+    //   action: "login",
+    //   details: { method: "local" },
+    //   ip: req.ip,
+    //   userAgent: req.headers['user-agent']
+    // });
 
     res.json({
       token,

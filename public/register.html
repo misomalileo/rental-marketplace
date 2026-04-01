@@ -4,22 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register | Khomo Lathu</title>
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -31,8 +23,6 @@
       position: relative;
       overflow-x: hidden;
     }
-
-    /* Animated background shapes (same as login) */
     body::before {
       content: '';
       position: absolute;
@@ -60,7 +50,6 @@
       50% { transform: translate(30px, 20px) rotate(10deg); }
       100% { transform: translate(0, 0) rotate(0deg); }
     }
-
     .register-container {
       width: 100%;
       max-width: 460px;
@@ -77,7 +66,6 @@
     .register-container:hover {
       transform: translateY(-5px);
     }
-
     .logo {
       text-align: center;
       margin-bottom: 1.5rem;
@@ -99,7 +87,16 @@
       background-clip: text;
       color: transparent;
     }
-
+    .role-badge {
+      text-align: center;
+      margin-bottom: 1rem;
+      background: rgba(37,99,235,0.1);
+      padding: 0.4rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #2563eb;
+    }
     .input-group {
       margin-bottom: 1rem;
     }
@@ -124,7 +121,6 @@
       border-color: #2563eb;
       box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
     }
-
     .register-btn {
       width: 100%;
       padding: 0.8rem;
@@ -146,7 +142,6 @@
       opacity: 0.7;
       cursor: not-allowed;
     }
-
     .divider {
       display: flex;
       align-items: center;
@@ -164,7 +159,6 @@
     .divider span {
       margin: 0 0.8rem;
     }
-
     .social-buttons {
       display: flex;
       flex-direction: column;
@@ -198,7 +192,6 @@
     .google-btn i { background: linear-gradient(135deg, #DB4437, #F4B400, #0F9D58, #4285F4); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .apple-btn i { color: #000; }
     .facebook-btn i { color: #1877f2; }
-
     .login-link {
       text-align: center;
       margin-top: 1rem;
@@ -213,7 +206,6 @@
     .login-link a:hover {
       text-decoration: underline;
     }
-
     .message {
       margin-top: 1rem;
       padding: 0.8rem;
@@ -232,7 +224,6 @@
       color: #15803d;
       display: block;
     }
-
     @media (max-width: 640px) {
       .register-container {
         padding: 1.5rem;
@@ -246,7 +237,12 @@
       <i class="fas fa-home"></i>
       <h2>Join Khomo Lathu</h2>
     </div>
+
+    <!-- Role badge (dynamic) -->
+    <div id="roleBadge" class="role-badge"></div>
+
     <form id="registerForm">
+      <input type="hidden" id="roleInput" name="role" value="free">
       <div class="input-group">
         <label><i class="fas fa-user"></i> Full Name</label>
         <input type="text" id="name" placeholder="John Doe" required>
@@ -296,6 +292,22 @@
   </div>
 
   <script>
+    // Get role from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    let selectedRole = urlParams.get('role');
+    if (!selectedRole || (selectedRole !== 'landlord' && selectedRole !== 'free')) {
+      selectedRole = 'free';
+    }
+
+    // Update hidden input and badge
+    document.getElementById('roleInput').value = selectedRole;
+    const roleBadge = document.getElementById('roleBadge');
+    if (selectedRole === 'landlord') {
+      roleBadge.innerHTML = '<i class="fas fa-building"></i> You are registering as a Landlord. You will be able to list properties.';
+    } else {
+      roleBadge.innerHTML = '<i class="fas fa-user"></i> You are registering as a Renter. You can search and book properties.';
+    }
+
     const form = document.getElementById('registerForm');
     const registerBtn = document.getElementById('registerBtn');
     const messageDiv = document.getElementById('message');
@@ -316,8 +328,8 @@
       const phone = document.getElementById('phone').value.trim();
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
+      const role = document.getElementById('roleInput').value;
 
-      // Basic validation
       if (!name || !email || !phone || !password || !confirmPassword) {
         showMessage('Please fill in all fields.', 'error');
         return;
@@ -342,7 +354,7 @@
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, password, confirmPassword })
+          body: JSON.stringify({ name, email, phone, password, confirmPassword, role })
         });
         const data = await res.json();
         if (res.ok) {

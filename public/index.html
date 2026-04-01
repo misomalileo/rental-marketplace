@@ -6,7 +6,7 @@
   <title>Khomo Lathu | Rent Houses, Rooms & Hostels Across Malawi</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
-  <!-- Fonts: Poppins for headings, Inter for body -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
   <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
   <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
   <style>
-    /* ========== THEME VARIABLES (professional) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -453,7 +453,7 @@
       border-color: var(--button-bg);
     }
 
-    /* ========== PROPERTY GRID (6-7 cards per row) ========== */
+    /* ========== PROPERTY GRID ========== */
     #houses-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -473,7 +473,7 @@
       #houses-container { grid-template-columns: 1fr; }
     }
 
-    /* ========== HOUSE CARD (3D lift, soft shadow) ========== */
+    /* ========== HOUSE CARD ========== */
     .house-card {
       background: var(--card-bg);
       border-radius: 28px;
@@ -649,7 +649,7 @@
       cursor: pointer;
     }
 
-    /* ========== FOOTER (modern) ========== */
+    /* ========== FOOTER ========== */
     .footer {
       background: var(--footer-bg);
       border-top: 1px solid var(--input-border);
@@ -815,7 +815,7 @@
       color: var(--text-color);
     }
 
-    /* ========== MODALS (unchanged but refined) ========== */
+    /* ========== MODALS ========== */
     .modal {
       position: fixed;
       z-index: 2000;
@@ -951,24 +951,13 @@
     <div class="nav-links">
       <a href="#">Home</a>
       <a href="#map">Explore Map</a>
+      <!-- Avatar dropdown (replaces Landlord Login) -->
       <div class="user-menu" id="userMenu">
-        <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
+        <div class="user-avatar" id="userAvatar"><i class="fas fa-user-circle"></i></div>
         <div class="user-dropdown" id="userDropdown">
-          <div class="dropdown-header">
-            <div class="avatar" id="dropdownAvatar"></div>
-            <div class="info">
-              <h4 id="userName">Loading...</h4>
-              <p id="userRole"></p>
-            </div>
-          </div>
-          <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
-          <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
-          <div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>
-          <div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>
-          <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
+          <!-- Dynamic content will be inserted by JavaScript -->
         </div>
       </div>
-      <a href="login.html" id="loginLink" style="display: none;">Login / Register</a>
       <select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select>
       <select class="theme-select" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="aquatic">Aquatic</option><option value="minimal">Minimal</option><option value="luxury">Luxury</option></select>
     </div>
@@ -1130,72 +1119,113 @@
     const userMenu = document.getElementById('userMenu');
     const userAvatar = document.getElementById('userAvatar');
     const userDropdown = document.getElementById('userDropdown');
-    const loginLink = document.getElementById('loginLink');
 
     userAvatar.addEventListener('click', (e) => { e.stopPropagation(); userMenu.classList.toggle('active'); });
     document.addEventListener('click', (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove('active'); });
 
     async function loadCurrentUser() {
       const token = localStorage.getItem('token');
-      if (!token) { userMenu.style.display = 'none'; loginLink.style.display = 'inline-block'; return; }
+      if (!token) {
+        // Guest user – show guest dropdown
+        userMenu.style.display = 'block';
+        userDropdown.innerHTML = `
+          <div class="dropdown-header">
+            <div class="avatar"><i class="fas fa-user"></i></div>
+            <div class="info">
+              <h4>Guest User</h4>
+              <p>Sign in for more features</p>
+            </div>
+          </div>
+          <div class="dropdown-item" id="becomeLandlordGuest">
+            <i class="fas fa-building"></i> Become a Landlord
+          </div>
+          <div class="dropdown-item" id="becomePremiumGuest">
+            <i class="fas fa-gem"></i> Become a Premium User <span class="premium-badge">MWK 500/mo</span>
+          </div>
+          <div class="dropdown-item" id="loginGuest">
+            <i class="fas fa-sign-in-alt"></i> Login / Register
+          </div>
+        `;
+        document.getElementById('becomeLandlordGuest').addEventListener('click', () => {
+          window.location.href = 'register.html?role=landlord';
+        });
+        document.getElementById('becomePremiumGuest').addEventListener('click', () => {
+          window.location.href = 'register.html?role=premium_user';
+        });
+        document.getElementById('loginGuest').addEventListener('click', () => {
+          window.location.href = 'login.html';
+        });
+        return;
+      }
+
+      // Logged‑in user – fetch details
       try {
         const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
         if (res.ok) {
           currentUser = await res.json();
           userMenu.style.display = 'block';
-          loginLink.style.display = 'none';
-          updateUserMenu();
+          updateUserMenuLoggedIn();
         } else {
           localStorage.removeItem('token');
-          userMenu.style.display = 'none';
-          loginLink.style.display = 'inline-block';
+          // fallback to guest
+          loadCurrentUser();
         }
-      } catch (err) { console.error('Failed to load user', err); }
+      } catch (err) {
+        console.error('Failed to load user', err);
+      }
     }
 
-    function updateUserMenu() {
+    function updateUserMenuLoggedIn() {
       if (!currentUser) return;
       const userName = currentUser.name || 'User';
       const userInitial = userName.charAt(0).toUpperCase();
       const avatarDiv = userAvatar;
       avatarDiv.innerHTML = currentUser.profilePicture ? `<img src="${currentUser.profilePicture}">` : `<span>${userInitial}</span>`;
-      const dropdownAvatar = document.querySelector('#dropdownAvatar');
-      dropdownAvatar.innerHTML = currentUser.profilePicture ? `<img src="${currentUser.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`;
-      document.getElementById('userName').textContent = userName;
-      const roleSpan = document.getElementById('userRole');
-      let roleText = '';
-      if (currentUser.role === 'premium_user') roleText = 'Premium User';
-      else if (currentUser.role === 'premium_landlord') roleText = 'Premium Landlord';
-      else if (currentUser.role === 'admin') roleText = 'Admin';
-      else roleText = 'Free User';
-      roleSpan.textContent = roleText;
-
-      const upgradePremiumLink = document.getElementById('upgradePremiumLink');
-      const becomeLandlordLink = document.getElementById('becomeLandlordLink');
-      if (currentUser.role === 'premium_user') upgradePremiumLink.style.display = 'none';
-      else upgradePremiumLink.style.display = 'flex';
-      if (currentUser.role === 'premium_landlord' || currentUser.role === 'landlord') becomeLandlordLink.style.display = 'none';
-      else becomeLandlordLink.style.display = 'flex';
+      const dropdownAvatar = document.querySelector('#dropdownAvatar') || document.createElement('div');
+      if (!document.querySelector('#dropdownAvatar')) {
+        // we need to rebuild dropdown – simple approach: rebuild logged‑in menu
+      }
+      userDropdown.innerHTML = `
+        <div class="dropdown-header">
+          <div class="avatar">${currentUser.profilePicture ? `<img src="${currentUser.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`}</div>
+          <div class="info">
+            <h4>${escapeHtml(userName)}</h4>
+            <p>${currentUser.role === 'premium_user' ? 'Premium User' : (currentUser.role === 'premium_landlord' ? 'Premium Landlord' : (currentUser.role === 'admin' ? 'Admin' : 'Free User'))}</p>
+          </div>
+        </div>
+        <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
+        <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
+        <div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>
+        <div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>
+        <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
+      `;
+      document.getElementById('profileLink').addEventListener('click', () => { window.location.href = 'profile.html'; });
+      document.getElementById('premiumDashboardLink').addEventListener('click', () => { window.location.href = 'premium-dashboard.html'; });
+      document.getElementById('becomeLandlordLink').addEventListener('click', () => { window.location.href = 'dashboard.html'; });
+      document.getElementById('upgradePremiumLink').addEventListener('click', async () => {
+        try {
+          const res = await fetch('/api/payment/premium-user', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+          const data = await res.json();
+          if (data.payment_url) window.location.href = data.payment_url;
+          else alert('Payment initiation failed');
+        } catch (err) { alert('Error starting upgrade'); }
+      });
+      document.getElementById('logoutLink').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        window.location.reload();
+      });
     }
 
-    document.getElementById('profileLink').addEventListener('click', () => { window.location.href = 'profile.html'; });
-    document.getElementById('premiumDashboardLink').addEventListener('click', () => { window.location.href = 'premium-dashboard.html'; });
-    document.getElementById('becomeLandlordLink').addEventListener('click', () => { window.location.href = 'dashboard.html'; });
-    document.getElementById('upgradePremiumLink').addEventListener('click', async () => {
-      const token = localStorage.getItem('token');
-      if (!token) { alert('Please login first'); return; }
-      try {
-        const res = await fetch('/api/payment/premium-user', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
-        const data = await res.json();
-        if (data.payment_url) window.location.href = data.payment_url;
-        else alert('Payment initiation failed');
-      } catch (err) { alert('Error starting upgrade'); }
-    });
-    document.getElementById('logoutLink').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('role');
-      window.location.reload();
-    });
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
 
     loadCurrentUser();
   </script>
