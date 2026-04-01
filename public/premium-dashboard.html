@@ -9,13 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* (same styles as before) */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
     body {
       background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
       color: #1e293b;
       min-height: 100vh;
     }
+    /* Navbar */
     .navbar {
       background: rgba(255,255,255,0.95);
       backdrop-filter: blur(12px);
@@ -55,17 +55,12 @@
       transition: color 0.2s;
     }
     .nav-links a:hover { color: #2563eb; }
-    .premium-btn {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      color: white !important;
-      padding: 0.3rem 0.8rem;
-      border-radius: 30px;
-    }
     .dashboard-container {
       max-width: 1400px;
       margin: 2rem auto;
       padding: 0 1rem;
     }
+    /* Premium header */
     .premium-header {
       background: linear-gradient(135deg, #1e293b, #0f172a);
       border-radius: 32px;
@@ -90,7 +85,7 @@
       border-radius: 40px;
       font-size: 0.9rem;
     }
-    .upgrade-btn {
+    .activate-btn {
       background: linear-gradient(135deg, #f59e0b, #d97706);
       border: none;
       padding: 0.6rem 1.2rem;
@@ -99,12 +94,33 @@
       cursor: pointer;
       transition: transform 0.2s;
     }
-    .upgrade-btn:hover { transform: scale(1.02); }
-
+    .activate-btn:hover { transform: scale(1.02); }
+    .upgrade-banner {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 28px;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .upgrade-banner h2 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .upgrade-banner p {
+      margin-bottom: 1rem;
+      color: #475569;
+    }
+    .grid-locked {
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
       gap: 1.5rem;
+      transition: filter 0.2s;
     }
     .card {
       background: rgba(255,255,255,0.9);
@@ -231,16 +247,25 @@
     <div class="premium-header" id="premiumHeader">
       <h1><i class="fas fa-crown"></i> Premium Dashboard</h1>
       <div id="premiumStatusArea"></div>
-      <button id="upgradeBtn" class="upgrade-btn">Upgrade to Premium (MWK 500/month)</button>
+      <button id="activateBtn" class="activate-btn">Activate Premium (MWK 500)</button>
     </div>
 
-    <div class="dashboard-grid">
+    <!-- Banner for unpaid premium users -->
+    <div id="upgradeBanner" class="upgrade-banner" style="display: none;">
+      <h2><i class="fas fa-lock"></i> Unlock Premium Features</h2>
+      <p>Get early access to new listings, AI price negotiation, saved searches with alerts, and more!</p>
+      <button id="activateFromBannerBtn" class="activate-btn">Activate Now</button>
+    </div>
+
+    <div id="premiumContent" class="dashboard-grid" style="filter: blur(4px); pointer-events: none; user-select: none;">
+      <!-- Saved Searches -->
       <div class="card" data-card="savedSearches">
         <h2><i class="fas fa-search"></i> Saved Searches</h2>
         <div id="savedSearchesList">Loading...</div>
         <button id="newSearchBtn" class="small" style="margin-top: 0.5rem;"><i class="fas fa-plus"></i> New Search</button>
       </div>
 
+      <!-- AI Negotiation Tool -->
       <div class="card" data-card="negotiate">
         <h2><i class="fas fa-robot"></i> AI Price Negotiator</h2>
         <p>Enter a property URL or ID to get a suggested offer.</p>
@@ -249,15 +274,17 @@
         <div id="negotiationResult" style="margin-top:0.5rem; font-size:0.85rem;"></div>
       </div>
 
+      <!-- Notifications -->
       <div class="card" data-card="notifications">
         <h2><i class="fas fa-bell"></i> Notifications</h2>
         <div id="notificationsList">Loading...</div>
       </div>
-    </div>
 
-    <div class="card" style="margin-top: 1.5rem;" data-card="earlyAccess">
-      <h2><i class="fas fa-clock"></i> Early Access (New listings – 24h exclusive)</h2>
-      <div id="earlyAccessList" class="early-access-list">Loading...</div>
+      <!-- Early Access Listings -->
+      <div class="card" style="grid-column: span 2;" data-card="earlyAccess">
+        <h2><i class="fas fa-clock"></i> Early Access (New listings – 24h exclusive)</h2>
+        <div id="earlyAccessList" class="early-access-list">Loading...</div>
+      </div>
     </div>
   </div>
 
@@ -267,31 +294,45 @@
 
     function logout() { localStorage.clear(); window.location = "login.html"; }
 
-    document.querySelectorAll('.card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'A') return;
-        card.classList.add('clicked');
-        setTimeout(() => card.classList.remove('clicked'), 200);
-      });
-    });
+    let isActivePremium = false;
 
     async function loadPremiumStatus() {
       try {
         const res = await fetch("/api/premium/status", { headers: { Authorization: "Bearer " + token } });
         const data = await res.json();
         const statusArea = document.getElementById("premiumStatusArea");
+        const activateBtn = document.getElementById("activateBtn");
+        const upgradeBanner = document.getElementById("upgradeBanner");
+        const premiumContent = document.getElementById("premiumContent");
+
         if (data.isPremium) {
+          // Active premium user
+          isActivePremium = true;
           const expiry = new Date(data.expiresAt).toLocaleDateString();
           statusArea.innerHTML = `<span class="premium-status"><i class="fas fa-crown"></i> Active until ${expiry}</span>`;
-          document.getElementById("upgradeBtn").style.display = "none";
+          activateBtn.style.display = "none";
+          upgradeBanner.style.display = "none";
+          premiumContent.style.filter = "none";
+          premiumContent.style.pointerEvents = "auto";
+          premiumContent.style.userSelect = "auto";
+          renderSavedSearches(data.savedSearches);
+          renderNotifications(data.notifications);
+          loadEarlyAccess();
         } else {
-          statusArea.innerHTML = `<span class="premium-status"><i class="fas fa-lock"></i> Free account</span>`;
-          document.getElementById("upgradeBtn").style.display = "inline-block";
+          // Unpaid premium user (role = premium_user but no active subscription)
+          isActivePremium = false;
+          statusArea.innerHTML = `<span class="premium-status"><i class="fas fa-lock"></i> Inactive – activate to unlock</span>`;
+          activateBtn.style.display = "inline-block";
+          upgradeBanner.style.display = "block";
+          premiumContent.style.filter = "blur(4px)";
+          premiumContent.style.pointerEvents = "none";
+          premiumContent.style.userSelect = "none";
+          // Still load data but show blurred
+          renderSavedSearches(data.savedSearches || []);
+          renderNotifications(data.notifications || []);
         }
-        renderSavedSearches(data.savedSearches);
-        renderNotifications(data.notifications);
       } catch (err) {
-        console.error(err);
+        console.error("Error loading premium status:", err);
       }
     }
 
@@ -331,6 +372,7 @@
     }
 
     async function toggleAlert(index, enable) {
+      if (!isActivePremium) return alert("Please activate premium to manage alerts.");
       try {
         await fetch(`/api/premium/saved-searches/${index}/alert`, {
           method: "PUT",
@@ -342,6 +384,7 @@
     }
 
     async function deleteSearch(index) {
+      if (!isActivePremium) return alert("Please activate premium to manage searches.");
       if (!confirm("Delete this saved search?")) return;
       try {
         await fetch(`/api/premium/saved-searches/${index}`, { method: "DELETE", headers: { Authorization: "Bearer " + token } });
@@ -350,6 +393,7 @@
     }
 
     document.getElementById("newSearchBtn").addEventListener("click", async () => {
+      if (!isActivePremium) return alert("Please activate premium to create saved searches.");
       const name = prompt("Give this search a name:", "My Search");
       if (!name) return;
       const filters = {};
@@ -364,6 +408,7 @@
     });
 
     document.getElementById("negotiateBtn").addEventListener("click", async () => {
+      if (!isActivePremium) return alert("Please activate premium to use AI negotiator.");
       const input = document.getElementById("negotiateHouseId").value;
       let houseId = input;
       const match = input.match(/\/house\/([a-f0-9]{24})/);
@@ -390,6 +435,7 @@
     });
 
     async function loadEarlyAccess() {
+      if (!isActivePremium) return;
       try {
         const res = await fetch("/api/premium/early-access", { headers: { Authorization: "Bearer " + token } });
         const houses = await res.json();
@@ -413,8 +459,7 @@
       }
     }
 
-    // Upgrade button – calls the payment endpoint
-    document.getElementById("upgradeBtn").addEventListener("click", async () => {
+    async function activatePremium() {
       try {
         const res = await fetch("/api/payment/premium-user", {
           method: "POST",
@@ -427,10 +472,14 @@
           alert("Payment initiation failed: " + (data.message || "Unknown error"));
         }
       } catch (err) {
-        console.error("Upgrade error:", err);
+        console.error("Activation error:", err);
         alert("Error starting upgrade. Please try again.");
       }
-    });
+    }
+
+    // Attach activation handlers
+    document.getElementById("activateBtn").addEventListener("click", activatePremium);
+    document.getElementById("activateFromBannerBtn").addEventListener("click", activatePremium);
 
     function escapeHtml(str) {
       if (!str) return "";
@@ -443,7 +492,6 @@
     }
 
     loadPremiumStatus();
-    loadEarlyAccess();
   </script>
 </body>
 </html>
