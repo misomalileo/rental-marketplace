@@ -5,7 +5,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
-// const ActivityLog = require("../models/ActivityLog"); // optional – uncomment if you have this model
 const { authLimiter } = require("../middleware/rateLimiter");
 const {
   validateRegister,
@@ -24,7 +23,6 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
   try {
     const { name, email, password, phone, role = "free" } = req.body;
 
-    // Allowed roles during registration: free, landlord, premium_user
     if (!["free", "landlord", "premium_user"].includes(role)) {
       return res.status(400).json({ message: "Invalid role specified" });
     }
@@ -45,7 +43,7 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
       authProvider: "local",
       isEmailVerified: false,
       emailVerificationToken: verificationToken,
-      role: role, // free, landlord, or premium_user
+      role: role,
     });
     await user.save();
 
@@ -175,15 +173,6 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
       { expiresIn: "1d" }
     );
 
-    // Optional activity log – uncomment if you have ActivityLog model
-    // await ActivityLog.create({
-    //   user: user._id,
-    //   action: "login",
-    //   details: { method: "local" },
-    //   ip: req.ip,
-    //   userAgent: req.headers['user-agent']
-    // });
-
     res.json({
       token,
       user: {
@@ -213,8 +202,13 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
-// GOOGLE LOGIN
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// GOOGLE LOGIN with role support
+router.get("/google", (req, res, next) => {
+  const role = req.query.role || "free";
+  // Store the intended role in the session
+  req.session.intendedRole = role;
+  passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+});
 
 router.get(
   "/google/callback",
@@ -222,13 +216,34 @@ router.get(
     failureRedirect: "/login.html?error=google-auth-failed",
     session: false
   }),
-  (req, res) => {
-    const token = jwt.sign(
-      { id: req.user._id, role: req.user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-    res.redirect(`/oauth-redirect.html?token=${token}&role=${req.user.role}`);
+  async (req, res) => {
+    try {
+      const user = req.user;
+      let finalRole = user.role; // existing role
+
+      // If this is a new user (no previous role), set it from session
+      if (!user.role || user.role === "free") {
+        const intendedRole = req.session.intendedRole || "free";
+        // Only allow setting to landlord or premium_user
+        if (intendedRole === "landlord" || intendedRole === "premium_user") {
+          user.role = intendedRole;
+          await user.save();
+        }
+        finalRole = user.role;
+      } else {
+        finalRole = user.role;
+      }
+
+      const token = jwt.sign(
+        { id: user._id, role: finalRole },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+      res.redirect(`/oauth-redirect.html?token=${token}&role=${finalRole}`);
+    } catch (err) {
+      console.error(err);
+      res.redirect("/login.html?error=google-auth-failed");
+    }
   }
 );
 
