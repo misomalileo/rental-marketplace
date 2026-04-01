@@ -3,15 +3,16 @@ const router = express.Router();
 const User = require("../models/User");
 const House = require("../models/House");
 const Report = require("../models/Report");
-const ActivityLog = require("../models/ActivityLog"); // NEW
+const ActivityLog = require("../models/ActivityLog");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 const { logAdminAction } = require("../middleware/audit");
 
-// GET DASHBOARD STATS
+// ========== DASHBOARD STATS ==========
 router.get("/stats", auth, admin, async (req, res) => {
   try {
     const totalLandlords = await User.countDocuments({ role: "landlord" });
+    const totalPremiumUsers = await User.countDocuments({ role: "premium_user" });
     const totalHouses = await House.countDocuments();
     const totalViewsAgg = await House.aggregate([{ $group: { _id: null, total: { $sum: "$views" } } }]);
     const totalViews = totalViewsAgg[0]?.total || 0;
@@ -26,6 +27,7 @@ router.get("/stats", auth, admin, async (req, res) => {
 
     res.json({
       totalLandlords,
+      totalPremiumUsers,
       totalHouses,
       totalViews,
       pendingVerifications,
@@ -39,20 +41,35 @@ router.get("/stats", auth, admin, async (req, res) => {
   }
 });
 
-// GET ALL LANDLORDS
+// ========== PAGINATED LANDLORDS ==========
 router.get("/landlords", auth, admin, async (req, res) => {
   try {
-    const landlords = await User.find({ role: "landlord" })
-      .select("-password")
-      .sort({ createdAt: -1 });
-    res.json(landlords);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      User.find({ role: "landlord" })
+        .select("-password")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments({ role: "landlord" })
+    ]);
+
+    res.json({
+      users,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
   } catch (err) {
     console.error("Landlords fetch error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// VERIFY LANDLORD
+// ========== VERIFY LANDLORD ==========
 router.put("/verify/:id", auth, admin, async (req, res) => {
   try {
     const { type } = req.body;
@@ -78,7 +95,7 @@ router.put("/verify/:id", auth, admin, async (req, res) => {
   }
 });
 
-// BAN LANDLORD
+// ========== BAN LANDLORD ==========
 router.delete("/ban/:id", auth, admin, async (req, res) => {
   try {
     await House.deleteMany({ owner: req.params.id });
@@ -94,18 +111,35 @@ router.delete("/ban/:id", auth, admin, async (req, res) => {
   }
 });
 
-// GET ALL HOUSES
+// ========== PAGINATED HOUSES ==========
 router.get("/houses", auth, admin, async (req, res) => {
   try {
-    const houses = await House.find().populate("owner", "name email phone").sort({ createdAt: -1 });
-    res.json(houses);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [houses, total] = await Promise.all([
+      House.find()
+        .populate("owner", "name email phone")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      House.countDocuments()
+    ]);
+
+    res.json({
+      houses,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
   } catch (err) {
     console.error("Houses fetch error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// DELETE HOUSE
+// ========== DELETE HOUSE ==========
 router.delete("/house/:id", auth, admin, async (req, res) => {
   try {
     const deletedHouse = await House.findByIdAndDelete(req.params.id);
@@ -120,7 +154,7 @@ router.delete("/house/:id", auth, admin, async (req, res) => {
   }
 });
 
-// TOGGLE FEATURED (admin)
+// ========== TOGGLE FEATURED ==========
 router.put("/house/:id/toggle-featured", auth, admin, async (req, res) => {
   try {
     const house = await House.findById(req.params.id);
@@ -137,14 +171,64 @@ router.put("/house/:id/toggle-featured", auth, admin, async (req, res) => {
   }
 });
 
-// GET ALL REPORTS
+// ========== PREMIUM USERS (PAGINATED) ==========
+router.get("/premium-users", auth, admin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      User.find({ role: "premium_user" })
+        .select("-password")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments({ role: "premium_user" })
+    ]);
+
+    res.json({
+      users,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (err) {
+    console.error("Premium users fetch error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ========== REVOKE PREMIUM ==========
+router.put("/revoke-premium/:userId", auth, admin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.role !== "premium_user") {
+      return res.status(400).json({ message: "User is not a premium user" });
+    }
+    user.role = "free";
+    user.subscriptionExpiresAt = null;
+    await user.save();
+    await logAdminAction(req.user.id, "revoke_premium", user._id, "User", { email: user.email });
+    res.json({ message: "Premium status revoked" });
+  } catch (err) {
+    console.error("Revoke premium error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ========== REPORTS (ALL) ==========
 router.get("/reports", auth, admin, async (req, res) => {
   try {
     const reports = await Report.find()
       .populate("reporter", "name email")
       .populate("house", "name")
       .populate("landlord", "name email")
-      .populate("resolvedBy", "name");
+      .populate("resolvedBy", "name")
+      .sort({ createdAt: -1 });
     res.json(reports);
   } catch (err) {
     console.error("Reports fetch error:", err);
@@ -152,7 +236,7 @@ router.get("/reports", auth, admin, async (req, res) => {
   }
 });
 
-// RESOLVE REPORT
+// ========== RESOLVE REPORT ==========
 router.put("/report/:id/resolve", auth, admin, async (req, res) => {
   try {
     const report = await Report.findByIdAndUpdate(
@@ -171,9 +255,7 @@ router.put("/report/:id/resolve", auth, admin, async (req, res) => {
   }
 });
 
-// ======================================
-// REAL-TIME MONITORING STATS
-// ======================================
+// ========== REAL-TIME MONITORING ==========
 router.get("/real-time", auth, admin, async (req, res) => {
   try {
     const activeUsers = await ActivityLog.distinct('user', {
@@ -183,43 +265,41 @@ router.get("/real-time", auth, admin, async (req, res) => {
       createdAt: { $gt: new Date().setHours(0,0,0,0) }
     });
     const totalHouses = await House.countDocuments();
-    const totalViews = await House.aggregate([{ $group: { _id: null, total: { $sum: "$views" } } }]);
+    const totalViewsAgg = await House.aggregate([{ $group: { _id: null, total: { $sum: "$views" } } }]);
 
     res.json({
       activeUsers: activeUsers.length,
       newListingsToday,
       revenue: 0,
       totalHouses,
-      totalViews: totalViews[0]?.total || 0
+      totalViews: totalViewsAgg[0]?.total || 0
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ======================================
-// ACTIVITY LOGS (with pagination)
-// ======================================
+// ========== ACTIVITY LOGS (PAGINATED) ==========
 router.get("/activity-logs", auth, admin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
-    const logs = await ActivityLog.find()
-      .populate("user", "name email")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await ActivityLog.countDocuments();
+    const [logs, total] = await Promise.all([
+      ActivityLog.find()
+        .populate("user", "name email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      ActivityLog.countDocuments()
+    ]);
     res.json({ logs, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ======================================
-// CSV EXPORT (houses)
-// ======================================
+// ========== CSV EXPORT (HOUSES) ==========
 router.get("/export/csv", auth, admin, async (req, res) => {
   try {
     const houses = await House.find().populate("owner", "name email");
