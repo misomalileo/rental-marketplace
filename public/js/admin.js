@@ -5,7 +5,8 @@ if (!token) {
 }
 
 // ========== GLOBAL STATE ==========
-let housesChart, verificationChart;
+let housesChart = null;
+let verificationChart = null;
 let currentLogsPage = 1;
 let currentLandlordsPage = 1;
 let currentHousesPage = 1;
@@ -13,11 +14,13 @@ let currentPremiumPage = 1;
 const perPage = 10;
 
 // ========== HELPER: SHOW/HIDE LOADING ==========
-function showLoading(elementId, show = true) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  if (show) {
-    el.innerHTML = '<tr><td colspan="10" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading...</td></tr>';
+function setLoading(elementId, isLoading) {
+  const container = document.getElementById(elementId);
+  if (!container) return;
+  const tbody = container.querySelector('tbody');
+  if (!tbody) return;
+  if (isLoading) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading...</td></tr>';
   }
 }
 
@@ -58,7 +61,7 @@ async function loadStats() {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
         scales: { y: { beginAtZero: true, grid: { color: '#ecf0f1' } } },
         plugins: { legend: { display: false } }
       }
@@ -82,7 +85,7 @@ async function loadStats() {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
         plugins: { legend: { position: 'bottom' } },
         cutout: '70%'
       }
@@ -112,8 +115,9 @@ async function loadRealTimeStats() {
 // ========== LOAD PREMIUM USERS (with pagination) ==========
 async function loadPremiumUsers(page = 1) {
   currentPremiumPage = page;
-  const tbody = document.getElementById("premiumUsersTable").querySelector("tbody");
-  showLoading('premiumUsersTable', true);
+  const tbody = document.querySelector("#premiumUsersTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading premium users...</td></tr>';
   try {
     const res = await fetch(`/api/admin/premium-users?page=${page}&limit=${perPage}`, {
       headers: { Authorization: "Bearer " + token }
@@ -121,7 +125,7 @@ async function loadPremiumUsers(page = 1) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     tbody.innerHTML = "";
-    if (data.users.length === 0) {
+    if (!data.users || data.users.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No premium users found.</td></tr>';
     } else {
       data.users.forEach(user => {
@@ -137,7 +141,7 @@ async function loadPremiumUsers(page = 1) {
         `;
       });
     }
-    renderPagination('premiumUsersPagination', data.totalPages, data.page, loadPremiumUsers);
+    renderPagination('premiumUsersPagination', data.totalPages, data.page, 'loadPremiumUsers');
   } catch (err) {
     console.error("Failed to load premium users:", err);
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Error loading premium users.</td></tr>';
@@ -169,8 +173,9 @@ async function revokePremium(userId) {
 // ========== LOAD LANDLORDS (with pagination) ==========
 async function loadLandlords(page = 1) {
   currentLandlordsPage = page;
-  const tbody = document.getElementById("landlordsTable").querySelector("tbody");
-  showLoading('landlordsTable', true);
+  const tbody = document.querySelector("#landlordsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading landlords...</td></tr>';
   try {
     const res = await fetch(`/api/admin/landlords?page=${page}&limit=${perPage}`, {
       headers: { Authorization: "Bearer " + token }
@@ -178,7 +183,7 @@ async function loadLandlords(page = 1) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     tbody.innerHTML = "";
-    if (data.users.length === 0) {
+    if (!data.users || data.users.length === 0) {
       tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No landlords found.</td></tr>';
     } else {
       data.users.forEach(user => {
@@ -196,7 +201,7 @@ async function loadLandlords(page = 1) {
         `;
       });
     }
-    renderPagination('landlordsPagination', data.totalPages, data.page, loadLandlords);
+    renderPagination('landlordsPagination', data.totalPages, data.page, 'loadLandlords');
   } catch (err) {
     console.error("Failed to load landlords:", err);
     tbody.innerHTML = '<tr><td colspan="4">Error loading landlords.</td></tr>';
@@ -254,8 +259,9 @@ async function banUser(id) {
 // ========== LOAD HOUSES (with pagination) ==========
 async function loadHouses(page = 1) {
   currentHousesPage = page;
-  const tbody = document.getElementById("housesTable").querySelector("tbody");
-  showLoading('housesTable', true);
+  const tbody = document.querySelector("#housesTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading houses...</td></tr>';
   try {
     const res = await fetch(`/api/admin/houses?page=${page}&limit=${perPage}`, {
       headers: { Authorization: "Bearer " + token }
@@ -263,7 +269,7 @@ async function loadHouses(page = 1) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     tbody.innerHTML = "";
-    if (data.houses.length === 0) {
+    if (!data.houses || data.houses.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No houses found.</td></tr>';
     } else {
       data.houses.forEach(house => {
@@ -283,7 +289,7 @@ async function loadHouses(page = 1) {
         `;
       });
     }
-    renderPagination('housesPagination', data.totalPages, data.page, loadHouses);
+    renderPagination('housesPagination', data.totalPages, data.page, 'loadHouses');
   } catch (err) {
     console.error("Failed to load houses:", err);
     tbody.innerHTML = '<tr><td colspan="6">Error loading houses.</td></tr>';
@@ -338,9 +344,10 @@ async function loadReports() {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const reports = await res.json();
-    const tbody = document.getElementById("reportsTable").querySelector("tbody");
+    const tbody = document.querySelector("#reportsTable tbody");
+    if (!tbody) return;
     tbody.innerHTML = "";
-    if (reports.length === 0) {
+    if (!reports || reports.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No reports found.</td></tr>';
     } else {
       reports.forEach(r => {
@@ -362,7 +369,8 @@ async function loadReports() {
     }
   } catch (err) {
     console.error("Failed to load reports:", err);
-    document.getElementById("reportsTable").querySelector("tbody").innerHTML = '<tr><td colspan="7">Error loading reports.</td></tr>';
+    const tbody = document.querySelector("#reportsTable tbody");
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7">Error loading reports.</td></tr>';
   }
 }
 
@@ -394,8 +402,9 @@ async function loadActivityLogs(page = 1) {
     });
     const data = await res.json();
     const tbody = document.querySelector("#activityLogsTable tbody");
+    if (!tbody) return;
     tbody.innerHTML = "";
-    if (data.logs.length === 0) {
+    if (!data.logs || data.logs.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5">No logs found.</td></tr>';
     } else {
       data.logs.forEach(log => {
@@ -410,12 +419,14 @@ async function loadActivityLogs(page = 1) {
     renderLogsPagination(data);
   } catch (err) {
     console.error("Failed to load activity logs:", err);
-    document.querySelector("#activityLogsTable tbody").innerHTML = '<tr><td colspan="5">Error loading logs</td></tr>';
+    const tbody = document.querySelector("#activityLogsTable tbody");
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5">Error loading logs</td></tr>';
   }
 }
 
 function renderLogsPagination(data) {
   const paginationDiv = document.getElementById('logsPagination');
+  if (!paginationDiv) return;
   if (data.pages <= 1) {
     paginationDiv.innerHTML = '';
     return;
@@ -428,7 +439,7 @@ function renderLogsPagination(data) {
 }
 
 // ========== GENERAL PAGINATION RENDERER ==========
-function renderPagination(containerId, totalPages, currentPage, callback) {
+function renderPagination(containerId, totalPages, currentPage, functionName) {
   const container = document.getElementById(containerId);
   if (!container) return;
   if (totalPages <= 1) {
@@ -437,15 +448,18 @@ function renderPagination(containerId, totalPages, currentPage, callback) {
   }
   let html = '';
   for (let i = 1; i <= totalPages; i++) {
-    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="(${callback.name})(${i})">${i}</button>`;
+    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="window.${functionName}(${i})">${i}</button>`;
   }
   container.innerHTML = html;
 }
 
 // ========== CSV EXPORT ==========
-document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
-  window.location.href = '/api/admin/export/csv?token=' + token;
-});
+const exportBtn = document.getElementById('exportCsvBtn');
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    window.location.href = '/api/admin/export/csv?token=' + token;
+  });
+}
 
 // ========== ESCAPE HTML ==========
 function escapeHtml(str) {
