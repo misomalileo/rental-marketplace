@@ -19,13 +19,13 @@ function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// REGISTER – accepts optional role (landlord or free, default free)
+// REGISTER – accepts optional role (free, landlord, premium_user)
 router.post("/register", authLimiter, validateRegister, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password, phone, role = "free" } = req.body;
 
-    // Allowed roles during registration: free, landlord
-    if (!["free", "landlord"].includes(role)) {
+    // Allowed roles during registration: free, landlord, premium_user
+    if (!["free", "landlord", "premium_user"].includes(role)) {
       return res.status(400).json({ message: "Invalid role specified" });
     }
 
@@ -45,7 +45,7 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
       authProvider: "local",
       isEmailVerified: false,
       emailVerificationToken: verificationToken,
-      role: role, // free or landlord
+      role: role, // free, landlord, or premium_user
     });
     await user.save();
 
