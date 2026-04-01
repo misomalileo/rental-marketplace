@@ -6,41 +6,44 @@
   <title>Khomo Lathu | Rent Houses, Rooms & Hostels Across Malawi</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
+  <!-- Fonts: Poppins for headings, Inter for body -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Icon Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://unpkg.com/lucide-css@latest/dist/lucide.min.css" rel="stylesheet">
+  <!-- Leaflet, Draw, MarkerCluster, noUiSlider -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#3498db">
+  <meta name="theme-color" content="#2563eb">
+  <!-- Photo Sphere Viewer for 360 tours -->
   <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
   <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
   <style>
-    /* ========== THEME VARIABLES (unchanged) ========== */
+    /* ========== THEME VARIABLES (professional) ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
-      --secondary: #10b981;
+      --secondary: #0ea5a4;
       --accent: #f59e0b;
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-400: #9ca3af;
-      --gray-500: #6b7280;
-      --gray-600: #4b5563;
-      --gray-700: #374151;
-      --gray-800: #1f2937;
-      --gray-900: #111827;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
     }
-
     body.theme-light {
-      --bg-gradient: var(--gray-50);
+      --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
       --navbar-bg: rgba(255,255,255,0.96);
       --text-color: var(--gray-800);
       --card-bg: white;
@@ -51,8 +54,8 @@
       --button-hover: var(--primary-dark);
     }
     body.theme-dark {
-      --bg-gradient: var(--gray-900);
-      --navbar-bg: rgba(17,24,39,0.96);
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --navbar-bg: rgba(15,23,42,0.96);
       --text-color: var(--gray-100);
       --card-bg: var(--gray-800);
       --footer-bg: var(--gray-800);
@@ -62,7 +65,7 @@
       --button-hover: var(--primary-dark);
     }
     body.theme-aquatic {
-      --bg-gradient: #e6f7f5;
+      --bg-gradient: linear-gradient(135deg, #e6f7f5 0%, #e0f2fe 100%);
       --navbar-bg: rgba(230,247,245,0.96);
       --text-color: #1e4a4b;
       --card-bg: white;
@@ -84,7 +87,7 @@
       --button-hover: #1e293b;
     }
     body.theme-luxury {
-      --bg-gradient: #1e1e2f;
+      --bg-gradient: linear-gradient(135deg, #1e1e2f 0%, #2d2d44 100%);
       --navbar-bg: #1e1e2f;
       --text-color: #f5e7d9;
       --card-bg: #2a2a3c;
@@ -98,10 +101,19 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg-gradient); color: var(--text-color); min-height: 100vh; transition: background 0.2s, color 0.2s; }
-    h1, h2, h3, .logo, .stat-card .value { font-family: 'Poppins', 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; }
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+    }
+    h1, h2, h3, .logo, .stat-card .value {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
 
-    /* ========== ICON STYLES ========== */
+    /* ========== ICON STYLES (colourful gradients) ========== */
     i, [class*="ri-"], [class*="lucide-"] { transition: all 0.2s ease; }
     i.fas, i.far, i.fab, i.ri, .lucide { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .fa-wifi, .ri-wifi-line, .lucide-wifi { background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; }
@@ -141,14 +153,14 @@
       z-index: 1000;
     }
     .logo {
-      font-size: 1.4rem;
-      font-weight: 600;
+      font-size: 1.6rem;
+      font-weight: 800;
       letter-spacing: -0.02em;
       color: var(--text-color);
     }
     .logo i {
       margin-right: 6px;
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
       background-clip: text;
@@ -157,14 +169,14 @@
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 1.2rem;
+      gap: 1.5rem;
       flex-wrap: wrap;
     }
     .nav-links a {
       color: var(--text-color);
       text-decoration: none;
       font-weight: 500;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       transition: color 0.2s;
     }
     .nav-links a:hover {
@@ -185,8 +197,8 @@
       cursor: pointer;
     }
     .user-avatar {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       display: flex;
@@ -211,14 +223,15 @@
       right: 0;
       background: var(--card-bg);
       backdrop-filter: blur(8px);
-      border-radius: 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      width: 260px;
+      border-radius: 24px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+      width: 280px;
       overflow: hidden;
       opacity: 0;
       visibility: hidden;
       transition: all 0.2s;
       border: 1px solid var(--input-border);
+      z-index: 1001;
     }
     .user-menu.active .user-dropdown {
       opacity: 1;
@@ -233,14 +246,15 @@
       gap: 0.8rem;
     }
     .dropdown-header .avatar {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 600;
+      font-size: 1rem;
     }
     .dropdown-header .info h4 {
       font-size: 0.9rem;
@@ -251,7 +265,7 @@
       opacity: 0.7;
     }
     .dropdown-item {
-      padding: 0.7rem 1rem;
+      padding: 0.75rem 1rem;
       display: flex;
       align-items: center;
       gap: 0.8rem;
@@ -264,7 +278,7 @@
       background: rgba(0,0,0,0.05);
     }
     .dropdown-item i {
-      width: 20px;
+      width: 24px;
     }
     .premium-badge {
       background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -275,61 +289,175 @@
       margin-left: 0.5rem;
     }
 
-    /* ========== HERO (enlarged icon) ========== */
+    /* ========== HERO (enlarged icon with animation) ========== */
     .hero {
       text-align: center;
-      padding: 3rem 1rem 2.5rem 1rem;
-      background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(16,185,129,0.03) 100%);
-      border-radius: 48px;
-      margin: 1rem;
+      padding: 4rem 2rem 3rem;
+      background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(14,165,164,0.05) 100%);
+      border-radius: 64px;
+      margin: 1.5rem;
       transition: background 0.3s;
     }
     .hero:hover {
-      background: linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(16,185,129,0.06) 100%);
+      background: linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(14,165,164,0.08) 100%);
     }
     .hero h1 {
-      font-size: 2.5rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
+      font-size: 3rem;
+      font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.8rem;
       flex-wrap: wrap;
       color: var(--text-color);
     }
     .hero h1 i {
-      font-size: 4rem;
+      font-size: 4.5rem;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       animation: pulse 2s infinite;
     }
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
     .hero p {
-      font-size: 1rem;
+      font-size: 1.2rem;
       font-weight: 400;
       color: var(--gray-500);
+      margin-top: 0.8rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
+      gap: 0.6rem;
     }
 
     /* ========== MAIN CONTAINER ========== */
     .main-container {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 0 1rem;
+      padding: 0 1.5rem;
     }
 
-    /* ========== GRID (6-7 cards per row) ========== */
+    /* ========== FILTERS ROW (modern pill design) ========== */
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 2rem 0;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 0.8rem 1.5rem;
+      border-radius: 60px;
+      border: 1px solid var(--input-border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+    .price-range {
+      min-width: 200px;
+      background: var(--input-bg);
+      border-radius: 40px;
+      padding: 0.2rem 1rem;
+      border: 1px solid var(--input-border);
+    }
+    .price-range .range-values {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      margin-top: 0.2rem;
+    }
+    #priceSlider {
+      margin: 0.4rem 0;
+    }
+    .sort-select, .save-search-btn {
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .save-search-btn {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+    }
+    .save-search-btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
+    .amenities-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      justify-content: center;
+      margin: 1rem 0 1.5rem;
+    }
+    .amenities-filters label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--text-color);
+      background: var(--input-bg);
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      border: 1px solid var(--input-border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .amenities-filters label:hover {
+      background: var(--button-bg);
+      color: white;
+      border-color: var(--button-bg);
+    }
+    #searchInput {
+      width: 100%;
+      max-width: 500px;
+      display: block;
+      margin: 1rem auto;
+      padding: 0.7rem 1.2rem;
+      border: 1px solid var(--input-border);
+      border-radius: 60px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 0.9rem;
+    }
+    .category-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin: 1.5rem 0;
+      justify-content: center;
+    }
+    .tab-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 40px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-color);
+    }
+    .tab-btn:hover, .tab-btn.active {
+      background: var(--button-bg);
+      color: white;
+      border-color: var(--button-bg);
+    }
+
+    /* ========== PROPERTY GRID (6-7 cards per row) ========== */
     #houses-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 1.2rem;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
       margin: 2rem 0;
     }
     @media (min-width: 1800px) {
@@ -345,24 +473,24 @@
       #houses-container { grid-template-columns: 1fr; }
     }
 
-    /* ========== HOUSE CARD (unchanged) ========== */
+    /* ========== HOUSE CARD (3D lift, soft shadow) ========== */
     .house-card {
       background: var(--card-bg);
-      border-radius: 24px;
+      border-radius: 28px;
       overflow: hidden;
       transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
       cursor: pointer;
       border: 1px solid var(--input-border);
     }
     .house-card:hover {
-      transform: translateY(-6px) scale(1.01);
-      box-shadow: 0 20px 30px -10px rgba(0,0,0,0.15);
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 24px 36px -12px rgba(0,0,0,0.2);
     }
     .slider {
       position: relative;
       width: 100%;
-      height: 160px;
+      height: 170px;
       overflow: hidden;
     }
     .slider img {
@@ -380,22 +508,28 @@
       transform: translateY(-50%);
       background: rgba(255,255,255,0.8);
       border: none;
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       font-size: 0.8rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      backdrop-filter: blur(4px);
+      transition: 0.2s;
+    }
+    .slider button:hover {
+      background: white;
+      transform: translateY(-50%) scale(1.1);
     }
     .house-card-content {
-      padding: 0.8rem;
+      padding: 1rem;
     }
     .house-card-content h3 {
       font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
       color: var(--text-color);
     }
     .house-card-content p {
@@ -403,12 +537,14 @@
       font-size: 0.8rem;
       line-height: 1.4;
     }
+
+    /* ========== BUTTONS & BADGES ========== */
     .badge {
       display: inline-block;
-      padding: 0.2rem 0.5rem;
+      padding: 0.2rem 0.6rem;
       font-size: 0.7rem;
-      font-weight: 500;
-      border-radius: 30px;
+      font-weight: 600;
+      border-radius: 40px;
       margin-right: 0.3rem;
       text-transform: uppercase;
     }
@@ -416,57 +552,109 @@
     .badge.premium { background: #f1c40f; color: #2c3e50; }
     .badge.featured { background: #f1c40f; color: #2c3e50; }
     .badge.self-contained { background: #9b59b6; color: white; }
-    .amenities-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0; }
+    .amenities-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.4rem 0;
+    }
     .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn {
       background: var(--button-bg);
       color: white;
       border: none;
-      padding: 4px 10px;
-      border-radius: 30px;
+      padding: 5px 12px;
+      border-radius: 40px;
       font-size: 0.7rem;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
     }
     .fav-btn {
       background: none;
       border: 1px solid var(--input-border);
       color: var(--text-color);
     }
-    .fav-btn:hover { background: rgba(0,0,0,0.05); }
-    .chat-btn:hover, .report-btn:hover, .share-btn:hover, .compare-btn:hover { background: var(--button-hover); }
-    .rating-widget { margin-top: 0.4rem; }
+    .fav-btn:hover {
+      background: rgba(0,0,0,0.05);
+    }
+    .chat-btn:hover, .report-btn:hover, .share-btn:hover, .compare-btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
+    .rating-widget { margin-top: 0.5rem; }
     .star { font-size: 0.9rem; cursor: pointer; color: #f39c12; }
+
+    /* ========== PAGINATION ========== */
     .pagination {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 0.5rem;
       justify-content: center;
-      margin: 30px 0;
+      margin: 2rem 0;
     }
     .page-btn {
       background: var(--card-bg);
       border: 1px solid var(--input-border);
-      border-radius: 30px;
-      padding: 6px 12px;
+      border-radius: 40px;
+      padding: 0.5rem 1rem;
       font-size: 0.8rem;
       cursor: pointer;
       transition: all 0.2s;
       color: var(--text-color);
     }
-    .page-btn:hover, .page-btn.active { background: var(--button-bg); color: white; border-color: var(--button-bg); }
-    .map-section { margin: 2rem 0; }
-    #map { height: 380px; width: 100%; border-radius: 20px; overflow: hidden; border: 1px solid var(--input-border); }
-    .map-controls { margin: 10px 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .map-controls button, .map-controls label { background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 30px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
-    .gps-section { background: var(--card-bg); border-radius: 20px; padding: 1.5rem; margin: 2rem 0; text-align: center; border: 1px solid var(--input-border); }
-    #getLocationBtn { background: var(--button-bg); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 40px; font-size: 0.85rem; cursor: pointer; }
+    .page-btn:hover, .page-btn.active {
+      background: var(--button-bg);
+      color: white;
+      border-color: var(--button-bg);
+    }
 
-    /* ========== FOOTER (unchanged) ========== */
+    /* ========== MAP & GPS ========== */
+    .map-section { margin: 2rem 0; }
+    #map {
+      height: 420px;
+      width: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid var(--input-border);
+    }
+    .map-controls {
+      margin: 0.8rem 0;
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .map-controls button, .map-controls label {
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .gps-section {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 1.8rem;
+      margin: 2rem 0;
+      text-align: center;
+      border: 1px solid var(--input-border);
+    }
+    #getLocationBtn {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.5rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    /* ========== FOOTER (modern) ========== */
     .footer {
       background: var(--footer-bg);
       border-top: 1px solid var(--input-border);
       margin-top: 3rem;
-      padding: 2rem 1rem 1rem;
+      padding: 2.5rem 1rem 1.5rem;
       font-size: 0.85rem;
     }
     .footer-container {
@@ -478,8 +666,8 @@
       margin-bottom: 2rem;
     }
     .footer-logo {
-      font-size: 1.2rem;
-      font-weight: 600;
+      font-size: 1.3rem;
+      font-weight: 700;
       margin-bottom: 0.5rem;
       color: var(--text-color);
     }
@@ -530,8 +718,8 @@
     .social-links a {
       color: var(--text-color);
       background: var(--input-bg);
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       display: inline-flex;
       align-items: center;
@@ -543,16 +731,16 @@
       background: var(--primary);
       color: white;
       border-color: var(--primary);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
     }
     .contact-info p {
       margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
     }
     .contact-info i {
-      width: 20px;
+      width: 22px;
       color: var(--primary);
     }
     .contact-info a {
@@ -565,12 +753,12 @@
       color: var(--primary);
     }
     .footer-newsletter {
-      max-width: 500px;
+      max-width: 520px;
       margin: 0 auto 2rem;
       text-align: center;
-      padding: 1rem;
+      padding: 1.2rem;
       background: var(--card-bg);
-      border-radius: 20px;
+      border-radius: 60px;
       border: 1px solid var(--input-border);
     }
     .footer-newsletter h3 {
@@ -588,19 +776,19 @@
       justify-content: center;
     }
     .footer-newsletter input {
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1rem;
       border-radius: 40px;
       border: 1px solid var(--input-border);
       background: var(--input-bg);
       color: var(--text-color);
-      width: 250px;
+      width: 260px;
     }
     .footer-newsletter button {
       background: #25D366;
       color: white;
       border: none;
       border-radius: 40px;
-      padding: 0.5rem 1.2rem;
+      padding: 0.6rem 1.2rem;
       cursor: pointer;
       transition: background 0.2s;
     }
@@ -626,31 +814,126 @@
       border-radius: 30px;
       color: var(--text-color);
     }
-    .footer-bottom-right i {
-      margin: 0 0.2rem;
+
+    /* ========== MODALS (unchanged but refined) ========== */
+    .modal {
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+    }
+    .modal-content {
+      background-color: var(--card-bg);
+      margin: 20px auto;
+      padding: 24px;
+      border-radius: 32px;
+      width: 90%;
+      max-width: 700px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .close-btn {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .modal-tab {
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
+      padding: 6px 16px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .modal-tab.active {
+      background: var(--button-bg);
+      color: white;
+    }
+    #modalDetails p {
+      font-size: 0.9rem;
+      font-weight: 400;
+      line-height: 1.5;
+      opacity: 0.9;
+    }
+    #modalDetails h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    #modalDetails strong {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .lightbox-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .lightbox-content img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 12px;
+    }
+    .landlord-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      color: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-right: 8px;
+      overflow: hidden;
+    }
+    .landlord-info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    #compareFloatingBtn {
+      position: fixed;
+      bottom: 100px;
+      right: 25px;
+      background: var(--button-bg);
+      color: white;
+      border-radius: 60px;
+      padding: 10px 20px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      z-index: 9998;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-size: 0.85rem;
+      font-weight: 600;
     }
 
-    /* ========== MODALS (unchanged) ========== */
-    .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-    .modal-content { background-color: var(--card-bg); margin: 20px auto; padding: 20px; border-radius: 20px; width: 90%; max-width: 600px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
-    .close-btn { color: #aaa; float: right; font-size: 24px; font-weight: bold; cursor: pointer; }
-    .modal-tab { background: var(--card-bg); border: 1px solid var(--input-border); padding: 6px 14px; border-radius: 40px; cursor: pointer; }
-    .modal-tab.active { background: var(--button-bg); color: white; }
-    #modalDetails p { font-size: 0.85rem; font-weight: 400; color: var(--text-color); line-height: 1.5; opacity: 0.85; }
-    #modalDetails h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; }
-    #modalDetails strong { font-weight: 500; color: var(--primary); }
-    .lightbox-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .lightbox-content img { max-width: 90%; max-height: 90%; border-radius: 8px; }
-    .landlord-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: inline-flex; align-items: center; justify-content: center; font-weight: 500; color: white; font-size: 0.9rem; cursor: pointer; margin-right: 6px; overflow: hidden; }
-    .landlord-info-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-    #compareFloatingBtn { position: fixed; bottom: 90px; right: 20px; background: var(--button-bg); color: white; border-radius: 40px; padding: 8px 16px; display: none; align-items: center; gap: 6px; cursor: pointer; z-index: 9998; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 0.8rem; }
-
     @media (max-width: 768px) {
-      .navbar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-      .hero h1 { font-size: 1.8rem; }
+      .navbar { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+      .hero { margin: 1rem; padding: 2rem 1rem; }
+      .hero h1 { font-size: 2rem; }
       .hero h1 i { font-size: 3rem; }
-      .hero p { font-size: 0.9rem; }
-      .filters-row { flex-direction: column; align-items: stretch; }
+      .hero p { font-size: 1rem; }
+      .filters-row { flex-direction: column; border-radius: 28px; }
       #houses-container { grid-template-columns: 1fr; }
       #map { height: 280px; }
       .footer-container { grid-template-columns: 1fr; text-align: center; }
@@ -669,9 +952,7 @@
       <a href="#">Home</a>
       <a href="#map">Explore Map</a>
       <div class="user-menu" id="userMenu">
-        <div class="user-avatar" id="userAvatar">
-          <i class="fas fa-user"></i>
-        </div>
+        <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
         <div class="user-dropdown" id="userDropdown">
           <div class="dropdown-header">
             <div class="avatar" id="dropdownAvatar"></div>
@@ -680,21 +961,11 @@
               <p id="userRole"></p>
             </div>
           </div>
-          <div class="dropdown-item" id="profileLink">
-            <i class="fas fa-user-circle"></i> My Profile
-          </div>
-          <div class="dropdown-item" id="premiumDashboardLink">
-            <i class="fas fa-crown"></i> Premium Dashboard
-          </div>
-          <div class="dropdown-item" id="becomeLandlordLink">
-            <i class="fas fa-building"></i> Become a Landlord
-          </div>
-          <div class="dropdown-item" id="upgradePremiumLink">
-            <i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span>
-          </div>
-          <div class="dropdown-item" id="logoutLink">
-            <i class="fas fa-sign-out-alt"></i> Logout
-          </div>
+          <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
+          <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
+          <div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>
+          <div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>
+          <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
         </div>
       </div>
       <a href="login.html" id="loginLink" style="display: none;">Login / Register</a>
@@ -703,13 +974,26 @@
     </div>
   </nav>
 
-  <header class="hero"><div class="hero-content"><h1><i class="fas fa-home"></i> Khomo Lathu</h1><p><i class="fas fa-lightbulb"></i> Explore verified rentals posted by landlords</p></div></header>
+  <header class="hero">
+    <div class="hero-content">
+      <h1><i class="fas fa-home"></i> Khomo Lathu</h1>
+      <p><i class="fas fa-check-circle"></i> Verified rentals from trusted landlords</p>
+    </div>
+  </header>
 
   <main class="main-container">
     <div class="filters-row">
-      <div class="price-range"><div class="range-values"><span id="priceMinLabel">Min: 0</span><span id="priceMaxLabel">Max: 2,000,000</span></div><div id="priceSlider"></div><input type="hidden" id="priceMin" value="0"><input type="hidden" id="priceMax" value="2000000"></div>
-      <select id="regionFilter" class="sort-select" style="min-width: 120px;"><option value="">All Regions</option><option value="Northern">Northern Region</option><option value="Central">Central Region</option><option value="Southern">Southern Region</option></select>
-      <select id="sortSelect" class="sort-select"><option value="default">Sort by: Default</option><option value="price_asc">Price: Low to High</option><option value="price_desc">Price: High to Low</option><option value="newest">Newest First</option><option value="rating">Highest Rated</option><option value="distance">Nearest to Me</option></select>
+      <div class="price-range">
+        <div class="range-values"><span id="priceMinLabel">Min: 0</span><span id="priceMaxLabel">Max: 2,000,000</span></div>
+        <div id="priceSlider"></div>
+        <input type="hidden" id="priceMin" value="0"><input type="hidden" id="priceMax" value="2000000">
+      </div>
+      <select id="regionFilter" class="sort-select" style="min-width: 120px;">
+        <option value="">All Regions</option><option value="Northern">Northern Region</option><option value="Central">Central Region</option><option value="Southern">Southern Region</option>
+      </select>
+      <select id="sortSelect" class="sort-select">
+        <option value="default">Sort by: Default</option><option value="price_asc">Price: Low to High</option><option value="price_desc">Price: High to Low</option><option value="newest">Newest First</option><option value="rating">Highest Rated</option><option value="distance">Nearest to Me</option>
+      </select>
       <button id="saveSearchBtn" class="save-search-btn"><i class="fas fa-save"></i> Save Search</button>
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);"><i class="fas fa-filter"></i> Apply Filters</button>
     </div>
@@ -734,7 +1018,7 @@
       <button class="tab-btn" data-type="Office"><i class="fas fa-briefcase"></i> Offices</button>
     </div>
 
-    <h2 style="margin: 1rem 0 0.5rem 0;"><i class="fas fa-list"></i> Available Properties</h2>
+    <h2 style="margin: 1rem 0 0.5rem;"><i class="fas fa-list"></i> Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
     <div class="pagination" id="pagination"></div>
 
@@ -743,15 +1027,24 @@
       <div class="map-controls">
         <button id="drawAreaBtn" class="save-search-btn"><i class="fas fa-draw-polygon"></i> Draw Area</button>
         <button id="clearDrawBtn" class="save-search-btn" style="background: #e74c3c;"><i class="fas fa-trash-alt"></i> Clear</button>
-        <div style="display: flex; align-items: center; gap: 10px;"><label><i class="fas fa-location-dot"></i> Near Me Radius:</label><input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2"><span id="radiusValueControl">2 km</span><button id="applyRadiusBtn" class="save-search-btn">Find</button></div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label><i class="fas fa-location-dot"></i> Near Me Radius:</label>
+          <input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2">
+          <span id="radiusValueControl">2 km</span>
+          <button id="applyRadiusBtn" class="save-search-btn">Find</button>
+        </div>
       </div>
       <div id="map"></div>
     </section>
 
-    <section class="gps-section"><h2><i class="fas fa-location-dot"></i> Property GPS Locator</h2><button id="getLocationBtn"><i class="fas fa-location-dot"></i> Capture My Property Location</button><p id="gpsStatus"></p><input type="hidden" id="latitude"><input type="hidden" id="longitude"></section>
+    <section class="gps-section">
+      <h2><i class="fas fa-location-dot"></i> Property GPS Locator</h2>
+      <button id="getLocationBtn"><i class="fas fa-location-dot"></i> Capture My Property Location</button>
+      <p id="gpsStatus"></p>
+      <input type="hidden" id="latitude"><input type="hidden" id="longitude">
+    </section>
   </main>
 
-  <!-- ========== FOOTER ========== -->
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-col">
@@ -777,7 +1070,7 @@
     <div class="footer-bottom"><div class="footer-bottom-left"><select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select></div><div class="footer-bottom-right"><span>Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</span></div></div>
   </footer>
 
-  <!-- ========== MODALS (unchanged) ========== -->
+  <!-- MODALS (unchanged) -->
   <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePropertyModal()">&times;</span><div id="propertyModalContent"></div><div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;"><button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button><button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button><button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button><button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button><button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button></div><div id="modalDetails" style="display:block;"></div><div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div><div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div><div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div><div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div></div></div>
   <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message (optional)</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
   <div id="lightboxModal" class="lightbox-modal" style="display: none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
@@ -839,30 +1132,14 @@
     const userDropdown = document.getElementById('userDropdown');
     const loginLink = document.getElementById('loginLink');
 
-    // Toggle dropdown on click
-    userAvatar.addEventListener('click', (e) => {
-      e.stopPropagation();
-      userMenu.classList.toggle('active');
-    });
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!userMenu.contains(e.target)) {
-        userMenu.classList.remove('active');
-      }
-    });
+    userAvatar.addEventListener('click', (e) => { e.stopPropagation(); userMenu.classList.toggle('active'); });
+    document.addEventListener('click', (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove('active'); });
 
-    // Fetch current user
     async function loadCurrentUser() {
       const token = localStorage.getItem('token');
-      if (!token) {
-        userMenu.style.display = 'none';
-        loginLink.style.display = 'inline-block';
-        return;
-      }
+      if (!token) { userMenu.style.display = 'none'; loginLink.style.display = 'inline-block'; return; }
       try {
-        const res = await fetch('/api/auth/me', {
-          headers: { Authorization: 'Bearer ' + token }
-        });
+        const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
         if (res.ok) {
           currentUser = await res.json();
           userMenu.style.display = 'block';
@@ -873,9 +1150,7 @@
           userMenu.style.display = 'none';
           loginLink.style.display = 'inline-block';
         }
-      } catch (err) {
-        console.error('Failed to load user', err);
-      }
+      } catch (err) { console.error('Failed to load user', err); }
     }
 
     function updateUserMenu() {
@@ -884,7 +1159,6 @@
       const userInitial = userName.charAt(0).toUpperCase();
       const avatarDiv = userAvatar;
       avatarDiv.innerHTML = currentUser.profilePicture ? `<img src="${currentUser.profilePicture}">` : `<span>${userInitial}</span>`;
-
       const dropdownAvatar = document.querySelector('#dropdownAvatar');
       dropdownAvatar.innerHTML = currentUser.profilePicture ? `<img src="${currentUser.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`;
       document.getElementById('userName').textContent = userName;
@@ -896,51 +1170,26 @@
       else roleText = 'Free User';
       roleSpan.textContent = roleText;
 
-      // Show/hide upgrade options based on role
       const upgradePremiumLink = document.getElementById('upgradePremiumLink');
       const becomeLandlordLink = document.getElementById('becomeLandlordLink');
-      if (currentUser.role === 'premium_user') {
-        upgradePremiumLink.style.display = 'none';
-      } else {
-        upgradePremiumLink.style.display = 'flex';
-      }
-      if (currentUser.role === 'premium_landlord' || currentUser.role === 'landlord') {
-        becomeLandlordLink.style.display = 'none';
-      } else {
-        becomeLandlordLink.style.display = 'flex';
-      }
+      if (currentUser.role === 'premium_user') upgradePremiumLink.style.display = 'none';
+      else upgradePremiumLink.style.display = 'flex';
+      if (currentUser.role === 'premium_landlord' || currentUser.role === 'landlord') becomeLandlordLink.style.display = 'none';
+      else becomeLandlordLink.style.display = 'flex';
     }
 
-    // Dropdown item actions
-    document.getElementById('profileLink').addEventListener('click', () => {
-      window.location.href = 'profile.html';
-    });
-    document.getElementById('premiumDashboardLink').addEventListener('click', () => {
-      window.location.href = 'premium-dashboard.html';
-    });
-    document.getElementById('becomeLandlordLink').addEventListener('click', () => {
-      window.location.href = 'dashboard.html';
-    });
+    document.getElementById('profileLink').addEventListener('click', () => { window.location.href = 'profile.html'; });
+    document.getElementById('premiumDashboardLink').addEventListener('click', () => { window.location.href = 'premium-dashboard.html'; });
+    document.getElementById('becomeLandlordLink').addEventListener('click', () => { window.location.href = 'dashboard.html'; });
     document.getElementById('upgradePremiumLink').addEventListener('click', async () => {
       const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please login first');
-        return;
-      }
+      if (!token) { alert('Please login first'); return; }
       try {
-        const res = await fetch('/api/payment/premium-user', {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + token }
-        });
+        const res = await fetch('/api/payment/premium-user', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
         const data = await res.json();
-        if (data.payment_url) {
-          window.location.href = data.payment_url;
-        } else {
-          alert('Payment initiation failed');
-        }
-      } catch (err) {
-        alert('Error starting upgrade');
-      }
+        if (data.payment_url) window.location.href = data.payment_url;
+        else alert('Payment initiation failed');
+      } catch (err) { alert('Error starting upgrade'); }
     });
     document.getElementById('logoutLink').addEventListener('click', () => {
       localStorage.removeItem('token');
