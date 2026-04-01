@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ========== THEME VARIABLES (modern) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -235,7 +235,7 @@
       margin-top: 0.3rem;
     }
 
-    /* ========== CHARTS ========== */
+    /* ========== CHARTS (fixed height) ========== */
     .charts-row {
       display: grid;
       grid-template-columns: 2fr 1fr;
@@ -262,8 +262,12 @@
       align-items: center;
       gap: 0.5rem;
     }
+    .chart-card canvas {
+      max-height: 280px;
+      width: 100% !important;
+    }
 
-    /* ========== TABLES (modern) ========== */
+    /* ========== TABLES ========== */
     .table-card {
       background: var(--card-bg);
       backdrop-filter: blur(8px);
@@ -360,7 +364,7 @@
       border-color: var(--button-bg);
     }
 
-    /* ========== PREMIUM SECTION SPECIAL EFFECTS ========== */
+    /* ========== PREMIUM SECTION ========== */
     .premium-section {
       background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(16,185,129,0.05));
       border-radius: 32px;
@@ -459,10 +463,16 @@
       <div class="stat-card"><h3><i class="fas fa-clock"></i> Pending Verifications</h3><div class="value" id="pendingVerifications">0</div><div class="sub">landlords</div></div>
     </div>
 
-    <!-- Charts -->
+    <!-- Charts (with fixed height containers) -->
     <div class="charts-row">
-      <div class="chart-card"><h2><i class="fas fa-chart-line"></i> Houses Posted per Month</h2><canvas id="housesChart"></canvas></div>
-      <div class="chart-card"><h2><i class="fas fa-chart-pie"></i> Landlord Verification</h2><canvas id="verificationChart"></canvas></div>
+      <div class="chart-card">
+        <h2><i class="fas fa-chart-line"></i> Houses Posted per Month</h2>
+        <canvas id="housesChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2><i class="fas fa-chart-pie"></i> Landlord Verification</h2>
+        <canvas id="verificationChart"></canvas>
+      </div>
     </div>
 
     <!-- Real-time Stats -->
@@ -477,16 +487,14 @@
       <button id="exportCsvBtn" class="action-btn" style="background:#27ae60; margin-top:10px;"><i class="fas fa-download"></i> Export Houses (CSV)</button>
     </div>
 
-    <!-- PREMIUM USERS SECTION (NEW) -->
+    <!-- PREMIUM USERS SECTION -->
     <div class="premium-section">
       <h2><i class="fas fa-crown" style="color: #f59e0b;"></i> Premium Users Management</h2>
       <div class="table-card" style="margin-bottom:0; padding:0; background:transparent; box-shadow:none;">
         <div style="overflow-x: auto;">
           <table id="premiumUsersTable">
-            <thead>
-              <tr><th>User</th><th>Email</th><th>Status</th><th>Subscription Expiry</th><th>Actions</th></tr>
-            </thead>
-            <tbody><tr><td colspan="5" style="text-align:center;">Loading premium users...</td></tr></tbody>
+            <thead><tr><th>User</th><th>Email</th><th>Status</th><th>Subscription Expiry</th><th>Actions</th> </thead>
+            <tbody> <td colspan="5" style="text-align:center;">Loading premium users... </tbody>
           </table>
         </div>
         <div class="pagination" id="premiumUsersPagination"></div>
@@ -498,8 +506,8 @@
       <h2><i class="fas fa-user-tie"></i> Landlord Management</h2>
       <div style="overflow-x: auto;">
         <table id="landlordsTable">
-          <thead><tr><th>Name</th><th>Email</th><th>Verification</th><th>Actions</th></tr></thead>
-          <tbody><tr><td colspan="4" style="text-align:center;">Loading landlords...</td></tr></tbody>
+          <thead> <th>Name</th><th>Email</th><th>Verification</th><th>Actions</th> </thead>
+          <tbody> <td colspan="4" style="text-align:center;">Loading landlords... </tbody>
         </table>
       </div>
       <div class="pagination" id="landlordsPagination"></div>
@@ -510,8 +518,8 @@
       <h2><i class="fas fa-home"></i> All Houses</h2>
       <div style="overflow-x: auto;">
         <table id="housesTable">
-          <thead><tr><th>House</th><th>Location</th><th>Price</th><th>Owner</th><th>Featured</th><th>Actions</th></tr></thead>
-          <tbody><tr><td colspan="6" style="text-align:center;">Loading houses...</td></tr></tbody>
+          <thead> <th>House</th><th>Location</th><th>Price</th><th>Owner</th><th>Featured</th><th>Actions</th> </thead>
+          <tbody> <td colspan="6" style="text-align:center;">Loading houses... </tbody>
         </table>
       </div>
       <div class="pagination" id="housesPagination"></div>
@@ -522,8 +530,8 @@
       <h2><i class="fas fa-flag"></i> User Reports</h2>
       <div style="overflow-x: auto;">
         <table id="reportsTable">
-          <thead><tr><th>Reporter</th><th>Landlord</th><th>House</th><th>Reason</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody><tr><td colspan="7" style="text-align:center;">Loading reports...</td></tr></tbody>
+          <thead> <th>Reporter</th><th>Landlord</th><th>House</th><th>Reason</th><th>Date</th><th>Status</th><th>Action</th> </thead>
+          <tbody> <td colspan="7" style="text-align:center;">Loading reports... </tbody>
         </table>
       </div>
     </div>
@@ -533,8 +541,8 @@
       <h2><i class="fas fa-history"></i> User Activity Logs</h2>
       <div style="overflow-x: auto;">
         <table id="activityLogsTable">
-          <thead><tr><th>User</th><th>Action</th><th>Details</th><th>IP</th><th>Date</th></tr></thead>
-          <tbody><tr><td colspan="5" style="text-align:center;">Loading logs...</td></tr></tbody>
+          <thead> <th>User</th><th>Action</th><th>Details</th><th>IP</th><th>Date</th> </thead>
+          <tbody> <td colspan="5" style="text-align:center;">Loading logs... </tbody>
         </table>
       </div>
       <div class="pagination" id="logsPagination"></div>
