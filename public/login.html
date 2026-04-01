@@ -1,114 +1,338 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login | Khomo Lathu</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
+  <title>Login | Khomo Lathu</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* Same styles as before */
-    body { font-family: 'Inter', sans-serif; background: #f4f4f4; }
-    .form-container { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .form-container h2 { text-align: center; margin-bottom: 20px; color: #2c3e50; }
-    .form-container input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
-    .form-container button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    .form-container button:hover { background: #2980b9; }
-    .form-container button:disabled { background: #95a5a6; cursor: not-allowed; }
-    .google-btn { background: white; border: 1px solid #e0e0e0; color: #2c3e50; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    .google-btn:hover { background: #f8f9fa; }
-    .forgot-link { display: block; text-align: center; margin-top: 12px; color: #3498db; text-decoration: none; font-size: 0.9rem; }
-    .forgot-link:hover { text-decoration: underline; }
-    .message { margin-top: 15px; text-align: center; font-size: 0.9rem; padding: 8px; border-radius: 6px; display: none; }
-    .message.error { background: #f8d7da; color: #721c24; display: block; }
-    .message.success { background: #d4edda; color: #155724; display: block; }
-    .loading { display: inline-block; margin-left: 8px; }
-    @media(max-width:600px){ .form-container { margin:20px; } }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      top: -100px;
+      left: -100px;
+      animation: float 20s infinite;
+    }
+    body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      bottom: -150px;
+      right: -150px;
+      animation: float 25s infinite reverse;
+    }
+    @keyframes float {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(30px, 20px) rotate(10deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+    .login-container {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+      padding: 2rem;
+      transition: transform 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.3);
+      position: relative;
+      z-index: 10;
+    }
+    .login-container:hover {
+      transform: translateY(-5px);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .logo i {
+      font-size: 3rem;
+      background: linear-gradient(135deg, #2563eb, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .logo h2 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1.8rem;
+      margin-top: 0.5rem;
+      background: linear-gradient(135deg, #2c3e50, #3498db);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .input-group {
+      margin-bottom: 1rem;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: #2c3e50;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      background: #fff;
+      outline: none;
+    }
+    .input-group input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .login-btn {
+      width: 100%;
+      padding: 0.8rem;
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 0.5rem;
+    }
+    .login-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    }
+    .login-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 1.5rem 0;
+      color: #94a3b8;
+      font-size: 0.8rem;
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .divider span {
+      margin: 0 0.8rem;
+    }
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #2c3e50;
+      text-decoration: none;
+    }
+    .social-btn i {
+      font-size: 1.2rem;
+    }
+    .social-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .google-btn i { background: linear-gradient(135deg, #DB4437, #F4B400, #0F9D58, #4285F4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .apple-btn i { color: #000; }
+    .facebook-btn i { color: #1877f2; }
+    .forgot-link {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+    }
+    .forgot-link a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .forgot-link a:hover {
+      text-decoration: underline;
+    }
+    .signup-link {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #4b5563;
+    }
+    .signup-link a {
+      color: #2563eb;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .signup-link a:hover {
+      text-decoration: underline;
+    }
+    .message {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+    .message.error {
+      background: #fee2e2;
+      color: #b91c1c;
+      display: block;
+    }
+    .message.success {
+      background: #dcfce7;
+      color: #15803d;
+      display: block;
+    }
+    @media (max-width: 640px) {
+      .login-container {
+        padding: 1.5rem;
+      }
+    }
   </style>
 </head>
 <body>
-<div class="form-container">
-  <h2>Landlord Login</h2>
-  <form id="loginForm">
-    <input type="email" placeholder="Email" id="email" required>
-    <input type="password" placeholder="Password" id="password" required>
-    <button type="submit" id="loginBtn">Login</button>
-  </form>
-  <div id="message"></div>
-  <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
-  <a href="/api/auth/google">
-    <button class="google-btn" type="button">
-      <i class="fab fa-google" style="font-size: 1.2rem;"></i> Login with Google
-    </button>
-  </a>
-  <p style="text-align:center; margin-top:20px;">
-    No account? <a href="register.html">Register</a>
-  </p>
-</div>
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('verified') === 'true') {
-    showMessage('Email verified! You can now log in.', 'success');
-  }
-  if (urlParams.get('error') === 'google-auth-failed') {
-    showMessage('Google authentication failed.', 'error');
-  }
-  if (urlParams.get('error') === 'invalid-verification-token') {
-    showMessage('Invalid or expired verification link. Please register again.', 'error');
-  }
+  <div class="login-container">
+    <div class="logo">
+      <i class="fas fa-home"></i>
+      <h2>Welcome Back</h2>
+    </div>
 
-  function showMessage(text, type) {
-    const msgDiv = document.getElementById('message');
-    msgDiv.textContent = text;
-    msgDiv.className = 'message ' + type;
-    setTimeout(() => {
-      msgDiv.style.display = 'none';
-    }, 5000);
-  }
+    <form id="loginForm">
+      <div class="input-group">
+        <label><i class="fas fa-envelope"></i> Email Address</label>
+        <input type="email" id="email" placeholder="your@email.com" required>
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">
+        <i class="fas fa-sign-in-alt"></i> Log In
+      </button>
+    </form>
+    <div id="message" class="message"></div>
 
-  const form = document.getElementById('loginForm');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const loginBtn = document.getElementById('loginBtn');
+    <div class="divider">
+      <span>or continue with</span>
+    </div>
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
+    <a href="/api/auth/google" class="social-btn google-btn">
+      <i class="fab fa-google"></i> Continue with Google
+    </a>
+    <!-- Apple and Facebook buttons can be added if backend supports them -->
+    <!-- <a href="/api/auth/apple" class="social-btn apple-btn"><i class="fab fa-apple"></i> Continue with Apple</a> -->
+    <!-- <a href="/api/auth/facebook" class="social-btn facebook-btn"><i class="fab fa-facebook-f"></i> Continue with Facebook</a> -->
 
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = 'Logging in... <i class="fas fa-spinner fa-spin"></i>';
+    <div class="forgot-link">
+      <a href="forgot-password.html"><i class="fas fa-key"></i> Forgot password?</a>
+    </div>
+    <div class="signup-link">
+      Don't have an account? <a href="register.html">Sign up now</a>
+    </div>
+  </div>
 
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.user.role);
-        // Redirect based on role
-        if (data.user.role === 'admin') {
-          window.location.href = 'admin.html';
-        } else if (data.user.role === 'premium_user') {
-          window.location.href = 'premium-dashboard.html';
-        } else if (data.user.role === 'landlord') {
-          window.location.href = 'dashboard.html';
-        } else {
-          window.location.href = 'index.html';
-        }
-      } else {
-        showMessage(data.message || 'Login failed', 'error');
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = 'Login';
-      }
-    } catch (err) {
-      showMessage('Network error. Please try again.', 'error');
-      loginBtn.disabled = false;
-      loginBtn.innerHTML = 'Login';
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === 'true') {
+      showMessage('Email verified! You can now log in.', 'success');
     }
-  });
-</script>
+    if (urlParams.get('error') === 'google-auth-failed') {
+      showMessage('Google authentication failed.', 'error');
+    }
+    if (urlParams.get('error') === 'invalid-verification-token') {
+      showMessage('Invalid or expired verification link. Please register again.', 'error');
+    }
+
+    function showMessage(text, type) {
+      const msgDiv = document.getElementById('message');
+      msgDiv.textContent = text;
+      msgDiv.className = 'message ' + type;
+      setTimeout(() => {
+        msgDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('role', data.user.role);
+          // Redirect based on role
+          if (data.user.role === 'admin') {
+            window.location.href = 'admin.html';
+          } else if (data.user.role === 'premium_user') {
+            window.location.href = 'premium-dashboard.html';
+          } else if (data.user.role === 'landlord') {
+            window.location.href = 'dashboard.html';
+          } else {
+            window.location.href = 'index.html';
+          }
+        } else {
+          showMessage(data.message || 'Login failed', 'error');
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Log In';
+        }
+      } catch (err) {
+        showMessage('Network error. Please try again.', 'error');
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Log In';
+      }
+    });
+  </script>
 </body>
 </html>
