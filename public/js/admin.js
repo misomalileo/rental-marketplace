@@ -5,8 +5,7 @@ if (!token) {
 }
 
 // ========== GLOBAL STATE ==========
-let housesChart = null;
-let verificationChart = null;
+let housesChart, verificationChart;
 let currentLogsPage = 1;
 let currentLandlordsPage = 1;
 let currentHousesPage = 1;
@@ -14,12 +13,10 @@ let currentPremiumPage = 1;
 const perPage = 10;
 
 // ========== HELPER: SHOW/HIDE LOADING ==========
-function setLoading(elementId, isLoading) {
-  const container = document.getElementById(elementId);
-  if (!container) return;
-  const tbody = container.querySelector('tbody');
+function showLoading(tableId, show = true) {
+  const tbody = document.querySelector(`#${tableId} tbody`);
   if (!tbody) return;
-  if (isLoading) {
+  if (show) {
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading...</td></tr>';
   }
 }
@@ -33,16 +30,22 @@ async function loadStats() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const stats = await res.json();
 
-    document.getElementById("totalLandlords").innerText = stats.totalLandlords;
-    document.getElementById("totalHouses").innerText = stats.totalHouses;
-    document.getElementById("totalViews").innerText = stats.totalViews;
-    document.getElementById("pendingVerifications").innerText = stats.pendingVerifications;
+    document.getElementById("totalLandlords").innerText = stats.totalLandlords || 0;
+    document.getElementById("totalHouses").innerText = stats.totalHouses || 0;
+    document.getElementById("totalViews").innerText = stats.totalViews || 0;
+    document.getElementById("pendingVerifications").innerText = stats.pendingVerifications || 0;
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const chartData = new Array(12).fill(0);
-    stats.housesPerMonth.forEach(item => {
-      chartData[item._id - 1] = item.count;
-    });
+    if (stats.housesPerMonth && Array.isArray(stats.housesPerMonth)) {
+      stats.housesPerMonth.forEach(item => {
+        if (item._id >= 1 && item._id <= 12) chartData[item._id - 1] = item.count;
+      });
+    }
+
+    // Fix chart container size: ensure canvas has a parent with height
+    const chartContainer = document.getElementById('housesChart').parentElement;
+    if (chartContainer) chartContainer.style.height = '300px';
 
     const ctx1 = document.getElementById('housesChart').getContext('2d');
     if (housesChart) housesChart.destroy();
@@ -61,7 +64,7 @@ async function loadStats() {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         scales: { y: { beginAtZero: true, grid: { color: '#ecf0f1' } } },
         plugins: { legend: { display: false } }
       }
@@ -75,9 +78,9 @@ async function loadStats() {
         labels: ['None', 'Official', 'Premium'],
         datasets: [{
           data: [
-            stats.totalLandlords - stats.officialLandlords - stats.premiumLandlords,
-            stats.officialLandlords,
-            stats.premiumLandlords
+            (stats.totalLandlords || 0) - (stats.officialLandlords || 0) - (stats.premiumLandlords || 0),
+            stats.officialLandlords || 0,
+            stats.premiumLandlords || 0
           ],
           backgroundColor: ['#bdc3c7', '#2ecc71', '#f1c40f'],
           borderWidth: 0
@@ -85,14 +88,14 @@ async function loadStats() {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
         cutout: '70%'
       }
     });
   } catch (err) {
     console.error("Failed to load stats:", err);
-    alert("Failed to load stats: " + err.message);
+    // Don't alert – just show fallback
   }
 }
 
@@ -102,22 +105,25 @@ async function loadRealTimeStats() {
     const res = await fetch("/api/admin/real-time", {
       headers: { Authorization: "Bearer " + token }
     });
+    if (!res.ok) throw new Error();
     const data = await res.json();
-    document.getElementById('activeUsers').innerText = data.activeUsers;
-    document.getElementById('newListings').innerText = data.newListingsToday;
-    document.getElementById('revenueToday').innerText = data.revenue;
-    document.getElementById('totalHousesAdmin').innerText = data.totalHouses;
+    document.getElementById('activeUsers').innerText = data.activeUsers || 0;
+    document.getElementById('newListings').innerText = data.newListingsToday || 0;
+    document.getElementById('revenueToday').innerText = data.revenue || 'MWK 0';
+    document.getElementById('totalHousesAdmin').innerText = data.totalHouses || 0;
   } catch (err) {
     console.error("Failed to load real-time stats:", err);
+    // silent fail
   }
 }
 
 // ========== LOAD PREMIUM USERS (with pagination) ==========
 async function loadPremiumUsers(page = 1) {
   currentPremiumPage = page;
-  const tbody = document.querySelector("#premiumUsersTable tbody");
+  const tableId = 'premiumUsersTable';
+  const tbody = document.querySelector(`#${tableId} tbody`);
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading premium users...</td></tr>';
+  showLoading(tableId, true);
   try {
     const res = await fetch(`/api/admin/premium-users?page=${page}&limit=${perPage}`, {
       headers: { Authorization: "Bearer " + token }
@@ -141,10 +147,10 @@ async function loadPremiumUsers(page = 1) {
         `;
       });
     }
-    renderPagination('premiumUsersPagination', data.totalPages, data.page, 'loadPremiumUsers');
+    renderPagination('premiumUsersPagination', data.totalPages, data.page, loadPremiumUsers);
   } catch (err) {
     console.error("Failed to load premium users:", err);
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Error loading premium users.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Error loading premium users. Make sure the endpoint exists.</td></tr>';
   }
 }
 
@@ -160,7 +166,7 @@ async function revokePremium(userId) {
     if (res.ok) {
       alert("Premium status revoked.");
       loadPremiumUsers(currentPremiumPage);
-      loadStats(); // refresh stats if needed
+      loadStats();
     } else {
       alert("Failed: " + (data.message || "Unknown error"));
     }
@@ -173,9 +179,10 @@ async function revokePremium(userId) {
 // ========== LOAD LANDLORDS (with pagination) ==========
 async function loadLandlords(page = 1) {
   currentLandlordsPage = page;
-  const tbody = document.querySelector("#landlordsTable tbody");
+  const tableId = 'landlordsTable';
+  const tbody = document.querySelector(`#${tableId} tbody`);
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading landlords...</td></tr>';
+  showLoading(tableId, true);
   try {
     const res = await fetch(`/api/admin/landlords?page=${page}&limit=${perPage}`, {
       headers: { Authorization: "Bearer " + token }
@@ -201,10 +208,10 @@ async function loadLandlords(page = 1) {
         `;
       });
     }
-    renderPagination('landlordsPagination', data.totalPages, data.page, 'loadLandlords');
+    renderPagination('landlordsPagination', data.totalPages, data.page, loadLandlords);
   } catch (err) {
     console.error("Failed to load landlords:", err);
-    tbody.innerHTML = '<tr><td colspan="4">Error loading landlords.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4">Error loading landlords. Check console.</td></tr>';
   }
 }
 
@@ -259,9 +266,10 @@ async function banUser(id) {
 // ========== LOAD HOUSES (with pagination) ==========
 async function loadHouses(page = 1) {
   currentHousesPage = page;
-  const tbody = document.querySelector("#housesTable tbody");
+  const tableId = 'housesTable';
+  const tbody = document.querySelector(`#${tableId} tbody`);
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading houses...</td></tr>';
+  showLoading(tableId, true);
   try {
     const res = await fetch(`/api/admin/houses?page=${page}&limit=${perPage}`, {
       headers: { Authorization: "Bearer " + token }
@@ -289,7 +297,7 @@ async function loadHouses(page = 1) {
         `;
       });
     }
-    renderPagination('housesPagination', data.totalPages, data.page, 'loadHouses');
+    renderPagination('housesPagination', data.totalPages, data.page, loadHouses);
   } catch (err) {
     console.error("Failed to load houses:", err);
     tbody.innerHTML = '<tr><td colspan="6">Error loading houses.</td></tr>';
@@ -338,14 +346,15 @@ async function deleteHouse(id) {
 
 // ========== LOAD REPORTS ==========
 async function loadReports() {
+  const tbody = document.querySelector("#reportsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7"><i class="fas fa-spinner fa-pulse"></i> Loading...</td></tr>';
   try {
     const res = await fetch("/api/admin/reports", {
       headers: { Authorization: "Bearer " + token }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const reports = await res.json();
-    const tbody = document.querySelector("#reportsTable tbody");
-    if (!tbody) return;
     tbody.innerHTML = "";
     if (!reports || reports.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No reports found.</td></tr>';
@@ -359,18 +368,13 @@ async function loadReports() {
           <td>${escapeHtml(r.reason)}</td>
           <td>${new Date(r.createdAt).toLocaleDateString()}</td>
           <td><span class="badge ${r.status === 'pending' ? 'none' : 'official'}">${r.status}</span></td>
-          <td>
-            ${r.status === 'pending'
-              ? `<button class="action-btn verify" onclick="resolveReport('${r._id}')">✔ Resolve</button>`
-              : 'Resolved'}
-          </td>
+          <td>${r.status === 'pending' ? `<button class="action-btn verify" onclick="resolveReport('${r._id}')">✔ Resolve</button>` : 'Resolved'}</td>
         `;
       });
     }
   } catch (err) {
     console.error("Failed to load reports:", err);
-    const tbody = document.querySelector("#reportsTable tbody");
-    if (tbody) tbody.innerHTML = '<tr><td colspan="7">Error loading reports.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7">Error loading reports.</td></tr>';
   }
 }
 
@@ -396,13 +400,14 @@ async function resolveReport(id) {
 // ========== ACTIVITY LOGS (with pagination) ==========
 async function loadActivityLogs(page = 1) {
   currentLogsPage = page;
+  const tbody = document.querySelector("#activityLogsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-pulse"></i> Loading...</td></tr>';
   try {
     const res = await fetch(`/api/admin/activity-logs?page=${page}&limit=20`, {
       headers: { Authorization: "Bearer " + token }
     });
     const data = await res.json();
-    const tbody = document.querySelector("#activityLogsTable tbody");
-    if (!tbody) return;
     tbody.innerHTML = "";
     if (!data.logs || data.logs.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5">No logs found.</td></tr>';
@@ -419,15 +424,14 @@ async function loadActivityLogs(page = 1) {
     renderLogsPagination(data);
   } catch (err) {
     console.error("Failed to load activity logs:", err);
-    const tbody = document.querySelector("#activityLogsTable tbody");
-    if (tbody) tbody.innerHTML = '<tr><td colspan="5">Error loading logs</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5">Error loading logs.</td></tr>';
   }
 }
 
 function renderLogsPagination(data) {
   const paginationDiv = document.getElementById('logsPagination');
   if (!paginationDiv) return;
-  if (data.pages <= 1) {
+  if (!data.pages || data.pages <= 1) {
     paginationDiv.innerHTML = '';
     return;
   }
@@ -439,16 +443,16 @@ function renderLogsPagination(data) {
 }
 
 // ========== GENERAL PAGINATION RENDERER ==========
-function renderPagination(containerId, totalPages, currentPage, functionName) {
+function renderPagination(containerId, totalPages, currentPage, callback) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  if (totalPages <= 1) {
+  if (!totalPages || totalPages <= 1) {
     container.innerHTML = '';
     return;
   }
   let html = '';
   for (let i = 1; i <= totalPages; i++) {
-    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="window.${functionName}(${i})">${i}</button>`;
+    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="(${callback.name})(${i})">${i}</button>`;
   }
   container.innerHTML = html;
 }
@@ -480,9 +484,9 @@ loadReports();
 loadPremiumUsers();
 loadRealTimeStats();
 loadActivityLogs();
-setInterval(loadRealTimeStats, 30000); // update every 30 seconds
+setInterval(loadRealTimeStats, 30000);
 
-// Make functions globally available for onclick handlers
+// Make functions globally available
 window.verifyUser = verifyUser;
 window.banUser = banUser;
 window.toggleFeatured = toggleFeatured;
