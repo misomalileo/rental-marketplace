@@ -15,7 +15,6 @@ async function generateLease(bookingId) {
 }
 
 function openLeaseModal(leaseId, pdfUrl) {
-  // Remove any existing modal
   const existingModal = document.getElementById('leaseModal');
   if (existingModal) existingModal.remove();
 
