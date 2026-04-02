@@ -317,7 +317,7 @@ function filterHousesByPolygon() {
 }
 
 // ======================================
-// COMPARISON FUNCTIONS (ENHANCED)
+// COMPARISON FUNCTIONS
 // ======================================
 function updateCompareButton() {
   const btn = document.getElementById('compareFloatingBtn');
@@ -390,7 +390,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</tr></tbody></td>`;
+  tableHtml += `</table></tbody></table>`;
 
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
@@ -756,15 +756,16 @@ function loadVirtualTour(url) {
 }
 
 // ======================================
-// SHOW DETAILS (with tabs and bidding system)
+// SHOW DETAILS (with tabs and full bidding UI)
 // ======================================
 async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
   if (!house) return;
-  const detailsHtml = `<h2>${house.name}</h2><p><strong><i class="fas fa-home"></i> Type:</strong> ${house.type}</p><p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p><p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p><p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p><p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p><p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p><p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p><p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p><p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p><p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p><p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p><p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>`;
-  document.getElementById('modalDetails').innerHTML = detailsHtml;
 
-  // ========== RENTAL BIDDING SYSTEM ==========
+  // Build base details HTML
+  let detailsHtml = `<h2>${house.name}</h2><p><strong><i class="fas fa-home"></i> Type:</strong> ${house.type}</p><p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p><p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p><p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p><p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p><p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p><p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p><p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p><p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p><p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p><p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p><p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>`;
+
+  // ========== SHOW TENANT'S OWN OFFER STATUS (if any) ==========
   const isLoggedIn = !!localStorage.getItem("token");
   let currentUserId = null;
   if (isLoggedIn) {
@@ -774,8 +775,90 @@ async function showDetails(houseId) {
     } catch(e) {}
   }
 
-  // Add "Make an Offer" button
-  if (isLoggedIn && house.owner && house.owner._id !== currentUserId && house.allowBidding !== false) {
+  if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/offers/my/house/${house._id}`, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const myOffer = await res.json();
+        if (myOffer) {
+          let statusHtml = '';
+          if (myOffer.status === 'pending') {
+            statusHtml = `<div class="offer-status-card pending"><i class="fas fa-clock"></i> Your offer: Pending (MWK ${myOffer.proposedPrice.toLocaleString()})</div>`;
+          } else if (myOffer.status === 'accepted') {
+            statusHtml = `<div class="offer-status-card accepted"><i class="fas fa-check-circle"></i> Your offer was ACCEPTED! Contact the landlord to finalise.</div>`;
+          } else if (myOffer.status === 'rejected') {
+            statusHtml = `<div class="offer-status-card rejected"><i class="fas fa-times-circle"></i> Your offer was rejected.</div>`;
+          } else if (myOffer.status === 'countered') {
+            statusHtml = `<div class="offer-status-card countered">
+              <i class="fas fa-exchange-alt"></i> Landlord countered: MWK ${myOffer.counterOfferPrice.toLocaleString()}<br>
+              Move-in: ${new Date(myOffer.counterOfferDate).toLocaleDateString()}<br>
+              ${myOffer.landlordComment ? `<em>${myOffer.landlordComment}</em><br>` : ''}
+              <button id="acceptCounterFromModalBtn" class="save-search-btn" style="background: #10b981; margin-top: 8px;">Accept Counter Offer</button>
+            </div>`;
+          }
+          // Prepend status to detailsHtml
+          detailsHtml = statusHtml + detailsHtml;
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch tenant offer', err);
+    }
+  }
+
+  // Set modal content
+  document.getElementById('modalDetails').innerHTML = detailsHtml;
+
+  // If accept counter button exists, attach event
+  const acceptCounterBtn = document.getElementById('acceptCounterFromModalBtn');
+  if (acceptCounterBtn) {
+    acceptCounterBtn.addEventListener('click', async () => {
+      if (!confirm('Accept the landlord’s counter offer?')) return;
+      try {
+        const token = localStorage.getItem('token');
+        const resOffer = await fetch(`/api/offers/my/house/${house._id}`, {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const offerData = await resOffer.json();
+        if (!offerData || !offerData._id) return alert('Offer not found');
+        const acceptRes = await fetch(`/api/offers/${offerData._id}/accept`, {
+          method: 'PUT',
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        if (acceptRes.ok) {
+          alert('Counter offer accepted! The landlord will contact you.');
+          closePropertyModal();
+        } else {
+          const err = await acceptRes.json();
+          alert('Failed: ' + err.message);
+        }
+      } catch (err) {
+        alert('Network error');
+      }
+    });
+  }
+
+  // ========== MAKE AN OFFER BUTTON (only if no pending/countered) ==========
+  // We need to re-check if there is an existing offer that is pending or countered
+  let hasActiveOffer = false;
+  if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/offers/my/house/${house._id}`, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const existing = await res.json();
+        if (existing && (existing.status === 'pending' || existing.status === 'countered')) {
+          hasActiveOffer = true;
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (isLoggedIn && house.owner && house.owner._id !== currentUserId && house.allowBidding !== false && !hasActiveOffer) {
     const offerSection = document.createElement('div');
     offerSection.className = 'offer-section';
     offerSection.style.marginTop = '1rem';
@@ -831,6 +914,8 @@ async function showDetails(houseId) {
             if (res.ok) {
               alert('Offer submitted successfully! The landlord will be notified.');
               container.style.display = 'none';
+              // Refresh modal to show pending status
+              showDetails(house._id);
             } else {
               alert('Failed to submit offer: ' + (data.message || 'Unknown error'));
             }
@@ -849,14 +934,12 @@ async function showDetails(houseId) {
   if (isLoggedIn && house.showHighestBidToPremium) {
     try {
       const token = localStorage.getItem('token');
-      // First check if user is premium – either from JWT or fetch from /api/auth/me
       let isPremium = false;
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         isPremium = payload.isPremium === true;
       } catch(e) {}
       if (!isPremium) {
-        // Fallback: fetch user data
         const userRes = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
         if (userRes.ok) {
           const userData = await userRes.json();

@@ -10,7 +10,6 @@ router.post('/', auth, async (req, res) => {
   try {
     const { houseId, proposedPrice, moveInDate, tenantComment } = req.body;
 
-    // Validate required fields
     if (!houseId || !proposedPrice || !moveInDate) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
@@ -43,14 +42,11 @@ router.post('/', auth, async (req, res) => {
     });
     await offer.save();
 
-    // Get tenant name safely (req.user.name might be missing)
     let tenantName = 'A tenant';
     try {
       const tenant = await User.findById(req.user.id);
       if (tenant && tenant.name) tenantName = tenant.name;
-    } catch (err) {
-      console.warn('Could not fetch tenant name:', err.message);
-    }
+    } catch (err) {}
 
     const landlord = await User.findById(house.owner);
     if (landlord) {
@@ -71,6 +67,21 @@ router.post('/', auth, async (req, res) => {
   } catch (err) {
     console.error('Offer creation error:', err);
     res.status(500).json({ message: 'Server error: ' + err.message });
+  }
+});
+
+// GET /api/offers/my/house/:houseId – tenant's offer for a specific house (NEW)
+router.get('/my/house/:houseId', auth, async (req, res) => {
+  try {
+    const offer = await Offer.findOne({
+      houseId: req.params.houseId,
+      tenantId: req.user.id
+    }).populate('houseId', 'name');
+    if (!offer) return res.json(null);
+    res.json(offer);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
