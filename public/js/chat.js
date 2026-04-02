@@ -154,12 +154,15 @@ async function loadMessages(chatId) {
     }
     if (!res.ok) throw new Error(`Failed: ${res.status}`);
     const chat = await res.json();
+    // Ensure the main chat area is properly set up before rendering messages
+    if (!document.getElementById("messagesContainer")) {
+      renderChatHeader(chat);
+    }
     renderMessages(chat.messages);
-    renderChatHeader(chat);
     const messagesDiv = document.querySelector(".messages");
     if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
   } catch (err) {
-    console.error(err);
+    console.error("Error loading messages:", err);
     document.getElementById("mainChat").innerHTML = `<div class="no-chat"><p>Failed to load messages</p></div>`;
   }
 }
@@ -226,14 +229,13 @@ function appendMessageToDOM(msg, container) {
   `;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
-  // Add context menu for deletion (right-click)
-  div.addEventListener("contextmenu", (e) => {
-    e.preventDefault();
-    if (isSent) {
+  if (isSent) {
+    div.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
       currentContextMessage = msg._id;
       showContextMenu(e.clientX, e.clientY);
-    }
-  });
+    });
+  }
 }
 
 function showContextMenu(x, y) {
