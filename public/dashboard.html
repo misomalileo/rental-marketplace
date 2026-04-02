@@ -16,28 +16,29 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ========== THEME VARIABLES (Airbnb‑inspired) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
-      --secondary: #0ea5a4;
+      --secondary: #10b981;
       --accent: #f59e0b;
-      --gray-50: #f8fafc;
-      --gray-100: #f1f5f9;
-      --gray-200: #e2e8f0;
-      --gray-300: #cbd5e1;
-      --gray-400: #94a3b8;
-      --gray-500: #64748b;
-      --gray-600: #475569;
-      --gray-700: #334155;
-      --gray-800: #1e293b;
-      --gray-900: #0f172a;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
     }
     body.theme-light {
-      --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      --navbar-bg: rgba(255,255,255,0.96);
+      --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
+      --navbar-bg: rgba(255,255,255,0.95);
       --text-color: var(--gray-800);
-      --card-bg: white;
+      --card-bg: rgba(255,255,255,0.85);
+      --card-bg-solid: white;
       --footer-bg: white;
       --input-bg: white;
       --input-border: var(--gray-200);
@@ -45,13 +46,13 @@
       --button-hover: var(--primary-dark);
       --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
     }
     body.theme-dark {
       --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      --navbar-bg: rgba(15,23,42,0.96);
+      --navbar-bg: rgba(15,23,42,0.95);
       --text-color: var(--gray-100);
-      --card-bg: var(--gray-800);
+      --card-bg: rgba(30,41,59,0.7);
+      --card-bg-solid: var(--gray-800);
       --footer-bg: var(--gray-800);
       --input-bg: var(--gray-800);
       --input-border: var(--gray-700);
@@ -59,10 +60,11 @@
       --button-hover: var(--primary-dark);
     }
     body.theme-aquatic {
-      --bg-gradient: linear-gradient(135deg, #e6f7f5 0%, #e0f2fe 100%);
-      --navbar-bg: rgba(230,247,245,0.96);
+      --bg-gradient: linear-gradient(135deg, #c6f7f0 0%, #e0f2fe 100%);
+      --navbar-bg: rgba(230,247,245,0.95);
       --text-color: #1e4a4b;
-      --card-bg: white;
+      --card-bg: rgba(255,255,255,0.85);
+      --card-bg-solid: white;
       --footer-bg: white;
       --input-bg: white;
       --input-border: #cbd5e1;
@@ -74,6 +76,7 @@
       --navbar-bg: #ffffff;
       --text-color: #2c3e50;
       --card-bg: #ffffff;
+      --card-bg-solid: #ffffff;
       --footer-bg: #f8fafc;
       --input-bg: #ffffff;
       --input-border: #e2e8f0;
@@ -84,7 +87,8 @@
       --bg-gradient: linear-gradient(135deg, #1e1e2f 0%, #2d2d44 100%);
       --navbar-bg: #1e1e2f;
       --text-color: #f5e7d9;
-      --card-bg: #2a2a3c;
+      --card-bg: rgba(42,42,60,0.8);
+      --card-bg-solid: #2a2a3c;
       --footer-bg: #1e1e2f;
       --input-bg: #2a2a3c;
       --input-border: #d4af37;
@@ -103,15 +107,14 @@
       font-size: 0.875rem;
       font-weight: 400;
       line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
     }
-    h1, h2, h3, .stat-card .value, .insight-card h3, .profile-card h3 {
+    h1, h2, h3, .logo, .stat-card .value {
       font-family: 'Poppins', 'Inter', sans-serif;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
-    /* Glass navbar */
+    /* Navbar (same as before) */
     .navbar {
       background: var(--navbar-bg);
       backdrop-filter: blur(12px);
@@ -124,423 +127,127 @@
       top: 0;
       z-index: 1000;
     }
-    .logo {
-      font-size: 1.4rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: var(--text-color);
-    }
-    .logo i {
-      margin-right: 6px;
-      font-size: 1.2rem;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .nav-links {
+    .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-color); }
+    .logo i { margin-right: 6px; font-size: 1.2rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-links { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+    .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; }
+    .nav-links a:hover { color: var(--primary); }
+    .lang-select, .theme-select { padding: 0.25rem 0.6rem; border-radius: 30px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; backdrop-filter: blur(4px); }
+
+    /* Dashboard Tabs */
+    .dashboard-tabs {
       display: flex;
-      align-items: center;
-      gap: 1.2rem;
+      gap: 0.5rem;
+      margin: 1.5rem 0 1rem;
+      border-bottom: 2px solid var(--input-border);
       flex-wrap: wrap;
     }
-    .nav-links a {
+    .tab-btn-dash {
+      background: none;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 600;
       color: var(--text-color);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.85rem;
-      transition: all 0.2s;
-    }
-    .nav-links a i {
-      margin-right: 0.3rem;
-      transition: transform 0.2s;
-    }
-    .nav-links a:hover i {
-      transform: translateY(-2px);
-    }
-    .nav-links a:hover {
-      color: var(--primary);
-    }
-    .lang-select, .theme-select {
-      padding: 0.25rem 0.6rem;
-      border-radius: 30px;
-      border: 1px solid var(--input-border);
-      background: var(--input-bg);
-      color: var(--text-color);
+      opacity: 0.7;
       cursor: pointer;
-      font-size: 0.8rem;
-      backdrop-filter: blur(4px);
+      transition: all 0.2s;
+      border-radius: 30px 30px 0 0;
     }
-
-    .main-container {
-      max-width: 1400px;
-      margin: 1.5rem auto;
-      padding: 0 1rem;
+    .tab-btn-dash i { margin-right: 0.5rem; }
+    .tab-btn-dash.active {
+      opacity: 1;
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+      background: rgba(37,99,235,0.05);
     }
+    .tab-content { display: none; margin-top: 1rem; }
+    .tab-content.active { display: block; }
 
-    /* Cards */
-    .stat-card, .chart-container, .insight-card, .verification-card, .profile-card, .house-card, .offer-card, .booking-card {
+    /* Cards & Stats (unchanged) */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--card-bg); backdrop-filter: blur(8px); border-radius: 24px; padding: 1.2rem; text-align: center; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; box-shadow: var(--shadow-sm); }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .stat-card h3 { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; opacity: 0.8; }
+    .stat-card .value { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .stat-card i { font-size: 1.8rem; margin-bottom: 0.5rem; display: block; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .insight-card, .verification-card, .profile-card {
       background: var(--card-bg);
       backdrop-filter: blur(8px);
       border-radius: 24px;
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-      box-shadow: var(--shadow-sm);
-    }
-    .stat-card:hover, .chart-container:hover, .house-card:hover, .offer-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.2rem;
+      padding: 1rem;
       margin-bottom: 1.5rem;
-    }
-    .stat-card {
-      padding: 1.2rem;
-      text-align: center;
-    }
-    .stat-card h3 {
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-      opacity: 0.8;
-    }
-    .stat-card .value {
-      font-size: 2rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      line-height: 1.2;
-    }
-    .stat-card i {
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-      display: block;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin: 1.5rem 0 1rem;
-      border-bottom: 2px solid var(--input-border);
-      padding-bottom: 0.5rem;
-    }
-    .section-header h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      border: 1px solid rgba(255,255,255,0.1);
     }
-    .section-header h2 i {
-      font-size: 1.1rem;
-      color: var(--primary);
-    }
+    .chart-container { background: var(--card-bg); border-radius: 24px; padding: 1rem; margin-bottom: 1.5rem; }
 
     /* House grid */
-    #my-houses {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.2rem;
-      margin-top: 1rem;
-      margin-bottom: 2rem;
-    }
-    .house-card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-top-left-radius: 24px;
-      border-top-right-radius: 24px;
-    }
-    .house-content {
-      padding: 1rem;
-    }
-    .house-content h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-    }
-    .house-content p {
-      margin: 0.2rem 0;
-      font-size: 0.8rem;
-      opacity: 0.8;
-    }
-    .house-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.8rem;
-    }
-    .edit, .delete, .feature-btn {
-      border: none;
-      padding: 0.3rem 0.8rem;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    #my-houses { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem; margin-top: 1rem; margin-bottom: 2rem; }
+    .house-card { background: var(--card-bg-solid); border-radius: 20px; overflow: hidden; border: 1px solid var(--input-border); transition: all 0.2s; }
+    .house-card img { width: 100%; height: 180px; object-fit: cover; }
+    .house-content { padding: 1rem; }
+    .house-content h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .house-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+    .edit, .delete, .feature-btn { border: none; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; font-weight: 500; cursor: pointer; }
     .edit { background: #f39c12; color: white; }
     .delete { background: #e74c3c; color: white; }
     .feature-btn { background: #f1c40f; color: #2c3e50; }
-    .featured-badge {
-      background: #f1c40f;
-      color: #2c3e50;
-      padding: 0.2rem 0.6rem;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      display: inline-block;
-    }
 
-    /* Offers & Bookings */
-    .offer-card, .booking-card {
+    /* Offer cards */
+    .offer-card, .booking-card, .lease-card {
+      background: var(--card-bg-solid);
+      border-radius: 20px;
       padding: 1rem;
       margin-bottom: 1rem;
+      border: 1px solid var(--input-border);
     }
-    .offer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-    .offer-status {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
+    .offer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .offer-status { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
     .offer-status.pending { background: #fef3c7; color: #b45309; }
     .offer-status.accepted { background: #dcfce7; color: #15803d; }
     .offer-status.rejected { background: #fee2e2; color: #b91c1c; }
     .offer-status.countered { background: #e0e7ff; color: #1e40af; }
-    .offer-actions button, .booking-actions button {
-      margin-right: 0.5rem;
-      padding: 0.3rem 0.8rem;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      cursor: pointer;
-      border: none;
-      font-weight: 500;
-    }
-    .delete-offer {
-      background: #ef4444;
-      color: white;
-    }
-    .delete-offer:hover {
-      background: #dc2626;
-    }
+    .offer-actions button, .booking-actions button { margin-right: 0.5rem; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; cursor: pointer; border: none; }
 
-    /* Upload Wizard */
-    .upload-wizard {
-      background: var(--card-bg);
-      border-radius: 28px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-      border: 1px solid var(--input-border);
-    }
+    /* Upload wizard (unchanged) */
+    .upload-wizard { background: var(--card-bg); border-radius: 28px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid var(--input-border); }
     .wizard-step { display: none; }
     .wizard-step.active { display: block; }
-    .wizard-nav {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid var(--input-border);
-      padding-bottom: 0.5rem;
-    }
-    .wizard-nav button {
-      background: none;
-      border: none;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--text-color);
-      opacity: 0.6;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .wizard-nav button.active {
-      opacity: 1;
-      color: var(--primary);
-      border-bottom: 2px solid var(--primary);
-    }
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 0.3rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-    .form-group input, .form-group textarea, .form-group select {
-      width: 100%;
-      padding: 0.6rem;
-      border: 1px solid var(--input-border);
-      border-radius: 12px;
-      background: var(--input-bg);
-      color: var(--text-color);
-      font-size: 0.85rem;
-    }
-    .gps-btn, .upload-btn {
-      background: var(--button-bg);
-      color: white;
-      border: none;
-      padding: 0.6rem;
-      border-radius: 40px;
-      font-weight: 500;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 0.5rem;
-      transition: all 0.2s;
-    }
-    .gps-btn:hover, .upload-btn:hover {
-      background: var(--button-hover);
-      transform: scale(1.02);
-    }
-    .amenities-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin-top: 0.5rem;
-    }
-    .amenities-group label {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.8rem;
-      font-weight: normal;
-    }
+    .wizard-nav { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--input-border); padding-bottom: 0.5rem; }
+    .wizard-nav button { background: none; border: none; font-size: 0.9rem; font-weight: 500; color: var(--text-color); opacity: 0.6; cursor: pointer; }
+    .wizard-nav button.active { opacity: 1; color: var(--primary); border-bottom: 2px solid var(--primary); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.85rem; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text-color); font-size: 0.85rem; }
+    .gps-btn, .upload-btn { background: var(--button-bg); color: white; border: none; padding: 0.6rem; border-radius: 40px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 0.5rem; transition: all 0.2s; }
+    .amenities-group { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.5rem; }
 
     /* Map */
-    #map, #editMap {
-      height: 280px;
-      margin: 1rem 0;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid var(--input-border);
-    }
+    #map, #editMap { height: 280px; margin: 1rem 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--input-border); }
 
-    /* Modal */
-    .modal {
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-    }
-    .modal-content {
-      background: var(--card-bg-solid);
-      margin: 20px auto;
-      padding: 1.2rem;
-      border-radius: 28px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: var(--shadow-lg);
-    }
-    .close-btn {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-    .close-btn:hover { color: var(--text-color); }
-
-    /* Payment modal */
-    .payment-modal-header { text-align: center; margin-bottom: 1rem; }
-    .payment-amount {
-      background: var(--card-bg);
-      border-radius: 60px;
-      padding: 0.8rem;
-      text-align: center;
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin: 1rem 0;
-    }
-    .payment-option {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--card-bg);
-      border: 1px solid var(--input-border);
-      border-radius: 60px;
-      padding: 10px 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .payment-option:hover {
-      transform: translateY(-2px);
-      border-color: var(--primary);
-    }
-    .payment-option-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      color: white;
-    }
+    /* Modals */
+    .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+    .modal-content { background: var(--card-bg-solid); margin: 20px auto; padding: 1.2rem; border-radius: 28px; width: 90%; max-width: 500px; }
+    .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+    .payment-option { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 60px; padding: 10px 20px; cursor: pointer; }
+    .payment-option-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; }
     .airtel-bg { background: #E50000; }
     .tnm-bg { background: #00A651; }
     .bank-bg { background: #0077B6; }
 
-    footer {
-      text-align: center;
-      padding: 1.5rem;
-      background: var(--footer-bg);
-      border-top: 1px solid var(--input-border);
-      font-size: 0.75rem;
-      margin-top: 2rem;
-    }
-    #loadingOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px);
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 1rem;
-      display: none;
-    }
-    .extra-slots {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.2rem;
-      margin: 1.5rem 0;
-    }
-    .extra-card {
-      background: var(--card-bg);
-      border-radius: 24px;
-      padding: 1rem;
-    }
+    footer { text-align: center; padding: 1.5rem; background: var(--footer-bg); border-top: 1px solid var(--input-border); font-size: 0.75rem; margin-top: 2rem; }
+    #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; font-size: 1rem; display: none; }
+
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: flex-start; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       #my-houses { grid-template-columns: 1fr; }
+      .dashboard-tabs { justify-content: center; }
     }
   </style>
 </head>
@@ -548,21 +255,7 @@
   <div id="loadingOverlay"><div><i class="fas fa-spinner fa-pulse"></i> Processing...</div></div>
 
   <!-- Profile Modal -->
-  <div id="profileModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeProfileModal()">&times;</span>
-      <h2><i class="fas fa-user-edit"></i> Complete Your Profile</h2>
-      <form id="profileForm">
-        <div class="form-group"><label>Full Name *</label><input type="text" id="profileName" required></div>
-        <div class="form-group"><label>Phone Number (265...)</label><input type="tel" id="profilePhone" pattern="265[0-9]{9}" required></div>
-        <div class="form-group"><label>Business Name</label><input type="text" id="profileBusinessName"></div>
-        <div class="form-group"><label>Address / Location</label><input type="text" id="profileAddress"></div>
-        <div class="form-group"><label>Bio</label><textarea id="profileBio" rows="2"></textarea></div>
-        <div class="form-group"><label>Profile Picture</label><input type="file" id="profilePicture" accept="image/*"><div id="profilePreview"></div></div>
-        <button type="submit" class="upload-btn"><i class="fas fa-save"></i> Save Profile</button>
-      </form>
-    </div>
-  </div>
+  <div id="profileModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeProfileModal()">&times;</span><h2><i class="fas fa-user-edit"></i> Complete Your Profile</h2><form id="profileForm"><div class="form-group"><label>Full Name *</label><input type="text" id="profileName" required></div><div class="form-group"><label>Phone Number (265...)</label><input type="tel" id="profilePhone" pattern="265[0-9]{9}" required></div><div class="form-group"><label>Business Name</label><input type="text" id="profileBusinessName"></div><div class="form-group"><label>Address</label><input type="text" id="profileAddress"></div><div class="form-group"><label>Bio</label><textarea id="profileBio" rows="2"></textarea></div><div class="form-group"><label>Profile Picture</label><input type="file" id="profilePicture" accept="image/*"><div id="profilePreview"></div></div><button type="submit" class="upload-btn">Save Profile</button></form></div></div>
 
   <nav class="navbar">
     <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
@@ -614,125 +307,92 @@
       <div id="verification-status">Loading...</div>
     </div>
 
-    <!-- Extra Slots -->
-    <div class="extra-slots">
-      <div class="extra-card"><h3><i class="fas fa-clock"></i> Recent Activity</h3><div id="recentActivity">Loading...</div></div>
-      <div class="extra-card"><h3><i class="fas fa-trophy"></i> Top Listings</h3><div id="topListings">Loading...</div></div>
+    <!-- TABS -->
+    <div class="dashboard-tabs">
+      <button class="tab-btn-dash active" data-tab="houses"><i class="fas fa-home"></i> My Houses</button>
+      <button class="tab-btn-dash" data-tab="offers"><i class="fas fa-gavel"></i> Offers Received</button>
+      <button class="tab-btn-dash" data-tab="bookings"><i class="fas fa-calendar-alt"></i> Booking Requests</button>
+      <button class="tab-btn-dash" data-tab="lease"><i class="fas fa-file-signature"></i> Lease Negotiations</button>
     </div>
 
-    <!-- Upload House Wizard -->
-    <div class="upload-wizard">
-      <div class="wizard-nav">
-        <button class="wizard-nav-btn active" data-step="1">Basic Info</button>
-        <button class="wizard-nav-btn" data-step="2">Location & GPS</button>
-        <button class="wizard-nav-btn" data-step="3">Amenities</button>
-        <button class="wizard-nav-btn" data-step="4">Photos & Tour</button>
-      </div>
-      <form id="houseForm" enctype="multipart/form-data">
-        <div id="step1" class="wizard-step active">
-          <div class="form-group"><label>House Name</label><input type="text" name="name" required></div>
-          <div class="form-group"><label>Location</label><input type="text" name="location" required></div>
-          <div class="form-group"><label>Price (MWK)</label><input type="number" name="price" required></div>
-          <div class="form-group"><label>WhatsApp Number</label><input type="text" name="phone" required pattern="265[0-9]{9}"></div>
-          <div class="form-group"><label>Description</label><textarea name="description" rows="2"></textarea></div>
+    <!-- Tab Contents -->
+    <div id="houses-tab" class="tab-content active">
+      <!-- Upload House Wizard -->
+      <div class="upload-wizard">
+        <div class="wizard-nav">
+          <button class="wizard-nav-btn active" data-step="1">Basic Info</button>
+          <button class="wizard-nav-btn" data-step="2">Location & GPS</button>
+          <button class="wizard-nav-btn" data-step="3">Amenities</button>
+          <button class="wizard-nav-btn" data-step="4">Photos & Tour</button>
         </div>
-        <div id="step2" class="wizard-step">
-          <div class="form-group"><label>Property Type</label><select name="type" id="propertyType"><option value="House">House</option><option value="Hostel">Hostel</option><option value="Apartment">Apartment</option><option value="Room">Room</option><option value="Office">Office</option></select></div>
-          <div class="form-group" id="bedroomsGroup"><label>Bedrooms</label><input type="number" name="bedrooms" value="0"></div>
-          <div class="form-group" id="vacanciesGroup" style="display:none;"><label>Vacancies</label><input type="number" name="vacancies" value="0"></div>
-          <div class="form-group"><label>Condition</label><select name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div>
-          <div class="form-group"><label>Gender</label><select name="gender"><option value="none">None</option><option value="boys">Boys Only</option><option value="girls">Girls Only</option><option value="mixed">Mixed</option></select></div>
-          <div class="form-group"><label><input type="checkbox" name="selfContained"> Self Contained</label></div>
-          <div class="form-group"><label>Latitude</label><input type="text" name="lat" id="latitude" readonly></div>
-          <div class="form-group"><label>Longitude</label><input type="text" name="lng" id="longitude" readonly></div>
-          <button type="button" class="gps-btn" onclick="getLocation()"><i class="fas fa-location-dot"></i> Use GPS</button>
-          <div id="map"></div>
-        </div>
-        <div id="step3" class="wizard-step">
-          <div class="amenities-group">
-            <label><input type="checkbox" name="wifi"> <i class="fas fa-wifi"></i> WiFi</label>
-            <label><input type="checkbox" name="parking"> <i class="fas fa-parking"></i> Parking</label>
-            <label><input type="checkbox" name="furnished"> <i class="fas fa-couch"></i> Furnished</label>
-            <label><input type="checkbox" name="petFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label>
-            <label><input type="checkbox" name="pool"> <i class="fas fa-swimming-pool"></i> Pool</label>
-            <label><input type="checkbox" name="ac"> <i class="fas fa-snowflake"></i> AC</label>
+        <form id="houseForm" enctype="multipart/form-data">
+          <div id="step1" class="wizard-step active">
+            <div class="form-group"><label>House Name</label><input type="text" name="name" required></div>
+            <div class="form-group"><label>Location</label><input type="text" name="location" required></div>
+            <div class="form-group"><label>Price (MWK)</label><input type="number" name="price" required></div>
+            <div class="form-group"><label>WhatsApp Number</label><input type="text" name="phone" required pattern="265[0-9]{9}"></div>
+            <div class="form-group"><label>Description</label><textarea name="description" rows="2"></textarea></div>
           </div>
-        </div>
-        <div id="step4" class="wizard-step">
-          <div class="form-group"><label>Photos (up to 5)</label><input type="file" name="images" multiple accept="image/*" required></div>
-          <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-          <div class="form-group"><label>Virtual Tour URL</label><input type="text" name="virtualTourUrl" placeholder="360° image or video link"></div>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
-          <button type="button" id="prevBtn" class="gps-btn" style="width: auto;">Previous</button>
-          <button type="button" id="nextBtn" class="gps-btn" style="width: auto;">Next</button>
-          <button type="submit" id="submitBtn" class="upload-btn" style="width: auto; display: none;">Upload House</button>
-        </div>
-      </form>
+          <div id="step2" class="wizard-step">
+            <div class="form-group"><label>Property Type</label><select name="type" id="propertyType"><option value="House">House</option><option value="Hostel">Hostel</option><option value="Apartment">Apartment</option><option value="Room">Room</option><option value="Office">Office</option></select></div>
+            <div class="form-group" id="bedroomsGroup"><label>Bedrooms</label><input type="number" name="bedrooms" value="0"></div>
+            <div class="form-group" id="vacanciesGroup" style="display:none;"><label>Vacancies</label><input type="number" name="vacancies" value="0"></div>
+            <div class="form-group"><label>Condition</label><select name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div>
+            <div class="form-group"><label>Gender</label><select name="gender"><option value="none">None</option><option value="boys">Boys Only</option><option value="girls">Girls Only</option><option value="mixed">Mixed</option></select></div>
+            <div class="form-group"><label><input type="checkbox" name="selfContained"> Self Contained</label></div>
+            <div class="form-group"><label>Latitude</label><input type="text" name="lat" id="latitude" readonly></div>
+            <div class="form-group"><label>Longitude</label><input type="text" name="lng" id="longitude" readonly></div>
+            <button type="button" class="gps-btn" onclick="getLocation()"><i class="fas fa-location-dot"></i> Use GPS</button>
+            <div id="map"></div>
+          </div>
+          <div id="step3" class="wizard-step">
+            <div class="amenities-group">
+              <label><input type="checkbox" name="wifi"> <i class="fas fa-wifi"></i> WiFi</label>
+              <label><input type="checkbox" name="parking"> <i class="fas fa-parking"></i> Parking</label>
+              <label><input type="checkbox" name="furnished"> <i class="fas fa-couch"></i> Furnished</label>
+              <label><input type="checkbox" name="petFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label>
+              <label><input type="checkbox" name="pool"> <i class="fas fa-swimming-pool"></i> Pool</label>
+              <label><input type="checkbox" name="ac"> <i class="fas fa-snowflake"></i> AC</label>
+            </div>
+          </div>
+          <div id="step4" class="wizard-step">
+            <div class="form-group"><label>Photos (up to 5)</label><input type="file" name="images" multiple accept="image/*" required></div>
+            <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            <div class="form-group"><label>Virtual Tour URL</label><input type="text" name="virtualTourUrl" placeholder="360° image or video link"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+            <button type="button" id="prevBtn" class="gps-btn" style="width: auto;">Previous</button>
+            <button type="button" id="nextBtn" class="gps-btn" style="width: auto;">Next</button>
+            <button type="submit" id="submitBtn" class="upload-btn" style="width: auto; display: none;">Upload House</button>
+          </div>
+        </form>
+      </div>
+      <h2><i class="fas fa-list"></i> My Houses</h2>
+      <div id="my-houses"></div>
+      <div style="text-align: center;"><button id="loadMoreHousesBtn" class="gps-btn" style="width: auto;">Load More</button></div>
     </div>
 
-    <!-- My Houses Section -->
-    <div class="section-header"><h2><i class="fas fa-list"></i> My Houses</h2><span id="housesCount"></span></div>
-    <div id="my-houses"></div>
-    <div style="text-align: center;"><button id="loadMoreHousesBtn" class="load-more-btn">Load More</button></div>
+    <div id="offers-tab" class="tab-content">
+      <h2><i class="fas fa-gavel"></i> Offers Received</h2>
+      <div id="offersList">Loading offers...</div>
+    </div>
 
-    <!-- Booking Requests Section -->
-    <div class="section-header"><h2><i class="fas fa-calendar-alt"></i> Booking Requests</h2></div>
-    <div id="bookingRequests"></div>
+    <div id="bookings-tab" class="tab-content">
+      <h2><i class="fas fa-calendar-alt"></i> Booking Requests</h2>
+      <div id="bookingRequests"></div>
+    </div>
 
-    <!-- Offers Received Section -->
-    <div class="section-header"><h2><i class="fas fa-gavel"></i> Offers Received</h2></div>
-    <div id="offersList">Loading offers...</div>
-  </div>
-
-  <!-- Edit Modal -->
-  <div id="editModal" class="modal" style="display:none;">
-    <div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span>
-      <h2><i class="fas fa-edit"></i> Edit House</h2>
-      <form id="editForm" enctype="multipart/form-data">
-        <input type="hidden" id="editHouseId">
-        <div class="form-group"><label>House Name</label><input type="text" id="editName" name="name" required></div>
-        <div class="form-group"><label>Location</label><input type="text" id="editLocation" name="location" required></div>
-        <div class="form-group"><label>Price</label><input type="number" id="editPrice" name="price" required></div>
-        <div class="form-group"><label>WhatsApp</label><input type="text" id="editPhone" name="phone" required></div>
-        <div class="form-group"><label>Description</label><textarea id="editDescription" name="description"></textarea></div>
-        <div class="form-group"><label>Type</label><select id="editType" name="type"><option>House</option><option>Hostel</option><option>Apartment</option><option>Room</option><option>Office</option></select></div>
-        <div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" name="bedrooms" value="0"></div>
-        <div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div>
-        <div class="amenities-group">
-          <label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label>
-          <label><input type="checkbox" id="editParking" name="parking"> Parking</label>
-          <label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label>
-          <label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label>
-          <label><input type="checkbox" id="editPool" name="pool"> Pool</label>
-          <label><input type="checkbox" id="editAC" name="ac"> AC</label>
-        </div>
-        <div class="form-group"><label>Unavailable Dates</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly></div>
-        <div class="form-group"><label>New Photos</label><input type="file" name="images" multiple accept="image/*"></div>
-        <div class="form-group"><label>Virtual Tour</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl"></div>
-        <div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div>
-        <div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div>
-        <button type="button" class="gps-btn" onclick="getEditLocation()">Use GPS</button>
-        <div id="editMap" style="height: 180px;"></div>
-        <button type="submit" class="upload-btn">Save Changes</button>
-      </form>
+    <div id="lease-tab" class="tab-content">
+      <h2><i class="fas fa-file-signature"></i> Lease Negotiations</h2>
+      <div id="leaseList">Loading lease negotiations...</div>
     </div>
   </div>
+
+  <!-- Edit Modal (unchanged) -->
+  <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit House</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId"><div class="form-group"><label>House Name</label><input type="text" id="editName" name="name" required></div><div class="form-group"><label>Location</label><input type="text" id="editLocation" name="location" required></div><div class="form-group"><label>Price</label><input type="number" id="editPrice" name="price" required></div><div class="form-group"><label>WhatsApp</label><input type="text" id="editPhone" name="phone" required></div><div class="form-group"><label>Description</label><textarea id="editDescription" name="description"></textarea></div><div class="form-group"><label>Type</label><select id="editType" name="type"><option>House</option><option>Hostel</option><option>Apartment</option><option>Room</option><option>Office</option></select></div><div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" name="bedrooms" value="0"></div><div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> Pool</label><label><input type="checkbox" id="editAC" name="ac"> AC</label></div><div class="form-group"><label>Unavailable Dates</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly></div><div class="form-group"><label>New Photos</label><input type="file" name="images" multiple accept="image/*"></div><div class="form-group"><label>Virtual Tour</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl"></div><div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div><div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div><button type="button" class="gps-btn" onclick="getEditLocation()">Use GPS</button><div id="editMap" style="height: 180px;"></div><button type="submit" class="upload-btn">Save Changes</button></form></div></div>
 
   <!-- Payment Modal -->
-  <div id="paymentModal" class="modal" style="display:none;">
-    <div class="modal-content"><span class="close-btn" onclick="closePaymentModal()">&times;</span>
-      <div class="payment-modal-header"><h2><i class="fas fa-credit-card"></i> <span id="paymentTitle">Select Method</span></h2></div>
-      <div class="payment-amount" id="paymentAmount">MWK 0</div>
-      <div class="payment-phone"><label>Mobile Money Number</label><input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX"></div>
-      <div class="payment-options">
-        <div class="payment-option" onclick="processPayment('Airtel Money')"><div class="payment-option-icon airtel-bg"><i class="fas fa-mobile-alt"></i></div><div><h4>Airtel Money</h4><p>Pay instantly</p></div></div>
-        <div class="payment-option" onclick="processPayment('TNM Mpamba')"><div class="payment-option-icon tnm-bg"><i class="fas fa-mobile-alt"></i></div><div><h4>TNM Mpamba</h4><p>Fast & secure</p></div></div>
-        <div class="payment-option" onclick="processPayment('Standard Bank')"><div class="payment-option-icon bank-bg"><i class="fas fa-university"></i></div><div><h4>Bank Transfer</h4><p>All banks</p></div></div>
-      </div>
-      <div id="paymentStatus" class="payment-status"></div>
-    </div>
-  </div>
+  <div id="paymentModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePaymentModal()">&times;</span><div class="payment-modal-header"><h2><i class="fas fa-credit-card"></i> <span id="paymentTitle">Select Method</span></h2></div><div class="payment-amount" id="paymentAmount">MWK 0</div><div class="payment-phone"><label>Mobile Money Number</label><input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX"></div><div class="payment-options"><div class="payment-option" onclick="processPayment('Airtel Money')"><div class="payment-option-icon airtel-bg"><i class="fas fa-mobile-alt"></i></div><div><h4>Airtel Money</h4><p>Pay instantly</p></div></div><div class="payment-option" onclick="processPayment('TNM Mpamba')"><div class="payment-option-icon tnm-bg"><i class="fas fa-mobile-alt"></i></div><div><h4>TNM Mpamba</h4><p>Fast & secure</p></div></div><div class="payment-option" onclick="processPayment('Standard Bank')"><div class="payment-option-icon bank-bg"><i class="fas fa-university"></i></div><div><h4>Bank Transfer</h4><p>All banks</p></div></div></div><div id="paymentStatus" class="payment-status"></div></div></div>
 
   <footer>© 2026 Khomo Lathu – Connecting Renters Across Malawi</footer>
 
@@ -749,6 +409,8 @@
     });
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
+
+    // Wizard navigation
     let currentStep = 1, steps = document.querySelectorAll('.wizard-step'), navBtns = document.querySelectorAll('.wizard-nav-btn');
     const prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), submitBtn = document.getElementById('submitBtn');
     function updateWizard() {
@@ -762,6 +424,17 @@
     nextBtn.addEventListener('click', () => { if (currentStep < 4) { currentStep++; updateWizard(); } });
     navBtns.forEach((btn, idx) => btn.addEventListener('click', () => { currentStep = idx + 1; updateWizard(); }));
     updateWizard();
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn-dash').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn-dash').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(`${tab}-tab`).classList.add('active');
+      });
+    });
   </script>
 </body>
 </html>
