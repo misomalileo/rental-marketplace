@@ -22,7 +22,7 @@
       flex-direction: column;
       overflow: hidden;
     }
-    /* Navbar */
+    /* Navbar - WhatsApp green */
     .navbar {
       background: #075E54;
       padding: 0.8rem 1.5rem;
@@ -30,6 +30,7 @@
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      z-index: 10;
     }
     .logo {
       font-size: 1.3rem;
@@ -45,8 +46,10 @@
       font-weight: 500;
       font-size: 0.9rem;
       margin-left: 1.2rem;
+      transition: opacity 0.2s;
     }
-    /* Chat container with resizable sidebar */
+    .nav-links a:hover { opacity: 0.8; }
+    /* Chat container */
     .chat-container {
       display: flex;
       flex: 1;
@@ -54,7 +57,7 @@
       background: #1e1e1e;
       position: relative;
     }
-    /* Sidebar - resizable */
+    /* Sidebar - conversations with resize handle */
     .sidebar {
       width: 320px;
       min-width: 200px;
@@ -63,26 +66,48 @@
       border-right: 1px solid #2a2a2a;
       display: flex;
       flex-direction: column;
-      resize: horizontal;
-      overflow: auto;
+      position: relative;
+      transition: width 0.1s ease;
+    }
+    .resize-handle {
+      position: absolute;
+      right: -5px;
+      top: 0;
+      width: 10px;
+      height: 100%;
+      cursor: ew-resize;
+      background: transparent;
+      z-index: 20;
+    }
+    .resize-handle:hover {
+      background: rgba(37,99,235,0.3);
     }
     .sidebar-header {
       padding: 1rem;
       background: #075E54;
       color: white;
     }
+    .sidebar-header h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
     .chat-list {
       flex: 1;
       overflow-y: auto;
+      list-style: none;
     }
     .chat-item {
       padding: 0.8rem 1rem;
       cursor: pointer;
+      transition: background 0.2s;
       display: flex;
       align-items: center;
       gap: 0.8rem;
       border-bottom: 1px solid #2a2a2a;
-      transition: background 0.2s;
+      position: relative;
     }
     .chat-item:hover { background: #202020; }
     .chat-item.active { background: #2a2a2a; }
@@ -113,11 +138,13 @@
       flex: 1;
     }
     .chat-info h4 {
+      margin: 0 0 4px 0;
       font-size: 1rem;
       font-weight: 600;
       color: white;
     }
     .chat-info p {
+      margin: 0;
       font-size: 0.8rem;
       color: #aaa;
       white-space: nowrap;
@@ -127,6 +154,7 @@
     .chat-time {
       font-size: 0.65rem;
       color: #888;
+      text-align: right;
     }
     .unread-badge {
       background: #25D366;
@@ -137,12 +165,13 @@
       margin-top: 4px;
       display: inline-block;
     }
-    /* Main chat */
+    /* Main chat area */
     .main-chat {
       flex: 1;
       display: flex;
       flex-direction: column;
       background: #1a1a1a;
+      position: relative;
     }
     .chat-header {
       background: #075E54;
@@ -161,10 +190,30 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
+      position: relative;
     }
     .chat-header-info {
       flex: 1;
     }
+    .chat-header-info h3 {
+      font-size: 1rem;
+      margin: 0;
+    }
+    .chat-header-info p {
+      font-size: 0.7rem;
+      opacity: 0.8;
+      margin: 0;
+    }
+    .chat-actions {
+      display: flex;
+      gap: 0.8rem;
+    }
+    .chat-actions i {
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: opacity 0.2s;
+    }
+    .chat-actions i:hover { opacity: 0.7; }
     .messages {
       flex: 1;
       overflow-y: auto;
@@ -172,15 +221,16 @@
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.03"><path fill="none" d="M0 0h100v100H0z"/><circle cx="20" cy="20" r="4" fill="white"/><circle cx="80" cy="80" r="6" fill="white"/><circle cx="50" cy="50" r="3" fill="white"/></svg>');
     }
     .message {
       max-width: 70%;
       padding: 0.5rem 0.8rem;
       border-radius: 18px;
+      position: relative;
       word-wrap: break-word;
       animation: fadeIn 0.2s ease;
       font-size: 0.85rem;
-      position: relative;
     }
     .message.sent {
       align-self: flex-end;
@@ -194,30 +244,10 @@
       color: #e4e6eb;
       border-bottom-left-radius: 4px;
     }
-    .message img {
-      max-width: 200px;
-      max-height: 200px;
-      border-radius: 12px;
-      margin-top: 4px;
-    }
-    .message-delete {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background: #e74c3c;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.6rem;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .message:hover .message-delete {
-      opacity: 1;
+    .message-status {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 0.65rem;
     }
     .message-time {
       font-size: 0.6rem;
@@ -242,7 +272,8 @@
       font-size: 0.9rem;
       outline: none;
     }
-    .input-area button {
+    .input-area input::placeholder { color: #888; }
+    .attach-btn, .send-btn {
       background: #075E54;
       color: white;
       border: none;
@@ -250,28 +281,53 @@
       width: 44px;
       height: 44px;
       cursor: pointer;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
-    .file-input {
-      display: none;
+    .attach-btn:hover, .send-btn:hover { background: #128C7E; }
+    .attach-btn:disabled, .send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .no-chat {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #888;
+      flex-direction: column;
+      gap: 1rem;
     }
-    .attach-btn {
-      background: #075E54;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 44px;
-      height: 44px;
+    .context-menu {
+      position: absolute;
+      background: #2a2a2a;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+      min-width: 150px;
+    }
+    .context-menu div {
+      padding: 8px 12px;
       cursor: pointer;
+      color: white;
+      transition: background 0.2s;
     }
+    .context-menu div:hover { background: #075E54; }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
     @media (max-width: 768px) {
       .sidebar { width: 80px; min-width: 80px; }
-      .chat-info { display: none; }
+      .chat-info h4, .chat-info p { display: none; }
       .chat-time { display: none; }
       .message { max-width: 85%; }
+      .navbar { padding: 0.5rem 1rem; }
+      .logo { font-size: 1rem; }
+      .resize-handle { display: none; }
+    }
+    @media (max-width: 480px) {
+      .sidebar { width: 70px; }
+      .chat-avatar { width: 40px; height: 40px; font-size: 0.9rem; }
     }
   </style>
 </head>
@@ -285,14 +341,15 @@
   </nav>
 
   <div class="chat-container">
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
+      <div class="resize-handle" id="resizeHandle"></div>
       <div class="sidebar-header">
         <h3><i class="fas fa-comments"></i> Chats</h3>
       </div>
       <ul class="chat-list" id="chatList"></ul>
     </div>
     <div class="main-chat" id="mainChat">
-      <div class="no-chat" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #888;">
+      <div class="no-chat">
         <i class="fas fa-comment-dots" style="font-size: 3rem;"></i>
         <p>Select a conversation</p>
       </div>
@@ -306,6 +363,27 @@
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       window.location = "login.html";
+    }
+    // Resize sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const resizeHandle = document.getElementById('resizeHandle');
+    let startX, startWidth;
+    resizeHandle.addEventListener('mousedown', (e) => {
+      startX = e.clientX;
+      startWidth = parseInt(document.defaultView.getComputedStyle(sidebar).width, 10);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+    function onMouseMove(e) {
+      const dx = e.clientX - startX;
+      let newWidth = startWidth + dx;
+      if (newWidth < 200) newWidth = 200;
+      if (newWidth > 500) newWidth = 500;
+      sidebar.style.width = newWidth + 'px';
+    }
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
     }
   </script>
 </body>
