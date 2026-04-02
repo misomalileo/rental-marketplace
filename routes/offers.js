@@ -9,6 +9,12 @@ const User = require('../models/User');
 router.post('/', auth, async (req, res) => {
   try {
     const { houseId, proposedPrice, moveInDate, tenantComment } = req.body;
+
+    // Validate required fields
+    if (!houseId || !proposedPrice || !moveInDate) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
     const house = await House.findById(houseId);
     if (!house) return res.status(404).json({ message: 'House not found' });
     if (house.owner.toString() === req.user.id) {
@@ -37,23 +43,34 @@ router.post('/', auth, async (req, res) => {
     });
     await offer.save();
 
+    // Get tenant name safely (req.user.name might be missing)
+    let tenantName = 'A tenant';
+    try {
+      const tenant = await User.findById(req.user.id);
+      if (tenant && tenant.name) tenantName = tenant.name;
+    } catch (err) {
+      console.warn('Could not fetch tenant name:', err.message);
+    }
+
     const landlord = await User.findById(house.owner);
-    landlord.notifications.unshift({
-      title: 'New Rental Offer',
-      message: `${req.user.name} offered MWK ${proposedPrice.toLocaleString()} for ${house.name}`,
-      type: 'offer',
-      read: false,
-      createdAt: new Date()
-    });
-    await landlord.save();
+    if (landlord) {
+      landlord.notifications.unshift(JSON.stringify({
+        title: 'New Rental Offer',
+        message: `${tenantName} offered MWK ${proposedPrice.toLocaleString()} for ${house.name}`,
+        type: 'offer',
+        read: false,
+        createdAt: new Date()
+      }));
+      await landlord.save();
+    }
 
     const io = req.app.get('io');
     if (io) io.to(house.owner.toString()).emit('newNotification', { message: `New offer on ${house.name}` });
 
     res.status(201).json(offer);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Offer creation error:', err);
+    res.status(500).json({ message: 'Server error: ' + err.message });
   }
 });
 
@@ -140,14 +157,16 @@ router.put('/:id/accept', auth, async (req, res) => {
     await offer.save();
 
     const tenant = await User.findById(offer.tenantId);
-    tenant.notifications.unshift({
-      title: 'Offer Accepted!',
-      message: `Your offer of MWK ${offer.proposedPrice.toLocaleString()} for ${offer.houseId.name} has been accepted.`,
-      type: 'offer_accepted',
-      read: false,
-      createdAt: new Date()
-    });
-    await tenant.save();
+    if (tenant) {
+      tenant.notifications.unshift(JSON.stringify({
+        title: 'Offer Accepted!',
+        message: `Your offer of MWK ${offer.proposedPrice.toLocaleString()} for ${offer.houseId.name} has been accepted.`,
+        type: 'offer_accepted',
+        read: false,
+        createdAt: new Date()
+      }));
+      await tenant.save();
+    }
 
     const io = req.app.get('io');
     if (io) io.to(offer.tenantId.toString()).emit('newNotification', { message: 'Your offer was accepted!' });
@@ -171,14 +190,16 @@ router.put('/:id/reject', auth, async (req, res) => {
     await offer.save();
 
     const tenant = await User.findById(offer.tenantId);
-    tenant.notifications.unshift({
-      title: 'Offer Rejected',
-      message: `Your offer for ${offer.houseId.name} was rejected.`,
-      type: 'offer_rejected',
-      read: false,
-      createdAt: new Date()
-    });
-    await tenant.save();
+    if (tenant) {
+      tenant.notifications.unshift(JSON.stringify({
+        title: 'Offer Rejected',
+        message: `Your offer for ${offer.houseId.name} was rejected.`,
+        type: 'offer_rejected',
+        read: false,
+        createdAt: new Date()
+      }));
+      await tenant.save();
+    }
 
     const io = req.app.get('io');
     if (io) io.to(offer.tenantId.toString()).emit('newNotification', { message: 'Your offer was rejected' });
@@ -206,14 +227,16 @@ router.put('/:id/counter', auth, async (req, res) => {
     await offer.save();
 
     const tenant = await User.findById(offer.tenantId);
-    tenant.notifications.unshift({
-      title: 'Counter Offer Received',
-      message: `Landlord countered with MWK ${counterOfferPrice.toLocaleString()} for ${offer.houseId.name}`,
-      type: 'offer_countered',
-      read: false,
-      createdAt: new Date()
-    });
-    await tenant.save();
+    if (tenant) {
+      tenant.notifications.unshift(JSON.stringify({
+        title: 'Counter Offer Received',
+        message: `Landlord countered with MWK ${counterOfferPrice.toLocaleString()} for ${offer.houseId.name}`,
+        type: 'offer_countered',
+        read: false,
+        createdAt: new Date()
+      }));
+      await tenant.save();
+    }
 
     const io = req.app.get('io');
     if (io) io.to(offer.tenantId.toString()).emit('newNotification', { message: 'You received a counter offer' });
