@@ -131,7 +131,6 @@ io.on("connection", async (socket) => {
   socket.join(socket.userId);
   socket.broadcast.emit("userOnline", { userId: socket.userId, online: true });
 
-  // Update lastSeen when user connects
   try {
     await User.findByIdAndUpdate(socket.userId, { lastSeen: new Date() });
   } catch (err) {
@@ -144,7 +143,6 @@ io.on("connection", async (socket) => {
       if (!chatId) return;
       const chat = await Chat.findById(chatId);
       if (!chat) return;
-      // find the other participant safely
       const otherParticipant = chat.participants.find(p => p && p.toString && p.toString() !== socket.userId);
       if (otherParticipant) {
         io.to(otherParticipant.toString()).emit("newMessage", {
@@ -153,7 +151,7 @@ io.on("connection", async (socket) => {
             _id: messageId,
             text,
             senderId: socket.userId,
-            senderName: "User", // can be fetched if needed
+            senderName: "User",
             createdAt: new Date()
           }
         });
@@ -198,7 +196,6 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", async () => {
     console.log("🔴 User disconnected:", socket.userId);
-    // Update lastSeen on disconnect
     try {
       await User.findByIdAndUpdate(socket.userId, { lastSeen: new Date() });
     } catch (err) {
@@ -208,12 +205,13 @@ io.on("connection", async (socket) => {
   });
 });
 
-// Attach io to app so routes can use it
 app.set('io', io);
 
 // ===============================
-// ROUTES
+// ROUTES – with logging
 // ===============================
+console.log("📦 Registering routes...");
+
 const authRoutes = require("./routes/auth");
 const houseRoutes = require("./routes/houses");
 const adminRoutes = require("./routes/admin");
@@ -227,23 +225,39 @@ const chatbotRoutes = require("./routes/chatbot");
 const premiumRoutes = require("./routes/premium");
 
 app.use("/api/auth", authRoutes);
+console.log("✅ /api/auth");
 app.use("/api/houses", houseRoutes);
+console.log("✅ /api/houses");
 app.use("/api/admin", adminRoutes);
+console.log("✅ /api/admin");
 app.use("/api/contact", contactRoutes);
+console.log("✅ /api/contact");
 app.use("/api/profile", profileRoutes);
+console.log("✅ /api/profile");
 app.use("/api/report", reportRoutes);
+console.log("✅ /api/report");
 app.use("/api/chat", chatRoutes);
+console.log("✅ /api/chat");
 app.use("/api/payment", paymentRoutes);
+console.log("✅ /api/payment");
 app.use("/api/bookings", bookingRoutes);
+console.log("✅ /api/bookings");
 app.use("/api/chatbot", chatbotRoutes);
+console.log("✅ /api/chatbot");
 app.use("/api/premium", premiumRoutes);
+console.log("✅ /api/premium");
 
-// === NEW OFFERS ROUTE ===
-const offerRoutes = require("./routes/offers");
-app.use("/api/offers", offerRoutes);
+// === OFFERS ROUTE (with error handling) ===
+try {
+  const offerRoutes = require("./routes/offers");
+  app.use("/api/offers", offerRoutes);
+  console.log("✅ /api/offers");
+} catch (err) {
+  console.error("❌ Failed to load offers route:", err.message);
+}
 
 // ===============================
-// DEBUG ENDPOINT – TEST MONGODB CONNECTION
+// DEBUG ENDPOINTS
 // ===============================
 app.get("/api/db-test", async (req, res) => {
   try {
@@ -261,6 +275,19 @@ app.get("/api/db-test", async (req, res) => {
   }
 });
 
+// Test houses route directly
+app.get("/api/houses-test", async (req, res) => {
+  try {
+    const House = require("./models/House");
+    const count = await House.countDocuments();
+    const sample = await House.findOne().populate('owner', 'name');
+    res.json({ success: true, houseCount: count, sampleHouse: sample });
+  } catch (err) {
+    console.error("Houses test error:", err);
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
 // ===============================
 // CRON JOB FOR SUBSCRIPTION EXPIRY
 // ===============================
@@ -274,7 +301,7 @@ app.get("/", (req, res) => {
 });
 
 // ======================================
-// HOUSE SHARE PAGE (for social media previews)
+// HOUSE SHARE PAGE
 // ======================================
 app.get('/house/:id', async (req, res) => {
   try {
@@ -346,6 +373,14 @@ app.get('/sitemap.xml', async (req, res) => {
     console.error(err);
     res.status(500).send('Error generating sitemap');
   }
+});
+
+// ===============================
+// GLOBAL ERROR HANDLER
+// ===============================
+app.use((err, req, res, next) => {
+  console.error("🔥 Global error:", err.stack);
+  res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 
 // ===============================

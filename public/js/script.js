@@ -349,7 +349,6 @@ function openComparisonModal() {
     return;
   }
 
-  // Table with smaller font size
   let tableHtml = '<table style="width:100%; border-collapse: collapse; text-align: center; font-size: 0.75rem;">';
   tableHtml += '<thead> <th style="padding: 8px;">Feature</th>';
   housesToCompare.forEach(house => { tableHtml += `<th style="padding: 8px;">${house.name}</th>`; });
@@ -372,8 +371,7 @@ function openComparisonModal() {
   ];
 
   features.forEach(feature => {
-    tableHtml += `\
-<td style="padding: 8px; font-weight: bold;">${feature.label}${feature.label}`;
+    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
     housesToCompare.forEach(house => {
       let value = house[feature.key];
       if (feature.format) {
@@ -382,19 +380,18 @@ function openComparisonModal() {
       } else {
         value = value || 'N/A';
       }
-      tableHtml += `<td style="padding: 8px;">${value}${value}`;
+      tableHtml += `<td style="padding: 8px;">${value}</td>`;
     });
-    tableHtml += '';
+    tableHtml += `</tr>`;
   });
 
-  tableHtml += `|<td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image|`;
+  tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
   housesToCompare.forEach(house => {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
-    tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;">|`;
+    tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += '</tbody></table>';
+  tableHtml += `</tr></tbody></td>`;
 
-  // Find the best house (scoring: rating*10 + views/100 - price/10000)
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -404,7 +401,6 @@ function openComparisonModal() {
     if (scoreB > scoreA) bestHouse = b;
   }
 
-  // Summary with slanted (italic) text
   const summaryHtml = `
     <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(37,99,235,0.05); border-radius: 16px; border-left: 3px solid #2563eb;">
       <i class="fas fa-robot" style="color: #2563eb; margin-right: 0.5rem;"></i>
@@ -421,7 +417,7 @@ function openComparisonModal() {
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
 // ======================================
-// RENDER HOUSE CARDS (clean – only essential info)
+// RENDER HOUSE CARDS
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -437,7 +433,6 @@ function renderHouses(houses) {
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
     let currentIndex = 0;
 
-    // Landlord avatar
     let avatarHtml = '';
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
@@ -450,12 +445,9 @@ function renderHouses(houses) {
       landlordInfoHtml = `<div class="landlord-info-row">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${house.owner.verificationType === "premium" ? '<span class="badge premium"><i class="fas fa-star"></i> Premium</span>' : ''}${house.owner.verificationType === "official" ? '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>' : ''}</div>`;
     }
 
-    // Featured badge
     const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
-    // Self-contained badge
     const selfContainedBadge = house.selfContained ? '<span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
 
-    // Gender badge (only if not "none")
     let genderBadgeHtml = '';
     if (house.gender && house.gender !== 'none') {
       let genderClass = '';
@@ -466,7 +458,6 @@ function renderHouses(houses) {
       genderBadgeHtml = `<span class="badge ${genderClass}">${genderText}</span>`;
     }
 
-    // Price display (depending on type)
     let priceHtml = '';
     if (house.type === 'Hostel') {
       priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / room</p>`;
@@ -474,25 +465,17 @@ function renderHouses(houses) {
       priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / month</p>`;
     }
 
-    // Rating stars
     const ratingStars = getStarRating(house.averageRating);
     const ratingText = house.averageRating ? house.averageRating.toFixed(1) : "N/A";
-
-    // Favourite icon
     const favIcon = favorites.includes(house._id) ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
-
-    // Buttons
     const chatBtn = (isLoggedIn && house.owner && house.owner._id !== currentUserId) ? `<button class="chat-btn" onclick="startChat('${house.owner._id}', '${house._id}')"><i class="fas fa-comment-dots"></i> Chat</button>` : '';
     const shareBtn = `<button class="share-btn" onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>`;
     const isSelected = comparisonList.includes(house._id);
     const compareBtn = `<button class="compare-btn" data-id="${house._id}" onclick="addToCompare('${house._id}')"><i class="fas fa-chart-simple"></i> ${isSelected ? 'Remove' : 'Compare'}</button>`;
     const reportBtn = isLoggedIn ? `<button class="report-btn" onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>` : '';
     const favBtn = `<button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>`;
-
-    // Read more button
     const readMoreBtn = `<button class="read-more-btn" onclick="showDetails('${house._id}')"><i class="fas fa-book-open"></i> Read more</button>`;
 
-    // Build the card HTML
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
@@ -521,7 +504,6 @@ function renderHouses(houses) {
 
     container.appendChild(card);
 
-    // Slider functionality
     const img = card.querySelector(`#img-${house._id}`);
     if (images.length > 1) {
       const prevBtn = card.querySelector(".prev");
@@ -548,14 +530,12 @@ function renderHouses(houses) {
       if (typeof window.openLightbox === 'function') window.openLightbox(images, currentIdx);
     });
 
-    // Click on card (except on buttons) records view
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" }).catch(err => console.error("Failed to record view", err));
     });
   });
 
-  // Landlord name click handler
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
@@ -776,121 +756,133 @@ function loadVirtualTour(url) {
 }
 
 // ======================================
-// SHOW DETAILS (with tabs)
+// SHOW DETAILS (with tabs and bidding system)
 // ======================================
-function showDetails(houseId) {
+async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
   if (!house) return;
   const detailsHtml = `<h2>${house.name}</h2><p><strong><i class="fas fa-home"></i> Type:</strong> ${house.type}</p><p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p><p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p><p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p><p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p><p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p><p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p><p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p><p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p><p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p><p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p><p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>`;
   document.getElementById('modalDetails').innerHTML = detailsHtml;
 
-// ========== RENTAL BIDDING SYSTEM ==========
-const isLoggedIn = !!localStorage.getItem("token");
-let currentUserId = null;
-if (isLoggedIn) {
-  try {
-    const payload = JSON.parse(atob(localStorage.getItem("token").split('.')[1]));
-    currentUserId = payload.id;
-  } catch(e) {}
-}
+  // ========== RENTAL BIDDING SYSTEM ==========
+  const isLoggedIn = !!localStorage.getItem("token");
+  let currentUserId = null;
+  if (isLoggedIn) {
+    try {
+      const payload = JSON.parse(atob(localStorage.getItem("token").split('.')[1]));
+      currentUserId = payload.id;
+    } catch(e) {}
+  }
 
-// Add "Make an Offer" button (if user is logged in, not owner, and bidding allowed)
-if (isLoggedIn && house.owner && house.owner._id !== currentUserId && house.allowBidding !== false) {
-  const offerSection = document.createElement('div');
-  offerSection.className = 'offer-section';
-  offerSection.style.marginTop = '1rem';
-  offerSection.style.paddingTop = '1rem';
-  offerSection.style.borderTop = '1px solid var(--input-border)';
-  offerSection.innerHTML = `
-    <button id="makeOfferBtn" class="save-search-btn" style="background: #f59e0b;"><i class="fas fa-gavel"></i> Make an Offer</button>
-    <div id="offerFormContainer" style="display: none; margin-top: 1rem;"></div>
-  `;
-  document.getElementById('modalDetails').appendChild(offerSection);
+  // Add "Make an Offer" button
+  if (isLoggedIn && house.owner && house.owner._id !== currentUserId && house.allowBidding !== false) {
+    const offerSection = document.createElement('div');
+    offerSection.className = 'offer-section';
+    offerSection.style.marginTop = '1rem';
+    offerSection.style.paddingTop = '1rem';
+    offerSection.style.borderTop = '1px solid var(--input-border)';
+    offerSection.innerHTML = `
+      <button id="makeOfferBtn" class="save-search-btn" style="background: #f59e0b;"><i class="fas fa-gavel"></i> Make an Offer</button>
+      <div id="offerFormContainer" style="display: none; margin-top: 1rem;"></div>
+    `;
+    document.getElementById('modalDetails').appendChild(offerSection);
 
-  const makeOfferBtn = document.getElementById('makeOfferBtn');
-  const container = document.getElementById('offerFormContainer');
-  makeOfferBtn.addEventListener('click', () => {
-    if (container.style.display === 'none') {
-      container.style.display = 'block';
-      container.innerHTML = `
-        <div class="form-group">
-          <label>Your Offer Price (MWK)</label>
-          <input type="number" id="offerPrice" placeholder="e.g., 150000" value="${house.price}">
-        </div>
-        <div class="form-group">
-          <label>Proposed Move‑in Date</label>
-          <input type="date" id="offerMoveInDate" required>
-        </div>
-        <div class="form-group">
-          <label>Message to Landlord (optional)</label>
-          <textarea id="offerComment" rows="2" placeholder="e.g., I can move in immediately..."></textarea>
-        </div>
-        <button id="submitOfferBtn" class="save-search-btn">Submit Offer</button>
-      `;
-      document.getElementById('submitOfferBtn').addEventListener('click', async () => {
-        const price = document.getElementById('offerPrice').value;
-        const moveInDate = document.getElementById('offerMoveInDate').value;
-        const comment = document.getElementById('offerComment').value;
-        if (!price || !moveInDate) {
-          alert('Please fill in all required fields');
-          return;
-        }
-        const token = localStorage.getItem('token');
-        try {
-          const res = await fetch('/api/offers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-            body: JSON.stringify({
-              houseId: house._id,
-              proposedPrice: parseInt(price),
-              moveInDate,
-              tenantComment: comment
-            })
-          });
-          const data = await res.json();
-          if (res.ok) {
-            alert('Offer submitted successfully! The landlord will be notified.');
-            container.style.display = 'none';
-          } else {
-            alert('Failed to submit offer: ' + (data.message || 'Unknown error'));
+    const makeOfferBtn = document.getElementById('makeOfferBtn');
+    const container = document.getElementById('offerFormContainer');
+    makeOfferBtn.addEventListener('click', () => {
+      if (container.style.display === 'none') {
+        container.style.display = 'block';
+        container.innerHTML = `
+          <div class="form-group">
+            <label>Your Offer Price (MWK)</label>
+            <input type="number" id="offerPrice" placeholder="e.g., 150000" value="${house.price}">
+          </div>
+          <div class="form-group">
+            <label>Proposed Move‑in Date</label>
+            <input type="date" id="offerMoveInDate" required>
+          </div>
+          <div class="form-group">
+            <label>Message to Landlord (optional)</label>
+            <textarea id="offerComment" rows="2" placeholder="e.g., I can move in immediately..."></textarea>
+          </div>
+          <button id="submitOfferBtn" class="save-search-btn">Submit Offer</button>
+        `;
+        document.getElementById('submitOfferBtn').addEventListener('click', async () => {
+          const price = document.getElementById('offerPrice').value;
+          const moveInDate = document.getElementById('offerMoveInDate').value;
+          const comment = document.getElementById('offerComment').value;
+          if (!price || !moveInDate) {
+            alert('Please fill in all required fields');
+            return;
           }
-        } catch (err) {
-          console.error(err);
-          alert('Network error');
-        }
-      });
-    } else {
-      container.style.display = 'none';
-    }
-  });
-}
+          const token = localStorage.getItem('token');
+          try {
+            const res = await fetch('/api/offers', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+              body: JSON.stringify({
+                houseId: house._id,
+                proposedPrice: parseInt(price),
+                moveInDate,
+                tenantComment: comment
+              })
+            });
+            const data = await res.json();
+            if (res.ok) {
+              alert('Offer submitted successfully! The landlord will be notified.');
+              container.style.display = 'none';
+            } else {
+              alert('Failed to submit offer: ' + (data.message || 'Unknown error'));
+            }
+          } catch (err) {
+            console.error(err);
+            alert('Network error');
+          }
+        });
+      } else {
+        container.style.display = 'none';
+      }
+    });
+  }
 
-// Show highest bid for premium users (if landlord allows)
-if (isLoggedIn && house.showHighestBidToPremium) {
-  try {
-    const token = localStorage.getItem('token');
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    // Assuming your JWT contains `isPremium` – adjust accordingly
-    const isPremium = payload.isPremium === true;
-    if (isPremium) {
-      const res = await fetch(`/api/offers/house/${house._id}/highest`, {
-        headers: { Authorization: 'Bearer ' + token }
-      });
-      if (res.ok) {
-        const highest = await res.json();
-        if (highest && highest.proposedPrice) {
-          const highestDiv = document.createElement('div');
-          highestDiv.className = 'highest-bid';
-          highestDiv.style.marginTop = '0.5rem';
-          highestDiv.style.fontSize = '0.75rem';
-          highestDiv.style.color = '#f59e0b';
-          highestDiv.innerHTML = `<i class="fas fa-chart-line"></i> Current highest bid: MWK ${highest.proposedPrice.toLocaleString()}`;
-          document.getElementById('modalDetails').appendChild(highestDiv);
+  // Show highest bid for premium users (if landlord allows)
+  if (isLoggedIn && house.showHighestBidToPremium) {
+    try {
+      const token = localStorage.getItem('token');
+      // First check if user is premium – either from JWT or fetch from /api/auth/me
+      let isPremium = false;
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        isPremium = payload.isPremium === true;
+      } catch(e) {}
+      if (!isPremium) {
+        // Fallback: fetch user data
+        const userRes = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          isPremium = userData.isPremium === true;
         }
       }
-    }
-  } catch (err) { console.error('Failed to fetch highest bid', err); }
-}
+      if (isPremium) {
+        const res = await fetch(`/api/offers/house/${house._id}/highest`, {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        if (res.ok) {
+          const highest = await res.json();
+          if (highest && highest.proposedPrice) {
+            const highestDiv = document.createElement('div');
+            highestDiv.className = 'highest-bid';
+            highestDiv.style.marginTop = '0.5rem';
+            highestDiv.style.fontSize = '0.75rem';
+            highestDiv.style.color = '#f59e0b';
+            highestDiv.innerHTML = `<i class="fas fa-chart-line"></i> Current highest bid: MWK ${highest.proposedPrice.toLocaleString()}`;
+            document.getElementById('modalDetails').appendChild(highestDiv);
+          }
+        }
+      }
+    } catch (err) { console.error('Failed to fetch highest bid', err); }
+  }
+
   document.getElementById('propertyModal').style.display = 'block';
   if (house.lat && house.lng) { loadNeighbourhoodInsights(house.lat, house.lng); loadStreetView(house.lat, house.lng); } else { document.getElementById('modalInsights').innerHTML = '<p>No location data available for insights.</p>'; document.getElementById('modalStreetView').innerHTML = '<p>No location data for street view.</p>'; }
   loadPriceInsights(house._id);
