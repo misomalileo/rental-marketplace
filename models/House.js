@@ -43,7 +43,11 @@ const HouseSchema = new mongoose.Schema(
       default: "none"
     },
     unavailableDates: { type: [Date], default: [] },
-    selfContained: { type: Boolean, default: false }
+    selfContained: { type: Boolean, default: false },
+    virtualTourUrl: { type: String, default: null },
+    // === NEW BIDDING FIELDS ===
+    allowBidding: { type: Boolean, default: true },
+    showHighestBidToPremium: { type: Boolean, default: true }
   },
   { timestamps: true }
 );

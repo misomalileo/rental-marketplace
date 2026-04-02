@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Offers | Khomo Lathu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #f8fafc; color: #1e293b; font-size: 0.85rem; }
+    .navbar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .logo { font-size: 1.3rem; font-weight: 700; }
+    .logo i { color: #2563eb; margin-right: 6px; }
+    .nav-links a { margin-left: 1rem; text-decoration: none; color: #1e293b; font-weight: 500; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.6rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+    .offer-card { background: white; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+    .offer-status { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; margin-left: 0.5rem; }
+    .offer-status.pending { background: #fef3c7; color: #b45309; }
+    .offer-status.accepted { background: #dcfce7; color: #15803d; }
+    .offer-status.rejected { background: #fee2e2; color: #b91c1c; }
+    .offer-status.countered { background: #e0e7ff; color: #1e40af; }
+    .offer-details { margin-top: 0.5rem; font-size: 0.8rem; }
+    .offer-details p { margin: 0.2rem 0; }
+    .counter-section { margin-top: 0.5rem; padding: 0.5rem; background: #f1f5f9; border-radius: 12px; }
+    button { background: #2563eb; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 30px; cursor: pointer; margin-top: 0.5rem; font-size: 0.75rem; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
+    <div class="nav-links">
+      <a href="index.html"><i class="fas fa-home"></i> Home</a>
+      <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </nav>
+  <div class="container">
+    <h1><i class="fas fa-gavel"></i> My Offers</h1>
+    <div id="offersList">Loading...</div>
+  </div>
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) window.location = "login.html";
+    function logout() { localStorage.clear(); window.location = "login.html"; }
+
+    async function loadOffers() {
+      try {
+        const res = await fetch("/api/offers/my", { headers: { Authorization: "Bearer " + token } });
+        const offers = await res.json();
+        const container = document.getElementById("offersList");
+        if (offers.length === 0) {
+          container.innerHTML = "<p>You haven't made any offers yet.</p>";
+          return;
+        }
+        container.innerHTML = offers.map(offer => `
+          <div class="offer-card">
+            <div><strong>${offer.houseId?.name || 'Property'}</strong> <span class="offer-status ${offer.status}">${offer.status}</span></div>
+            <div class="offer-details">
+              <p><i class="fas fa-map-marker-alt"></i> ${offer.houseId?.location || 'N/A'}</p>
+              <p><i class="fas fa-money-bill-wave"></i> Your offer: MWK ${offer.proposedPrice.toLocaleString()}</p>
+              <p><i class="fas fa-calendar-alt"></i> Move‑in: ${new Date(offer.moveInDate).toLocaleDateString()}</p>
+              ${offer.tenantComment ? `<p><i class="fas fa-comment"></i> Your message: ${offer.tenantComment}</p>` : ''}
+              ${offer.counterOfferPrice ? `<div class="counter-section"><i class="fas fa-exchange-alt"></i> Landlord countered: MWK ${offer.counterOfferPrice.toLocaleString()}<br><i class="fas fa-calendar-alt"></i> Proposed move‑in: ${new Date(offer.counterOfferDate).toLocaleDateString()}<br>${offer.landlordComment ? `<i class="fas fa-comment"></i> Landlord's note: ${offer.landlordComment}</div>` : ''}</div>` : ''}
+            </div>
+            ${offer.status === 'countered' ? `<button onclick="acceptCounter('${offer._id}')">Accept Counter Offer</button>` : ''}
+          </div>
+        `).join('');
+      } catch (err) { console.error(err); container.innerHTML = "<p>Error loading offers.</p>"; }
+    }
+    async function acceptCounter(offerId) {
+      if (!confirm("Accept the landlord's counter offer?")) return;
+      try {
+        const res = await fetch(`/api/offers/${offerId}/accept`, { method: 'PUT', headers: { Authorization: "Bearer " + token } });
+        if (res.ok) alert("Offer accepted! The landlord will contact you.");
+        else alert("Failed to accept counter offer.");
+        loadOffers();
+      } catch (err) { alert("Network error"); }
+    }
+    loadOffers();
+  </script>
+</body>
+</html>

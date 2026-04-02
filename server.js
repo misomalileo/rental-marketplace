@@ -238,6 +238,10 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/premium", premiumRoutes);
 
+// === NEW OFFERS ROUTE ===
+const offerRoutes = require("./routes/offers");
+app.use("/api/offers", offerRoutes);
+
 // ===============================
 // DEBUG ENDPOINT – TEST MONGODB CONNECTION
 // ===============================

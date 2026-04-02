@@ -783,6 +783,114 @@ function showDetails(houseId) {
   if (!house) return;
   const detailsHtml = `<h2>${house.name}</h2><p><strong><i class="fas fa-home"></i> Type:</strong> ${house.type}</p><p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p><p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p><p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p><p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p><p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p><p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p><p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p><p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p><p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p><p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p><p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>`;
   document.getElementById('modalDetails').innerHTML = detailsHtml;
+
+// ========== RENTAL BIDDING SYSTEM ==========
+const isLoggedIn = !!localStorage.getItem("token");
+let currentUserId = null;
+if (isLoggedIn) {
+  try {
+    const payload = JSON.parse(atob(localStorage.getItem("token").split('.')[1]));
+    currentUserId = payload.id;
+  } catch(e) {}
+}
+
+// Add "Make an Offer" button (if user is logged in, not owner, and bidding allowed)
+if (isLoggedIn && house.owner && house.owner._id !== currentUserId && house.allowBidding !== false) {
+  const offerSection = document.createElement('div');
+  offerSection.className = 'offer-section';
+  offerSection.style.marginTop = '1rem';
+  offerSection.style.paddingTop = '1rem';
+  offerSection.style.borderTop = '1px solid var(--input-border)';
+  offerSection.innerHTML = `
+    <button id="makeOfferBtn" class="save-search-btn" style="background: #f59e0b;"><i class="fas fa-gavel"></i> Make an Offer</button>
+    <div id="offerFormContainer" style="display: none; margin-top: 1rem;"></div>
+  `;
+  document.getElementById('modalDetails').appendChild(offerSection);
+
+  const makeOfferBtn = document.getElementById('makeOfferBtn');
+  const container = document.getElementById('offerFormContainer');
+  makeOfferBtn.addEventListener('click', () => {
+    if (container.style.display === 'none') {
+      container.style.display = 'block';
+      container.innerHTML = `
+        <div class="form-group">
+          <label>Your Offer Price (MWK)</label>
+          <input type="number" id="offerPrice" placeholder="e.g., 150000" value="${house.price}">
+        </div>
+        <div class="form-group">
+          <label>Proposed Move‑in Date</label>
+          <input type="date" id="offerMoveInDate" required>
+        </div>
+        <div class="form-group">
+          <label>Message to Landlord (optional)</label>
+          <textarea id="offerComment" rows="2" placeholder="e.g., I can move in immediately..."></textarea>
+        </div>
+        <button id="submitOfferBtn" class="save-search-btn">Submit Offer</button>
+      `;
+      document.getElementById('submitOfferBtn').addEventListener('click', async () => {
+        const price = document.getElementById('offerPrice').value;
+        const moveInDate = document.getElementById('offerMoveInDate').value;
+        const comment = document.getElementById('offerComment').value;
+        if (!price || !moveInDate) {
+          alert('Please fill in all required fields');
+          return;
+        }
+        const token = localStorage.getItem('token');
+        try {
+          const res = await fetch('/api/offers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify({
+              houseId: house._id,
+              proposedPrice: parseInt(price),
+              moveInDate,
+              tenantComment: comment
+            })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert('Offer submitted successfully! The landlord will be notified.');
+            container.style.display = 'none';
+          } else {
+            alert('Failed to submit offer: ' + (data.message || 'Unknown error'));
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Network error');
+        }
+      });
+    } else {
+      container.style.display = 'none';
+    }
+  });
+}
+
+// Show highest bid for premium users (if landlord allows)
+if (isLoggedIn && house.showHighestBidToPremium) {
+  try {
+    const token = localStorage.getItem('token');
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    // Assuming your JWT contains `isPremium` – adjust accordingly
+    const isPremium = payload.isPremium === true;
+    if (isPremium) {
+      const res = await fetch(`/api/offers/house/${house._id}/highest`, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const highest = await res.json();
+        if (highest && highest.proposedPrice) {
+          const highestDiv = document.createElement('div');
+          highestDiv.className = 'highest-bid';
+          highestDiv.style.marginTop = '0.5rem';
+          highestDiv.style.fontSize = '0.75rem';
+          highestDiv.style.color = '#f59e0b';
+          highestDiv.innerHTML = `<i class="fas fa-chart-line"></i> Current highest bid: MWK ${highest.proposedPrice.toLocaleString()}`;
+          document.getElementById('modalDetails').appendChild(highestDiv);
+        }
+      }
+    }
+  } catch (err) { console.error('Failed to fetch highest bid', err); }
+}
   document.getElementById('propertyModal').style.display = 'block';
   if (house.lat && house.lng) { loadNeighbourhoodInsights(house.lat, house.lng); loadStreetView(house.lat, house.lng); } else { document.getElementById('modalInsights').innerHTML = '<p>No location data available for insights.</p>'; document.getElementById('modalStreetView').innerHTML = '<p>No location data for street view.</p>'; }
   loadPriceInsights(house._id);

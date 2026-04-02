@@ -792,11 +792,116 @@ async function updateBooking(bookingId, status) {
   }
 }
 
+// ========== NEW RENTAL BIDDING SYSTEM FUNCTIONS ==========
+async function loadOffers() {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch("/api/offers/my-houses", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const offers = await res.json();
+    const container = document.getElementById("offersList");
+    if (!container) return;
+    if (offers.length === 0) {
+      container.innerHTML = "<p>No offers yet.</p>";
+      return;
+    }
+    container.innerHTML = offers.map(offer => `
+      <div class="offer-card" data-id="${offer._id}">
+        <div class="offer-header">
+          <strong>${offer.houseId?.name || 'Unknown property'}</strong>
+          <span class="offer-status ${offer.status}">${offer.status}</span>
+        </div>
+        <div class="offer-details">
+          <p><i class="fas fa-user"></i> Tenant: ${offer.tenantId?.name || 'Unknown'}</p>
+          <p><i class="fas fa-money-bill-wave"></i> Offered: MWK ${offer.proposedPrice.toLocaleString()}</p>
+          <p><i class="fas fa-calendar-alt"></i> Move‑in: ${new Date(offer.moveInDate).toLocaleDateString()}</p>
+          <p><i class="fas fa-comment"></i> Message: ${offer.tenantComment || 'No message'}</p>
+          ${offer.counterOfferPrice ? `<p><i class="fas fa-exchange-alt"></i> Your counter: MWK ${offer.counterOfferPrice.toLocaleString()}</p>` : ''}
+        </div>
+        <div class="offer-actions">
+          ${offer.status === 'pending' ? `
+            <button class="action-btn accept-offer" data-id="${offer._id}">Accept</button>
+            <button class="action-btn reject-offer" data-id="${offer._id}">Reject</button>
+            <button class="action-btn counter-offer" data-id="${offer._id}">Counter</button>
+          ` : ''}
+          ${offer.status === 'countered' ? `
+            <button class="action-btn accept-offer" data-id="${offer._id}">Accept Counter</button>
+            <button class="action-btn reject-offer" data-id="${offer._id}">Reject Counter</button>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    // Attach event listeners
+    document.querySelectorAll('.accept-offer').forEach(btn => {
+      btn.addEventListener('click', () => updateOffer(btn.dataset.id, 'accept'));
+    });
+    document.querySelectorAll('.reject-offer').forEach(btn => {
+      btn.addEventListener('click', () => updateOffer(btn.dataset.id, 'reject'));
+    });
+    document.querySelectorAll('.counter-offer').forEach(btn => {
+      btn.addEventListener('click', () => showCounterModal(btn.dataset.id));
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function updateOffer(offerId, action) {
+  const confirmMsg = action === 'accept' ? 'Accept this offer?' : 'Reject this offer?';
+  if (!confirm(confirmMsg)) return;
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/offers/${offerId}/${action}`, {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (res.ok) {
+      alert(`Offer ${action}ed`);
+      loadOffers();
+    } else {
+      const data = await res.json();
+      alert('Failed: ' + data.message);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Network error');
+  }
+}
+
+function showCounterModal(offerId) {
+  const price = prompt('Enter your counter offer price (MWK):');
+  if (!price) return;
+  const moveInDate = prompt('Proposed move‑in date (YYYY-MM-DD):');
+  if (!moveInDate) return;
+  const comment = prompt('Optional message to tenant:');
+  fetch(`/api/offers/${offerId}/counter`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem("token") },
+    body: JSON.stringify({
+      counterOfferPrice: parseInt(price),
+      moveInDate,
+      landlordComment: comment || ''
+    })
+  }).then(res => res.json()).then(data => {
+    if (data.message) alert(data.message);
+    loadOffers();
+  }).catch(err => console.error(err));
+}
+// ========== END RENTAL BIDDING SYSTEM ==========
+
+// Initialize everything
 initMap();
 fetchUser();
 loadMyHouses();
 loadUnreadCount();
+// Load offers after a short delay to ensure DOM is ready
+setTimeout(() => {
+  if (document.getElementById("offersList")) loadOffers();
+}, 500);
 
+// Expose functions globally
 window.payForVerification = payForVerification;
 window.featureHouse = featureHouse;
 window.processPayment = processPayment;

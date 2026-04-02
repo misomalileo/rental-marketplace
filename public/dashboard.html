@@ -477,7 +477,36 @@
       font-weight: bold;
       cursor: pointer;
     }
-
+    .offer-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--input-border);
+    }
+    .offer-status {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 600;  
+      text-transform: uppercase;
+      margin-left: 0.5rem;
+    }
+    .offer-status.pending { background: #fef3c7; color: #b45309; }
+    .offer-status.accepted { background: #dcfce7; color: #15803d; }
+    .offer-status.rejected { background: #fee2e2; color: #b91c1c; }
+    .offer-status.countered { background: #e0e7ff; color: #1e40af; }
+    .offer-actions button {
+      margin-right: 0.5rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      background: var(--button-bg);
+      color: white;
+      border: none;
+    }
     /* ========== UPGRADED PAYMENT MODAL ========== */
     .payment-modal-header {
       text-align: center;
@@ -859,6 +888,8 @@
 
     <h2><i class="fas fa-calendar-alt"></i> Booking Requests</h2>
     <div id="bookingRequests"></div>
+    <h2><i class="fas fa-gavel"></i> Offers Received</h2>
+    <div id="offersList">Loading offers...</div>
   </div>
 
   <!-- Edit Modal (unchanged) -->
