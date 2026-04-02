@@ -70,7 +70,7 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// GET /api/offers/my/house/:houseId – tenant's offer for a specific house (NEW)
+// GET /api/offers/my/house/:houseId – tenant's offer for a specific house
 router.get('/my/house/:houseId', auth, async (req, res) => {
   try {
     const offer = await Offer.findOne({
@@ -153,7 +153,7 @@ router.get('/my-houses', auth, async (req, res) => {
   }
 });
 
-// PUT /api/offers/:id/accept – accept an offer
+// PUT /api/offers/:id/accept – landlord accepts an offer (for pending or countered)
 router.put('/:id/accept', auth, async (req, res) => {
   try {
     const offer = await Offer.findById(req.params.id).populate('houseId');
@@ -189,7 +189,79 @@ router.put('/:id/accept', auth, async (req, res) => {
   }
 });
 
-// PUT /api/offers/:id/reject – reject an offer
+// PUT /api/offers/:id/accept-tenant – TENANT accepts a counter offer
+router.put('/:id/accept-tenant', auth, async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.id).populate('houseId');
+    if (!offer) return res.status(404).json({ message: 'Offer not found' });
+    if (offer.tenantId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    if (offer.status !== 'countered') {
+      return res.status(400).json({ message: 'Only countered offers can be accepted by tenant' });
+    }
+    offer.status = 'accepted';
+    await offer.save();
+
+    const landlord = await User.findById(offer.houseId.owner);
+    if (landlord) {
+      landlord.notifications.unshift(JSON.stringify({
+        title: 'Counter Offer Accepted',
+        message: `${req.user.name || 'Tenant'} accepted your counter offer of MWK ${offer.counterOfferPrice?.toLocaleString() || offer.proposedPrice.toLocaleString()} for ${offer.houseId.name}.`,
+        type: 'offer_accepted',
+        read: false,
+        createdAt: new Date()
+      }));
+      await landlord.save();
+    }
+
+    const io = req.app.get('io');
+    if (io) io.to(offer.houseId.owner.toString()).emit('newNotification', { message: 'Tenant accepted your counter offer!' });
+
+    res.json({ message: 'Counter offer accepted', offer });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /api/offers/:id/reject-tenant – TENANT rejects a counter offer
+router.put('/:id/reject-tenant', auth, async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.id).populate('houseId');
+    if (!offer) return res.status(404).json({ message: 'Offer not found' });
+    if (offer.tenantId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    if (offer.status !== 'countered') {
+      return res.status(400).json({ message: 'Only countered offers can be rejected by tenant' });
+    }
+    offer.status = 'rejected';
+    await offer.save();
+
+    const landlord = await User.findById(offer.houseId.owner);
+    if (landlord) {
+      landlord.notifications.unshift(JSON.stringify({
+        title: 'Counter Offer Rejected',
+        message: `${req.user.name || 'Tenant'} rejected your counter offer for ${offer.houseId.name}.`,
+        type: 'offer_rejected',
+        read: false,
+        createdAt: new Date()
+      }));
+      await landlord.save();
+    }
+
+    const io = req.app.get('io');
+    if (io) io.to(offer.houseId.owner.toString()).emit('newNotification', { message: 'Tenant rejected your counter offer.' });
+
+    res.json({ message: 'Counter offer rejected', offer });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /api/offers/:id/reject – landlord rejects an offer
 router.put('/:id/reject', auth, async (req, res) => {
   try {
     const offer = await Offer.findById(req.params.id).populate('houseId');
@@ -222,7 +294,7 @@ router.put('/:id/reject', auth, async (req, res) => {
   }
 });
 
-// PUT /api/offers/:id/counter – counter an offer
+// PUT /api/offers/:id/counter – landlord counters an offer
 router.put('/:id/counter', auth, async (req, res) => {
   try {
     const { counterOfferPrice, moveInDate, landlordComment } = req.body;
