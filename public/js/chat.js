@@ -1,10 +1,32 @@
-// chat.js – working without encryption (messages readable)
+// chat.js – final with proper decryption, no duplicates, WhatsApp style
 let socket;
 let currentChatId = null;
 let currentOtherUser = null;
 let chats = [];
 let typingTimeout = null;
 let currentUser = null;
+
+// Simple XOR encryption/decryption (for demonstration)
+const encryptionKey = "KhomoLathuSecret2026";
+function encrypt(text) {
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    const charCode = text.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length);
+    result += String.fromCharCode(charCode);
+  }
+  return btoa(result);
+}
+function decrypt(encrypted) {
+  try {
+    const decoded = atob(encrypted);
+    let result = '';
+    for (let i = 0; i < decoded.length; i++) {
+      const charCode = decoded.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length);
+      result += String.fromCharCode(charCode);
+    }
+    return result;
+  } catch { return encrypted; }
+}
 
 function getToken() { return localStorage.getItem("token"); }
 
@@ -19,22 +41,26 @@ function initSocket() {
   socket.on("connect", () => console.log("Socket connected"));
   socket.on("connect_error", (err) => {
     console.error("Socket connection error:", err.message);
-    document.getElementById("mainChat").innerHTML = `
-      <div class="no-chat">
-        <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#e74c3c;"></i>
-        <p>Unable to connect to chat server. Please refresh.</p>
-      </div>
-    `;
   });
   socket.on("newMessage", (data) => {
     const { chatId, message } = data;
+    // Decrypt message content if needed
+    let msgText = message.text;
+    if (msgText && msgText.startsWith('enc:')) {
+      msgText = decrypt(msgText.substring(4));
+    }
+    const finalMsg = { ...message, text: msgText };
     if (currentChatId === chatId) {
-      appendMessageToDOM(message, document.getElementById("messagesContainer"));
-      markMessagesAsRead(currentChatId);
+      // Avoid duplicate: check if message already exists
+      const existingMsgs = document.querySelectorAll(`.message[data-id="${finalMsg._id}"]`);
+      if (existingMsgs.length === 0) {
+        appendMessageToDOM(finalMsg, document.getElementById("messagesContainer"));
+        markMessagesAsRead(currentChatId);
+      }
     }
     updateChatList();
-    if (message.senderId !== currentUser?._id && currentChatId !== chatId && Notification.permission === "granted") {
-      new Notification("New message from " + (message.senderName || "Someone"), { body: message.text });
+    if (finalMsg.senderId !== currentUser?._id && currentChatId !== chatId && Notification.permission === "granted") {
+      new Notification("New message from " + (finalMsg.senderName || "Someone"), { body: msgText });
     }
   });
   socket.on("messagesRead", ({ chatId }) => {
@@ -63,28 +89,6 @@ async function loadChats() {
       if (chat) {
         const other = chat.participants.find(p => p && p._id !== currentUser._id);
         if (other) await selectChat(chatId, other);
-      } else {
-        try {
-          const res2 = await fetch(`/api/chat/${chatId}`, { headers: { Authorization: "Bearer " + token } });
-          if (res2.ok) {
-            const chatData = await res2.json();
-            const other = chatData.participants.find(p => p && p._id !== currentUser._id);
-            if (other) {
-              chats.unshift({
-                _id: chatData._id,
-                participants: chatData.participants,
-                messages: chatData.messages,
-                lastMessage: "",
-                unreadCount: 0,
-                online: false
-              });
-              updateChatList();
-              await selectChat(chatId, other);
-            }
-          } else if (res2.status === 403) {
-            console.warn(`Chat ${chatId} not accessible (403).`);
-          }
-        } catch (err) { console.error("Could not load chat from URL", err); }
       }
     }
   } catch (err) {
@@ -98,7 +102,7 @@ function updateChatList() {
   if (!container) return;
   container.innerHTML = "";
   if (!chats.length) {
-    container.innerHTML = '<li style="padding:1rem; text-align:center;">No conversations yet</li>';
+    container.innerHTML = '<li style="padding:1rem; text-align:center; color:#888;">No conversations yet</li>';
     return;
   }
   chats.forEach(chat => {
@@ -106,13 +110,12 @@ function updateChatList() {
     const other = validParticipants.find(p => p._id !== currentUser._id);
     if (!other) return;
     const lastMsg = chat.messages[chat.messages.length - 1];
+    let lastMsgText = lastMsg ? (lastMsg.text || '') : 'No messages yet';
+    if (lastMsgText.startsWith('enc:')) lastMsgText = decrypt(lastMsgText.substring(4));
     const unread = chat.unreadCount || 0;
     const item = document.createElement("li");
     item.className = "chat-item" + (chat._id === currentChatId ? " active" : "");
     item.onclick = () => selectChat(chat._id, other);
-    let lastMsgText = lastMsg ? (lastMsg.text.length > 30 ? lastMsg.text.substring(0,30)+"…" : lastMsg.text) : "No messages yet";
-    // If last message starts with "enc:", it's still encrypted – we'll display it as "Encrypted message"
-    if (lastMsgText.startsWith("enc:")) lastMsgText = "Encrypted message";
     item.innerHTML = `
       <div class="chat-avatar">
         <span>${other.name?.charAt(0) || "?"}</span>
@@ -120,11 +123,11 @@ function updateChatList() {
       </div>
       <div class="chat-info">
         <h4>${other.name || "User"}</h4>
-        <p>${lastMsgText}</p>
+        <p>${lastMsgText.length > 30 ? lastMsgText.substring(0,30)+"…" : lastMsgText}</p>
       </div>
       <div class="chat-time">
         ${lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
-        ${unread ? `<span class="badge">${unread}</span>` : ""}
+        ${unread ? `<div class="unread-badge">${unread}</div>` : ""}
       </div>
     `;
     container.appendChild(item);
@@ -141,58 +144,16 @@ async function selectChat(chatId, otherUser) {
 
 async function loadMessages(chatId) {
   try {
-    const res = await fetch(`/api/chat/${chatId}`, {
-      headers: { Authorization: "Bearer " + token }
-    });
-    if (res.status === 403) {
-      console.error(`Not authorized for chat ${chatId}. Refreshing chat list...`);
-      await loadChats();
-      if (currentChatId === chatId) {
-        currentChatId = null;
-        currentOtherUser = null;
-        document.getElementById("mainChat").innerHTML = `
-          <div class="no-chat">
-            <i class="fas fa-comment-dots" style="font-size:3rem; opacity:0.5;"></i>
-            <p>Select a conversation to start chatting</p>
-          </div>
-        `;
-      }
-      return;
-    }
+    const res = await fetch(`/api/chat/${chatId}`, { headers: { Authorization: "Bearer " + token } });
     if (!res.ok) throw new Error(`Failed to load messages: ${res.status}`);
     const chat = await res.json();
-    // Decrypt any messages that are still encrypted (legacy)
-    const decryptedMessages = chat.messages.map(msg => {
-      let text = msg.text;
-      if (text && text.startsWith("enc:")) {
-        // Attempt decryption – if fails, keep as is
-        try {
-          const encryptedPart = text.substring(4);
-          const decoded = atob(encryptedPart);
-          let decrypted = '';
-          const key = "KhomoLathuSecret2026";
-          for (let i = 0; i < decoded.length; i++) {
-            const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-            decrypted += String.fromCharCode(charCode);
-          }
-          text = decrypted;
-        } catch(e) { /* keep original */ }
-      }
-      return { ...msg, text };
-    });
-    renderMessages(decryptedMessages);
+    renderMessages(chat.messages);
     renderChatHeader(chat);
     const messagesDiv = document.querySelector(".messages");
     if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
   } catch (err) {
     console.error("Error loading messages:", err);
-    document.getElementById("mainChat").innerHTML = `
-      <div class="no-chat">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>Failed to load messages. Please try again later.</p>
-        <small>${err.message}</small>
-      </div>
-    `;
+    document.getElementById("mainChat").innerHTML = `<div class="no-chat"><p>Failed to load messages.</p></div>`;
   }
 }
 
@@ -215,7 +176,7 @@ function renderChatHeader(chat) {
     <div class="messages" id="messagesContainer"></div>
     <div class="input-area">
       <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
-      <button id="sendBtn"><i class="fas fa-paper-plane"></i> Send</button>
+      <button id="sendBtn"><i class="fas fa-paper-plane"></i></button>
     </div>
   `;
   const input = document.getElementById("messageInput");
@@ -240,10 +201,15 @@ function renderMessages(messages) {
 
 function appendMessageToDOM(msg, container) {
   const isSent = msg.sender === currentUser._id;
+  let msgText = msg.text;
+  if (msgText && msgText.startsWith('enc:')) {
+    msgText = decrypt(msgText.substring(4));
+  }
   const div = document.createElement("div");
   div.className = `message ${isSent ? "sent" : "received"}`;
+  div.setAttribute("data-id", msg._id);
   div.innerHTML = `
-    <div class="message-text">${escapeHtml(msg.text)}</div>
+    <div class="message-text">${escapeHtml(msgText)}</div>
     <div class="message-time">
       ${new Date(msg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
       ${isSent ? `<span class="message-status">${getStatusIcon(msg)}</span>` : ""}
@@ -263,6 +229,7 @@ async function sendMessage() {
   const input = document.getElementById("messageInput");
   let text = input.value.trim();
   if (!text) return;
+  const encrypted = "enc:" + encrypt(text);
   input.disabled = true;
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) sendBtn.disabled = true;
@@ -271,13 +238,14 @@ async function sendMessage() {
     const res = await fetch("/api/chat/send", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-      body: JSON.stringify({ chatId: currentChatId, text }) // send plain text, no encryption
+      body: JSON.stringify({ chatId: currentChatId, text: encrypted })
     });
     const data = await res.json();
     if (res.ok) {
+      const decryptedText = decrypt(data.text.substring(4));
       const tempMsg = {
         _id: data._id,
-        text: data.text,
+        text: decryptedText,
         sender: data.sender,
         createdAt: data.createdAt,
         read: false,
@@ -285,7 +253,7 @@ async function sendMessage() {
       };
       appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
       input.value = "";
-      socket.emit("sendMessage", { chatId: currentChatId, text, messageId: data._id });
+      socket.emit("sendMessage", { chatId: currentChatId, text: encrypted, messageId: data._id });
     } else {
       alert("Failed to send: " + (data.message || "Unknown error"));
     }
