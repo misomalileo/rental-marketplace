@@ -403,11 +403,35 @@ function showCounterModal(offerId) {
   const comment = prompt('Optional message to tenant:');
   fetch(`/api/offers/${offerId}/counter`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ counterOfferPrice: parseInt(price), moveInDate, landlordComment: comment || '' }) }).then(res => res.json()).then(data => { if (data.message) alert(data.message); loadOffers(); }).catch(err => console.error(err));
 }
+// ========== LEASE NEGOTIATIONS ==========
+async function loadLeaseNegotiations() {
+  try {
+    const res = await fetch("/api/lease/my", { headers: { Authorization: "Bearer " + token } });
+    const leases = await res.json();
+    const container = document.getElementById("leaseList");
+    if (!container) return;
+    if (leases.length === 0) { container.innerHTML = "<p>No lease negotiations yet.</p>"; return; }
+    container.innerHTML = leases.map(lease => `
+      <div class="lease-card">
+        <div class="offer-header"><strong>${lease.houseId?.name || 'Unknown property'}</strong><span class="offer-status ${lease.status}">${lease.status}</span></div>
+        <div class="offer-details"><p><i class="fas fa-user"></i> Tenant: ${lease.tenantId?.name || 'Not joined'}</p><p><i class="fas fa-money-bill-wave"></i> Rent: MWK ${lease.rentAmount?.toLocaleString()}</p><p><i class="fas fa-calendar-alt"></i> Start: ${new Date(lease.leaseStartDate).toLocaleDateString()}</p><p><i class="fas fa-chart-line"></i> Lease Score: ${lease.leaseScore}/100</p></div>
+        <div class="offer-actions"><button class="edit" onclick="window.location.href='lease-negotiation.html?id=${lease._id}'">Continue Negotiation</button></div>
+      </div>
+    `).join('');
+  } catch (err) { console.error(err); }
+}
+
+// Initialize everything
 initMap();
 fetchUser();
 loadMyHouses();
 loadUnreadCount();
-setTimeout(() => { if (document.getElementById("offersList")) loadOffers(); }, 500);
+setTimeout(() => {
+  if (document.getElementById("offersList")) loadOffers();
+  if (document.getElementById("leaseList")) loadLeaseNegotiations();
+}, 500);
+
+// Expose functions globally
 window.payForVerification = payForVerification;
 window.featureHouse = featureHouse;
 window.processPayment = processPayment;
@@ -415,3 +439,4 @@ window.closePaymentModal = closePaymentModal;
 window.updateBooking = updateBooking;
 window.openEditProfile = openEditProfile;
 window.closeProfileModal = closeProfileModal;
+window.deleteOffer = deleteOffer; // added for delete offer button

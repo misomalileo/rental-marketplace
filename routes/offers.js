@@ -9,11 +9,9 @@ const User = require('../models/User');
 router.post('/', auth, async (req, res) => {
   try {
     const { houseId, proposedPrice, moveInDate, tenantComment } = req.body;
-
     if (!houseId || !proposedPrice || !moveInDate) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
-
     const house = await House.findById(houseId);
     if (!house) return res.status(404).json({ message: 'House not found' });
     if (house.owner.toString() === req.user.id) {
@@ -22,7 +20,6 @@ router.post('/', auth, async (req, res) => {
     if (!house.allowBidding) {
       return res.status(400).json({ message: 'Bidding is disabled for this property' });
     }
-
     const existingPending = await Offer.findOne({
       houseId,
       tenantId: req.user.id,
@@ -31,7 +28,6 @@ router.post('/', auth, async (req, res) => {
     if (existingPending) {
       return res.status(400).json({ message: 'You already have a pending offer on this property' });
     }
-
     const offer = new Offer({
       houseId,
       tenantId: req.user.id,
@@ -41,13 +37,11 @@ router.post('/', auth, async (req, res) => {
       status: 'pending'
     });
     await offer.save();
-
     let tenantName = 'A tenant';
     try {
       const tenant = await User.findById(req.user.id);
       if (tenant && tenant.name) tenantName = tenant.name;
     } catch (err) {}
-
     const landlord = await User.findById(house.owner);
     if (landlord) {
       landlord.notifications.unshift(JSON.stringify({
@@ -59,10 +53,8 @@ router.post('/', auth, async (req, res) => {
       }));
       await landlord.save();
     }
-
     const io = req.app.get('io');
     if (io) io.to(house.owner.toString()).emit('newNotification', { message: `New offer on ${house.name}` });
-
     res.status(201).json(offer);
   } catch (err) {
     console.error('Offer creation error:', err);
@@ -91,10 +83,8 @@ router.get('/house/:houseId/highest', auth, async (req, res) => {
     const house = await House.findById(req.params.houseId);
     if (!house) return res.status(404).json({ message: 'House not found' });
     if (!house.showHighestBidToPremium) return res.json(null);
-
     const user = await User.findById(req.user.id);
     if (!user.isPremium && !user.isAdmin) return res.json(null);
-
     const highest = await Offer.findOne({
       houseId: req.params.houseId,
       status: { $in: ['pending', 'countered'] }
@@ -166,7 +156,6 @@ router.put('/:id/accept', auth, async (req, res) => {
     }
     offer.status = 'accepted';
     await offer.save();
-
     const tenant = await User.findById(offer.tenantId);
     if (tenant) {
       tenant.notifications.unshift(JSON.stringify({
@@ -178,10 +167,8 @@ router.put('/:id/accept', auth, async (req, res) => {
       }));
       await tenant.save();
     }
-
     const io = req.app.get('io');
     if (io) io.to(offer.tenantId.toString()).emit('newNotification', { message: 'Your offer was accepted!' });
-
     res.json({ message: 'Offer accepted', offer });
   } catch (err) {
     console.error(err);
@@ -202,7 +189,6 @@ router.put('/:id/accept-tenant', auth, async (req, res) => {
     }
     offer.status = 'accepted';
     await offer.save();
-
     const landlord = await User.findById(offer.houseId.owner);
     if (landlord) {
       landlord.notifications.unshift(JSON.stringify({
@@ -214,10 +200,8 @@ router.put('/:id/accept-tenant', auth, async (req, res) => {
       }));
       await landlord.save();
     }
-
     const io = req.app.get('io');
     if (io) io.to(offer.houseId.owner.toString()).emit('newNotification', { message: 'Tenant accepted your counter offer!' });
-
     res.json({ message: 'Counter offer accepted', offer });
   } catch (err) {
     console.error(err);
@@ -238,7 +222,6 @@ router.put('/:id/reject-tenant', auth, async (req, res) => {
     }
     offer.status = 'rejected';
     await offer.save();
-
     const landlord = await User.findById(offer.houseId.owner);
     if (landlord) {
       landlord.notifications.unshift(JSON.stringify({
@@ -250,10 +233,8 @@ router.put('/:id/reject-tenant', auth, async (req, res) => {
       }));
       await landlord.save();
     }
-
     const io = req.app.get('io');
     if (io) io.to(offer.houseId.owner.toString()).emit('newNotification', { message: 'Tenant rejected your counter offer.' });
-
     res.json({ message: 'Counter offer rejected', offer });
   } catch (err) {
     console.error(err);
@@ -271,7 +252,6 @@ router.put('/:id/reject', auth, async (req, res) => {
     }
     offer.status = 'rejected';
     await offer.save();
-
     const tenant = await User.findById(offer.tenantId);
     if (tenant) {
       tenant.notifications.unshift(JSON.stringify({
@@ -283,10 +263,8 @@ router.put('/:id/reject', auth, async (req, res) => {
       }));
       await tenant.save();
     }
-
     const io = req.app.get('io');
     if (io) io.to(offer.tenantId.toString()).emit('newNotification', { message: 'Your offer was rejected' });
-
     res.json({ message: 'Offer rejected', offer });
   } catch (err) {
     console.error(err);
@@ -308,7 +286,6 @@ router.put('/:id/counter', auth, async (req, res) => {
     offer.counterOfferDate = moveInDate ? new Date(moveInDate) : offer.moveInDate;
     offer.landlordComment = landlordComment;
     await offer.save();
-
     const tenant = await User.findById(offer.tenantId);
     if (tenant) {
       tenant.notifications.unshift(JSON.stringify({
@@ -320,11 +297,25 @@ router.put('/:id/counter', auth, async (req, res) => {
       }));
       await tenant.save();
     }
-
     const io = req.app.get('io');
     if (io) io.to(offer.tenantId.toString()).emit('newNotification', { message: 'You received a counter offer' });
-
     res.json({ message: 'Counter offer sent', offer });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ========== DELETE OFFER (landlord only) ==========
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.id).populate('houseId');
+    if (!offer) return res.status(404).json({ message: 'Offer not found' });
+    if (offer.houseId.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    await offer.deleteOne();
+    res.json({ message: 'Offer deleted successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
