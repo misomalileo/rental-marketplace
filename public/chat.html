@@ -22,7 +22,7 @@
       flex-direction: column;
       overflow: hidden;
     }
-    /* Navbar - WhatsApp green */
+    /* Navbar */
     .navbar {
       background: #075E54;
       padding: 0.8rem 1.5rem;
@@ -45,49 +45,44 @@
       font-weight: 500;
       font-size: 0.9rem;
       margin-left: 1.2rem;
-      transition: opacity 0.2s;
     }
-    .nav-links a:hover { opacity: 0.8; }
-    /* Chat container */
+    /* Chat container with resizable sidebar */
     .chat-container {
       display: flex;
       flex: 1;
       overflow: hidden;
       background: #1e1e1e;
+      position: relative;
     }
-    /* Sidebar - conversations */
+    /* Sidebar - resizable */
     .sidebar {
-      width: 360px;
+      width: 320px;
+      min-width: 200px;
+      max-width: 500px;
       background: #131313;
       border-right: 1px solid #2a2a2a;
       display: flex;
       flex-direction: column;
+      resize: horizontal;
+      overflow: auto;
     }
     .sidebar-header {
       padding: 1rem;
       background: #075E54;
       color: white;
     }
-    .sidebar-header h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
     .chat-list {
       flex: 1;
       overflow-y: auto;
-      list-style: none;
     }
     .chat-item {
       padding: 0.8rem 1rem;
       cursor: pointer;
-      transition: background 0.2s;
       display: flex;
       align-items: center;
       gap: 0.8rem;
       border-bottom: 1px solid #2a2a2a;
+      transition: background 0.2s;
     }
     .chat-item:hover { background: #202020; }
     .chat-item.active { background: #2a2a2a; }
@@ -118,13 +113,11 @@
       flex: 1;
     }
     .chat-info h4 {
-      margin: 0 0 4px 0;
       font-size: 1rem;
       font-weight: 600;
       color: white;
     }
     .chat-info p {
-      margin: 0;
       font-size: 0.8rem;
       color: #aaa;
       white-space: nowrap;
@@ -134,7 +127,6 @@
     .chat-time {
       font-size: 0.65rem;
       color: #888;
-      text-align: right;
     }
     .unread-badge {
       background: #25D366;
@@ -145,13 +137,12 @@
       margin-top: 4px;
       display: inline-block;
     }
-    /* Main chat area */
+    /* Main chat */
     .main-chat {
       flex: 1;
       display: flex;
       flex-direction: column;
       background: #1a1a1a;
-      position: relative;
     }
     .chat-header {
       background: #075E54;
@@ -170,19 +161,9 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
-      position: relative;
     }
     .chat-header-info {
       flex: 1;
-    }
-    .chat-header-info h3 {
-      font-size: 1rem;
-      margin: 0;
-    }
-    .chat-header-info p {
-      font-size: 0.7rem;
-      opacity: 0.8;
-      margin: 0;
     }
     .messages {
       flex: 1;
@@ -191,16 +172,15 @@
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.03"><path fill="none" d="M0 0h100v100H0z"/><circle cx="20" cy="20" r="4" fill="white"/><circle cx="80" cy="80" r="6" fill="white"/><circle cx="50" cy="50" r="3" fill="white"/></svg>');
     }
     .message {
       max-width: 70%;
       padding: 0.5rem 0.8rem;
       border-radius: 18px;
-      position: relative;
       word-wrap: break-word;
       animation: fadeIn 0.2s ease;
       font-size: 0.85rem;
+      position: relative;
     }
     .message.sent {
       align-self: flex-end;
@@ -214,10 +194,30 @@
       color: #e4e6eb;
       border-bottom-left-radius: 4px;
     }
-    .message-status {
-      display: inline-block;
-      margin-left: 6px;
-      font-size: 0.65rem;
+    .message img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 12px;
+      margin-top: 4px;
+    }
+    .message-delete {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #e74c3c;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .message:hover .message-delete {
+      opacity: 1;
     }
     .message-time {
       font-size: 0.6rem;
@@ -242,7 +242,6 @@
       font-size: 0.9rem;
       outline: none;
     }
-    .input-area input::placeholder { color: #888; }
     .input-area button {
       background: #075E54;
       color: white;
@@ -251,34 +250,28 @@
       width: 44px;
       height: 44px;
       cursor: pointer;
-      transition: background 0.2s;
     }
-    .input-area button:hover { background: #128C7E; }
-    .input-area button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .no-chat {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #888;
-      flex-direction: column;
-      gap: 1rem;
+    .file-input {
+      display: none;
+    }
+    .attach-btn {
+      background: #075E54;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
     @media (max-width: 768px) {
-      .sidebar { width: 80px; }
-      .chat-info h4, .chat-info p { display: none; }
+      .sidebar { width: 80px; min-width: 80px; }
+      .chat-info { display: none; }
       .chat-time { display: none; }
       .message { max-width: 85%; }
-      .navbar { padding: 0.5rem 1rem; }
-      .logo { font-size: 1rem; }
-    }
-    @media (max-width: 480px) {
-      .sidebar { width: 70px; }
-      .chat-avatar { width: 40px; height: 40px; font-size: 0.9rem; }
     }
   </style>
 </head>
@@ -299,7 +292,7 @@
       <ul class="chat-list" id="chatList"></ul>
     </div>
     <div class="main-chat" id="mainChat">
-      <div class="no-chat">
+      <div class="no-chat" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #888;">
         <i class="fas fa-comment-dots" style="font-size: 3rem;"></i>
         <p>Select a conversation</p>
       </div>

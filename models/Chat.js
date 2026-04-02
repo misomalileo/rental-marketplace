@@ -4,7 +4,9 @@ const MessageSchema = new mongoose.Schema(
   {
     sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     content: { type: String, required: true },
+    type: { type: String, enum: ["text", "image"], default: "text" },
     read: { type: Boolean, default: false },
+    deleted: { type: Boolean, default: false }, // soft delete
   },
   { timestamps: true }
 );
