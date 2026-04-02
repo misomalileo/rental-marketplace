@@ -1,4 +1,3 @@
-// chat.js – final with proper message loading, delete, file attach
 let socket;
 let currentChatId = null;
 let currentOtherUser = null;
@@ -18,22 +17,15 @@ function initSocket() {
   });
   socket.on("connect", () => console.log("Socket connected"));
   socket.on("connect_error", (err) => {
-    console.error("Socket connection error:", err.message);
-    document.getElementById("mainChat").innerHTML = `
-      <div class="no-chat">
-        <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#e74c3c;"></i>
-        <p>Unable to connect to chat server. Please refresh.</p>
-      </div>
-    `;
+    console.error("Socket error:", err);
+    document.getElementById("mainChat").innerHTML = `<div class="no-chat"><p>Connection failed. Refresh.</p></div>`;
   });
   socket.on("newMessage", (data) => {
     const { chatId, message } = data;
     if (currentChatId === chatId) {
-      const existingMsg = document.querySelector(`.message[data-id="${message._id}"]`);
-      if (!existingMsg) {
-        appendMessageToDOM(message, document.getElementById("messagesContainer"));
-        markMessagesAsRead(currentChatId);
-      }
+      const existing = document.querySelector(`.message[data-id="${message._id}"]`);
+      if (!existing) appendMessageToDOM(message, document.getElementById("messagesContainer"));
+      markMessagesAsRead(currentChatId);
     }
     updateChatList();
     if (message.senderId !== currentUser?._id && currentChatId !== chatId && Notification.permission === "granted") {
@@ -51,6 +43,21 @@ function initSocket() {
     }
   });
   socket.on("userOnline", ({ userId, online }) => updateOnlineStatus(userId, online));
+  socket.on("messageDeleted", ({ chatId, messageId }) => {
+    if (chatId === currentChatId) {
+      const msg = document.querySelector(`.message[data-id="${messageId}"]`);
+      if (msg) msg.remove();
+    }
+    updateChatList();
+  });
+  socket.on("chatDeleted", ({ chatId }) => {
+    if (currentChatId === chatId) {
+      currentChatId = null;
+      currentOtherUser = null;
+      document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-comment-dots"></i><p>Conversation deleted</p></div>`;
+    }
+    loadChats();
+  });
 }
 
 async function loadChats() {
@@ -103,8 +110,7 @@ function updateChatList() {
     return;
   }
   chats.forEach(chat => {
-    const validParticipants = (chat.participants || []).filter(p => p && p._id);
-    const other = validParticipants.find(p => p._id !== currentUser._id);
+    const other = chat.participants.find(p => p && p._id !== currentUser._id);
     if (!other) return;
     const lastMsg = chat.messages[chat.messages.length - 1];
     const unread = chat.unreadCount || 0;
@@ -140,60 +146,37 @@ async function selectChat(chatId, otherUser) {
 
 async function loadMessages(chatId) {
   try {
-    const res = await fetch(`/api/chat/${chatId}`, {
-      headers: { Authorization: "Bearer " + token }
-    });
+    const res = await fetch(`/api/chat/${chatId}`, { headers: { Authorization: "Bearer " + token } });
     if (res.status === 403) {
-      console.error(`Not authorized for chat ${chatId}. Refreshing chat list...`);
+      console.warn("Not authorized, reloading chats");
       await loadChats();
-      if (currentChatId === chatId) {
-        currentChatId = null;
-        currentOtherUser = null;
-        document.getElementById("mainChat").innerHTML = `
-          <div class="no-chat">
-            <i class="fas fa-comment-dots" style="font-size:3rem;"></i>
-            <p>Select a conversation to start chatting</p>
-          </div>
-        `;
-      }
       return;
     }
-    if (!res.ok) throw new Error(`Failed to load messages: ${res.status}`);
+    if (!res.ok) throw new Error(`Failed: ${res.status}`);
     const chat = await res.json();
     renderMessages(chat.messages);
     renderChatHeader(chat);
     const messagesDiv = document.querySelector(".messages");
     if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
   } catch (err) {
-    console.error("Error loading messages:", err);
-    document.getElementById("mainChat").innerHTML = `
-      <div class="no-chat">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>Failed to load messages. Please try again later.</p>
-        <small>${err.message}</small>
-      </div>
-    `;
+    console.error(err);
+    document.getElementById("mainChat").innerHTML = `<div class="no-chat"><p>Failed to load messages</p></div>`;
   }
 }
 
 function renderChatHeader(chat) {
-  const validParticipants = (chat.participants || []).filter(p => p && p._id);
-  const other = validParticipants.find(p => p._id !== currentUser._id);
+  const other = chat.participants.find(p => p && p._id !== currentUser._id);
   const mainChatDiv = document.getElementById("mainChat");
   if (!mainChatDiv) return;
   mainChatDiv.innerHTML = `
     <div class="chat-header">
-      <div class="avatar">
-        <span>${other?.name?.charAt(0) || "?"}</span>
-        <span class="online-dot" style="display: none"></span>
-      </div>
+      <div class="avatar">${other?.name?.charAt(0) || "?"}</div>
       <div class="chat-header-info">
         <h3>${other?.name || "User"}</h3>
-        <p class="typing-indicator">Typing...</p>
+        <p class="typing-indicator" style="display:none;">Typing...</p>
       </div>
       <div class="chat-actions">
         <i class="fas fa-trash-alt" id="deleteChatBtn" title="Delete conversation"></i>
-        <i class="fas fa-ellipsis-v" id="chatMenuBtn"></i>
       </div>
     </div>
     <div class="messages" id="messagesContainer"></div>
@@ -223,43 +206,6 @@ function renderMessages(messages) {
   if (!container) return;
   container.innerHTML = "";
   messages.forEach(msg => appendMessageToDOM(msg, container));
-  // Add context menu for each message
-  document.querySelectorAll(".message").forEach(msgEl => {
-    msgEl.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-      const msgId = msgEl.getAttribute("data-id");
-      currentContextMessage = msgId;
-      showContextMenu(e.clientX, e.clientY);
-    });
-  });
-}
-
-function showContextMenu(x, y) {
-  const existing = document.querySelector(".context-menu");
-  if (existing) existing.remove();
-  const menu = document.createElement("div");
-  menu.className = "context-menu";
-  menu.style.left = x + "px";
-  menu.style.top = y + "px";
-  menu.innerHTML = `
-    <div id="deleteMsgBtn">Delete for me</div>
-    <div id="copyMsgBtn">Copy text</div>
-  `;
-  document.body.appendChild(menu);
-  document.getElementById("deleteMsgBtn").onclick = () => {
-    deleteMessage(currentContextMessage);
-    menu.remove();
-  };
-  document.getElementById("copyMsgBtn").onclick = () => {
-    const msgEl = document.querySelector(`.message[data-id="${currentContextMessage}"]`);
-    if (msgEl) {
-      const text = msgEl.querySelector(".message-text").innerText;
-      navigator.clipboard.writeText(text);
-      alert("Message copied!");
-    }
-    menu.remove();
-  };
-  document.addEventListener("click", () => menu.remove(), { once: true });
 }
 
 function appendMessageToDOM(msg, container) {
@@ -267,9 +213,9 @@ function appendMessageToDOM(msg, container) {
   const div = document.createElement("div");
   div.className = `message ${isSent ? "sent" : "received"}`;
   div.setAttribute("data-id", msg._id);
-  let content = msg.text;
-  if (msg.type === "image" && msg.url) {
-    content = `<img src="${msg.url}" style="max-width:200px; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.url}')">`;
+  let content = escapeHtml(msg.text);
+  if (msg.type === "image") {
+    content = `<img src="${msg.text}" style="max-width:200px; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.text}')">`;
   }
   div.innerHTML = `
     <div class="message-text">${content}</div>
@@ -280,17 +226,34 @@ function appendMessageToDOM(msg, container) {
   `;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
-  // Add context menu listener
+  // Add context menu for deletion (right-click)
   div.addEventListener("contextmenu", (e) => {
     e.preventDefault();
-    currentContextMessage = msg._id;
-    showContextMenu(e.clientX, e.clientY);
+    if (isSent) {
+      currentContextMessage = msg._id;
+      showContextMenu(e.clientX, e.clientY);
+    }
   });
+}
+
+function showContextMenu(x, y) {
+  const existing = document.querySelector(".context-menu");
+  if (existing) existing.remove();
+  const menu = document.createElement("div");
+  menu.className = "context-menu";
+  menu.style.left = x + "px";
+  menu.style.top = y + "px";
+  menu.innerHTML = `<div id="deleteMsgBtn">Delete for me</div>`;
+  document.body.appendChild(menu);
+  document.getElementById("deleteMsgBtn").onclick = () => {
+    deleteMessage(currentContextMessage);
+    menu.remove();
+  };
+  document.addEventListener("click", () => menu.remove(), { once: true });
 }
 
 function getStatusIcon(msg) {
   if (msg.read) return '<i class="fas fa-check-double" style="color:#34b7f1;"></i>';
-  if (msg.delivered) return '<i class="fas fa-check-double"></i>';
   return '<i class="fas fa-check"></i>';
 }
 
@@ -316,7 +279,8 @@ async function sendMessage() {
         sender: data.sender,
         createdAt: data.createdAt,
         read: false,
-        delivered: false
+        delivered: false,
+        type: "text"
       };
       appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
       input.value = "";
@@ -351,7 +315,6 @@ async function attachFile() {
       });
       const uploadData = await uploadRes.json();
       if (uploadRes.ok) {
-        // Send message with image URL
         const res = await fetch("/api/chat/send", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
@@ -366,18 +329,19 @@ async function attachFile() {
             createdAt: data.createdAt,
             read: false,
             delivered: false,
-            type: "image",
-            url: uploadData.url
+            type: "image"
           };
           appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
           socket.emit("sendMessage", { chatId: currentChatId, text: uploadData.url, messageId: data._id, type: "image" });
+        } else {
+          alert("Failed to send image");
         }
       } else {
         alert("Upload failed");
       }
     } catch (err) {
       console.error("Upload error:", err);
-      alert("Network error uploading file");
+      alert("Network error");
     }
   };
   input.click();
@@ -471,6 +435,5 @@ async function loadCurrentUser() {
     window.location = "login.html";
   }
 }
-
 loadCurrentUser();
 if ("Notification" in window) Notification.requestPermission();
