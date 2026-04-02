@@ -26,7 +26,7 @@
   <!-- Signature Pad for leases -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <style>
-    /* ========== THEME VARIABLES (unchanged) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -112,6 +112,56 @@
       font-family: 'Poppins', 'Inter', sans-serif;
       font-weight: 700;
       letter-spacing: -0.02em;
+    }
+
+    /* ========== OFFER STATUS CARDS (RENTAL BIDDING) ========== */
+    .offer-status-card {
+      padding: 14px 18px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
+    .offer-status-card i {
+      margin-right: 8px;
+      font-size: 1.1rem;
+    }
+    .offer-status-card.pending {
+      background: #fef3c7;
+      color: #b45309;
+      border-left: 6px solid #f59e0b;
+    }
+    .offer-status-card.accepted {
+      background: #dcfce7;
+      color: #15803d;
+      border-left: 6px solid #10b981;
+    }
+    .offer-status-card.rejected {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-left: 6px solid #ef4444;
+    }
+    .offer-status-card.countered {
+      background: #e0e7ff;
+      color: #1e40af;
+      border-left: 6px solid #3b82f6;
+    }
+    .highest-bid {
+      margin-top: 0.75rem;
+      padding: 8px 12px;
+      background: rgba(245,158,11,0.12);
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #f59e0b;
+      display: inline-block;
+    }
+    .highest-bid i {
+      margin-right: 4px;
     }
 
     /* ========== ICON STYLES ========== */
@@ -1123,7 +1173,7 @@
     <div class="footer-bottom"><div class="footer-bottom-left"><select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select></div><div class="footer-bottom-right"><span>Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</span></div></div>
   </footer>
 
-  <!-- MODALS (unchanged) -->
+  <!-- MODALS (unchanged, but ready to display bidding status) -->
   <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePropertyModal()">&times;</span><div id="propertyModalContent"></div><div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;"><button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button><button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button><button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button><button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button><button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button></div><div id="modalDetails" style="display:block;"></div><div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div><div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div><div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div><div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div></div></div>
   <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message (optional)</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
   <div id="lightboxModal" class="lightbox-modal" style="display: none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
@@ -1190,7 +1240,6 @@
     async function loadCurrentUser() {
       const token = localStorage.getItem('token');
       if (!token) {
-        // Guest user – show guest dropdown
         userMenu.style.display = 'block';
         userDropdown.innerHTML = `
           <div class="dropdown-header">
@@ -1210,19 +1259,12 @@
             <i class="fas fa-sign-in-alt"></i> Login / Register
           </div>
         `;
-        document.getElementById('becomeLandlordGuest').addEventListener('click', () => {
-          window.location.href = 'register.html?role=landlord';
-        });
-        document.getElementById('becomePremiumGuest').addEventListener('click', () => {
-          window.location.href = 'register.html?role=premium_user';
-        });
-        document.getElementById('loginGuest').addEventListener('click', () => {
-          window.location.href = 'login.html';
-        });
+        document.getElementById('becomeLandlordGuest').addEventListener('click', () => { window.location.href = 'register.html?role=landlord'; });
+        document.getElementById('becomePremiumGuest').addEventListener('click', () => { window.location.href = 'register.html?role=premium_user'; });
+        document.getElementById('loginGuest').addEventListener('click', () => { window.location.href = 'login.html'; });
         return;
       }
 
-      // Logged‑in user – fetch details
       try {
         const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
         if (res.ok) {
@@ -1231,12 +1273,9 @@
           updateUserMenuLoggedIn();
         } else {
           localStorage.removeItem('token');
-          // fallback to guest
           loadCurrentUser();
         }
-      } catch (err) {
-        console.error('Failed to load user', err);
-      }
+      } catch (err) { console.error('Failed to load user', err); }
     }
 
     function updateUserMenuLoggedIn() {
