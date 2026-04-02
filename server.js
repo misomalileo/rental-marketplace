@@ -11,7 +11,10 @@ const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
 const Chat = require("./models/Chat");
 const User = require("./models/User");
+const LeaseNegotiation = require("./models/LeaseNegotiation"); // Added for socket events
 require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
 
 const { limiter } = require("./middleware/rateLimiter");
 
@@ -97,6 +100,11 @@ app.use("/api/", limiter);
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
+// Serve contracts folder for generated PDFs
+const contractsDir = path.join(__dirname, "contracts");
+if (!fs.existsSync(contractsDir)) fs.mkdirSync(contractsDir, { recursive: true });
+app.use("/contracts", express.static(contractsDir));
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "your-secret-key",
   resave: false,
@@ -114,7 +122,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.log("❌ MongoDB Error:", err));
 
 // ===============================
-// SOCKET.IO – Real‑time chat with lastSeen & online status
+// SOCKET.IO – Real‑time chat + lease negotiation
 // ===============================
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
@@ -137,6 +145,7 @@ io.on("connection", async (socket) => {
     console.error("Failed to update lastSeen on connect:", err);
   }
 
+  // Existing chat events
   socket.on("sendMessage", async (data) => {
     try {
       const { chatId, text, messageId } = data;
@@ -194,6 +203,32 @@ io.on("connection", async (socket) => {
     }).catch(err => console.error("Socket typing error:", err));
   });
 
+  // NEW: Join a lease negotiation room
+  socket.on("join-negotiation", (negotiationId) => {
+    socket.join(`negotiation_${negotiationId}`);
+    console.log(`User ${socket.userId} joined negotiation ${negotiationId}`);
+  });
+
+  // NEW: Send message in negotiation chat
+  socket.on("negotiation-message", async ({ negotiationId, text }) => {
+    try {
+      const negotiation = await LeaseNegotiation.findById(negotiationId);
+      if (!negotiation) return;
+      const userId = socket.userId;
+      let sender = "unknown";
+      if (negotiation.landlordId.toString() === userId) sender = "landlord";
+      else if (negotiation.tenantId && negotiation.tenantId.toString() === userId) sender = "tenant";
+      else sender = "ai";
+      io.to(`negotiation_${negotiationId}`).emit("negotiation-message", {
+        sender,
+        text,
+        time: new Date()
+      });
+    } catch (err) {
+      console.error("Negotiation message error:", err);
+    }
+  });
+
   socket.on("disconnect", async () => {
     console.log("🔴 User disconnected:", socket.userId);
     try {
@@ -247,13 +282,22 @@ console.log("✅ /api/chatbot");
 app.use("/api/premium", premiumRoutes);
 console.log("✅ /api/premium");
 
-// === OFFERS ROUTE (with error handling) ===
+// === OFFERS ROUTE ===
 try {
   const offerRoutes = require("./routes/offers");
   app.use("/api/offers", offerRoutes);
   console.log("✅ /api/offers");
 } catch (err) {
   console.error("❌ Failed to load offers route:", err.message);
+}
+
+// === LEASE NEGOTIATION ROUTE ===
+try {
+  const leaseRoutes = require("./routes/lease");
+  app.use("/api/lease", leaseRoutes);
+  console.log("✅ /api/lease");
+} catch (err) {
+  console.error("❌ Failed to load lease route:", err.message);
 }
 
 // ===============================

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lease Negotiation | Khomo Lathu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #f8fafc; color: #1e293b; font-size: 0.85rem; }
+    .navbar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .logo { font-size: 1.3rem; font-weight: 700; }
+    .logo i { color: #2563eb; margin-right: 6px; }
+    .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; display: flex; gap: 2rem; flex-wrap: wrap; }
+    .negotiation-panel { flex: 2; background: white; border-radius: 24px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .score-panel { flex: 1; background: white; border-radius: 24px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
+    .clause-list { margin-top: 1rem; }
+    .clause-card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; transition: all 0.2s; }
+    .clause-card.agreed { background: #dcfce7; border-color: #10b981; }
+    .clause-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .clause-title { font-weight: 700; font-size: 1rem; }
+    .clause-badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 30px; background: #e2e8f0; }
+    .clause-badge.landlord { background: #3b82f6; color: white; }
+    .clause-badge.tenant { background: #10b981; color: white; }
+    .clause-badge.ai { background: #f59e0b; color: white; }
+    .clause-description { font-size: 0.85rem; margin: 0.5rem 0; color: #475569; }
+    .clause-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .btn { padding: 0.4rem 1rem; border-radius: 30px; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-success { background: #10b981; color: white; }
+    .btn-warning { background: #f59e0b; color: white; }
+    .btn-outline { background: transparent; border: 1px solid #cbd5e1; }
+    .btn-danger { background: #ef4444; color: white; }
+    .ai-suggestion { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 0.8rem; margin-bottom: 1rem; border-radius: 12px; }
+    .lease-score { text-align: center; margin: 1rem 0; }
+    .score-gauge { width: 150px; height: 150px; margin: 0 auto; position: relative; }
+    .score-value { font-size: 2.5rem; font-weight: 800; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .add-clause { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+    .chat-messages { max-height: 300px; overflow-y: auto; margin: 1rem 0; padding: 0.5rem; background: #f1f5f9; border-radius: 16px; }
+    .message { margin-bottom: 0.8rem; padding: 0.5rem; border-radius: 12px; }
+    .message.ai { background: #fef3c7; }
+    .message.landlord { background: #dbeafe; margin-left: 20%; }
+    .message.tenant { background: #dcfce7; margin-right: 20%; }
+    .message small { font-size: 0.6rem; opacity: 0.7; }
+    .input-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .input-group input { flex: 1; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 30px; }
+    @media (max-width: 768px) { .container { flex-direction: column; } .score-panel { position: static; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
+    <div><a href="index.html" style="text-decoration: none; color: #2563eb;">← Back to Properties</a></div>
+  </nav>
+  <div class="container">
+    <div class="negotiation-panel">
+      <h2><i class="fas fa-handshake"></i> Lease Negotiation</h2>
+      <div id="negotiationInfo"></div>
+      <div id="aiSuggestions"></div>
+      <div class="clause-list" id="clauseList"></div>
+      <div class="add-clause">
+        <h4><i class="fas fa-plus-circle"></i> Propose New Clause</h4>
+        <div class="input-group">
+          <input type="text" id="newClauseTitle" placeholder="Clause title (e.g., 'Parking')">
+          <input type="text" id="newClauseDesc" placeholder="Description">
+          <button id="addClauseBtn" class="btn btn-primary">Propose</button>
+        </div>
+      </div>
+      <div style="margin-top: 1.5rem;">
+        <h4><i class="fas fa-comments"></i> Negotiation Chat</h4>
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="input-group">
+          <input type="text" id="chatInput" placeholder="Type a message...">
+          <button id="sendChatBtn" class="btn btn-primary">Send</button>
+        </div>
+      </div>
+      <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+        <button id="finalizeBtn" class="btn btn-success" style="background: #10b981;">Finalize & Generate Contract</button>
+      </div>
+    </div>
+    <div class="score-panel">
+      <h3><i class="fas fa-chart-line"></i> Lease Score</h3>
+      <div class="lease-score">
+        <div class="score-gauge">
+          <canvas id="scoreGauge" width="150" height="150"></canvas>
+          <div class="score-value" id="scoreValue">0</div>
+        </div>
+        <p id="scoreFeedback"></p>
+      </div>
+      <h4><i class="fas fa-robot"></i> AI Suggestions</h4>
+      <div id="aiSuggestionsSidebar"></div>
+      <h4 style="margin-top: 1rem;"><i class="fas fa-info-circle"></i> Lease Summary</h4>
+      <div id="leaseSummary"></div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location = 'login.html';
+    const urlParams = new URLSearchParams(window.location.search);
+    const negotiationId = urlParams.get('id');
+    if (!negotiationId) window.location = 'index.html';
+    let negotiation = null;
+    let socket = null;
+    let scoreChart = null;
+
+    async function loadNegotiation() {
+      const res = await fetch(`/api/lease/${negotiationId}`, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (res.ok) {
+        negotiation = await res.json();
+        renderNegotiation();
+        initWebSocket();
+      } else {
+        alert('Failed to load negotiation');
+      }
+    }
+
+    function renderNegotiation() {
+      document.getElementById('negotiationInfo').innerHTML = `
+        <p><strong>Property:</strong> ${negotiation.houseId?.name || 'N/A'}</p>
+        <p><strong>Landlord:</strong> ${negotiation.landlordId?.name || 'N/A'}</p>
+        <p><strong>Tenant:</strong> ${negotiation.tenantId?.name || 'Not joined yet'}</p>
+        <p><strong>Status:</strong> <span class="badge">${negotiation.status}</span></p>
+      `;
+      const clauseContainer = document.getElementById('clauseList');
+      clauseContainer.innerHTML = '';
+      negotiation.clauses.forEach((clause, idx) => {
+        const agreedClass = clause.isAgreed ? 'agreed' : '';
+        const badgeClass = clause.suggestedBy === 'ai' ? 'ai' : (clause.suggestedBy === 'landlord' ? 'landlord' : 'tenant');
+        clauseContainer.innerHTML += `
+          <div class="clause-card ${agreedClass}" data-idx="${idx}">
+            <div class="clause-header">
+              <span class="clause-title">${escapeHtml(clause.title)}</span>
+              <span class="clause-badge ${badgeClass}">${clause.suggestedBy || 'user'}</span>
+            </div>
+            <div class="clause-description">${escapeHtml(clause.description)}</div>
+            <div class="clause-actions">
+              ${!clause.isAgreed ? `<button class="btn btn-success agree-clause" data-idx="${idx}">Agree</button>` : '<span><i class="fas fa-check-circle"></i> Agreed</span>'}
+              <button class="btn btn-outline edit-clause" data-idx="${idx}">Edit</button>
+            </div>
+          </div>
+        `;
+      });
+      document.querySelectorAll('.agree-clause').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = btn.dataset.idx;
+          const res = await fetch(`/api/lease/agree/${negotiationId}/${idx}`, {
+            method: 'PUT',
+            headers: { Authorization: 'Bearer ' + token }
+          });
+          if (res.ok) loadNegotiation();
+          else alert('Failed to agree');
+        });
+      });
+      document.querySelectorAll('.edit-clause').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = btn.dataset.idx;
+          const clause = negotiation.clauses[idx];
+          const newDesc = prompt('Edit clause description:', clause.description);
+          if (newDesc && newDesc !== clause.description) {
+            fetch(`/api/lease/clause/${negotiationId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+              body: JSON.stringify({ title: clause.title, description: newDesc })
+            }).then(res => res.ok && loadNegotiation());
+          }
+        });
+      });
+
+      // AI suggestions
+      const aiContainer = document.getElementById('aiSuggestionsSidebar');
+      if (negotiation.aiSuggestions && negotiation.aiSuggestions.length) {
+        aiContainer.innerHTML = negotiation.aiSuggestions.map(s => `
+          <div class="ai-suggestion">
+            <strong>${escapeHtml(s.title)}</strong><br>
+            ${escapeHtml(s.description)}<br>
+            <small>${escapeHtml(s.reasoning)}</small>
+          </div>
+        `).join('');
+      } else {
+        aiContainer.innerHTML = '<p>No AI suggestions at this time.</p>';
+      }
+
+      // Lease score gauge
+      const score = negotiation.leaseScore || 0;
+      document.getElementById('scoreValue').innerText = score;
+      const ctx = document.getElementById('scoreGauge').getContext('2d');
+      if (scoreChart) scoreChart.destroy();
+      scoreChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { datasets: [{ data: [score, 100 - score], backgroundColor: ['#10b981', '#e2e8f0'], borderWidth: 0 }] },
+        options: { cutout: '70%', plugins: { tooltip: { enabled: false }, legend: { display: false } } }
+      });
+      let feedback = '';
+      if (score >= 80) feedback = 'Excellent! Very fair lease.';
+      else if (score >= 60) feedback = 'Good lease, but could be improved.';
+      else feedback = 'This lease has unfair clauses. Consider AI suggestions.';
+      document.getElementById('scoreFeedback').innerText = feedback;
+
+      // Lease summary
+      document.getElementById('leaseSummary').innerHTML = `
+        <p><strong>Rent:</strong> MWK ${negotiation.rentAmount?.toLocaleString()}</p>
+        <p><strong>Deposit:</strong> MWK ${negotiation.depositAmount?.toLocaleString()}</p>
+        <p><strong>Start:</strong> ${new Date(negotiation.leaseStartDate).toLocaleDateString()}</p>
+        <p><strong>End:</strong> ${new Date(negotiation.leaseEndDate).toLocaleDateString()}</p>
+        <p><strong>Notice:</strong> ${negotiation.noticePeriodDays} days</p>
+        <p><strong>Late Fee:</strong> ${negotiation.lateFeePercentage}%</p>
+      `;
+    }
+
+    function initWebSocket() {
+      // Connect to Socket.IO (same as chat)
+      const socketIoScript = document.createElement('script');
+      socketIoScript.src = 'https://cdn.socket.io/4.5.0/socket.io.min.js';
+      socketIoScript.onload = () => {
+        socket = io({ auth: { token } });
+        socket.emit('join-negotiation', negotiationId);
+        socket.on('negotiation-update', (data) => {
+          if (data.negotiation) {
+            negotiation = data.negotiation;
+            renderNegotiation();
+          }
+        });
+        socket.on('negotiation-message', (msg) => {
+          const chatDiv = document.getElementById('chatMessages');
+          chatDiv.innerHTML += `<div class="message ${msg.sender}"><strong>${msg.sender}:</strong> ${escapeHtml(msg.text)}<br><small>${new Date(msg.time).toLocaleTimeString()}</small></div>`;
+          chatDiv.scrollTop = chatDiv.scrollHeight;
+        });
+      };
+      document.head.appendChild(socketIoScript);
+    }
+
+    document.getElementById('addClauseBtn').addEventListener('click', async () => {
+      const title = document.getElementById('newClauseTitle').value.trim();
+      const desc = document.getElementById('newClauseDesc').value.trim();
+      if (!title || !desc) return alert('Both fields required');
+      const res = await fetch(`/api/lease/clause/${negotiationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ title, description: desc })
+      });
+      if (res.ok) {
+        document.getElementById('newClauseTitle').value = '';
+        document.getElementById('newClauseDesc').value = '';
+        loadNegotiation();
+      } else alert('Failed to add clause');
+    });
+
+    document.getElementById('sendChatBtn').addEventListener('click', () => {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text || !socket) return;
+      socket.emit('negotiation-message', { negotiationId, text });
+      input.value = '';
+    });
+
+    document.getElementById('finalizeBtn').addEventListener('click', async () => {
+      if (confirm('All clauses agreed? Finalize will generate a contract.')) {
+        const res = await fetch(`/api/lease/finalize/${negotiationId}`, {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Contract generated! Redirecting to sign...');
+          window.location.href = `sign-contract.html?id=${data.smartContract._id}`;
+        } else alert('Error: ' + data.message);
+      }
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
+
+    loadNegotiation();
+  </script>
+</body>
+</html>
