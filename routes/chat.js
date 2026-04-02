@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Chat = require('../models/Chat');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 
 function safeToString(value) {
@@ -17,12 +18,14 @@ router.get('/my', auth, async (req, res) => {
     const chats = await Chat.find({ participants: userId })
       .populate('participants', 'name profilePicture')
       .sort({ lastMessage: -1 });
+
     const enriched = chats.map(chat => {
       const validParticipants = (chat.participants || []).filter(p => p && p._id);
       const lastMsg = chat.messages[chat.messages.length - 1];
       const unreadCount = chat.messages.filter(
         m => m.sender && safeToString(m.sender) !== userId && !m.read
       ).length;
+
       const messages = (chat.messages || []).map(m => ({
         _id: m._id,
         text: m.content || m.text || '',
@@ -31,6 +34,7 @@ router.get('/my', auth, async (req, res) => {
         delivered: true,
         createdAt: m.createdAt
       }));
+
       return {
         _id: chat._id,
         participants: validParticipants,
@@ -82,7 +86,7 @@ router.get('/:chatId', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/send – fixed sender
+// POST /api/chat/send
 router.post('/send', auth, async (req, res) => {
   try {
     const { chatId, text } = req.body;
@@ -98,7 +102,6 @@ router.post('/send', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    // Convert user id to ObjectId for the sender field
     const senderId = new mongoose.Types.ObjectId(userId);
     const newMessage = {
       sender: senderId,

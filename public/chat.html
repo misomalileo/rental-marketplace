@@ -22,7 +22,7 @@
       flex-direction: column;
       overflow: hidden;
     }
-    /* Navbar - WhatsApp style */
+    /* Navbar - WhatsApp green */
     .navbar {
       background: #075E54;
       padding: 0.8rem 1.5rem;
@@ -269,10 +269,16 @@
       to { opacity: 1; transform: translateY(0); }
     }
     @media (max-width: 768px) {
-      .sidebar { width: 100px; }
+      .sidebar { width: 80px; }
       .chat-info h4, .chat-info p { display: none; }
       .chat-time { display: none; }
       .message { max-width: 85%; }
+      .navbar { padding: 0.5rem 1rem; }
+      .logo { font-size: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .sidebar { width: 70px; }
+      .chat-avatar { width: 40px; height: 40px; font-size: 0.9rem; }
     }
   </style>
 </head>
