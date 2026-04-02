@@ -82,7 +82,7 @@ router.get('/:chatId', auth, async (req, res) => {
   }
 });
 
-// POST /api/chat/send
+// POST /api/chat/send – fixed sender
 router.post('/send', auth, async (req, res) => {
   try {
     const { chatId, text } = req.body;
@@ -97,8 +97,11 @@ router.post('/send', auth, async (req, res) => {
     if (!participants.some(p => safeToString(p) === userId)) {
       return res.status(403).json({ message: 'Not authorized' });
     }
+
+    // Convert user id to ObjectId for the sender field
+    const senderId = new mongoose.Types.ObjectId(userId);
     const newMessage = {
-      sender: req.user._id,
+      sender: senderId,
       content: text,
       read: false,
       createdAt: new Date()
@@ -106,6 +109,7 @@ router.post('/send', auth, async (req, res) => {
     chat.messages.push(newMessage);
     chat.lastMessage = new Date();
     await chat.save();
+
     const savedMessage = chat.messages[chat.messages.length - 1];
     const responseMessage = {
       _id: savedMessage._id,
@@ -115,6 +119,7 @@ router.post('/send', auth, async (req, res) => {
       delivered: true,
       createdAt: savedMessage.createdAt
     };
+
     const io = req.app.get('io');
     if (io) {
       participants.forEach(participantId => {
@@ -131,6 +136,7 @@ router.post('/send', auth, async (req, res) => {
         }
       });
     }
+
     res.status(201).json(responseMessage);
   } catch (err) {
     console.error('Error in POST /send:', err);
