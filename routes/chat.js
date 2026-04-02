@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Chat = require('../models/Chat');
-const User = require('../models/User');
 const auth = require('../middleware/auth');
 
 function safeToString(value) {
@@ -14,16 +13,16 @@ function safeToString(value) {
 // GET /api/chat/my
 router.get('/my', auth, async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id; // string
     const chats = await Chat.find({ participants: userId })
-      .populate('participants', 'name profilePicture lastSeen')
+      .populate('participants', 'name profilePicture')
       .sort({ lastMessage: -1 });
 
     const enriched = chats.map(chat => {
       const validParticipants = (chat.participants || []).filter(p => p && p._id);
       const lastMsg = chat.messages[chat.messages.length - 1];
       const unreadCount = chat.messages.filter(
-        m => m.sender && safeToString(m.sender) !== safeToString(userId) && !m.read
+        m => m.sender && safeToString(m.sender) !== userId && !m.read
       ).length;
 
       const messages = (chat.messages || []).map(m => ({
@@ -42,7 +41,7 @@ router.get('/my', auth, async (req, res) => {
         lastMessage: lastMsg ? (lastMsg.content || lastMsg.text || '') : '',
         lastMessageAt: lastMsg ? lastMsg.createdAt : chat.updatedAt,
         unreadCount,
-        online: false // will be set via socket
+        online: false
       };
     });
     res.json(enriched);
@@ -56,15 +55,19 @@ router.get('/my', auth, async (req, res) => {
 router.get('/:chatId', auth, async (req, res) => {
   try {
     const chatId = req.params.chatId;
+    const userId = req.user.id; // string
+
     if (!mongoose.Types.ObjectId.isValid(chatId)) {
       return res.status(400).json({ message: 'Invalid chat ID format' });
     }
 
-    const chat = await Chat.findById(chatId).populate('participants', 'name profilePicture lastSeen');
+    const chat = await Chat.findById(chatId).populate('participants', 'name profilePicture');
     if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
     const validParticipants = (chat.participants || []).filter(p => p && p._id);
-    if (!validParticipants.some(p => safeToString(p._id) === safeToString(req.user._id))) {
+    const isAuthorized = validParticipants.some(p => safeToString(p._id) === userId);
+    if (!isAuthorized) {
+      console.error(`User ${userId} not authorized for chat ${chatId}. Participants: ${validParticipants.map(p => p._id).join(', ')}`);
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -92,8 +95,9 @@ router.get('/:chatId', auth, async (req, res) => {
 router.post('/send', auth, async (req, res) => {
   try {
     const { chatId, text } = req.body;
-    if (!chatId || !text) return res.status(400).json({ message: 'chatId and text required' });
+    const userId = req.user.id;
 
+    if (!chatId || !text) return res.status(400).json({ message: 'chatId and text required' });
     if (!mongoose.Types.ObjectId.isValid(chatId)) {
       return res.status(400).json({ message: 'Invalid chat ID format' });
     }
@@ -102,7 +106,7 @@ router.post('/send', auth, async (req, res) => {
     if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
     const participants = (chat.participants || []).filter(p => p != null);
-    if (!participants.some(p => safeToString(p) === safeToString(req.user._id))) {
+    if (!participants.some(p => safeToString(p) === userId)) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -130,7 +134,7 @@ router.post('/send', auth, async (req, res) => {
     if (io) {
       participants.forEach(participantId => {
         const pStr = safeToString(participantId);
-        if (pStr && pStr !== safeToString(req.user._id)) {
+        if (pStr && pStr !== userId) {
           io.to(pStr).emit('newMessage', {
             chatId: chat._id,
             message: {
@@ -154,7 +158,7 @@ router.post('/send', auth, async (req, res) => {
 router.post('/:chatId/read', auth, async (req, res) => {
   try {
     const chatId = req.params.chatId;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(chatId)) {
       return res.status(400).json({ message: 'Invalid chat ID format' });
@@ -165,7 +169,7 @@ router.post('/:chatId/read', auth, async (req, res) => {
 
     let updated = false;
     chat.messages.forEach(msg => {
-      if (msg.sender && safeToString(msg.sender) !== safeToString(userId) && !msg.read) {
+      if (msg.sender && safeToString(msg.sender) !== userId && !msg.read) {
         msg.read = true;
         updated = true;
       }
@@ -177,7 +181,7 @@ router.post('/:chatId/read', auth, async (req, res) => {
       const participants = (chat.participants || []).filter(p => p != null);
       participants.forEach(participantId => {
         const pStr = safeToString(participantId);
-        if (pStr && pStr !== safeToString(userId)) {
+        if (pStr && pStr !== userId) {
           io.to(pStr).emit('messagesRead', {
             chatId,
             readBy: userId,
@@ -197,8 +201,9 @@ router.post('/:chatId/read', auth, async (req, res) => {
 router.post('/start', auth, async (req, res) => {
   try {
     const { recipientId, houseId } = req.body;
-    if (!recipientId) return res.status(400).json({ message: 'recipientId required' });
+    const userId = req.user.id;
 
+    if (!recipientId) return res.status(400).json({ message: 'recipientId required' });
     if (!mongoose.Types.ObjectId.isValid(recipientId)) {
       return res.status(400).json({ message: 'Invalid recipient ID format' });
     }
@@ -206,12 +211,12 @@ router.post('/start', auth, async (req, res) => {
     let chat;
     if (houseId) {
       chat = await Chat.findOne({
-        participants: { $all: [req.user._id, recipientId], $size: 2 },
+        participants: { $all: [userId, recipientId], $size: 2 },
         house: houseId
       });
     } else {
       chat = await Chat.findOne({
-        participants: { $all: [req.user._id, recipientId], $size: 2 },
+        participants: { $all: [userId, recipientId], $size: 2 },
         house: { $exists: false }
       });
     }
@@ -219,7 +224,7 @@ router.post('/start', auth, async (req, res) => {
     if (chat) return res.json({ chatId: chat._id });
 
     chat = new Chat({
-      participants: [req.user._id, recipientId],
+      participants: [userId, recipientId],
       house: houseId || null,
       messages: [],
       lastMessage: new Date()

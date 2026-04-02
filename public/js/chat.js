@@ -1,4 +1,4 @@
-// chat.js – final with encryption simulation, online status, read receipts
+// chat.js – final with encryption simulation, online status, read receipts, 403 handling
 let socket;
 let currentChatId = null;
 let currentOtherUser = null;
@@ -41,21 +41,28 @@ function initSocket() {
   socket.on("connect", () => console.log("Socket connected"));
   socket.on("connect_error", (err) => {
     console.error("Socket connection error:", err.message);
-    document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#e74c3c;"></i><p>Unable to connect to chat server. Please refresh.</p></div>`;
+    document.getElementById("mainChat").innerHTML = `
+      <div class="no-chat">
+        <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#e74c3c;"></i>
+        <p>Unable to connect to chat server. Please refresh.</p>
+      </div>
+    `;
   });
   socket.on("newMessage", (data) => {
     const { chatId, message } = data;
     // Decrypt message content if it was encrypted
-    if (message.text && message.text.startsWith('enc:')) {
-      message.text = decrypt(message.text.substring(4));
+    let messageText = message.text;
+    if (messageText && messageText.startsWith('enc:')) {
+      messageText = decrypt(messageText.substring(4));
     }
+    const msgToDisplay = { ...message, text: messageText };
     if (currentChatId === chatId) {
-      appendMessageToDOM(message, document.getElementById("messagesContainer"));
+      appendMessageToDOM(msgToDisplay, document.getElementById("messagesContainer"));
       markMessagesAsRead(currentChatId);
     }
     updateChatList();
     if (message.senderId !== currentUser?._id && currentChatId !== chatId && Notification.permission === "granted") {
-      new Notification("New message from " + (message.senderName || "Someone"), { body: message.text });
+      new Notification("New message from " + (message.senderName || "Someone"), { body: messageText });
     }
   });
   socket.on("messagesRead", ({ chatId }) => {
@@ -85,6 +92,7 @@ async function loadChats() {
         const other = chat.participants.find(p => p && p._id !== currentUser._id);
         if (other) await selectChat(chatId, other);
       } else {
+        // Try to load directly if not in list
         try {
           const res2 = await fetch(`/api/chat/${chatId}`, { headers: { Authorization: "Bearer " + token } });
           if (res2.ok) {
@@ -102,6 +110,9 @@ async function loadChats() {
               updateChatList();
               await selectChat(chatId, other);
             }
+          } else if (res2.status === 403) {
+            console.warn(`Chat ${chatId} not accessible (403). Removing from list if present.`);
+            // Chat might be invalid – do nothing
           }
         } catch (err) { console.error("Could not load chat from URL", err); }
       }
@@ -157,7 +168,25 @@ async function selectChat(chatId, otherUser) {
 
 async function loadMessages(chatId) {
   try {
-    const res = await fetch(`/api/chat/${chatId}`, { headers: { Authorization: "Bearer " + token } });
+    const res = await fetch(`/api/chat/${chatId}`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    if (res.status === 403) {
+      console.error(`Not authorized for chat ${chatId}. Refreshing chat list...`);
+      await loadChats(); // refresh the chat list to remove invalid chat
+      // If currentChatId is still the same, clear it
+      if (currentChatId === chatId) {
+        currentChatId = null;
+        currentOtherUser = null;
+        document.getElementById("mainChat").innerHTML = `
+          <div class="no-chat">
+            <i class="fas fa-comment-dots" style="font-size:3rem; opacity:0.5;"></i>
+            <p>Select a conversation to start chatting</p>
+          </div>
+        `;
+      }
+      return;
+    }
     if (!res.ok) throw new Error(`Failed to load messages: ${res.status}`);
     const chat = await res.json();
     renderMessages(chat.messages);
@@ -166,7 +195,13 @@ async function loadMessages(chatId) {
     if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
   } catch (err) {
     console.error("Error loading messages:", err);
-    document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-exclamation-triangle"></i><p>Failed to load messages. Please try again later.</p><small>${err.message}</small></div>`;
+    document.getElementById("mainChat").innerHTML = `
+      <div class="no-chat">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Failed to load messages. Please try again later.</p>
+        <small>${err.message}</small>
+      </div>
+    `;
   }
 }
 
