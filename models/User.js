@@ -59,7 +59,10 @@ const UserSchema = new mongoose.Schema({
     }],
     
     // Trust score (0-100) for premium users
-    trustScore: { type: Number, default: 0 }
+    trustScore: { type: Number, default: 0 },
+    
+    // Last seen for chat
+    lastSeen: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model("User", UserSchema);

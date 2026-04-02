@@ -1,4 +1,4 @@
-// chat.js – final safe version with robust participant handling
+// chat.js – final with encryption simulation, online status, read receipts
 let socket;
 let currentChatId = null;
 let currentOtherUser = null;
@@ -6,9 +6,29 @@ let chats = [];
 let typingTimeout = null;
 let currentUser = null;
 
-function getToken() {
-  return localStorage.getItem("token");
+// Simple XOR encryption (for demonstration only – not secure for production)
+const encryptionKey = "KhomoLathuSecret2026";
+function encrypt(text) {
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    const charCode = text.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length);
+    result += String.fromCharCode(charCode);
+  }
+  return btoa(result);
 }
+function decrypt(encrypted) {
+  try {
+    const decoded = atob(encrypted);
+    let result = '';
+    for (let i = 0; i < decoded.length; i++) {
+      const charCode = decoded.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length);
+      result += String.fromCharCode(charCode);
+    }
+    return result;
+  } catch { return encrypted; }
+}
+
+function getToken() { return localStorage.getItem("token"); }
 
 const token = getToken();
 if (!token) window.location = "login.html";
@@ -18,20 +38,17 @@ function initSocket() {
     auth: { token },
     transports: ['websocket', 'polling']
   });
-
   socket.on("connect", () => console.log("Socket connected"));
   socket.on("connect_error", (err) => {
     console.error("Socket connection error:", err.message);
-    document.getElementById("mainChat").innerHTML = `
-      <div class="no-chat">
-        <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#e74c3c;"></i>
-        <p>Unable to connect to chat server. Please refresh.</p>
-      </div>
-    `;
+    document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#e74c3c;"></i><p>Unable to connect to chat server. Please refresh.</p></div>`;
   });
-
   socket.on("newMessage", (data) => {
     const { chatId, message } = data;
+    // Decrypt message content if it was encrypted
+    if (message.text && message.text.startsWith('enc:')) {
+      message.text = decrypt(message.text.substring(4));
+    }
     if (currentChatId === chatId) {
       appendMessageToDOM(message, document.getElementById("messagesContainer"));
       markMessagesAsRead(currentChatId);
@@ -41,27 +58,22 @@ function initSocket() {
       new Notification("New message from " + (message.senderName || "Someone"), { body: message.text });
     }
   });
-
   socket.on("messagesRead", ({ chatId }) => {
     if (chatId === currentChatId) updateReadStatus();
     updateChatList();
   });
-
   socket.on("typing", ({ chatId, userId, isTyping }) => {
     if (chatId === currentChatId && userId !== currentUser._id) {
       const typingDiv = document.querySelector(".typing-indicator");
       if (typingDiv) typingDiv.style.display = isTyping ? "block" : "none";
     }
   });
-
   socket.on("userOnline", ({ userId, online }) => updateOnlineStatus(userId, online));
 }
 
 async function loadChats() {
   try {
-    const res = await fetch("/api/chat/my", {
-      headers: { Authorization: "Bearer " + token }
-    });
+    const res = await fetch("/api/chat/my", { headers: { Authorization: "Bearer " + token } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     chats = await res.json();
     updateChatList();
@@ -73,11 +85,8 @@ async function loadChats() {
         const other = chat.participants.find(p => p && p._id !== currentUser._id);
         if (other) await selectChat(chatId, other);
       } else {
-        // Try to load directly if not in list
         try {
-          const res2 = await fetch(`/api/chat/${chatId}`, {
-            headers: { Authorization: "Bearer " + token }
-          });
+          const res2 = await fetch(`/api/chat/${chatId}`, { headers: { Authorization: "Bearer " + token } });
           if (res2.ok) {
             const chatData = await res2.json();
             const other = chatData.participants.find(p => p && p._id !== currentUser._id);
@@ -112,7 +121,6 @@ function updateChatList() {
     return;
   }
   chats.forEach(chat => {
-    // Filter participants to avoid null
     const validParticipants = (chat.participants || []).filter(p => p && p._id);
     const other = validParticipants.find(p => p._id !== currentUser._id);
     if (!other) return;
@@ -149,9 +157,7 @@ async function selectChat(chatId, otherUser) {
 
 async function loadMessages(chatId) {
   try {
-    const res = await fetch(`/api/chat/${chatId}`, {
-      headers: { Authorization: "Bearer " + token }
-    });
+    const res = await fetch(`/api/chat/${chatId}`, { headers: { Authorization: "Bearer " + token } });
     if (!res.ok) throw new Error(`Failed to load messages: ${res.status}`);
     const chat = await res.json();
     renderMessages(chat.messages);
@@ -160,13 +166,7 @@ async function loadMessages(chatId) {
     if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
   } catch (err) {
     console.error("Error loading messages:", err);
-    document.getElementById("mainChat").innerHTML = `
-      <div class="no-chat">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>Failed to load messages. Please try again later.</p>
-        <small>${err.message}</small>
-      </div>
-    `;
+    document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-exclamation-triangle"></i><p>Failed to load messages. Please try again later.</p><small>${err.message}</small></div>`;
   }
 }
 
@@ -199,9 +199,7 @@ function renderChatHeader(chat) {
     input.addEventListener("input", () => {
       socket.emit("typing", { chatId: currentChatId, isTyping: true });
       if (typingTimeout) clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => {
-        socket.emit("typing", { chatId: currentChatId, isTyping: false });
-      }, 1000);
+      typingTimeout = setTimeout(() => { socket.emit("typing", { chatId: currentChatId, isTyping: false }); }, 1000);
     });
     sendBtn.onclick = sendMessage;
   }
@@ -237,8 +235,10 @@ function getStatusIcon(msg) {
 
 async function sendMessage() {
   const input = document.getElementById("messageInput");
-  const text = input.value.trim();
+  let text = input.value.trim();
   if (!text) return;
+  // Encrypt message before sending
+  const encrypted = "enc:" + encrypt(text);
   input.disabled = true;
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) sendBtn.disabled = true;
@@ -246,17 +246,16 @@ async function sendMessage() {
   try {
     const res = await fetch("/api/chat/send", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ chatId: currentChatId, text })
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({ chatId: currentChatId, text: encrypted })
     });
     const data = await res.json();
     if (res.ok) {
+      // Decrypt for local display
+      const decryptedText = decrypt(data.text.substring(4));
       const tempMsg = {
         _id: data._id,
-        text: data.text,
+        text: decryptedText,
         sender: data.sender,
         createdAt: data.createdAt,
         read: false,
@@ -264,7 +263,7 @@ async function sendMessage() {
       };
       appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
       input.value = "";
-      socket.emit("sendMessage", { chatId: currentChatId, text, messageId: data._id });
+      socket.emit("sendMessage", { chatId: currentChatId, text: encrypted, messageId: data._id });
     } else {
       alert("Failed to send: " + (data.message || "Unknown error"));
     }
@@ -280,15 +279,10 @@ async function sendMessage() {
 
 async function markMessagesAsRead(chatId) {
   try {
-    await fetch(`/api/chat/${chatId}/read`, {
-      method: "POST",
-      headers: { Authorization: "Bearer " + token }
-    });
+    await fetch(`/api/chat/${chatId}/read`, { method: "POST", headers: { Authorization: "Bearer " + token } });
     socket.emit("readMessages", { chatId });
     updateChatList();
-  } catch (err) {
-    console.error("Error marking read:", err);
-  }
+  } catch (err) { console.error("Error marking read:", err); }
 }
 
 function updateReadStatus() {
@@ -308,25 +302,21 @@ function updateOnlineStatus(userId, online) {
 function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/[&<>]/g, function(m) {
-    if (m === "&") return "&amp;";
-    if (m === "<") return "&lt;";
-    if (m === ">") return "&gt;";
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
     return m;
   });
 }
 
 async function loadCurrentUser() {
   try {
-    const res = await fetch("/api/auth/me", {
-      headers: { Authorization: "Bearer " + token }
-    });
+    const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
     if (res.ok) {
       currentUser = await res.json();
       initSocket();
       loadChats();
-    } else {
-      throw new Error("Not authenticated");
-    }
+    } else throw new Error("Not authenticated");
   } catch (err) {
     console.error("Failed to load user:", err);
     window.location = "login.html";

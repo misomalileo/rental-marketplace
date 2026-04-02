@@ -10,6 +10,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
 const Chat = require("./models/Chat");
+const User = require("./models/User");
 require("dotenv").config();
 
 const { limiter } = require("./middleware/rateLimiter");
@@ -113,7 +114,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.log("❌ MongoDB Error:", err));
 
 // ===============================
-// SOCKET.IO – Real‑time chat (SAFE)
+// SOCKET.IO – Real‑time chat with lastSeen & online status
 // ===============================
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
@@ -125,10 +126,17 @@ io.use((socket, next) => {
   });
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   console.log("🟢 User connected:", socket.userId);
   socket.join(socket.userId);
   socket.broadcast.emit("userOnline", { userId: socket.userId, online: true });
+
+  // Update lastSeen when user connects
+  try {
+    await User.findByIdAndUpdate(socket.userId, { lastSeen: new Date() });
+  } catch (err) {
+    console.error("Failed to update lastSeen on connect:", err);
+  }
 
   socket.on("sendMessage", async (data) => {
     try {
@@ -188,8 +196,14 @@ io.on("connection", (socket) => {
     }).catch(err => console.error("Socket typing error:", err));
   });
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log("🔴 User disconnected:", socket.userId);
+    // Update lastSeen on disconnect
+    try {
+      await User.findByIdAndUpdate(socket.userId, { lastSeen: new Date() });
+    } catch (err) {
+      console.error("Failed to update lastSeen on disconnect:", err);
+    }
     socket.broadcast.emit("userOnline", { userId: socket.userId, online: false });
   });
 });
@@ -222,7 +236,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/chatbot", chatbotRoutes);
-app.use("/api/premium", premiumRoutes);  // <-- ADDED
+app.use("/api/premium", premiumRoutes);
 
 // ===============================
 // DEBUG ENDPOINT – TEST MONGODB CONNECTION
