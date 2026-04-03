@@ -79,7 +79,7 @@ router.post('/start', auth, async (req, res) => {
     const negotiation = new LeaseNegotiation({
       houseId,
       landlordId: req.user.id,
-      tenantId: null,
+      tenantId: null, // ✅ allowed now
       rentAmount,
       depositAmount,
       leaseStartDate,
@@ -174,7 +174,7 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
-// Finalize and generate PDF
+// Finalize and generate PDF (fixed: handle missing tenant)
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -185,12 +185,22 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
     const allAgreed = negotiation.clauses.every(c => c.isAgreed);
     if (!allAgreed) return res.status(400).json({ message: 'Not all clauses are agreed yet' });
 
+    // Ensure tenant exists before generating contract
+    if (!negotiation.tenantId) {
+      return res.status(400).json({ message: 'Tenant has not joined the negotiation yet' });
+    }
+
     negotiation.status = 'agreed';
     await negotiation.save();
 
     const house = await House.findById(negotiation.houseId);
     const landlord = await User.findById(negotiation.landlordId);
     const tenant = await User.findById(negotiation.tenantId);
+    
+    if (!house || !landlord || !tenant) {
+      return res.status(400).json({ message: 'Missing required data (house, landlord, or tenant)' });
+    }
+
     const contractDir = path.join(__dirname, '../contracts');
     if (!fs.existsSync(contractDir)) fs.mkdirSync(contractDir, { recursive: true });
     const pdfPath = path.join(contractDir, `contract_${negotiation._id}.pdf`);
@@ -226,9 +236,13 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
       await smartContract.save();
       res.json({ smartContract, pdfUrl });
     });
+    writeStream.on('error', (err) => {
+      console.error('PDF write error:', err);
+      res.status(500).json({ message: 'Failed to generate PDF' });
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error: ' + err.message });
   }
 });
 
