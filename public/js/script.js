@@ -963,6 +963,42 @@ async function showDetails(houseId) {
     } catch (err) { console.error('Failed to fetch highest bid', err); }
   }
 
+  // ========== LEASE NEGOTIATION BUTTON (for landlords) ==========
+  if (isLoggedIn && house.owner && house.owner._id === currentUserId) {
+    const leaseBtn = document.createElement('button');
+    leaseBtn.className = 'save-search-btn';
+    leaseBtn.style.background = '#8b5cf6';
+    leaseBtn.style.marginTop = '0.5rem';
+    leaseBtn.style.width = '100%';
+    leaseBtn.innerHTML = '<i class="fas fa-file-signature"></i> Start Lease Negotiation';
+    leaseBtn.onclick = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/lease/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({
+            houseId: house._id,
+            rentAmount: house.price,
+            depositAmount: house.price * 2,
+            leaseStartDate: new Date().toISOString().split('T')[0],
+            leaseEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Lease negotiation created! Redirecting...');
+          window.location.href = `lease-negotiation.html?id=${data._id}`;
+        } else {
+          alert('Error: ' + data.message);
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      }
+    };
+    document.getElementById('modalDetails').appendChild(leaseBtn);
+  }
+
   document.getElementById('propertyModal').style.display = 'block';
   if (house.lat && house.lng) { loadNeighbourhoodInsights(house.lat, house.lng); loadStreetView(house.lat, house.lng); } else { document.getElementById('modalInsights').innerHTML = '<p>No location data available for insights.</p>'; document.getElementById('modalStreetView').innerHTML = '<p>No location data for street view.</p>'; }
   loadPriceInsights(house._id);
@@ -974,7 +1010,6 @@ async function showDetails(houseId) {
   const virtualTourPanel = document.getElementById('modalVirtualTour');
   tabs.forEach(tab => { tab.addEventListener('click', () => { const target = tab.getAttribute('data-tab'); tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); if (target === 'details') { detailsPanel.style.display = 'block'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'insights') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'block'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'streetview') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'block'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'pricing') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'block'; virtualTourPanel.style.display = 'none'; } else if (target === 'virtualtour') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'block'; loadVirtualTour(house.virtualTourUrl); } }); });
 }
-
 // ======================================
 // EVENT LISTENERS
 // ======================================
