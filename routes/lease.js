@@ -130,7 +130,7 @@ router.post('/join/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Add or update a clause (same as before – keep)
+// Add or update a clause
 router.put('/clause/:negotiationId', auth, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -194,7 +194,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
     if (!negotiation) return res.status(404).json({ message: 'Negotiation not found' });
     console.log('Finalize - userId:', req.user.id, 'landlordId:', negotiation.landlordId.toString(), 'tenantId:', negotiation.tenantId);
-    // Check if user is landlord or tenant
     if (negotiation.landlordId.toString() !== req.user.id && (!negotiation.tenantId || negotiation.tenantId.toString() !== req.user.id)) {
       return res.status(403).json({ message: 'Not authorized' });
     }
@@ -264,7 +263,7 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Sign contract (unchanged)
+// Sign contract
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId);
@@ -375,7 +374,7 @@ router.get('/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Get all lease negotiations for the logged-in landlord
+// Get all lease negotiations for the logged-in landlord (used in dashboard)
 router.get('/my', auth, async (req, res) => {
   try {
     const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
@@ -397,6 +396,29 @@ router.get('/check/:houseId', auth, async (req, res) => {
       status: { $in: ['draft', 'negotiating', 'agreed'] }
     });
     res.json(negotiation);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ========== TERMINATE LEASE (after signing) ==========
+router.put('/terminate/:contractId', auth, async (req, res) => {
+  try {
+    const contract = await SmartContract.findById(req.params.contractId);
+    if (!contract) return res.status(404).json({ message: 'Contract not found' });
+    const userId = req.user.id;
+    const isLandlord = contract.landlordId.toString() === userId;
+    const isTenant = contract.tenantId.toString() === userId;
+    if (!isLandlord && !isTenant) return res.status(403).json({ message: 'Not authorized' });
+    if (contract.status !== 'active') {
+      return res.status(400).json({ message: 'Only active contracts can be terminated' });
+    }
+    contract.status = 'terminated';
+    await contract.save();
+    // Update negotiation status
+    await LeaseNegotiation.findByIdAndUpdate(contract.negotiationId, { status: 'expired' });
+    res.json({ message: 'Lease terminated successfully', contract });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

@@ -403,22 +403,59 @@ function showCounterModal(offerId) {
   const comment = prompt('Optional message to tenant:');
   fetch(`/api/offers/${offerId}/counter`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ counterOfferPrice: parseInt(price), moveInDate, landlordComment: comment || '' }) }).then(res => res.json()).then(data => { if (data.message) alert(data.message); loadOffers(); }).catch(err => console.error(err));
 }
-// ========== LEASE NEGOTIATIONS ==========
+// ========== LEASE NEGOTIATIONS (with download button for signed contracts) ==========
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch("/api/lease/my", { headers: { Authorization: "Bearer " + token } });
+    if (!res.ok) throw new Error('Failed to fetch leases');
     const leases = await res.json();
     const container = document.getElementById("leaseList");
     if (!container) return;
-    if (leases.length === 0) { container.innerHTML = "<p>No lease negotiations yet.</p>"; return; }
-    container.innerHTML = leases.map(lease => `
-      <div class="lease-card">
-        <div class="offer-header"><strong>${lease.houseId?.name || 'Unknown property'}</strong><span class="offer-status ${lease.status}">${lease.status}</span></div>
-        <div class="offer-details"><p><i class="fas fa-user"></i> Tenant: ${lease.tenantId?.name || 'Not joined'}</p><p><i class="fas fa-money-bill-wave"></i> Rent: MWK ${lease.rentAmount?.toLocaleString()}</p><p><i class="fas fa-calendar-alt"></i> Start: ${new Date(lease.leaseStartDate).toLocaleDateString()}</p><p><i class="fas fa-chart-line"></i> Lease Score: ${lease.leaseScore}/100</p></div>
-        <div class="offer-actions"><button class="edit" onclick="window.location.href='lease-negotiation.html?id=${lease._id}'">Continue Negotiation</button></div>
-      </div>
-    `).join('');
-  } catch (err) { console.error(err); }
+    if (leases.length === 0) {
+      container.innerHTML = "<p>No lease negotiations yet.</p>";
+      return;
+    }
+    container.innerHTML = leases.map(lease => {
+      let statusClass = 'offer-status';
+      let statusText = lease.status;
+      if (lease.status === 'signed' || lease.status === 'active') {
+        statusClass += ' accepted';
+        statusText = 'Signed ✓';
+      } else if (lease.status === 'agreed') {
+        statusClass += ' pending';
+        statusText = 'Awaiting Signatures';
+      } else if (lease.status === 'negotiating') {
+        statusClass += ' pending';
+      } else if (lease.status === 'rejected') {
+        statusClass += ' rejected';
+      }
+      const tenantName = lease.tenantId?.name || 'Not joined';
+      const downloadButton = (lease.status === 'signed' || lease.status === 'active') 
+        ? `<a href="/contracts/contract_${lease._id}.pdf" target="_blank" class="btn" style="background: #2563eb; color: white; padding: 0.3rem 0.8rem; border-radius: 30px; text-decoration: none; font-size: 0.7rem; display: inline-block; margin-left: 0.5rem;"><i class="fas fa-download"></i> Contract</a>`
+        : '';
+      return `
+        <div class="lease-card">
+          <div class="offer-header">
+            <strong>${lease.houseId?.name || 'Unknown property'}</strong>
+            <span class="${statusClass}">${statusText}</span>
+          </div>
+          <div class="offer-details">
+            <p><i class="fas fa-user"></i> Tenant: ${tenantName}</p>
+            <p><i class="fas fa-money-bill-wave"></i> Rent: MWK ${lease.rentAmount?.toLocaleString()}</p>
+            <p><i class="fas fa-calendar-alt"></i> Start: ${new Date(lease.leaseStartDate).toLocaleDateString()}</p>
+            <p><i class="fas fa-chart-line"></i> Lease Score: ${lease.leaseScore}/100</p>
+          </div>
+          <div class="offer-actions">
+            <button class="edit" onclick="window.location.href='lease-negotiation.html?id=${lease._id}'">Continue Negotiation</button>
+            ${downloadButton}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    document.getElementById("leaseList").innerHTML = "<p>Error loading lease negotiations. Please refresh.</p>";
+  }
 }
 
 // Initialize everything
@@ -439,4 +476,4 @@ window.closePaymentModal = closePaymentModal;
 window.updateBooking = updateBooking;
 window.openEditProfile = openEditProfile;
 window.closeProfileModal = closeProfileModal;
-window.deleteOffer = deleteOffer; // added for delete offer button
+window.deleteOffer = deleteOffer;
