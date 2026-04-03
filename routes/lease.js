@@ -61,7 +61,6 @@ function generateAiSuggestions(negotiation) {
       reasoning: 'Many tenants have pets. A refundable pet deposit protects the landlord while attracting more renters.'
     });
   }
-  // Malawi-specific: water & electricity bills
   if (!negotiation.utilitiesIncluded) {
     suggestions.push({
       title: 'Utility Bills',
@@ -76,6 +75,7 @@ function generateAiSuggestions(negotiation) {
 router.post('/start', auth, async (req, res) => {
   try {
     const { houseId, rentAmount, depositAmount, leaseStartDate, leaseEndDate } = req.body;
+    console.log('Start lease - landlord userId:', req.user.id);
     const house = await House.findById(houseId);
     if (!house) return res.status(404).json({ message: 'House not found' });
     if (house.owner.toString() !== req.user.id && req.user.role !== 'admin') {
@@ -101,6 +101,7 @@ router.post('/start', auth, async (req, res) => {
     negotiation.leaseScore = calculateLeaseScore(negotiation);
     negotiation.aiSuggestions = generateAiSuggestions(negotiation);
     await negotiation.save();
+    console.log('Negotiation created with ID:', negotiation._id);
     res.status(201).json(negotiation);
   } catch (err) {
     console.error('Start lease error:', err);
@@ -111,20 +112,25 @@ router.post('/start', auth, async (req, res) => {
 // Join negotiation (tenant)
 router.post('/join/:negotiationId', auth, async (req, res) => {
   try {
+    console.log('Join request - userId:', req.user.id);
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
     if (!negotiation) return res.status(404).json({ message: 'Negotiation not found' });
-    if (negotiation.tenantId) return res.status(400).json({ message: 'Tenant already joined' });
+    console.log('Negotiation found - landlordId:', negotiation.landlordId.toString(), 'current tenantId:', negotiation.tenantId);
+    if (negotiation.tenantId) {
+      return res.status(400).json({ message: 'Tenant already joined' });
+    }
     negotiation.tenantId = req.user.id;
     negotiation.status = 'negotiating';
     await negotiation.save();
+    console.log('Tenant joined successfully. New tenantId:', negotiation.tenantId);
     res.json(negotiation);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Join error:', err);
+    res.status(500).json({ message: 'Server error: ' + err.message });
   }
 });
 
-// Add or update a clause
+// Add or update a clause (same as before – keep)
 router.put('/clause/:negotiationId', auth, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -182,12 +188,14 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
-// Finalize and generate PDF (only after tenant has joined and all clauses agreed)
+// Finalize and generate PDF
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
     if (!negotiation) return res.status(404).json({ message: 'Negotiation not found' });
-    if (negotiation.landlordId.toString() !== req.user.id && negotiation.tenantId?.toString() !== req.user.id) {
+    console.log('Finalize - userId:', req.user.id, 'landlordId:', negotiation.landlordId.toString(), 'tenantId:', negotiation.tenantId);
+    // Check if user is landlord or tenant
+    if (negotiation.landlordId.toString() !== req.user.id && (!negotiation.tenantId || negotiation.tenantId.toString() !== req.user.id)) {
       return res.status(403).json({ message: 'Not authorized' });
     }
     if (!negotiation.tenantId) {
@@ -256,7 +264,7 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Sign contract
+// Sign contract (unchanged)
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId);
@@ -367,7 +375,7 @@ router.get('/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Get all lease negotiations for the logged-in landlord (used in dashboard)
+// Get all lease negotiations for the logged-in landlord
 router.get('/my', auth, async (req, res) => {
   try {
     const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
@@ -381,7 +389,7 @@ router.get('/my', auth, async (req, res) => {
   }
 });
 
-// ========== ADDED: Check if a negotiation already exists for a house (for tenants) ==========
+// Check if a negotiation already exists for a house (for tenants)
 router.get('/check/:houseId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findOne({
@@ -395,7 +403,7 @@ router.get('/check/:houseId', auth, async (req, res) => {
   }
 });
 
-// Test endpoint to verify route is working
+// Test endpoint
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
 });
