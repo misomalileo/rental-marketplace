@@ -163,7 +163,7 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
   } catch (err) {
     console.error("Failed loading houses:", err);
     const container = document.getElementById("houses-container");
-    if (container) container.innerHTML = "<p>Failed to load houses.</p>";
+    if (container) container.innerHTML = "<p>Failed to load houses. Please refresh.</p>";
   }
 }
 
@@ -342,18 +342,15 @@ function openComparisonModal() {
   const housesToCompare = allHouses.filter(h => comparisonList.includes(h._id));
   const container = document.getElementById('comparisonTable');
   if (!container) return;
-
   if (housesToCompare.length === 0) {
     container.innerHTML = '<p>No houses selected.</p>';
     document.getElementById('comparisonModal').style.display = 'block';
     return;
   }
-
   let tableHtml = '<table style="width:100%; border-collapse: collapse; text-align: center; font-size: 0.75rem;">';
-  tableHtml += '<thead> <th style="padding: 8px;">Feature</th>';
+  tableHtml += '<thead><th style="padding: 8px;">Feature</th>';
   housesToCompare.forEach(house => { tableHtml += `<th style="padding: 8px;">${house.name}</th>`; });
   tableHtml += '</thead><tbody>';
-
   const features = [
     { label: '<i class="fas fa-money-bill-wave"></i> Price', key: 'price', format: (v, house) => `MWK ${v.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}` },
     { label: '<i class="fas fa-map-marker-alt"></i> Location', key: 'location' },
@@ -369,7 +366,6 @@ function openComparisonModal() {
     { label: '<i class="fas fa-snowflake"></i> AC', key: 'ac', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
     { label: '<i class="fas fa-star"></i> Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
   ];
-
   features.forEach(feature => {
     tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
     housesToCompare.forEach(house => {
@@ -384,14 +380,12 @@ function openComparisonModal() {
     });
     tableHtml += `</tr>`;
   });
-
   tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
   housesToCompare.forEach(house => {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `<tr></tbody></table>`;
-
+  tableHtml += `</tr></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -400,7 +394,6 @@ function openComparisonModal() {
     const scoreB = (b.averageRating || 0) * 10 + (b.views || 0) / 100 - (b.price / 10000);
     if (scoreB > scoreA) bestHouse = b;
   }
-
   const summaryHtml = `
     <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(37,99,235,0.05); border-radius: 16px; border-left: 3px solid #2563eb;">
       <i class="fas fa-robot" style="color: #2563eb; margin-right: 0.5rem;"></i>
@@ -410,7 +403,6 @@ function openComparisonModal() {
       </p>
     </div>
   `;
-
   container.innerHTML = tableHtml + summaryHtml;
   document.getElementById('comparisonModal').style.display = 'block';
 }
@@ -426,28 +418,23 @@ function renderHouses(houses) {
   const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
   const isLoggedIn = checkAuth();
   const currentUserId = getUserIdFromToken();
-
   houses.forEach(house => {
     const card = document.createElement("div");
     card.className = "house-card";
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
     let currentIndex = 0;
-
     let avatarHtml = '';
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
       const avatarStyle = house.owner.profilePicture ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:1rem;">${initial}</span>`;
       avatarHtml = `<div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarStyle}</div>`;
     }
-
     let landlordInfoHtml = '';
     if (house.owner) {
       landlordInfoHtml = `<div class="landlord-info-row">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${house.owner.verificationType === "premium" ? '<span class="badge premium"><i class="fas fa-star"></i> Premium</span>' : ''}${house.owner.verificationType === "official" ? '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>' : ''}</div>`;
     }
-
     const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
     const selfContainedBadge = house.selfContained ? '<span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
-
     let genderBadgeHtml = '';
     if (house.gender && house.gender !== 'none') {
       let genderClass = '';
@@ -457,14 +444,12 @@ function renderHouses(houses) {
       else if (house.gender === 'mixed') { genderClass = 'gender-mixed'; genderText = '<i class="fas fa-venus-mars"></i> Mixed'; }
       genderBadgeHtml = `<span class="badge ${genderClass}">${genderText}</span>`;
     }
-
     let priceHtml = '';
     if (house.type === 'Hostel') {
       priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / room</p>`;
     } else {
       priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / month</p>`;
     }
-
     const ratingStars = getStarRating(house.averageRating);
     const ratingText = house.averageRating ? house.averageRating.toFixed(1) : "N/A";
     const favIcon = favorites.includes(house._id) ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
@@ -475,7 +460,6 @@ function renderHouses(houses) {
     const reportBtn = isLoggedIn ? `<button class="report-btn" onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>` : '';
     const favBtn = `<button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>`;
     const readMoreBtn = `<button class="read-more-btn" onclick="showDetails('${house._id}')"><i class="fas fa-book-open"></i> Read more</button>`;
-
     card.innerHTML = `
       <div class="slider">
         <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
@@ -501,9 +485,7 @@ function renderHouses(houses) {
         ${readMoreBtn}
       </div>
     `;
-
     container.appendChild(card);
-
     const img = card.querySelector(`#img-${house._id}`);
     if (images.length > 1) {
       const prevBtn = card.querySelector(".prev");
@@ -529,13 +511,11 @@ function renderHouses(houses) {
       const currentIdx = parseInt(img.getAttribute('data-current-index') || "0");
       if (typeof window.openLightbox === 'function') window.openLightbox(images, currentIdx);
     });
-
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" }).catch(err => console.error("Failed to record view", err));
     });
   });
-
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
@@ -756,7 +736,7 @@ function loadVirtualTour(url) {
 }
 
 // ======================================
-// SHOW DETAILS (with tabs, bidding, and lease negotiation button)
+// SHOW DETAILS (with tabs and full bidding UI)
 // ======================================
 async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
@@ -964,11 +944,11 @@ async function showDetails(houseId) {
     } catch (err) { console.error('Failed to fetch highest bid', err); }
   }
 
-  // ========== LEASE NEGOTIATION BUTTON (only for landlords viewing their own property) ==========
+  // ========== LEASE NEGOTIATION BUTTON (for landlords) ==========
   if (isLoggedIn && house.owner && house.owner._id === currentUserId) {
     const leaseBtn = document.createElement('button');
     leaseBtn.className = 'save-search-btn';
-    leaseBtn.style.background = '#8b5cf6';
+    leaseBtn.style.background = '#0d9488';
     leaseBtn.style.marginTop = '0.5rem';
     leaseBtn.style.width = '100%';
     leaseBtn.innerHTML = '<i class="fas fa-file-signature"></i> Start Lease Negotiation';
@@ -1013,6 +993,32 @@ async function showDetails(houseId) {
 }
 
 // ======================================
+// CLOSE PROPERTY MODAL (FIXED)
+// ======================================
+function closePropertyModal() {
+  const modal = document.getElementById('propertyModal');
+  if (modal) modal.style.display = 'none';
+}
+
+// ======================================
+// TOGGLE FAVORITE
+// ======================================
+function toggleFavorite(id) {
+  let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+  if (favs.includes(id)) favs = favs.filter(x => x !== id);
+  else favs.push(id);
+  localStorage.setItem("favorites", JSON.stringify(favs));
+  renderHouses(allHouses);
+}
+
+// ======================================
+// GENERATE LEASE (stub – will be replaced by lease.js)
+// ======================================
+function generateLease() {
+  console.log("Lease generation function called – implement if needed");
+}
+
+// ======================================
 // EVENT LISTENERS
 // ======================================
 document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', function() { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); currentType = this.dataset.type; currentPage = 1; loadHouses(currentPage, currentType, currentFilters, currentSort); }); });
@@ -1037,14 +1043,9 @@ if (urlParams.has('sort')) currentSort = urlParams.get('sort');
 if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
 loadHouses(currentPage, currentType, currentFilters, currentSort);
 
-// ======================================
-// GLOBAL FUNCTIONS (exposed)
-// ======================================
+// Expose functions globally
 window.showDetails = showDetails;
-window.closePropertyModal = function() {
-  const modal = document.getElementById('propertyModal');
-  if (modal) modal.style.display = 'none';
-};
+window.closePropertyModal = closePropertyModal;
 window.toggleFavorite = toggleFavorite;
 window.reportHouse = reportHouse;
 window.startChat = startChat;
@@ -1058,4 +1059,4 @@ window.addToCompare = addToCompare;
 window.closeComparisonModal = closeComparisonModal;
 window.showLandlordProfile = showLandlordProfile;
 window.closeLandlordModal = closeLandlordModal;
-window.generateLease = generateLease; // from lease.js
+window.generateLease = generateLease;
