@@ -8,8 +8,9 @@ const SmartContractSchema = new mongoose.Schema({
   pdfUrl: { type: String, required: true },
   signedByLandlord: { type: Boolean, default: false },
   signedByTenant: { type: Boolean, default: false },
+  landlordSignature: { type: String, default: null },
+  tenantSignature: { type: String, default: null },
   signedAt: { type: Date },
-  blockchainHash: { type: String }, // for future integration
   status: { type: String, enum: ['pending', 'active', 'terminated', 'expired'], default: 'pending' },
   createdAt: { type: Date, default: Date.now }
 });

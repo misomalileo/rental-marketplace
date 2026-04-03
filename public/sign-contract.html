@@ -92,18 +92,12 @@
     }
     .status.success { background: #dcfce7; color: #15803d; }
     .status.info { background: #dbeafe; color: #1e40af; }
-    .pdf-placeholder {
-      background: #f1f5f9;
-      border-radius: 20px;
-      padding: 2rem;
-      text-align: center;
-      margin: 1rem 0;
-    }
     @media (max-width: 640px) {
       body { padding: 1rem; }
       .container { padding: 1.5rem; }
       h2 { font-size: 1.4rem; }
       .btn-group { flex-direction: column; }
+      .btn { justify-content: center; }
     }
   </style>
 </head>
@@ -111,10 +105,6 @@
   <div class="container">
     <h2><i class="fas fa-file-signature"></i> Sign Lease Contract</h2>
     <div id="contractInfo" class="contract-info"></div>
-    <div class="pdf-placeholder">
-      <i class="fas fa-file-pdf" style="font-size: 3rem; color: #ef4444;"></i>
-      <p style="margin-top: 0.5rem;">Your contract is ready. Download it after signing.</p>
-    </div>
     <div class="signature-pad">
       <p><i class="fas fa-pen-fancy"></i> Your Signature (draw or type)</p>
       <canvas id="signatureCanvas" width="400" height="150"></canvas>
@@ -192,7 +182,7 @@
           statusDiv.className = 'status success';
           document.getElementById('signContract').disabled = true;
           downloadBtn.style.display = 'inline-flex';
-          await loadContract();
+          await loadContract(); // refresh status
         } else {
           statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed: ' + (data.message || 'Unknown error');
         }
@@ -204,24 +194,17 @@
     downloadBtn.addEventListener('click', async () => {
       if (!negotiationId) return;
       try {
-        const res = await fetch(`/api/lease/download/${negotiationId}`, {
+        const res = await fetch(`/api/lease/download-temp/${negotiationId}`, {
           headers: { Authorization: 'Bearer ' + token }
         });
-        if (res.ok) {
-          const blob = await res.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Lease_Agreement_${negotiationId}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
+        const data = await res.json();
+        if (res.ok && data.downloadUrl) {
+          window.open(data.downloadUrl, '_blank');
         } else {
-          alert('Failed to download contract. Please try again.');
+          alert('Failed to get download link');
         }
       } catch (err) {
-        alert('Network error while downloading.');
+        alert('Network error');
       }
     });
 
