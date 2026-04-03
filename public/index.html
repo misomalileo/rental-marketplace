@@ -513,7 +513,7 @@
     const newsletterForm = document.getElementById('footerNewsletterForm');
     if (newsletterForm) { newsletterForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = newsletterForm.querySelector('input').value.trim(); const statusDiv = document.getElementById('newsletterStatus'); if (!email) return; statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Subscribing...'; setTimeout(() => { statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Thanks for subscribing!'; newsletterForm.reset(); setTimeout(() => { statusDiv.innerHTML = ''; }, 3000); }, 500); }); }
 
-    // User menu - FIXED (no stray HTML)
+    // User menu (fixed – no stray HTML)
     let currentUser = null;
     const userMenu = document.getElementById('userMenu');
     const userAvatar = document.getElementById('userAvatar');
