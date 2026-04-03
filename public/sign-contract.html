@@ -172,6 +172,7 @@
     if (!contractId) window.location = 'index.html';
 
     let contract = null;
+    let negotiationId = null;
     const canvas = document.getElementById('signatureCanvas');
     const signaturePad = new SignaturePad(canvas);
     const statusDiv = document.getElementById('status');
@@ -184,7 +185,9 @@
         });
         if (res.ok) {
           contract = await res.json();
-          document.getElementById('pdfFrame').src = contract.pdfUrl;
+          negotiationId = contract.negotiationId;
+          // Use the view-pdf endpoint
+          document.getElementById('pdfFrame').src = `/api/lease/view-pdf/${negotiationId}`;
           document.getElementById('contractInfo').innerHTML = `
             <div class="info-card"><i class="fas fa-home"></i> <strong>Property:</strong> ${contract.houseId?.name || 'N/A'}</div>
             <div class="info-card"><i class="fas fa-user-tie"></i> <strong>Landlord:</strong> ${contract.landlordId?.name}</div>
@@ -197,6 +200,8 @@
             document.getElementById('signContract').disabled = true;
             downloadBtn.style.display = 'inline-flex';
             downloadBtn.href = `/api/lease/download/${contractId}`;
+          } else {
+            // Show download button only after signing (handled in sign callback)
           }
         } else {
           statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to load contract details.';
