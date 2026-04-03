@@ -84,18 +84,22 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant, isFina
     // Add subtle background color
     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#fef9e8');
 
-    // Header
+    // Header with gradient-like effect (using rectangle)
     doc.rect(0, 0, doc.page.width, 80).fill('#1e3a5f');
     doc.fillColor('white').fontSize(22).font('Helvetica-Bold')
       .text('🏠 RESIDENTIAL LEASE AGREEMENT', 50, 25, { align: 'center' });
     doc.fillColor('#f1c40f').fontSize(12).font('Helvetica')
       .text('Malawi Standard Tenancy Contract', 50, 55, { align: 'center' });
 
+    // Content area
     let y = 100;
     doc.fillColor('#2c3e50').fontSize(10).font('Helvetica');
+
+    // Date
     doc.text(`📅 Date: ${new Date().toLocaleDateString()}`, 50, y);
     y += 20;
 
+    // Property and parties
     doc.font('Helvetica-Bold').text('1. PARTIES & PROPERTY', 50, y);
     y += 15;
     doc.font('Helvetica')
@@ -104,6 +108,7 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant, isFina
       .text(`Tenant: ${tenant.name} (${tenant.email})`, 60, y + 30);
     y += 60;
 
+    // Lease terms in a nice box
     doc.rect(50, y, doc.page.width - 100, 100).stroke('#3498db');
     doc.fillColor('#3498db').font('Helvetica-Bold').text('LEASE TERMS', 55, y + 5);
     doc.fillColor('#2c3e50').font('Helvetica')
@@ -113,6 +118,7 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant, isFina
       .text(`Security Deposit: MWK ${negotiation.depositAmount.toLocaleString()} (refundable)`, 60, y + 70);
     y += 110;
 
+    // Additional clauses
     doc.font('Helvetica-Bold').text('2. ADDITIONAL CLAUSES', 50, y);
     y += 15;
     doc.font('Helvetica');
@@ -124,6 +130,7 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant, isFina
     });
     y += 10;
 
+    // Standard Malawi clauses
     doc.font('Helvetica-Bold').text('3. STANDARD CONDITIONS (Malawi Law)', 50, y);
     y += 15;
     doc.font('Helvetica')
@@ -134,12 +141,14 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant, isFina
       .text(`• Pets: ${negotiation.petPolicy}`, 60, y + 60);
     y += 85;
 
+    // Governing law
     doc.font('Helvetica-Bold').text('4. GOVERNING LAW', 50, y);
     y += 15;
     doc.font('Helvetica')
       .text('This agreement is governed by the laws of Malawi, including the Rented Premises (Control of Rent) Act and common law principles.', 60, y);
     y += 40;
 
+    // Signature area
     doc.moveTo(50, y).lineTo(doc.page.width - 50, y).stroke();
     y += 10;
     doc.font('Helvetica').text('Signed by:', 50, y);
@@ -147,6 +156,7 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant, isFina
     doc.text(`Landlord: ___________________  Date: __________`, 60, y);
     doc.text(`Tenant:  ___________________  Date: __________`, 60, y + 20);
 
+    // Footer
     const pageCount = doc.bufferedPageRange().count;
     for (let i = 0; i < pageCount; i++) {
       doc.switchToPage(i);
@@ -160,7 +170,7 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant, isFina
   });
 }
 
-// Start lease negotiation
+// Start a new lease negotiation (landlord)
 router.post('/start', auth, async (req, res) => {
   try {
     const { houseId, rentAmount, depositAmount, leaseStartDate, leaseEndDate } = req.body;
@@ -196,7 +206,7 @@ router.post('/start', auth, async (req, res) => {
   }
 });
 
-// Join negotiation
+// Join negotiation (tenant)
 router.post('/join/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -212,7 +222,7 @@ router.post('/join/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Add/update clause
+// Add or update a clause
 router.put('/clause/:negotiationId', auth, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -247,7 +257,7 @@ router.put('/clause/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Agree to clause
+// Agree to a clause
 router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -270,7 +280,7 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
-// Finalize and generate PDF
+// Finalize and generate beautiful PDF
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -288,8 +298,8 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
     const house = await House.findById(negotiation.houseId);
     const landlord = await User.findById(negotiation.landlordId);
     const tenant = await User.findById(negotiation.tenantId);
-    await generateBeautifulPDF(negotiation, house, landlord, tenant, true);
-    const pdfUrl = `/api/lease/view-pdf/${negotiation._id}`; // use endpoint instead of static file
+    const pdfPath = await generateBeautifulPDF(negotiation, house, landlord, tenant, true);
+    const pdfUrl = `/contracts/contract_${negotiation._id}.pdf`;
 
     const smartContract = new SmartContract({
       negotiationId: negotiation._id,
@@ -348,27 +358,7 @@ router.get('/contract/:contractId', auth, async (req, res) => {
   }
 });
 
-// View PDF (inline for iframe)
-router.get('/view-pdf/:negotiationId', auth, async (req, res) => {
-  try {
-    const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
-    if (!negotiation) return res.status(404).json({ message: 'Negotiation not found' });
-    const userId = req.user.id;
-    if (negotiation.landlordId.toString() !== userId && (!negotiation.tenantId || negotiation.tenantId.toString() !== userId)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-    const filePath = path.join(__dirname, '../contracts', `contract_${negotiation._id}.pdf`);
-    if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'PDF not found' });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline');
-    fs.createReadStream(filePath).pipe(res);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Download PDF (attachment)
+// Download PDF directly (with inline display)
 router.get('/download/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId);
@@ -377,10 +367,11 @@ router.get('/download/:contractId', auth, async (req, res) => {
     if (contract.landlordId.toString() !== userId && contract.tenantId.toString() !== userId) {
       return res.status(403).json({ message: 'Not authorized' });
     }
-    const negotiationId = contract.negotiationId;
-    const filePath = path.join(__dirname, '../contracts', `contract_${negotiationId}.pdf`);
+    const filePath = path.join(__dirname, '../contracts', `contract_${contract.negotiationId}.pdf`);
     if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'PDF not found' });
-    res.download(filePath, `Lease_Agreement_${negotiationId}.pdf`);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline'); // Show in browser, not download
+    fs.createReadStream(filePath).pipe(res);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
