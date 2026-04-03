@@ -24,7 +24,7 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
-// Security middleware
+// ========== UPDATED CSP – allow external APIs ==========
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -34,8 +34,34 @@ app.use(
         scriptSrcAttr: null,
         styleSrc: ["'self'", "https://unpkg.com", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-        imgSrc: ["'self'", "data:", "https://maps.google.com", "https://*.tile.openstreetmap.org", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://res.cloudinary.com", "https://images.pexels.com"],
-        connectSrc: ["'self'", "https://maps.google.com", "http://localhost:5000", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "wss://*.ngrok-free.dev", "https://*.ngrok-free.dev", "https://*.tile.openstreetmap.org", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://rental-marketplace-irmj.onrender.com", "wss://rental-marketplace-irmj.onrender.com"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://maps.google.com",
+          "https://*.tile.openstreetmap.org",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",
+          "https://res.cloudinary.com",
+          "https://images.pexels.com",
+          "https://maps.googleapis.com"  // added for Street View
+        ],
+        connectSrc: [
+          "'self'",
+          "https://maps.google.com",
+          "http://localhost:5000",
+          "https://unpkg.com",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",
+          "wss://*.ngrok-free.dev",
+          "https://*.ngrok-free.dev",
+          "https://*.tile.openstreetmap.org",
+          "https://fonts.googleapis.com",
+          "https://fonts.gstatic.com",
+          "https://rental-marketplace-irmj.onrender.com",
+          "wss://rental-marketplace-irmj.onrender.com",
+          "https://overpass-api.de",          // added for OpenStreetMap Overpass API
+          "https://maps.googleapis.com"       // added for Street View API
+        ],
         upgradeInsecureRequests: [],
       },
     },
@@ -66,7 +92,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
-// Socket.IO
+// Socket.IO (unchanged)
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error("Authentication error"));
@@ -187,7 +213,7 @@ try {
   console.log("✅ /api/offers");
 } catch (err) { console.error("❌ Failed to load offers route:", err.message); }
 
-// Lease route – IMPORTANT: ensure file is named 'lease.js' inside routes folder
+// Lease route – ensure file is named 'lease.js' inside routes folder
 try {
   const leaseRoutes = require("./routes/lease");
   app.use("/api/lease", leaseRoutes);
