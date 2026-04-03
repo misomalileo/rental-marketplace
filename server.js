@@ -24,26 +24,48 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
-// ========== UPDATED CSP – allow external APIs ==========
+// ========== MOBILE‑FRIENDLY CSP ==========
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.socket.io", "'unsafe-inline'", "'unsafe-eval'"],
+        scriptSrc: [
+          "'self'",
+          "https://unpkg.com",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",
+          "https://cdn.socket.io",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          "blob:" // required for signature canvas and PDF downloads
+        ],
         scriptSrcAttr: null,
-        styleSrc: ["'self'", "https://unpkg.com", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+        styleSrc: [
+          "'self'",
+          "https://unpkg.com",
+          "https://fonts.googleapis.com",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",
+          "'unsafe-inline'"
+        ],
+        fontSrc: [
+          "'self'",
+          "https://fonts.gstatic.com",
+          "https://cdnjs.cloudflare.com",
+          "data:" // for embedded fonts
+        ],
         imgSrc: [
           "'self'",
           "data:",
+          "blob:",
           "https://maps.google.com",
           "https://*.tile.openstreetmap.org",
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
           "https://res.cloudinary.com",
           "https://images.pexels.com",
-          "https://maps.googleapis.com"  // added for Street View
+          "https://maps.googleapis.com"
         ],
         connectSrc: [
           "'self'",
@@ -59,8 +81,10 @@ app.use(
           "https://fonts.gstatic.com",
           "https://rental-marketplace-irmj.onrender.com",
           "wss://rental-marketplace-irmj.onrender.com",
-          "https://overpass-api.de",          // added for OpenStreetMap Overpass API
-          "https://maps.googleapis.com"       // added for Street View API
+          "https://overpass-api.de",
+          "https://maps.googleapis.com",
+          "wss://*.render.com",
+          "blob:"
         ],
         upgradeInsecureRequests: [],
       },
@@ -77,7 +101,15 @@ app.use("/uploads", express.static("uploads"));
 
 const contractsDir = path.join(__dirname, "contracts");
 if (!fs.existsSync(contractsDir)) fs.mkdirSync(contractsDir, { recursive: true });
-app.use("/contracts", express.static(contractsDir));
+app.use("/contracts", express.static(contractsDir, {
+  setHeaders: (res, filePath) => {
+    // Ensure PDFs are served with correct content type for mobile
+    if (filePath.endsWith('.pdf')) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline');
+    }
+  }
+}));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "your-secret-key",
@@ -92,7 +124,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
-// Socket.IO (unchanged)
+// Socket.IO
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error("Authentication error"));
@@ -213,17 +245,16 @@ try {
   console.log("✅ /api/offers");
 } catch (err) { console.error("❌ Failed to load offers route:", err.message); }
 
-// Lease route – ensure file is named 'lease.js' inside routes folder
+// Lease route
 try {
   const leaseRoutes = require("./routes/lease");
   app.use("/api/lease", leaseRoutes);
   console.log("✅ /api/lease");
 } catch (err) { 
   console.error("❌ Failed to load lease route:", err.message);
-  console.error("Make sure routes/lease.js exists and has no syntax errors");
 }
 
-// Test endpoint to verify lease route is working
+// Test endpoint for lease API
 app.get("/api/lease-test", (req, res) => {
   res.json({ message: "Lease API test endpoint is reachable", timestamp: new Date().toISOString() });
 });
