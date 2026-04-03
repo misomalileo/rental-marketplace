@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const LeaseNegotiationSchema = new mongoose.Schema({
   houseId: { type: mongoose.Schema.Types.ObjectId, ref: 'House', required: true },
   landlordId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // NOT required initially
   status: {
     type: String,
     enum: ['draft', 'negotiating', 'agreed', 'signed', 'expired'],
