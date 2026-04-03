@@ -5,7 +5,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
-const cookieParser = require("cookie-parser"); // ✅ Fixed: correct package name
+const cookieParser = require("cookie-parser");
 const http = require("http");
 const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
@@ -20,61 +20,22 @@ const { limiter } = require("./middleware/rateLimiter");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: { origin: "*" }
-});
+const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
+// Security middleware
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "https://unpkg.com",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "https://cdn.socket.io",
-          "'unsafe-inline'",
-          "'unsafe-eval'",
-        ],
+        scriptSrc: ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.socket.io", "'unsafe-inline'", "'unsafe-eval'"],
         scriptSrcAttr: null,
-        styleSrc: [
-          "'self'",
-          "https://unpkg.com",
-          "https://fonts.googleapis.com",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "'unsafe-inline'",
-        ],
+        styleSrc: ["'self'", "https://unpkg.com", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-        imgSrc: [
-          "'self'",
-          "data:",
-          "https://maps.google.com",
-          "https://*.tile.openstreetmap.org",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "https://res.cloudinary.com",
-          "https://images.pexels.com",
-        ],
-        connectSrc: [
-          "'self'",
-          "https://maps.google.com",
-          "http://localhost:5000",
-          "https://unpkg.com",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "wss://*.ngrok-free.dev",
-          "https://*.ngrok-free.dev",
-          "https://*.tile.openstreetmap.org",
-          "https://fonts.googleapis.com",
-          "https://fonts.gstatic.com",
-          "https://rental-marketplace-irmj.onrender.com",
-          "wss://rental-marketplace-irmj.onrender.com",
-        ],
+        imgSrc: ["'self'", "data:", "https://maps.google.com", "https://*.tile.openstreetmap.org", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://res.cloudinary.com", "https://images.pexels.com"],
+        connectSrc: ["'self'", "https://maps.google.com", "http://localhost:5000", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "wss://*.ngrok-free.dev", "https://*.ngrok-free.dev", "https://*.tile.openstreetmap.org", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://rental-marketplace-irmj.onrender.com", "wss://rental-marketplace-irmj.onrender.com"],
         upgradeInsecureRequests: [],
       },
     },
@@ -100,11 +61,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Database connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
-// ========== SOCKET.IO ==========
+// Socket.IO
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error("Authentication error"));
@@ -191,7 +153,7 @@ io.on("connection", async (socket) => {
 
 app.set('io', io);
 
-// ========== ROUTES ==========
+// Routes
 console.log("📦 Registering routes...");
 
 const authRoutes = require("./routes/auth");
@@ -225,7 +187,7 @@ try {
   console.log("✅ /api/offers");
 } catch (err) { console.error("❌ Failed to load offers route:", err.message); }
 
-// ✅ LEASE ROUTE - Make sure your file is named `lease.js` (not `leases.js`)
+// Lease route (file must be named lease.js)
 try {
   const leaseRoutes = require("./routes/lease");
   app.use("/api/lease", leaseRoutes);

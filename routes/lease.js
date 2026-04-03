@@ -10,7 +10,6 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// Helper: calculate lease score (0-100)
 function calculateLeaseScore(negotiation) {
   let score = 70;
   if (negotiation.rentAmount > 0 && negotiation.rentAmount < 1000000) score += 5;
@@ -19,52 +18,50 @@ function calculateLeaseScore(negotiation) {
   if (negotiation.lateFeePercentage <= 5) score += 5;
   if (negotiation.maintenanceResponsibility === 'Landlord') score += 5;
   if (negotiation.utilitiesIncluded) score += 3;
-  if (negotiation.clauses && negotiation.clauses.filter(c => c.isAgreed).length > 5) score += 2;
+  if (negotiation.clauses.filter(c => c.isAgreed).length > 5) score += 2;
   return Math.min(100, Math.max(0, score));
 }
 
-// AI clause suggestions (rule-based, no external API)
 function generateAiSuggestions(negotiation) {
   const suggestions = [];
   if (negotiation.depositAmount > negotiation.rentAmount * 3) {
     suggestions.push({
       title: 'Deposit Amount',
       description: `Consider lowering deposit to ${negotiation.rentAmount * 2} MWK (2 months rent).`,
-      reasoning: 'Standard practice in Malawi is 2 months rent deposit. High deposits may deter tenants.'
+      reasoning: 'Standard practice in Malawi is 2 months rent deposit.'
     });
   }
   if (negotiation.noticePeriodDays > 60) {
     suggestions.push({
       title: 'Notice Period',
       description: `Reduce notice period to 30 days.`,
-      reasoning: 'Long notice periods are often unfair. 30 days is reasonable for both parties.'
+      reasoning: 'Long notice periods are often unfair.'
     });
   }
   if (negotiation.lateFeePercentage > 10) {
     suggestions.push({
       title: 'Late Fee',
       description: `Reduce late fee to 5% of rent.`,
-      reasoning: 'Excessive late fees may be considered unfair. 5% is standard.'
+      reasoning: 'Excessive late fees may be considered unfair.'
     });
   }
   if (negotiation.maintenanceResponsibility !== 'Landlord') {
     suggestions.push({
       title: 'Maintenance Responsibility',
       description: `Shift major repairs to landlord.`,
-      reasoning: 'Landlords are typically responsible for structural and major repairs.'
+      reasoning: 'Landlords are typically responsible for structural repairs.'
     });
   }
   if (negotiation.petPolicy === 'Not allowed') {
     suggestions.push({
       title: 'Pet Policy',
       description: `Consider allowing small pets with a pet deposit.`,
-      reasoning: 'Many tenants have pets. A pet deposit protects landlord while attracting more renters.'
+      reasoning: 'Many tenants have pets. A pet deposit protects landlord.'
     });
   }
   return suggestions;
 }
 
-// Start a new lease negotiation (landlord)
 router.post('/start', auth, async (req, res) => {
   try {
     const { houseId, rentAmount, depositAmount, leaseStartDate, leaseEndDate } = req.body;
@@ -74,7 +71,7 @@ router.post('/start', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only landlord can start lease negotiation' });
     }
     const existing = await LeaseNegotiation.findOne({ houseId, landlordId: req.user.id, status: { $in: ['draft', 'negotiating'] } });
-    if (existing) return res.status(400).json({ message: 'Active negotiation already exists for this house' });
+    if (existing) return res.status(400).json({ message: 'Active negotiation already exists' });
 
     const negotiation = new LeaseNegotiation({
       houseId,
@@ -84,11 +81,6 @@ router.post('/start', auth, async (req, res) => {
       depositAmount,
       leaseStartDate,
       leaseEndDate,
-      noticePeriodDays: 30,
-      lateFeePercentage: 5,
-      maintenanceResponsibility: 'Landlord',
-      utilitiesIncluded: false,
-      petPolicy: 'Allowed with deposit',
       clauses: [
         { title: 'Rent Amount', description: `${rentAmount} MWK per month`, suggestedBy: 'landlord', isAgreed: true },
         { title: 'Deposit', description: `${depositAmount} MWK`, suggestedBy: 'landlord', isAgreed: true },
@@ -105,7 +97,6 @@ router.post('/start', auth, async (req, res) => {
   }
 });
 
-// Join negotiation (tenant)
 router.post('/join/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -121,7 +112,6 @@ router.post('/join/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Add or update a clause (both parties)
 router.put('/clause/:negotiationId', auth, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -138,12 +128,7 @@ router.put('/clause/:negotiationId', auth, async (req, res) => {
       existingClause.suggestedBy = isLandlord ? 'landlord' : 'tenant';
       existingClause.isAgreed = false;
     } else {
-      negotiation.clauses.push({
-        title,
-        description,
-        suggestedBy: isLandlord ? 'landlord' : 'tenant',
-        isAgreed: false
-      });
+      negotiation.clauses.push({ title, description, suggestedBy: isLandlord ? 'landlord' : 'tenant', isAgreed: false });
     }
     negotiation.updatedAt = new Date();
     negotiation.leaseScore = calculateLeaseScore(negotiation);
@@ -156,7 +141,6 @@ router.put('/clause/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Agree to a clause (both parties)
 router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -179,7 +163,6 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
-// Finalize and generate smart contract PDF
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -193,7 +176,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
     negotiation.status = 'agreed';
     await negotiation.save();
 
-    // Generate PDF contract
     const house = await House.findById(negotiation.houseId);
     const landlord = await User.findById(negotiation.landlordId);
     const tenant = await User.findById(negotiation.tenantId);
@@ -238,10 +220,8 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Sign contract (both parties)
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
-    const { signature } = req.body;
     const contract = await SmartContract.findById(req.params.contractId);
     if (!contract) return res.status(404).json({ message: 'Contract not found' });
     const userId = req.user.id;
@@ -265,7 +245,6 @@ router.put('/sign/:contractId', auth, async (req, res) => {
   }
 });
 
-// Get contract details (for signing page)
 router.get('/contract/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId)
@@ -280,7 +259,6 @@ router.get('/contract/:contractId', auth, async (req, res) => {
   }
 });
 
-// Setup recurring payment (after contract signed)
 router.post('/setup-payment', auth, async (req, res) => {
   try {
     const { contractId, paymentMethod, phoneNumber } = req.body;
@@ -311,7 +289,6 @@ router.post('/setup-payment', auth, async (req, res) => {
   }
 });
 
-// Process auto payment (cron job would call this daily)
 router.post('/process-payment/:paymentId', auth, async (req, res) => {
   try {
     const payment = await RecurringPayment.findById(req.params.paymentId);
@@ -335,7 +312,6 @@ router.post('/process-payment/:paymentId', auth, async (req, res) => {
   }
 });
 
-// Get lease negotiation details
 router.get('/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId)
@@ -350,7 +326,7 @@ router.get('/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// ✅ ADDED: GET all lease negotiations for the logged-in landlord (used in dashboard)
+// ========== ADDED: GET all lease negotiations for the logged-in landlord ==========
 router.get('/my', auth, async (req, res) => {
   try {
     const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
