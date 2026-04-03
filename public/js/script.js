@@ -390,7 +390,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</table></tbody></table>`;
+  tableHtml += `<tr></tbody></table>`;
 
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
@@ -756,7 +756,8 @@ function loadVirtualTour(url) {
 }
 
 // ======================================
-// SHOW DETAILS (with tabs and full bidding UI)
+// SHOW DETAILS (with tabs, bidding, and lease negotiation button)
+// ======================================
 async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
   if (!house) return;
@@ -963,7 +964,7 @@ async function showDetails(houseId) {
     } catch (err) { console.error('Failed to fetch highest bid', err); }
   }
 
-  // ========== LEASE NEGOTIATION BUTTON (for landlords) ==========
+  // ========== LEASE NEGOTIATION BUTTON (only for landlords viewing their own property) ==========
   if (isLoggedIn && house.owner && house.owner._id === currentUserId) {
     const leaseBtn = document.createElement('button');
     leaseBtn.className = 'save-search-btn';
@@ -1010,6 +1011,7 @@ async function showDetails(houseId) {
   const virtualTourPanel = document.getElementById('modalVirtualTour');
   tabs.forEach(tab => { tab.addEventListener('click', () => { const target = tab.getAttribute('data-tab'); tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); if (target === 'details') { detailsPanel.style.display = 'block'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'insights') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'block'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'streetview') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'block'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'pricing') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'block'; virtualTourPanel.style.display = 'none'; } else if (target === 'virtualtour') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'block'; loadVirtualTour(house.virtualTourUrl); } }); });
 }
+
 // ======================================
 // EVENT LISTENERS
 // ======================================
@@ -1035,9 +1037,14 @@ if (urlParams.has('sort')) currentSort = urlParams.get('sort');
 if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
 loadHouses(currentPage, currentType, currentFilters, currentSort);
 
-// Expose functions globally
+// ======================================
+// GLOBAL FUNCTIONS (exposed)
+// ======================================
 window.showDetails = showDetails;
-window.closePropertyModal = closePropertyModal;
+window.closePropertyModal = function() {
+  const modal = document.getElementById('propertyModal');
+  if (modal) modal.style.display = 'none';
+};
 window.toggleFavorite = toggleFavorite;
 window.reportHouse = reportHouse;
 window.startChat = startChat;
