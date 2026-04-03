@@ -5,7 +5,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
-const cookieParser = require("cookieParser");
+const cookieParser = require("cookie-parser"); // ✅ Fixed: correct package name
 const http = require("http");
 const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
@@ -225,7 +225,7 @@ try {
   console.log("✅ /api/offers");
 } catch (err) { console.error("❌ Failed to load offers route:", err.message); }
 
-// Lease route – make sure file is named lease.js inside routes folder
+// ✅ LEASE ROUTE - Make sure your file is named `lease.js` (not `leases.js`)
 try {
   const leaseRoutes = require("./routes/lease");
   app.use("/api/lease", leaseRoutes);

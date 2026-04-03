@@ -19,7 +19,7 @@ function calculateLeaseScore(negotiation) {
   if (negotiation.lateFeePercentage <= 5) score += 5;
   if (negotiation.maintenanceResponsibility === 'Landlord') score += 5;
   if (negotiation.utilitiesIncluded) score += 3;
-  if (negotiation.clauses.filter(c => c.isAgreed).length > 5) score += 2;
+  if (negotiation.clauses && negotiation.clauses.filter(c => c.isAgreed).length > 5) score += 2;
   return Math.min(100, Math.max(0, score));
 }
 
@@ -84,6 +84,11 @@ router.post('/start', auth, async (req, res) => {
       depositAmount,
       leaseStartDate,
       leaseEndDate,
+      noticePeriodDays: 30,
+      lateFeePercentage: 5,
+      maintenanceResponsibility: 'Landlord',
+      utilitiesIncluded: false,
+      petPolicy: 'Allowed with deposit',
       clauses: [
         { title: 'Rent Amount', description: `${rentAmount} MWK per month`, suggestedBy: 'landlord', isAgreed: true },
         { title: 'Deposit', description: `${depositAmount} MWK`, suggestedBy: 'landlord', isAgreed: true },
@@ -236,7 +241,7 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
 // Sign contract (both parties)
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
-    const { signature } = req.body; // optional signature data URL
+    const { signature } = req.body;
     const contract = await SmartContract.findById(req.params.contractId);
     if (!contract) return res.status(404).json({ message: 'Contract not found' });
     const userId = req.user.id;
@@ -312,7 +317,6 @@ router.post('/process-payment/:paymentId', auth, async (req, res) => {
     const payment = await RecurringPayment.findById(req.params.paymentId);
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
     if (payment.status !== 'active') return res.json({ message: 'Payment not active' });
-    // Integrate with Airtel/TNM API here (simulate success)
     const transactionId = 'TXN' + Date.now();
     payment.paymentHistory.push({
       amount: payment.amount,
@@ -346,7 +350,7 @@ router.get('/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// ========== ADDED: GET all lease negotiations for the logged-in landlord (used in dashboard) ==========
+// ✅ ADDED: GET all lease negotiations for the logged-in landlord (used in dashboard)
 router.get('/my', auth, async (req, res) => {
   try {
     const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
