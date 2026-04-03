@@ -385,7 +385,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</tr></tbody></table>`;
+  tableHtml += `</tr></tbody></td>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -736,7 +736,7 @@ function loadVirtualTour(url) {
 }
 
 // ======================================
-// SHOW DETAILS (with tabs and full bidding UI)
+// SHOW DETAILS (with tabs, full bidding UI, and lease flow)
 // ======================================
 async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
@@ -944,8 +944,10 @@ async function showDetails(houseId) {
     } catch (err) { console.error('Failed to fetch highest bid', err); }
   }
 
-  // ========== LEASE NEGOTIATION BUTTON (for landlords) ==========
+  // ========== LEASE NEGOTIATION FLOW ==========
+  // Only show if user is logged in and is landlord of this property
   if (isLoggedIn && house.owner && house.owner._id === currentUserId) {
+    // Landlord: Start Lease Negotiation
     const leaseBtn = document.createElement('button');
     leaseBtn.className = 'save-search-btn';
     leaseBtn.style.background = '#0d9488';
@@ -968,8 +970,14 @@ async function showDetails(houseId) {
         });
         const data = await res.json();
         if (res.ok) {
-          alert('Lease negotiation created! Redirecting...');
-          window.location.href = `lease-negotiation.html?id=${data._id}`;
+          const negotiationUrl = `${window.location.origin}/lease-negotiation.html?id=${data._id}`;
+          // Show the link and allow copying
+          const copyLink = confirm(`Lease negotiation created!\n\nShare this link with the tenant:\n${negotiationUrl}\n\nClick OK to copy the link to clipboard.`);
+          if (copyLink) {
+            await navigator.clipboard.writeText(negotiationUrl);
+            alert('Link copied to clipboard! Send it to the tenant.');
+          }
+          window.location.href = negotiationUrl;
         } else {
           alert('Error: ' + data.message);
         }
@@ -978,6 +986,57 @@ async function showDetails(houseId) {
       }
     };
     document.getElementById('modalDetails').appendChild(leaseBtn);
+  } 
+  else if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
+    // Logged-in tenant: check if a lease negotiation already exists for this house
+    try {
+      const token = localStorage.getItem('token');
+      const checkRes = await fetch(`/api/lease/check/${house._id}`, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (checkRes.ok) {
+        const existingNegotiation = await checkRes.json();
+        if (existingNegotiation && existingNegotiation.status !== 'signed') {
+          // Show "Join Negotiation" button
+          const joinBtn = document.createElement('button');
+          joinBtn.className = 'save-search-btn';
+          joinBtn.style.background = '#8b5cf6';
+          joinBtn.style.marginTop = '0.5rem';
+          joinBtn.style.width = '100%';
+          joinBtn.innerHTML = '<i class="fas fa-handshake"></i> Join Lease Negotiation';
+          joinBtn.onclick = () => {
+            window.location.href = `lease-negotiation.html?id=${existingNegotiation._id}`;
+          };
+          document.getElementById('modalDetails').appendChild(joinBtn);
+        } else {
+          // No active negotiation – show message
+          const msg = document.createElement('p');
+          msg.style.marginTop = '0.5rem';
+          msg.style.fontSize = '0.8rem';
+          msg.style.color = '#6b7280';
+          msg.innerHTML = '<i class="fas fa-info-circle"></i> No active lease negotiation for this property. Ask the landlord to start one.';
+          document.getElementById('modalDetails').appendChild(msg);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to check existing negotiation', err);
+      // Fallback: show a generic message
+      const msg = document.createElement('p');
+      msg.style.marginTop = '0.5rem';
+      msg.style.fontSize = '0.8rem';
+      msg.style.color = '#6b7280';
+      msg.innerHTML = '<i class="fas fa-info-circle"></i> Lease negotiation not available.';
+      document.getElementById('modalDetails').appendChild(msg);
+    }
+  }
+  else {
+    // Not logged in – show login prompt
+    const loginMsg = document.createElement('p');
+    loginMsg.style.marginTop = '0.5rem';
+    loginMsg.style.fontSize = '0.8rem';
+    loginMsg.style.color = '#6b7280';
+    loginMsg.innerHTML = '<i class="fas fa-lock"></i> <a href="login.html" style="color: #2563eb;">Login</a> to start or join a lease negotiation.';
+    document.getElementById('modalDetails').appendChild(loginMsg);
   }
 
   document.getElementById('propertyModal').style.display = 'block';

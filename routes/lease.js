@@ -87,7 +87,7 @@ router.post('/start', auth, async (req, res) => {
     const negotiation = new LeaseNegotiation({
       houseId,
       landlordId: req.user.id,
-      tenantId: null, // ✅ allowed
+      tenantId: null,
       rentAmount,
       depositAmount,
       leaseStartDate,
@@ -190,7 +190,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
     if (negotiation.landlordId.toString() !== req.user.id && negotiation.tenantId?.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
-    // ✅ Check that tenant has joined
     if (!negotiation.tenantId) {
       return res.status(400).json({ message: 'Tenant must join the negotiation first.' });
     }
@@ -210,7 +209,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
 
-    // Generate PDF with Malawi law compliance
     doc.fontSize(20).text('RESIDENTIAL LEASE AGREEMENT (Malawi)', { align: 'center' });
     doc.moveDown();
     doc.fontSize(12).text(`Date: ${new Date().toLocaleDateString()}`);
@@ -377,6 +375,20 @@ router.get('/my', auth, async (req, res) => {
       .populate('tenantId', 'name email')
       .sort({ createdAt: -1 });
     res.json(leases);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ========== ADDED: Check if a negotiation already exists for a house (for tenants) ==========
+router.get('/check/:houseId', auth, async (req, res) => {
+  try {
+    const negotiation = await LeaseNegotiation.findOne({
+      houseId: req.params.houseId,
+      status: { $in: ['draft', 'negotiating', 'agreed'] }
+    });
+    res.json(negotiation);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
