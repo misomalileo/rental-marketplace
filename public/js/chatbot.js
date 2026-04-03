@@ -1,57 +1,44 @@
 // ======================================
-// AI KHOMO LATHU – Professional Concierge
+// AI KHOMO LATHU – Intelligent Concierge (Masterpiece Edition)
 // ======================================
 (function() {
-  // Widget HTML with suggested questions
+  // Widget HTML (modern, glass-morphism, suggested questions)
   const widgetHtml = `
     <div id="chatbot-widget" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; font-family: 'Inter', sans-serif;">
-      <div id="chatbot-toggle" style="width: 56px; height: 56px; background: linear-gradient(135deg, #2563eb, #0ea5e9); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.15); transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);">
-        <i class="fas fa-comment-dots" style="color: white; font-size: 24px;"></i>
+      <div id="chatbot-toggle" style="width: 60px; height: 60px; background: linear-gradient(135deg, #8B5CF6, #EC4899); border-radius: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 20px rgba(139,92,246,0.4); transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);">
+        <i class="fas fa-robot" style="color: white; font-size: 28px;"></i>
       </div>
-      <div id="chatbot-panel" style="display: none; position: absolute; bottom: 80px; right: 0; width: 380px; height: 520px; background: var(--card-bg, white); border-radius: 28px; box-shadow: 0 20px 35px -8px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--input-border, #e2e8f0); backdrop-filter: blur(0px);">
-        <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="background: rgba(255,255,255,0.15); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-              <i class="fas fa-robot" style="font-size: 18px;"></i>
-            </div>
-            <div>
-              <span style="font-weight: 700; font-size: 0.95rem;">KHOMO LATHU AI</span>
-              <span style="font-size: 0.65rem; opacity: 0.8; display: block;">Your property assistant</span>
-            </div>
-          </div>
-          <span id="chatbot-close" style="cursor: pointer; font-size: 24px; opacity: 0.8; transition: opacity 0.2s;">&times;</span>
+      <div id="chatbot-panel" style="display: none; position: absolute; bottom: 80px; right: 0; width: 380px; height: 560px; background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,0.2);">
+        <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px;"><i class="fas fa-brain"></i> Khomo Lathu AI</span>
+          <span id="chatbot-close" style="cursor: pointer; font-size: 24px; line-height: 1;">&times;</span>
         </div>
-        <div id="chatbot-messages" style="flex: 1; overflow-y: auto; padding: 16px; background: var(--input-bg, #f8fafc); font-size: 0.85rem; display: flex; flex-direction: column; gap: 12px;">
-          <div style="text-align: left;">
-            <div style="display: inline-block; background: var(--card-bg, white); padding: 12px 16px; border-radius: 20px; border-bottom-left-radius: 4px; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-              <i class="fas fa-sparkles" style="color: #f59e0b; margin-right: 6px;"></i> 
-              Hello! I'm your AI assistant. I can help you find properties, explain how to list, or answer any questions.
+        <div id="chatbot-messages" style="flex: 1; overflow-y: auto; padding: 16px; background: #f9fafb; font-size: 0.85rem; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #8B5CF6, #EC4899); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <i class="fas fa-robot" style="color: white; font-size: 14px;"></i>
+            </div>
+            <div style="background: white; padding: 12px 16px; border-radius: 20px; border-top-left-radius: 4px; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+              <i class="fas fa-sparkles" style="color: #8B5CF6; margin-right: 6px;"></i> Hello! I'm Khomo Lathu AI. Ask me about properties, listings, or how to use the platform.
             </div>
           </div>
-          <div style="text-align: left;">
-            <div style="display: inline-block; background: var(--card-bg, white); padding: 12px 16px; border-radius: 20px; border-bottom-left-radius: 4px; max-width: 85%;">
-              <i class="fas fa-lightbulb" style="color: #10b981; margin-right: 6px;"></i>
-              Try asking me:<br>
-              • "Show me rooms under 150k"<br>
-              • "Hostels near Lilongwe"<br>
-              • "How do I list a property?"<br>
-              • "Furnished apartments with parking"
+          <div id="suggested-questions" style="margin-top: 8px;">
+            <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 8px;"><i class="fas fa-lightbulb"></i> Try asking:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <button class="suggested-q" data-q="Show me all houses">🏠 All houses</button>
+              <button class="suggested-q" data-q="Show me all rooms">🛏️ All rooms</button>
+              <button class="suggested-q" data-q="Hostels in Lilongwe">🏨 Hostels in Lilongwe</button>
+              <button class="suggested-q" data-q="Apartments with parking">🚗 Apartments with parking</button>
+              <button class="suggested-q" data-q="How do I list a property?">📋 How to list?</button>
+              <button class="suggested-q" data-q="Become a premium landlord">⭐ Premium landlord</button>
             </div>
           </div>
         </div>
-        <div style="padding: 12px 16px; border-top: 1px solid var(--input-border, #e2e8f0); background: var(--card-bg, white);">
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="chatbot-input" placeholder="Ask me anything..." style="flex: 1; padding: 10px 16px; border: 1px solid var(--input-border, #cbd5e1); border-radius: 40px; background: var(--input-bg, white); color: var(--text-color, #1e293b); outline: none; font-size: 0.85rem; transition: border 0.2s;">
-            <button id="chatbot-send" style="background: #2563eb; color: white; border: none; border-radius: 40px; padding: 0 20px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; transition: background 0.2s;">
-              <i class="fas fa-paper-plane"></i>
-            </button>
-          </div>
-          <div id="suggested-questions" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
-            <button class="suggested-q" data-q="rooms under 150k" style="background: #f1f5f9; border: none; border-radius: 30px; padding: 4px 12px; font-size: 0.7rem; cursor: pointer; color: #1e293b;">🏠 Rooms under 150k</button>
-            <button class="suggested-q" data-q="hostels in Blantyre" style="background: #f1f5f9; border: none; border-radius: 30px; padding: 4px 12px; font-size: 0.7rem; cursor: pointer;">🏨 Hostels in Blantyre</button>
-            <button class="suggested-q" data-q="furnished apartments with parking" style="background: #f1f5f9; border: none; border-radius: 30px; padding: 4px 12px; font-size: 0.7rem; cursor: pointer;">🛋️ Furnished apartments</button>
-            <button class="suggested-q" data-q="how to become a landlord" style="background: #f1f5f9; border: none; border-radius: 30px; padding: 4px 12px; font-size: 0.7rem; cursor: pointer;">👑 Become a landlord</button>
-          </div>
+        <div style="padding: 12px 16px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; background: white;">
+          <input type="text" id="chatbot-input" placeholder="Type your question..." style="flex: 1; padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 40px; background: white; color: #1e293b; outline: none; font-size: 0.85rem;">
+          <button id="chatbot-send" style="background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; border: none; border-radius: 40px; padding: 8px 20px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-paper-plane"></i> Send
+          </button>
         </div>
       </div>
     </div>
@@ -65,21 +52,38 @@
   const sendBtn = document.getElementById('chatbot-send');
   const input = document.getElementById('chatbot-input');
   const messagesDiv = document.getElementById('chatbot-messages');
+  const suggestedContainer = document.getElementById('suggested-questions');
 
   let isLoading = false;
 
   function addMessage(text, isUser = false, isHtml = false) {
     const msgDiv = document.createElement('div');
-    msgDiv.style.marginBottom = '0';
     msgDiv.style.display = 'flex';
-    msgDiv.style.justifyContent = isUser ? 'flex-end' : 'flex-start';
-    const content = isHtml ? text : escapeHtml(text);
-    msgDiv.innerHTML = `<div style="max-width: 85%; background: ${isUser ? '#2563eb' : 'var(--card-bg, white)'}; color: ${isUser ? 'white' : 'var(--text-color, #1e293b)'}; padding: 10px 14px; border-radius: 20px; ${isUser ? 'border-bottom-right-radius: 4px;' : 'border-bottom-left-radius: 4px;'} font-size: 0.85rem; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${content}</div>`;
+    msgDiv.style.gap = '10px';
+    msgDiv.style.alignItems = 'flex-start';
+    msgDiv.style.marginBottom = '12px';
+    if (isUser) {
+      msgDiv.style.flexDirection = 'row-reverse';
+      msgDiv.innerHTML = `
+        <div style="width: 32px; height: 32px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <i class="fas fa-user" style="color: white; font-size: 14px;"></i>
+        </div>
+        <div style="background: #2563eb; color: white; padding: 10px 14px; border-radius: 20px; border-top-right-radius: 4px; max-width: 85%; font-size: 0.85rem; word-wrap: break-word;">${isHtml ? text : escapeHtml(text)}</div>
+      `;
+    } else {
+      msgDiv.innerHTML = `
+        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #8B5CF6, #EC4899); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <i class="fas fa-robot" style="color: white; font-size: 14px;"></i>
+        </div>
+        <div style="background: white; padding: 10px 14px; border-radius: 20px; border-top-left-radius: 4px; max-width: 85%; font-size: 0.85rem; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${isHtml ? text : escapeHtml(text)}</div>
+      `;
+    }
     messagesDiv.appendChild(msgDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
   function escapeHtml(str) {
+    if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
       if (m === '&') return '&amp;';
       if (m === '<') return '&lt;';
@@ -88,22 +92,11 @@
     });
   }
 
-  function getPropertyIcon(type) {
-    const icons = {
-      'House': '<i class="fas fa-home"></i>',
-      'Hostel': '<i class="fas fa-hotel"></i>',
-      'Apartment': '<i class="fas fa-building"></i>',
-      'Room': '<i class="fas fa-bed"></i>',
-      'Office': '<i class="fas fa-briefcase"></i>'
-    };
-    return icons[type] || '<i class="fas fa-home"></i>';
-  }
-
-  function formatSearchResults(houses) {
+  function formatSearchResults(houses, queryType = 'properties') {
     if (!houses || houses.length === 0) {
-      return '<i class="fas fa-frown" style="color:#f59e0b;"></i> Sorry, no properties found. Try different words.';
+      return `<div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-frown" style="color: #f59e0b;"></i> No ${queryType} found. Try different words.</div>`;
     }
-    let typeLabel = 'properties';
+    let typeLabel = queryType;
     if (houses.length > 0) {
       const firstType = houses[0].type;
       if (houses.every(h => h.type === firstType)) {
@@ -112,14 +105,18 @@
         else if (firstType === 'Apartment') typeLabel = 'apartments';
         else if (firstType === 'Room') typeLabel = 'rooms';
         else if (firstType === 'Office') typeLabel = 'offices';
+        else typeLabel = 'properties';
       }
     }
-    let html = `<div style="font-size: 0.8rem;"><strong><i class="fas fa-search"></i> ${houses.length} ${typeLabel} found:</strong><ul style="margin: 8px 0 0 20px; padding-left: 0;">`;
+    let html = `<div><strong><i class="fas fa-search"></i> Found ${houses.length} ${typeLabel}:</strong><ul style="margin: 8px 0 0 20px; padding-left: 0;">`;
     houses.forEach(house => {
-      const iconHtml = getPropertyIcon(house.type);
+      const iconMap = {
+        'House': '🏠', 'Hostel': '🏨', 'Apartment': '🏢', 'Room': '🛏️', 'Office': '💼'
+      };
+      const icon = iconMap[house.type] || '🏠';
       const linkUrl = `/?house=${house.id}`;
       html += `<li style="margin-bottom: 8px; line-height: 1.3;">
-        ${iconHtml} <a href="${linkUrl}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">${escapeHtml(house.name)}</a> – MWK ${house.price.toLocaleString()} (${escapeHtml(house.location)})
+        ${icon} <a href="${linkUrl}" target="_blank" style="color: #8B5CF6; text-decoration: none; font-weight: 500;">${escapeHtml(house.name)}</a> – MWK ${house.price.toLocaleString()} (${escapeHtml(house.location)})
       </li>`;
     });
     html += '</ul></div>';
@@ -133,12 +130,21 @@
     if (!messageText) input.value = '';
     isLoading = true;
 
-    // Typing indicator
+    // Show typing indicator
     const typingDiv = document.createElement('div');
     typingDiv.id = 'typing-indicator';
     typingDiv.style.display = 'flex';
-    typingDiv.style.justifyContent = 'flex-start';
-    typingDiv.innerHTML = `<div style="background: var(--card-bg, white); padding: 10px 14px; border-radius: 20px; border-bottom-left-radius: 4px; font-size: 0.75rem;"><i class="fas fa-spinner fa-pulse"></i> Thinking...</div>`;
+    typingDiv.style.gap = '10px';
+    typingDiv.style.alignItems = 'flex-start';
+    typingDiv.style.marginBottom = '12px';
+    typingDiv.innerHTML = `
+      <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #8B5CF6, #EC4899); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <i class="fas fa-robot" style="color: white; font-size: 14px;"></i>
+      </div>
+      <div style="background: white; padding: 10px 14px; border-radius: 20px; border-top-left-radius: 4px;">
+        <i class="fas fa-spinner fa-pulse"></i> Thinking...
+      </div>
+    `;
     messagesDiv.appendChild(typingDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
@@ -152,29 +158,37 @@
       typingDiv.remove();
 
       if (data.action === 'searchResults') {
-        const formatted = formatSearchResults(data.houses);
+        const formatted = formatSearchResults(data.houses, data.queryType || 'properties');
         addMessage(formatted, false, true);
       } else {
         let text = data.text;
-        // Replace emojis with icons
-        text = text.replace(/🤖/g, '<i class="fas fa-robot"></i>');
-        text = text.replace(/✅/g, '<i class="fas fa-check-circle" style="color:#10b981;"></i>');
-        text = text.replace(/❌/g, '<i class="fas fa-times-circle" style="color:#ef4444;"></i>');
-        text = text.replace(/📢/g, '<i class="fas fa-bullhorn"></i>');
-        text = text.replace(/💡/g, '<i class="fas fa-lightbulb"></i>');
-        text = text.replace(/⭐/g, '<i class="fas fa-star" style="color:#fbbf24;"></i>');
+        // Enhance with icons
+        text = text.replace(/houses/gi, '<i class="fas fa-home"></i> houses');
+        text = text.replace(/rooms/gi, '<i class="fas fa-bed"></i> rooms');
+        text = text.replace(/hostels/gi, '<i class="fas fa-hotel"></i> hostels');
+        text = text.replace(/apartments/gi, '<i class="fas fa-building"></i> apartments');
+        text = text.replace(/offices/gi, '<i class="fas fa-briefcase"></i> offices');
+        text = text.replace(/landlord/gi, '<i class="fas fa-user-tie"></i> landlord');
+        text = text.replace(/tenant/gi, '<i class="fas fa-user"></i> tenant');
+        text = text.replace(/premium/gi, '<i class="fas fa-crown"></i> premium');
         addMessage(text, false, true);
       }
     } catch (err) {
       typingDiv.remove();
-      addMessage('<i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> Sorry, I\'m having trouble connecting. Try again later.', false, true);
+      addMessage('<i class="fas fa-exclamation-triangle"></i> Sorry, I\'m having trouble connecting. Try again later.', false, true);
     } finally {
       isLoading = false;
     }
   }
 
+  // Event listeners
   toggleBtn.addEventListener('click', () => {
-    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+    const isVisible = panel.style.display === 'flex';
+    panel.style.display = isVisible ? 'none' : 'flex';
+    if (!isVisible && messagesDiv.querySelectorAll('.message').length === 0) {
+      // Auto-focus input
+      setTimeout(() => input.focus(), 300);
+    }
   });
   closeBtn.addEventListener('click', () => {
     panel.style.display = 'none';
@@ -183,6 +197,7 @@
   input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
   });
+
   // Suggested questions
   document.querySelectorAll('.suggested-q').forEach(btn => {
     btn.addEventListener('click', () => {
