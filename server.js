@@ -187,12 +187,20 @@ try {
   console.log("✅ /api/offers");
 } catch (err) { console.error("❌ Failed to load offers route:", err.message); }
 
-// Lease route (file must be named lease.js)
+// Lease route – IMPORTANT: ensure file is named 'lease.js' inside routes folder
 try {
   const leaseRoutes = require("./routes/lease");
   app.use("/api/lease", leaseRoutes);
   console.log("✅ /api/lease");
-} catch (err) { console.error("❌ Failed to load lease route:", err.message); }
+} catch (err) { 
+  console.error("❌ Failed to load lease route:", err.message);
+  console.error("Make sure routes/lease.js exists and has no syntax errors");
+}
+
+// Test endpoint to verify lease route is working
+app.get("/api/lease-test", (req, res) => {
+  res.json({ message: "Lease API test endpoint is reachable", timestamp: new Date().toISOString() });
+});
 
 // Debug endpoints
 app.get("/api/db-test", async (req, res) => {
