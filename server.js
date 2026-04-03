@@ -24,7 +24,7 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
-// ========== MOBILE‑FRIENDLY CSP ==========
+// ========== CSP FOR MOBILE & DESKTOP ==========
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -38,7 +38,7 @@ app.use(
           "https://cdn.socket.io",
           "'unsafe-inline'",
           "'unsafe-eval'",
-          "blob:" // required for signature canvas and PDF downloads
+          "blob:"
         ],
         scriptSrcAttr: null,
         styleSrc: [
@@ -49,12 +49,7 @@ app.use(
           "https://cdnjs.cloudflare.com",
           "'unsafe-inline'"
         ],
-        fontSrc: [
-          "'self'",
-          "https://fonts.gstatic.com",
-          "https://cdnjs.cloudflare.com",
-          "data:" // for embedded fonts
-        ],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "data:"],
         imgSrc: [
           "'self'",
           "data:",
@@ -99,17 +94,11 @@ app.use("/api/", limiter);
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
+// Contracts folder – ensure it exists
 const contractsDir = path.join(__dirname, "contracts");
 if (!fs.existsSync(contractsDir)) fs.mkdirSync(contractsDir, { recursive: true });
-app.use("/contracts", express.static(contractsDir, {
-  setHeaders: (res, filePath) => {
-    // Ensure PDFs are served with correct content type for mobile
-    if (filePath.endsWith('.pdf')) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'inline');
-    }
-  }
-}));
+// Do NOT serve contracts statically – we'll use authenticated download endpoint
+// app.use("/contracts", express.static(contractsDir)); // COMMENTED to prevent direct access
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "your-secret-key",
@@ -124,7 +113,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
-// Socket.IO
+// Socket.IO (unchanged)
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error("Authentication error"));
