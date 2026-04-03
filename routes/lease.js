@@ -10,7 +10,6 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// Helper: calculate lease score (0-100)
 function calculateLeaseScore(negotiation) {
   let score = 70;
   if (negotiation.rentAmount > 0 && negotiation.rentAmount < 1000000) score += 5;
@@ -23,7 +22,6 @@ function calculateLeaseScore(negotiation) {
   return Math.min(100, Math.max(0, score));
 }
 
-// AI clause suggestions (rule-based)
 function generateAiSuggestions(negotiation) {
   const suggestions = [];
   if (negotiation.depositAmount > negotiation.rentAmount * 3) {
@@ -64,7 +62,6 @@ function generateAiSuggestions(negotiation) {
   return suggestions;
 }
 
-// Start a new lease negotiation (landlord)
 router.post('/start', auth, async (req, res) => {
   try {
     const { houseId, rentAmount, depositAmount, leaseStartDate, leaseEndDate } = req.body;
@@ -100,7 +97,6 @@ router.post('/start', auth, async (req, res) => {
   }
 });
 
-// Join negotiation (tenant)
 router.post('/join/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -116,7 +112,6 @@ router.post('/join/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Add or update a clause
 router.put('/clause/:negotiationId', auth, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -151,7 +146,6 @@ router.put('/clause/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Agree to a clause
 router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -174,7 +168,6 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
-// Finalize and generate PDF
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -232,7 +225,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Sign contract
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId);
@@ -258,7 +250,6 @@ router.put('/sign/:contractId', auth, async (req, res) => {
   }
 });
 
-// Get contract details
 router.get('/contract/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId)
@@ -273,7 +264,6 @@ router.get('/contract/:contractId', auth, async (req, res) => {
   }
 });
 
-// Setup recurring payment
 router.post('/setup-payment', auth, async (req, res) => {
   try {
     const { contractId, paymentMethod, phoneNumber } = req.body;
@@ -304,7 +294,6 @@ router.post('/setup-payment', auth, async (req, res) => {
   }
 });
 
-// Process auto payment
 router.post('/process-payment/:paymentId', auth, async (req, res) => {
   try {
     const payment = await RecurringPayment.findById(req.params.paymentId);
@@ -328,7 +317,6 @@ router.post('/process-payment/:paymentId', auth, async (req, res) => {
   }
 });
 
-// Get lease negotiation details
 router.get('/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId)
@@ -343,7 +331,6 @@ router.get('/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Get all lease negotiations for the logged-in landlord (used in dashboard)
 router.get('/my', auth, async (req, res) => {
   try {
     const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
@@ -357,7 +344,6 @@ router.get('/my', auth, async (req, res) => {
   }
 });
 
-// Test endpoint to verify route is working
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
 });
