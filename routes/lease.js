@@ -23,42 +23,50 @@ function calculateLeaseScore(negotiation) {
   return Math.min(100, Math.max(0, score));
 }
 
-// AI clause suggestions (rule-based)
+// AI clause suggestions (rule-based, Malawi specific)
 function generateAiSuggestions(negotiation) {
   const suggestions = [];
   if (negotiation.depositAmount > negotiation.rentAmount * 3) {
     suggestions.push({
       title: 'Deposit Amount',
       description: `Consider lowering deposit to ${negotiation.rentAmount * 2} MWK (2 months rent).`,
-      reasoning: 'Standard practice in Malawi is 2 months rent deposit.'
+      reasoning: 'Standard practice in Malawi is 2 months rent deposit. High deposits may deter tenants.'
     });
   }
   if (negotiation.noticePeriodDays > 60) {
     suggestions.push({
       title: 'Notice Period',
       description: `Reduce notice period to 30 days.`,
-      reasoning: 'Long notice periods are often unfair.'
+      reasoning: 'Under Malawi law, 30 days is reasonable. Longer periods may be unfair.'
     });
   }
   if (negotiation.lateFeePercentage > 10) {
     suggestions.push({
       title: 'Late Fee',
       description: `Reduce late fee to 5% of rent.`,
-      reasoning: 'Excessive late fees may be considered unfair.'
+      reasoning: 'Excessive late fees may be considered unfair under Malawian consumer protection laws.'
     });
   }
   if (negotiation.maintenanceResponsibility !== 'Landlord') {
     suggestions.push({
       title: 'Maintenance Responsibility',
       description: `Shift major repairs to landlord.`,
-      reasoning: 'Landlords are typically responsible for structural repairs.'
+      reasoning: 'The landlord is typically responsible for structural repairs (Malawi Tenancy Guidelines).'
     });
   }
   if (negotiation.petPolicy === 'Not allowed') {
     suggestions.push({
       title: 'Pet Policy',
       description: `Consider allowing small pets with a pet deposit.`,
-      reasoning: 'Many tenants have pets. A pet deposit protects landlord.'
+      reasoning: 'Many tenants have pets. A refundable pet deposit protects the landlord while attracting more renters.'
+    });
+  }
+  // Malawi-specific: water & electricity bills
+  if (!negotiation.utilitiesIncluded) {
+    suggestions.push({
+      title: 'Utility Bills',
+      description: `Specify who pays for water and electricity.`,
+      reasoning: 'In Malawi, it is common for tenants to pay for their own electricity and water unless otherwise agreed.'
     });
   }
   return suggestions;
@@ -79,14 +87,14 @@ router.post('/start', auth, async (req, res) => {
     const negotiation = new LeaseNegotiation({
       houseId,
       landlordId: req.user.id,
-      tenantId: null, // ✅ allowed now
+      tenantId: null, // ✅ allowed
       rentAmount,
       depositAmount,
       leaseStartDate,
       leaseEndDate,
       clauses: [
         { title: 'Rent Amount', description: `${rentAmount} MWK per month`, suggestedBy: 'landlord', isAgreed: true },
-        { title: 'Deposit', description: `${depositAmount} MWK`, suggestedBy: 'landlord', isAgreed: true },
+        { title: 'Deposit', description: `${depositAmount} MWK (refundable)`, suggestedBy: 'landlord', isAgreed: true },
         { title: 'Lease Term', description: `${new Date(leaseStartDate).toLocaleDateString()} to ${new Date(leaseEndDate).toLocaleDateString()}`, suggestedBy: 'landlord', isAgreed: true }
       ]
     });
@@ -174,7 +182,7 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
-// Finalize and generate PDF (fixed: handle missing tenant)
+// Finalize and generate PDF (only after tenant has joined and all clauses agreed)
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -182,13 +190,12 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
     if (negotiation.landlordId.toString() !== req.user.id && negotiation.tenantId?.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
+    // ✅ Check that tenant has joined
+    if (!negotiation.tenantId) {
+      return res.status(400).json({ message: 'Tenant must join the negotiation first.' });
+    }
     const allAgreed = negotiation.clauses.every(c => c.isAgreed);
     if (!allAgreed) return res.status(400).json({ message: 'Not all clauses are agreed yet' });
-
-    // Ensure tenant exists before generating contract
-    if (!negotiation.tenantId) {
-      return res.status(400).json({ message: 'Tenant has not joined the negotiation yet' });
-    }
 
     negotiation.status = 'agreed';
     await negotiation.save();
@@ -196,27 +203,36 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
     const house = await House.findById(negotiation.houseId);
     const landlord = await User.findById(negotiation.landlordId);
     const tenant = await User.findById(negotiation.tenantId);
-    
-    if (!house || !landlord || !tenant) {
-      return res.status(400).json({ message: 'Missing required data (house, landlord, or tenant)' });
-    }
-
     const contractDir = path.join(__dirname, '../contracts');
     if (!fs.existsSync(contractDir)) fs.mkdirSync(contractDir, { recursive: true });
     const pdfPath = path.join(contractDir, `contract_${negotiation._id}.pdf`);
     const doc = new PDFDocument();
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
-    doc.fontSize(20).text('RESIDENTIAL LEASE AGREEMENT', { align: 'center' });
+
+    // Generate PDF with Malawi law compliance
+    doc.fontSize(20).text('RESIDENTIAL LEASE AGREEMENT (Malawi)', { align: 'center' });
     doc.moveDown();
     doc.fontSize(12).text(`Date: ${new Date().toLocaleDateString()}`);
     doc.text(`Property: ${house.name}, ${house.location}`);
     doc.text(`Landlord: ${landlord.name} (${landlord.email})`);
     doc.text(`Tenant: ${tenant.name} (${tenant.email})`);
     doc.moveDown();
+    doc.text('1. TERM: The lease shall commence on ' + new Date(negotiation.leaseStartDate).toLocaleDateString() + 
+              ' and end on ' + new Date(negotiation.leaseEndDate).toLocaleDateString() + '.');
+    doc.text(`2. RENT: MWK ${negotiation.rentAmount.toLocaleString()} per month, payable on the 1st day of each month.`);
+    doc.text(`3. DEPOSIT: MWK ${negotiation.depositAmount.toLocaleString()} (refundable, subject to deductions for damages beyond normal wear and tear).`);
+    doc.text(`4. NOTICE PERIOD: ${negotiation.noticePeriodDays} days.`);
+    doc.text(`5. LATE FEE: ${negotiation.lateFeePercentage}% of monthly rent per day after grace period of 5 days.`);
+    doc.text(`6. MAINTENANCE: ${negotiation.maintenanceResponsibility} is responsible for major repairs. Tenant responsible for minor maintenance and cleanliness.`);
+    doc.text(`7. UTILITIES: ${negotiation.utilitiesIncluded ? 'Included in rent' : 'Tenant pays for electricity, water, and other utilities separately.'}`);
+    doc.text(`8. PETS: ${negotiation.petPolicy}`);
+    doc.moveDown();
     negotiation.clauses.forEach((clause, idx) => {
-      doc.text(`${idx + 1}. ${clause.title}: ${clause.description}`);
+      doc.text(`${idx + 9}. ${clause.title}: ${clause.description}`);
     });
+    doc.moveDown();
+    doc.text('GOVERNING LAW: This agreement is governed by the laws of Malawi, including the Rented Premises (Control of Rent) Act and common law principles.');
     doc.moveDown();
     doc.text('Signed by:');
     doc.text(`Landlord: ___________________  Date: __________`);
@@ -235,10 +251,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
       });
       await smartContract.save();
       res.json({ smartContract, pdfUrl });
-    });
-    writeStream.on('error', (err) => {
-      console.error('PDF write error:', err);
-      res.status(500).json({ message: 'Failed to generate PDF' });
     });
   } catch (err) {
     console.error(err);
