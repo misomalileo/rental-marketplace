@@ -126,6 +126,7 @@
 
     let contract = null;
     let negotiationId = null;
+    let currentDownloadUrl = null;
     const canvas = document.getElementById('signatureCanvas');
     const signaturePad = new SignaturePad(canvas);
     const statusDiv = document.getElementById('status');
@@ -150,12 +151,30 @@
             statusDiv.className = 'status success';
             document.getElementById('signContract').disabled = true;
             downloadBtn.style.display = 'inline-flex';
+            // Refresh download URL
+            await refreshDownloadUrl();
           }
         } else {
           statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to load contract details.';
         }
       } catch (err) {
         statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Network error.';
+      }
+    }
+
+    async function refreshDownloadUrl() {
+      if (!negotiationId) return;
+      try {
+        const res = await fetch(`/api/lease/download-temp/${negotiationId}`, {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (res.ok && data.downloadUrl) {
+          currentDownloadUrl = data.downloadUrl;
+          downloadBtn.onclick = () => window.open(currentDownloadUrl, '_blank');
+        }
+      } catch (err) {
+        console.error('Failed to refresh download URL', err);
       }
     }
 
@@ -182,29 +201,14 @@
           statusDiv.className = 'status success';
           document.getElementById('signContract').disabled = true;
           downloadBtn.style.display = 'inline-flex';
-          await loadContract(); // refresh status
+          // Refresh contract details and download URL
+          await loadContract();
+          await refreshDownloadUrl();
         } else {
           statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed: ' + (data.message || 'Unknown error');
         }
       } catch (err) {
         statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Network error.';
-      }
-    });
-
-    downloadBtn.addEventListener('click', async () => {
-      if (!negotiationId) return;
-      try {
-        const res = await fetch(`/api/lease/download-temp/${negotiationId}`, {
-          headers: { Authorization: 'Bearer ' + token }
-        });
-        const data = await res.json();
-        if (res.ok && data.downloadUrl) {
-          window.open(data.downloadUrl, '_blank');
-        } else {
-          alert('Failed to get download link');
-        }
-      } catch (err) {
-        alert('Network error');
       }
     });
 

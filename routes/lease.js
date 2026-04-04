@@ -11,6 +11,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
+// Helper: calculate lease score (0-100)
 function calculateLeaseScore(negotiation) {
   let score = 70;
   if (negotiation.rentAmount > 0 && negotiation.rentAmount < 1000000) score += 5;
@@ -23,54 +24,55 @@ function calculateLeaseScore(negotiation) {
   return Math.min(100, Math.max(0, score));
 }
 
+// AI clause suggestions (rule-based, Malawi specific)
 function generateAiSuggestions(negotiation) {
   const suggestions = [];
   if (negotiation.depositAmount > negotiation.rentAmount * 3) {
     suggestions.push({
       title: 'Deposit Amount',
       description: `Consider lowering deposit to ${negotiation.rentAmount * 2} MWK (2 months rent).`,
-      reasoning: 'Standard practice in Malawi is 2 months rent deposit.'
+      reasoning: 'Standard practice in Malawi is 2 months rent deposit. High deposits may deter tenants.'
     });
   }
   if (negotiation.noticePeriodDays > 60) {
     suggestions.push({
       title: 'Notice Period',
       description: `Reduce notice period to 30 days.`,
-      reasoning: 'Under Malawi law, 30 days is reasonable.'
+      reasoning: 'Under Malawi law, 30 days is reasonable. Longer periods may be unfair.'
     });
   }
   if (negotiation.lateFeePercentage > 10) {
     suggestions.push({
       title: 'Late Fee',
       description: `Reduce late fee to 5% of rent.`,
-      reasoning: 'Excessive late fees may be unfair.'
+      reasoning: 'Excessive late fees may be considered unfair under Malawian consumer protection laws.'
     });
   }
   if (negotiation.maintenanceResponsibility !== 'Landlord') {
     suggestions.push({
       title: 'Maintenance Responsibility',
       description: `Shift major repairs to landlord.`,
-      reasoning: 'Landlord is responsible for structural repairs.'
+      reasoning: 'The landlord is typically responsible for structural repairs (Malawi Tenancy Guidelines).'
     });
   }
   if (negotiation.petPolicy === 'Not allowed') {
     suggestions.push({
       title: 'Pet Policy',
       description: `Consider allowing small pets with a pet deposit.`,
-      reasoning: 'Pet deposit protects landlord while attracting more renters.'
+      reasoning: 'Many tenants have pets. A refundable pet deposit protects the landlord while attracting more renters.'
     });
   }
   if (!negotiation.utilitiesIncluded) {
     suggestions.push({
       title: 'Utility Bills',
       description: `Specify who pays for water and electricity.`,
-      reasoning: 'Common for tenants to pay separately.'
+      reasoning: 'In Malawi, it is common for tenants to pay for their own electricity and water unless otherwise agreed.'
     });
   }
   return suggestions;
 }
 
-// Generate PDF with embedded signatures (both passed as base64 strings)
+// Generate PDF with embedded signatures (always regenerates fresh)
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
     const contractDir = path.join(__dirname, '../contracts');
@@ -80,6 +82,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
 
+    // Background and header
     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#fef9e8');
     doc.rect(0, 0, doc.page.width, 80).fill('#1e3a5f');
     doc.fillColor('white').fontSize(22).font('Helvetica-Bold')
@@ -143,13 +146,13 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
 
     // Landlord signature
     doc.text(`Landlord: ${landlord.name}`, 60, y);
-    if (signatureLandlord && signatureLandlord !== 'null') {
+    if (signatureLandlord) {
       try {
-        // Remove data:image/png;base64, prefix if present
-        const base64 = signatureLandlord.replace(/^data:image\/png;base64,/, '');
-        const imgBuffer = Buffer.from(base64, 'base64');
+        // Remove data:image/png;base64, prefix
+        const base64Data = signatureLandlord.replace(/^data:image\/png;base64,/, '');
+        const imgBuffer = Buffer.from(base64Data, 'base64');
         doc.image(imgBuffer, 250, y - 10, { width: 100 });
-      } catch(e) { console.error('Failed to embed landlord signature', e); }
+      } catch(e) { console.error('Failed to embed landlord signature', e); doc.text(`___________________`, 250, y); }
     } else {
       doc.text(`___________________`, 250, y);
     }
@@ -158,17 +161,18 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
 
     // Tenant signature
     doc.text(`Tenant: ${tenant.name}`, 60, y);
-    if (signatureTenant && signatureTenant !== 'null') {
+    if (signatureTenant) {
       try {
-        const base64 = signatureTenant.replace(/^data:image\/png;base64,/, '');
-        const imgBuffer = Buffer.from(base64, 'base64');
+        const base64Data = signatureTenant.replace(/^data:image\/png;base64,/, '');
+        const imgBuffer = Buffer.from(base64Data, 'base64');
         doc.image(imgBuffer, 250, y - 10, { width: 100 });
-      } catch(e) { console.error('Failed to embed tenant signature', e); }
+      } catch(e) { console.error('Failed to embed tenant signature', e); doc.text(`___________________`, 250, y); }
     } else {
       doc.text(`___________________`, 250, y);
     }
     doc.text(`Date: __________`, 400, y);
 
+    // Footer
     const pageCount = doc.bufferedPageRange().count;
     for (let i = 0; i < pageCount; i++) {
       doc.switchToPage(i);
@@ -186,12 +190,13 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant) {
   return generatePDFWithSignatures(negotiation, house, landlord, tenant, null, null);
 }
 
-// ========== ROUTES ==========
+// ========== ROUTES (order matters – static routes before dynamic :id) ==========
 
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
 });
 
+// Get all lease negotiations for landlord
 router.get('/my', auth, async (req, res) => {
   try {
     const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
@@ -205,6 +210,7 @@ router.get('/my', auth, async (req, res) => {
   }
 });
 
+// Check existing negotiation for tenant
 router.get('/check/:houseId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findOne({
@@ -218,6 +224,7 @@ router.get('/check/:houseId', auth, async (req, res) => {
   }
 });
 
+// Start a new lease negotiation (landlord)
 router.post('/start', auth, async (req, res) => {
   try {
     const { houseId, rentAmount, depositAmount, leaseStartDate, leaseEndDate } = req.body;
@@ -253,6 +260,7 @@ router.post('/start', auth, async (req, res) => {
   }
 });
 
+// Join negotiation (tenant)
 router.post('/join/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -268,6 +276,7 @@ router.post('/join/:negotiationId', auth, async (req, res) => {
   }
 });
 
+// Add or update a clause
 router.put('/clause/:negotiationId', auth, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -302,6 +311,7 @@ router.put('/clause/:negotiationId', auth, async (req, res) => {
   }
 });
 
+// Agree to a clause
 router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -324,6 +334,7 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
+// Finalize and generate initial PDF
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -360,6 +371,7 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
+// Sign contract (with signature embedding and PDF regeneration)
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const { signature } = req.body;
@@ -380,7 +392,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     }
     if (updated) await contract.save();
 
-    // If both have signed, regenerate PDF with signatures
+    // If both have signed, regenerate PDF with both signatures
     if (contract.signedByLandlord && contract.signedByTenant) {
       contract.status = 'active';
       contract.signedAt = new Date();
@@ -391,8 +403,11 @@ router.put('/sign/:contractId', auth, async (req, res) => {
       const house = await House.findById(contract.houseId);
       const landlord = await User.findById(contract.landlordId);
       const tenant = await User.findById(contract.tenantId);
-      // Regenerate PDF with both signatures
       await generatePDFWithSignatures(negotiation, house, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
+      
+      // Return the new signed PDF URL so frontend can refresh
+      const signedPdfUrl = `/api/lease/download-temp/${negotiation._id}`;
+      return res.json({ contract, signedPdfUrl });
     }
     res.json(contract);
   } catch (err) {
@@ -401,6 +416,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
   }
 });
 
+// Get contract details
 router.get('/contract/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId)
@@ -415,6 +431,7 @@ router.get('/contract/:contractId', auth, async (req, res) => {
   }
 });
 
+// Generate a temporary signed download URL (valid 5 minutes)
 router.get('/download-temp/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -434,6 +451,7 @@ router.get('/download-temp/:negotiationId', auth, async (req, res) => {
   }
 });
 
+// Serve signed download (no auth required, token is enough)
 router.get('/download-signed/:token', async (req, res) => {
   try {
     const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
@@ -448,6 +466,7 @@ router.get('/download-signed/:token', async (req, res) => {
   }
 });
 
+// Setup recurring payment
 router.post('/setup-payment', auth, async (req, res) => {
   try {
     const { contractId, paymentMethod, phoneNumber } = req.body;
@@ -474,6 +493,7 @@ router.post('/setup-payment', auth, async (req, res) => {
   }
 });
 
+// Process auto payment
 router.post('/process-payment/:paymentId', auth, async (req, res) => {
   try {
     const payment = await RecurringPayment.findById(req.params.paymentId);
@@ -492,6 +512,7 @@ router.post('/process-payment/:paymentId', auth, async (req, res) => {
   }
 });
 
+// Terminate lease
 router.put('/terminate/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId);
@@ -511,6 +532,7 @@ router.put('/terminate/:contractId', auth, async (req, res) => {
   }
 });
 
+// Get lease negotiation details (must be LAST)
 router.get('/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId)
