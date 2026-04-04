@@ -11,7 +11,6 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// Helper: calculate lease score (0-100)
 function calculateLeaseScore(negotiation) {
   let score = 70;
   if (negotiation.rentAmount > 0 && negotiation.rentAmount < 1000000) score += 5;
@@ -24,63 +23,53 @@ function calculateLeaseScore(negotiation) {
   return Math.min(100, Math.max(0, score));
 }
 
-// AI clause suggestions (rule-based, Malawi specific)
 function generateAiSuggestions(negotiation) {
   const suggestions = [];
   if (negotiation.depositAmount > negotiation.rentAmount * 3) {
     suggestions.push({
       title: 'Deposit Amount',
       description: `Consider lowering deposit to ${negotiation.rentAmount * 2} MWK (2 months rent).`,
-      reasoning: 'Standard practice in Malawi is 2 months rent deposit. High deposits may deter tenants.'
+      reasoning: 'Standard practice in Malawi is 2 months rent deposit.'
     });
   }
   if (negotiation.noticePeriodDays > 60) {
     suggestions.push({
       title: 'Notice Period',
       description: `Reduce notice period to 30 days.`,
-      reasoning: 'Under Malawi law, 30 days is reasonable. Longer periods may be unfair.'
+      reasoning: 'Under Malawi law, 30 days is reasonable.'
     });
   }
   if (negotiation.lateFeePercentage > 10) {
     suggestions.push({
       title: 'Late Fee',
       description: `Reduce late fee to 5% of rent.`,
-      reasoning: 'Excessive late fees may be considered unfair under Malawian consumer protection laws.'
+      reasoning: 'Excessive late fees may be unfair.'
     });
   }
   if (negotiation.maintenanceResponsibility !== 'Landlord') {
     suggestions.push({
       title: 'Maintenance Responsibility',
       description: `Shift major repairs to landlord.`,
-      reasoning: 'The landlord is typically responsible for structural repairs (Malawi Tenancy Guidelines).'
+      reasoning: 'Landlord is responsible for structural repairs.'
     });
   }
   if (negotiation.petPolicy === 'Not allowed') {
     suggestions.push({
       title: 'Pet Policy',
       description: `Consider allowing small pets with a pet deposit.`,
-      reasoning: 'Many tenants have pets. A refundable pet deposit protects the landlord while attracting more renters.'
+      reasoning: 'Pet deposit protects landlord while attracting renters.'
     });
   }
   if (!negotiation.utilitiesIncluded) {
     suggestions.push({
       title: 'Utility Bills',
       description: `Specify who pays for water and electricity.`,
-      reasoning: 'In Malawi, it is common for tenants to pay for their own electricity and water unless otherwise agreed.'
+      reasoning: 'Common for tenants to pay separately in Malawi.'
     });
   }
   return suggestions;
 }
 
-// Helper: convert data URL to buffer
-function dataURLToBuffer(dataURL) {
-  if (!dataURL) return null;
-  // Remove the data:image/png;base64, prefix
-  const base64 = dataURL.replace(/^data:image\/\w+;base64,/, '');
-  return Buffer.from(base64, 'base64');
-}
-
-// Generate PDF with embedded signatures
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
     const contractDir = path.join(__dirname, '../contracts');
@@ -90,6 +79,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
 
+    // Background and header
     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#fef9e8');
     doc.rect(0, 0, doc.page.width, 80).fill('#1e3a5f');
     doc.fillColor('white').fontSize(22).font('Helvetica-Bold')
@@ -145,6 +135,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       .text('This agreement is governed by the laws of Malawi, including the Rented Premises (Control of Rent) Act and common law principles.', 60, y);
     y += 40;
 
+    // Signature area
     doc.moveTo(50, y).lineTo(doc.page.width - 50, y).stroke();
     y += 10;
     doc.font('Helvetica').text('Signed by:', 50, y);
@@ -154,35 +145,31 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`Landlord: ${landlord.name}`, 60, y);
     if (signatureLandlord) {
       try {
-        const imgBuffer = dataURLToBuffer(signatureLandlord);
-        if (imgBuffer && imgBuffer.length > 0) {
-          doc.image(imgBuffer, 250, y - 10, { width: 100, height: 40, fit: [100, 40] });
-        } else {
-          doc.text(`___________________`, 250, y);
-        }
-      } catch(e) { console.error('Failed to embed landlord signature', e); doc.text(`___________________`, 250, y); }
+        // Remove data:image/png;base64, prefix
+        const base64Data = signatureLandlord.replace(/^data:image\/png;base64,/, '');
+        const imgBuffer = Buffer.from(base64Data, 'base64');
+        doc.image(imgBuffer, 250, y - 10, { width: 100 });
+      } catch(e) { console.error('Failed to embed landlord signature', e); }
     } else {
       doc.text(`___________________`, 250, y);
     }
-    doc.text(`Date: __________`, 400, y);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 400, y);
     y += 40;
 
     // Tenant signature
     doc.text(`Tenant: ${tenant.name}`, 60, y);
     if (signatureTenant) {
       try {
-        const imgBuffer = dataURLToBuffer(signatureTenant);
-        if (imgBuffer && imgBuffer.length > 0) {
-          doc.image(imgBuffer, 250, y - 10, { width: 100, height: 40, fit: [100, 40] });
-        } else {
-          doc.text(`___________________`, 250, y);
-        }
-      } catch(e) { console.error('Failed to embed tenant signature', e); doc.text(`___________________`, 250, y); }
+        const base64Data = signatureTenant.replace(/^data:image\/png;base64,/, '');
+        const imgBuffer = Buffer.from(base64Data, 'base64');
+        doc.image(imgBuffer, 250, y - 10, { width: 100 });
+      } catch(e) { console.error('Failed to embed tenant signature', e); }
     } else {
       doc.text(`___________________`, 250, y);
     }
-    doc.text(`Date: __________`, 400, y);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 400, y);
 
+    // Footer
     const pageCount = doc.bufferedPageRange().count;
     for (let i = 0; i < pageCount; i++) {
       doc.switchToPage(i);
@@ -200,7 +187,7 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant) {
   return generatePDFWithSignatures(negotiation, house, landlord, tenant, null, null);
 }
 
-// ========== ROUTES (order matters – static routes before dynamic :id) ==========
+// ========== ROUTES ==========
 
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
@@ -394,7 +381,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     }
     if (updated) await contract.save();
 
-    // If both have signed, regenerate PDF with signatures
+    // If both have signed, regenerate PDF with signatures and set signedAt
     if (contract.signedByLandlord && contract.signedByTenant) {
       contract.status = 'active';
       contract.signedAt = new Date();
@@ -405,7 +392,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
       const house = await House.findById(contract.houseId);
       const landlord = await User.findById(contract.landlordId);
       const tenant = await User.findById(contract.tenantId);
-      // Wait for PDF generation to complete
+      // Regenerate PDF with both signatures
       await generatePDFWithSignatures(negotiation, house, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
     }
     res.json(contract);
@@ -438,7 +425,7 @@ router.get('/download-temp/:negotiationId', auth, async (req, res) => {
     const isTenant = negotiation.tenantId && negotiation.tenantId.toString() === userId;
     if (!isLandlord && !isTenant) return res.status(403).json({ message: 'Not authorized' });
     const filePath = path.join(__dirname, '../contracts', `contract_${negotiation._id}.pdf`);
-    if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'PDF not found' });
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'PDF not found. Please finalize the negotiation first.' });
     const token = jwt.sign({ negotiationId: negotiation._id, userId }, process.env.JWT_SECRET, { expiresIn: '5m' });
     const downloadUrl = `/api/lease/download-signed/${token}`;
     res.json({ downloadUrl });
@@ -525,6 +512,7 @@ router.put('/terminate/:contractId', auth, async (req, res) => {
   }
 });
 
+// Must be LAST – catches :negotiationId
 router.get('/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId)

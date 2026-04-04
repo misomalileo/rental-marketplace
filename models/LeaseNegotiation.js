@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const LeaseNegotiationSchema = new mongoose.Schema({
   houseId: { type: mongoose.Schema.Types.ObjectId, ref: 'House', required: true },
   landlordId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // ✅ allow null initially
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   status: {
     type: String,
     enum: ['draft', 'negotiating', 'agreed', 'signed', 'expired'],
@@ -28,6 +28,7 @@ const LeaseNegotiationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   leaseScore: { type: Number, default: 0 },
+  signedAt: { type: Date }, // when both parties signed
   aiSuggestions: [{
     title: String,
     description: String,
