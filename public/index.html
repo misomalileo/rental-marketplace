@@ -120,7 +120,25 @@
       letter-spacing: -0.02em;
     }
 
-    /* ========== HERO CAROUSEL (Ultra-modern, compact, wow) ========== */
+    /* ========== ICONS – SOLID COLOR, NO GRADIENT ========== */
+    i, .fas, .far, .fab, .fa-solid, .fa-regular {
+      color: var(--text-color) !important;
+      background: none !important;
+      -webkit-background-clip: unset !important;
+      background-clip: unset !important;
+    }
+    .carousel-title i, .hero h1 i, .logo i {
+      color: var(--primary) !important;
+    }
+    button i, .save-search-btn i, .carousel-btn i {
+      color: white !important;
+    }
+    .house-card-content i, .modal-content i, .footer i {
+      color: var(--text-color) !important;
+      opacity: 0.8;
+    }
+
+    /* ========== HERO CAROUSEL ========== */
     .carousel-section {
       margin: 1rem 1.5rem 2rem;
       position: relative;
@@ -143,27 +161,10 @@
       margin-bottom: 1rem;
       color: var(--text-color);
       letter-spacing: -0.02em;
-      text-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     .carousel-title i {
-      background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
       font-size: 2rem;
-      animation: glowPulse 2s ease infinite, gradientShift 3s ease infinite;
-      filter: drop-shadow(0 0 6px rgba(245,158,11,0.4));
-    }
-    @keyframes glowPulse {
-      0% { filter: drop-shadow(0 0 2px rgba(245,158,11,0.2)); }
-      50% { filter: drop-shadow(0 0 12px rgba(245,158,11,0.8)); }
-      100% { filter: drop-shadow(0 0 2px rgba(245,158,11,0.2)); }
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      filter: drop-shadow(0 0 4px rgba(37,99,235,0.4));
     }
     .carousel-subtitle {
       font-size: 0.75rem;
@@ -173,7 +174,6 @@
       background: rgba(139,92,246,0.15);
       padding: 0.2rem 0.8rem;
       border-radius: 40px;
-      letter-spacing: normal;
     }
     .hero-swiper {
       width: 100%;
@@ -272,7 +272,78 @@
       .swiper-slide { width: 80%; }
     }
 
-    /* ========== OFFER STATUS CARDS (RENTAL BIDDING) ========== */
+    /* ========== DREAM MATCH MODAL ========== */
+    #dreamMatchModal .modal-content {
+      max-width: 800px;
+    }
+    #dreamMatchForm .form-group {
+      margin-bottom: 1rem;
+    }
+    #dreamMatchForm label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+    .dream-swiper {
+      padding: 0.5rem 0.8rem;
+    }
+    .dream-swiper .swiper-slide {
+      background: var(--card-bg);
+      border-radius: 24px;
+      overflow: hidden;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .dream-swiper .swiper-slide:hover {
+      transform: translateY(-6px) rotateX(2deg);
+      box-shadow: 0 20px 30px -8px rgba(0,0,0,0.2);
+    }
+    .dream-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .dream-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+    .dream-card-content {
+      padding: 0.8rem;
+    }
+    .dream-card-content h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .dream-card-content p {
+      font-size: 0.7rem;
+      opacity: 0.8;
+      margin: 0.2rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .dream-price {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0.4rem 0;
+    }
+    .dream-match-badge {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      color: white;
+      border-radius: 20px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ========== OFFER STATUS CARDS ========== */
     .offer-status-card {
       padding: 14px 18px;
       border-radius: 20px;
@@ -282,7 +353,6 @@
       text-align: center;
       backdrop-filter: blur(4px);
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      transition: all 0.2s;
     }
     .offer-status-card i { margin-right: 8px; font-size: 1.1rem; }
     .offer-status-card.pending { background: #fef3c7; color: #b45309; border-left: 6px solid #f59e0b; }
@@ -300,35 +370,6 @@
       display: inline-block;
     }
 
-    /* ========== ICON STYLES ========== */
-    i, [class*="ri-"], [class*="lucide-"] { transition: all 0.2s ease; }
-    i.fas, i.far, i.fab, i.ri, .lucide { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .fa-wifi, .ri-wifi-line { background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; }
-    .fa-parking, .ri-parking-line { background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; }
-    .fa-couch, .ri-sofa-line { background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; }
-    .fa-paw, .ri-paw-line { background: linear-gradient(135deg, #ec489a, #f472b6); -webkit-background-clip: text; }
-    .fa-swimming-pool, .ri-swimming-line { background: linear-gradient(135deg, #06b6d4, #22d3ee); -webkit-background-clip: text; }
-    .fa-snowflake, .ri-snowflake-line { background: linear-gradient(135deg, #8b5cf6, #a78bfa); -webkit-background-clip: text; }
-    .fa-home, .ri-home-line { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; }
-    .fa-hotel, .ri-hotel-line { background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; }
-    .fa-building, .ri-building-line { background: linear-gradient(135deg, #64748b, #94a3b8); -webkit-background-clip: text; }
-    .fa-bed, .ri-bed-line { background: linear-gradient(135deg, #f43f5e, #fb7185); -webkit-background-clip: text; }
-    .fa-briefcase, .ri-briefcase-line { background: linear-gradient(135deg, #4b5563, #6b7280); -webkit-background-clip: text; }
-    .fa-star, .ri-star-line { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; }
-    .fa-map-marker-alt, .ri-map-pin-line { background: linear-gradient(135deg, #ef4444, #f97316); -webkit-background-clip: text; }
-    .fa-money-bill-wave, .ri-money-dollar-circle-line { background: linear-gradient(135deg, #2ecc71, #27ae60); -webkit-background-clip: text; }
-    .fa-calendar-check, .ri-calendar-check-line { background: linear-gradient(135deg, #3498db, #2980b9); -webkit-background-clip: text; }
-    i:hover, [class*="ri-"]:hover { transform: translateY(-2px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-
-    /* ========== TYPOGRAPHY ========== */
-    .house-card-content p, .house-card-content .amenities-list, .house-card-content .rating-stars, .house-card-content small {
-      color: var(--gray-700);
-      opacity: 1;
-      font-size: 0.75rem;
-      line-height: 1.3;
-    }
-    body.theme-dark .house-card-content p { color: var(--gray-300); }
-
     /* ========== NAVBAR ========== */
     .navbar {
       background: var(--navbar-bg);
@@ -343,30 +384,32 @@
       z-index: 1000;
     }
     .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-color); }
-    .logo i { margin-right: 6px; font-size: 1.4rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .logo i { margin-right: 6px; font-size: 1.4rem; color: var(--primary) !important; }
     .nav-links { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
-    .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: color 0.2s; }
+    .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: color 0.2s; display: flex; align-items: center; gap: 6px; }
     .nav-links a:hover { color: var(--primary); }
+    .nav-links a i { font-size: 0.9rem; }
     .lang-select, .theme-select { padding: 0.25rem 0.6rem; border-radius: 30px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; }
     .user-menu { position: relative; cursor: pointer; }
     .user-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; transition: transform 0.2s; }
     .user-avatar:hover { transform: scale(1.05); }
     .user-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .user-avatar i { color: white !important; font-size: 24px; }
     .user-dropdown { position: absolute; top: 50px; right: 0; background: var(--card-bg); backdrop-filter: blur(8px); border-radius: 24px; box-shadow: 0 12px 28px rgba(0,0,0,0.15); width: 280px; overflow: hidden; opacity: 0; visibility: hidden; transition: all 0.2s; border: 1px solid var(--input-border); z-index: 1001; }
     .user-menu.active .user-dropdown { opacity: 1; visibility: visible; transform: translateY(5px); }
     .dropdown-header { padding: 1rem; border-bottom: 1px solid var(--input-border); display: flex; align-items: center; gap: 0.8rem; }
-    .dropdown-header .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; }
+    .dropdown-header .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; color: white; }
     .dropdown-header .info h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
     .dropdown-header .info p { font-size: 0.7rem; opacity: 0.7; }
     .dropdown-item { padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.8rem; transition: background 0.2s; cursor: pointer; text-decoration: none; color: var(--text-color); }
     .dropdown-item:hover { background: rgba(0,0,0,0.05); }
-    .dropdown-item i { width: 24px; }
+    .dropdown-item i { width: 24px; font-size: 1rem; }
     .premium-badge { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.6rem; margin-left: 0.5rem; }
 
     /* ========== HERO ========== */
-    .hero { text-align: center; padding: 4rem 2rem 3rem; background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(14,165,164,0.05) 100%); border-radius: 64px; margin: 1.5rem; transition: background 0.3s; }
+    .hero { text-align: center; padding: 4rem 2rem 3rem; background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(14,165,164,0.05) 100%); border-radius: 64px; margin: 1.5rem; }
     .hero h1 { font-size: 3rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap; color: var(--text-color); }
-    .hero h1 i { font-size: 4.5rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; animation: pulse 2s infinite; }
+    .hero h1 i { font-size: 4.5rem; color: var(--primary) !important; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
     .hero p { font-size: 1.2rem; font-weight: 400; color: var(--gray-500); margin-top: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
 
@@ -374,7 +417,7 @@
     .main-container { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
 
     /* ========== FILTERS ========== */
-    .filters-row { display: flex; flex-wrap: wrap; gap: 1rem; margin: 2rem 0; justify-content: center; align-items: center; background: var(--card-bg); padding: 0.8rem 1.5rem; border-radius: 60px; border: 1px solid var(--input-border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+    .filters-row { display: flex; flex-wrap: wrap; gap: 1rem; margin: 2rem 0; justify-content: center; align-items: center; background: var(--card-bg); padding: 0.8rem 1.5rem; border-radius: 60px; border: 1px solid var(--input-border); }
     .price-range { min-width: 200px; background: var(--input-bg); border-radius: 40px; padding: 0.2rem 1rem; border: 1px solid var(--input-border); }
     .price-range .range-values { display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 0.2rem; }
     #priceSlider { margin: 0.4rem 0; }
@@ -422,8 +465,6 @@
     .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn { background: var(--button-bg); color: white; border: none; padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.6rem; cursor: pointer; transition: all 0.2s; }
     .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
     .fav-btn:hover { background: rgba(0,0,0,0.05); }
-    .rating-widget { margin-top: 0.4rem; }
-    .star { font-size: 0.7rem; cursor: pointer; color: #f39c12; }
 
     /* ========== PAGINATION ========== */
     .pagination { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 2rem 0; }
@@ -500,8 +541,9 @@
   <nav class="navbar">
     <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
     <div class="nav-links">
-      <a href="#">Home</a>
-      <a href="#map">Explore Map</a>
+      <a href="#"><i class="fas fa-home"></i> Home</a>
+      <a href="#map"><i class="fas fa-map"></i> Explore Map</a>
+      <a href="#" id="dreamMatchLink"><i class="fas fa-magic"></i> Dream Match</a>
       <div class="user-menu" id="userMenu">
         <div class="user-avatar" id="userAvatar"><i class="fas fa-user-circle"></i></div>
         <div class="user-dropdown" id="userDropdown"></div>
@@ -518,7 +560,7 @@
     </div>
   </header>
 
-  <!-- ========== STUNNING 3D HERO CAROUSEL (Compact & WOW) ========== -->
+  <!-- 3D HERO CAROUSEL -->
   <div class="carousel-section">
     <div class="carousel-container">
       <div class="carousel-title">
@@ -526,9 +568,7 @@
         <span class="carousel-subtitle">Handpicked for you</span>
       </div>
       <div class="swiper hero-swiper">
-        <div class="swiper-wrapper" id="carousel-wrapper">
-          <!-- Slides will be injected by JS -->
-        </div>
+        <div class="swiper-wrapper" id="carousel-wrapper"></div>
         <div class="swiper-pagination"></div>
         <div class="swiper-button-next"></div>
         <div class="swiper-button-prev"></div>
@@ -625,7 +665,68 @@
     <div class="footer-bottom"><div class="footer-bottom-left"><select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select></div><div class="footer-bottom-right"><span>Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</span></div></div>
   </footer>
 
-  <!-- MODALS -->
+  <!-- DREAM MATCH MODAL -->
+  <div id="dreamMatchModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeDreamMatchModal()">&times;</span>
+      <h2><i class="fas fa-magic"></i> Dream Home Match</h2>
+      <p>Answer a few quick questions – we'll find properties that match your lifestyle.</p>
+      <form id="dreamMatchForm">
+        <div class="form-group">
+          <label><i class="fas fa-briefcase"></i> Do you work from home?</label>
+          <select id="dream_workFromHome" class="sort-select" style="width:100%">
+            <option value="essential">Essential – need a dedicated office</option>
+            <option value="nice">Nice to have</option>
+            <option value="no">Not needed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-utensils"></i> How often do you host friends?</label>
+          <select id="dream_social" class="sort-select" style="width:100%">
+            <option value="often">Often – I love entertaining</option>
+            <option value="sometimes">Sometimes</option>
+            <option value="rarely">Rarely – I prefer quiet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-tree"></i> How important is outdoor space?</label>
+          <select id="dream_outdoor" class="sort-select" style="width:100%">
+            <option value="essential">Essential – garden or balcony</option>
+            <option value="nice">Nice to have</option>
+            <option value="no">Not important</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-volume-down"></i> Preferred noise level?</label>
+          <select id="dream_noise" class="sort-select" style="width:100%">
+            <option value="quiet">Very quiet (no traffic, no parties)</option>
+            <option value="moderate">Moderate (normal city life)</option>
+            <option value="lively">Lively (restaurants, bars nearby)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-money-bill-wave"></i> Maximum monthly rent (MWK)</label>
+          <input type="number" id="dream_maxPrice" placeholder="e.g., 500000" style="width:100%">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-bed"></i> Minimum bedrooms</label>
+          <input type="number" id="dream_bedrooms" placeholder="e.g., 2" value="1" style="width:100%">
+        </div>
+        <button type="submit" class="save-search-btn" style="width:100%; margin-top:1rem;"><i class="fas fa-magic"></i> Find My Dream Home</button>
+      </form>
+      <div id="dreamMatchResults" style="margin-top: 2rem; display: none;">
+        <h3><i class="fas fa-chart-line"></i> Your Top Matches</h3>
+        <div id="dreamMatchCarousel" class="swiper dream-swiper" style="overflow:hidden;">
+          <div class="swiper-wrapper" id="dreamMatchWrapper"></div>
+          <div class="swiper-pagination"></div>
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROPERTY MODAL -->
   <div id="propertyModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closePropertyModal()">&times;</span>
@@ -645,12 +746,78 @@
     </div>
   </div>
 
-  <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
-  <div id="lightboxModal" class="lightbox-modal" style="display: none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
-  <div id="saveSearchModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeSaveSearchModal()">&times;</span><h2>Save This Search</h2><p>Get email alerts when new houses match.</p><form id="saveSearchForm"><div class="form-group"><label>Your Email</label><input type="email" id="searchEmail" required></div><div class="form-group"><label>Search Name</label><input type="text" id="searchName"></div><button type="submit" class="save-search-btn">Save & Get Alerts</button></form><div id="saveSearchStatus"></div></div></div>
-  <div id="landlordModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:500px;"><span class="close-btn" onclick="closeLandlordModal()">&times;</span><div id="landlordModalContent"></div></div></div>
-  <div id="shareModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:400px;"><span class="close-btn" onclick="closeShareModal()">&times;</span><h3><i class="fas fa-share-alt"></i> Share this property</h3><div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;"><button onclick="shareOnFacebook()" style="background:#1877f2;">Facebook</button><button onclick="shareOnWhatsApp()" style="background:#25D366;">WhatsApp</button><button onclick="shareOnTwitter()" style="background:#1DA1F2;">Twitter</button><button onclick="copyShareLink()" style="background:#6c757d;">Copy Link</button></div><div id="shareStatus"></div></div></div>
-  <div id="comparisonModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:900px;"><span class="close-btn" onclick="closeComparisonModal()">&times;</span><h2><i class="fas fa-chart-simple"></i> Compare Properties</h2><div id="comparisonTable">Select up to 3 houses to compare.</div></div></div>
+  <!-- BOOKING MODAL -->
+  <div id="bookingModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeBookingModal()">&times;</span>
+      <h2>Request Booking</h2>
+      <div id="bookingHouseInfo"></div>
+      <form id="bookingForm">
+        <div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div>
+        <div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div>
+        <div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div>
+        <button type="submit" class="save-search-btn">Send Request</button>
+      </form>
+      <div id="bookingStatus"></div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX MODAL -->
+  <div id="lightboxModal" class="lightbox-modal" style="display: none;">
+    <span class="lightbox-close">&times;</span>
+    <span class="lightbox-prev">&#10094;</span>
+    <span class="lightbox-next">&#10095;</span>
+    <div class="lightbox-content"><img id="lightboxImage" src=""></div>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
+  </div>
+
+  <!-- SAVE SEARCH MODAL -->
+  <div id="saveSearchModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeSaveSearchModal()">&times;</span>
+      <h2>Save This Search</h2>
+      <p>Get email alerts when new houses match.</p>
+      <form id="saveSearchForm">
+        <div class="form-group"><label>Your Email</label><input type="email" id="searchEmail" required></div>
+        <div class="form-group"><label>Search Name</label><input type="text" id="searchName"></div>
+        <button type="submit" class="save-search-btn">Save & Get Alerts</button>
+      </form>
+      <div id="saveSearchStatus"></div>
+    </div>
+  </div>
+
+  <!-- LANDLORD MODAL -->
+  <div id="landlordModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:500px;">
+      <span class="close-btn" onclick="closeLandlordModal()">&times;</span>
+      <div id="landlordModalContent"></div>
+    </div>
+  </div>
+
+  <!-- SHARE MODAL -->
+  <div id="shareModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:400px;">
+      <span class="close-btn" onclick="closeShareModal()">&times;</span>
+      <h3><i class="fas fa-share-alt"></i> Share this property</h3>
+      <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;">
+        <button onclick="shareOnFacebook()" style="background:#1877f2;">Facebook</button>
+        <button onclick="shareOnWhatsApp()" style="background:#25D366;">WhatsApp</button>
+        <button onclick="shareOnTwitter()" style="background:#1DA1F2;">Twitter</button>
+        <button onclick="copyShareLink()" style="background:#6c757d;">Copy Link</button>
+      </div>
+      <div id="shareStatus"></div>
+    </div>
+  </div>
+
+  <!-- COMPARISON MODAL -->
+  <div id="comparisonModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:900px;">
+      <span class="close-btn" onclick="closeComparisonModal()">&times;</span>
+      <h2><i class="fas fa-chart-simple"></i> Compare Properties</h2>
+      <div id="comparisonTable">Select up to 3 houses to compare.</div>
+    </div>
+  </div>
+
   <div id="compareFloatingBtn"><i class="fas fa-chart-simple"></i> Compare (<span id="compareCount">0</span>/3)</div>
 
   <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';</script>
@@ -664,12 +831,10 @@
   <script src="js/script.js"></script>
   <script src="js/chatbot.js"></script>
   <script src="js/lease.js"></script>
-  <!-- Swiper JS -->
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    // ========== HERO CAROUSEL LOADER ==========
+    // Hero carousel loader
     let heroSwiper = null;
-
     async function loadHeroCarousel() {
       try {
         const res = await fetch('/api/houses?page=1&limit=6');
@@ -696,119 +861,16 @@
         `).join('');
         if (heroSwiper) heroSwiper.destroy(true, true);
         heroSwiper = new Swiper('.hero-swiper', {
-          loop: true,
-          autoplay: { delay: 5000, disableOnInteraction: false },
-          effect: 'slide',
-          grabCursor: true,
-          slidesPerView: 1,
-          spaceBetween: 20,
-          breakpoints: {
-            640: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
-            1280: { slidesPerView: 4 }
-          },
+          loop: true, autoplay: { delay: 5000, disableOnInteraction: false },
+          slidesPerView: 1, spaceBetween: 20,
+          breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
           pagination: { el: '.swiper-pagination', clickable: true },
           navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
         });
-      } catch (err) {
-        console.error('Failed to load carousel:', err);
-      }
+      } catch (err) { console.error('Failed to load carousel:', err); }
     }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-      });
-    }
-
-    // Load carousel after page loads
-    document.addEventListener('DOMContentLoaded', () => {
-      loadHeroCarousel();
-    });
-
-    // Lightbox functions (no conflict)
-    let currentLightboxImages = [];
-    let currentImageIndex = 0;
-    function openLightbox(images, startIndex = 0) { if (!images || images.length === 0) return; currentLightboxImages = images; currentImageIndex = startIndex; const modal = document.getElementById('lightboxModal'); const imgElement = document.getElementById('lightboxImage'); const counter = document.getElementById('lightboxCounter'); imgElement.src = images[startIndex]; counter.textContent = `${startIndex + 1} / ${images.length}`; modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
-    function closeLightbox() { document.getElementById('lightboxModal').style.display = 'none'; document.body.style.overflow = ''; }
-    function showPrevImage() { if (currentLightboxImages.length === 0) return; currentImageIndex = (currentImageIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length; document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex]; document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`; }
-    function showNextImage() { if (currentLightboxImages.length === 0) return; currentImageIndex = (currentImageIndex + 1) % currentLightboxImages.length; document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex]; document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`; }
-    document.querySelector('.lightbox-close')?.addEventListener('click', closeLightbox);
-    document.querySelector('.lightbox-prev')?.addEventListener('click', showPrevImage);
-    document.querySelector('.lightbox-next')?.addEventListener('click', showNextImage);
-    document.getElementById('lightboxModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('lightboxModal')) closeLightbox(); });
-
-    document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
-    document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
-    window.openBookingModal = function(houseId, houseName) { window.currentBookingHouseId = houseId; document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`; document.getElementById("bookingStart").value = ''; document.getElementById("bookingEnd").value = ''; document.getElementById("bookingMessage").value = ''; document.getElementById("bookingStatus").innerHTML = ''; document.getElementById("bookingModal").style.display = "block"; };
-    window.closeBookingModal = function() { document.getElementById("bookingModal").style.display = "none"; window.currentBookingHouseId = null; };
-    document.getElementById("bookingForm")?.addEventListener("submit", async e => { e.preventDefault(); const token = localStorage.getItem("token"); if (!token) { alert("Please login to book"); return; } const start = document.getElementById("bookingStart").value; const end = document.getElementById("bookingEnd").value; const message = document.getElementById("bookingMessage").value; if (!start || !end) { alert("Please select both dates"); return; } const statusDiv = document.getElementById("bookingStatus"); statusDiv.innerHTML = "Sending..."; try { const res = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ houseId: window.currentBookingHouseId, startDate: start, endDate: end, message }) }); const data = await res.json(); if (res.ok) { statusDiv.innerHTML = "✅ Booking request sent!"; setTimeout(() => window.closeBookingModal(), 2000); } else { statusDiv.innerHTML = "❌ " + (data.message || "Error"); } } catch (err) { statusDiv.innerHTML = "❌ Network error"; } });
-    window.openLightbox = openLightbox;
-    window.closeSaveSearchModal = function() { document.getElementById('saveSearchModal').style.display = 'none'; };
-
-    // Newsletter
-    const newsletterForm = document.getElementById('footerNewsletterForm');
-    if (newsletterForm) { newsletterForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = newsletterForm.querySelector('input').value.trim(); const statusDiv = document.getElementById('newsletterStatus'); if (!email) return; statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Subscribing...'; setTimeout(() => { statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Thanks for subscribing!'; newsletterForm.reset(); setTimeout(() => { statusDiv.innerHTML = ''; }, 3000); }, 500); }); }
-
-    // User menu
-    let currentUser = null;
-    const userMenu = document.getElementById('userMenu');
-    const userAvatar = document.getElementById('userAvatar');
-    const userDropdown = document.getElementById('userDropdown');
-    userAvatar.addEventListener('click', (e) => { e.stopPropagation(); userMenu.classList.toggle('active'); });
-    document.addEventListener('click', (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove('active'); });
-
-    async function loadCurrentUser() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        userMenu.style.display = 'block';
-        userDropdown.innerHTML = `
-          <div class="dropdown-header"><div class="avatar"><i class="fas fa-user"></i></div><div class="info"><h4>Guest User</h4><p>Sign in for more features</p></div></div>
-          <div class="dropdown-item" id="becomeLandlordGuest"><i class="fas fa-building"></i> Become a Landlord</div>
-          <div class="dropdown-item" id="becomePremiumGuest"><i class="fas fa-gem"></i> Become a Premium User <span class="premium-badge">MWK 500/mo</span></div>
-          <div class="dropdown-item" id="loginGuest"><i class="fas fa-sign-in-alt"></i> Login / Register</div>
-        `;
-        document.getElementById('becomeLandlordGuest')?.addEventListener('click', () => { window.location.href = 'register.html?role=landlord'; });
-        document.getElementById('becomePremiumGuest')?.addEventListener('click', () => { window.location.href = 'register.html?role=premium_user'; });
-        document.getElementById('loginGuest')?.addEventListener('click', () => { window.location.href = 'login.html'; });
-        return;
-      }
-      try {
-        const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
-        if (res.ok) {
-          currentUser = await res.json();
-          userMenu.style.display = 'block';
-          updateUserMenuLoggedIn();
-        } else { localStorage.removeItem('token'); loadCurrentUser(); }
-      } catch (err) { console.error('Failed to load user', err); }
-    }
-
-    function updateUserMenuLoggedIn() {
-      if (!currentUser) return;
-      const userName = currentUser.name || 'User';
-      const userInitial = userName.charAt(0).toUpperCase();
-      const avatarDiv = userAvatar;
-      avatarDiv.innerHTML = currentUser.profilePicture ? `<img src="${currentUser.profilePicture}">` : `<span>${userInitial}</span>`;
-      userDropdown.innerHTML = `
-        <div class="dropdown-header"><div class="avatar">${currentUser.profilePicture ? `<img src="${currentUser.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`}</div><div class="info"><h4>${escapeHtml(userName)}</h4><p>${currentUser.role === 'premium_user' ? 'Premium User' : (currentUser.role === 'premium_landlord' ? 'Premium Landlord' : (currentUser.role === 'admin' ? 'Admin' : 'Free User'))}</p></div></div>
-        <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
-        <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
-        <div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>
-        <div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>
-        <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
-      `;
-      document.getElementById('profileLink')?.addEventListener('click', () => { window.location.href = 'profile.html'; });
-      document.getElementById('premiumDashboardLink')?.addEventListener('click', () => { window.location.href = 'premium-dashboard.html'; });
-      document.getElementById('becomeLandlordLink')?.addEventListener('click', () => { window.location.href = 'dashboard.html'; });
-      document.getElementById('upgradePremiumLink')?.addEventListener('click', async () => { try { const res = await fetch('/api/payment/premium-user', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }); const data = await res.json(); if (data.payment_url) window.location.href = data.payment_url; else alert('Payment initiation failed'); } catch (err) { alert('Error starting upgrade'); } });
-      document.getElementById('logoutLink')?.addEventListener('click', () => { localStorage.removeItem('token'); localStorage.removeItem('role'); window.location.reload(); });
-    }
-
-    loadCurrentUser();
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+    document.addEventListener('DOMContentLoaded', () => { loadHeroCarousel(); });
   </script>
 </body>
 </html>
