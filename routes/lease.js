@@ -50,41 +50,27 @@ function generateAiSuggestions(negotiation) {
     suggestions.push({
       title: 'Maintenance Responsibility',
       description: `Shift major repairs to landlord.`,
-      reasoning: 'Landlords are responsible for structural repairs.'
+      reasoning: 'Landlord is responsible for structural repairs.'
     });
   }
   if (negotiation.petPolicy === 'Not allowed') {
     suggestions.push({
       title: 'Pet Policy',
       description: `Consider allowing small pets with a pet deposit.`,
-      reasoning: 'Many tenants have pets.'
+      reasoning: 'Pet deposit protects landlord while attracting more renters.'
     });
   }
   if (!negotiation.utilitiesIncluded) {
     suggestions.push({
       title: 'Utility Bills',
       description: `Specify who pays for water and electricity.`,
-      reasoning: 'In Malawi, tenants often pay separately.'
+      reasoning: 'Common for tenants to pay separately.'
     });
   }
   return suggestions;
 }
 
-// Helper to embed signature image properly
-async function embedSignature(doc, signatureDataURL, x, y, width = 100) {
-  if (!signatureDataURL) return false;
-  try {
-    // Remove the data:image/png;base64, prefix
-    const base64Data = signatureDataURL.replace(/^data:image\/png;base64,/, '');
-    const imgBuffer = Buffer.from(base64Data, 'base64');
-    doc.image(imgBuffer, x, y, { width: width });
-    return true;
-  } catch (err) {
-    console.error('Failed to embed signature:', err);
-    return false;
-  }
-}
-
+// Generate PDF with embedded signatures (both passed as base64 strings)
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
     const contractDir = path.join(__dirname, '../contracts');
@@ -97,13 +83,13 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#fef9e8');
     doc.rect(0, 0, doc.page.width, 80).fill('#1e3a5f');
     doc.fillColor('white').fontSize(22).font('Helvetica-Bold')
-      .text('RESIDENTIAL LEASE AGREEMENT', 50, 25, { align: 'center' });
+      .text('🏠 RESIDENTIAL LEASE AGREEMENT', 50, 25, { align: 'center' });
     doc.fillColor('#f1c40f').fontSize(12).font('Helvetica')
       .text('Malawi Standard Tenancy Contract', 50, 55, { align: 'center' });
 
     let y = 100;
     doc.fillColor('#2c3e50').fontSize(10).font('Helvetica');
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 50, y);
+    doc.text(`📅 Date: ${new Date().toLocaleDateString()}`, 50, y);
     y += 20;
     doc.font('Helvetica-Bold').text('1. PARTIES & PROPERTY', 50, y);
     y += 15;
@@ -149,28 +135,39 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       .text('This agreement is governed by the laws of Malawi, including the Rented Premises (Control of Rent) Act and common law principles.', 60, y);
     y += 40;
 
-    // Signature section
+    // Signature area
     doc.moveTo(50, y).lineTo(doc.page.width - 50, y).stroke();
     y += 10;
-    doc.font('Helvetica-Bold').text('Signed by:', 50, y);
-    y += 25;
+    doc.font('Helvetica').text('Signed by:', 50, y);
+    y += 20;
 
     // Landlord signature
-    doc.font('Helvetica').text(`Landlord: ${landlord.name}`, 60, y);
-    const landlordSigPlaced = await embedSignature(doc, signatureLandlord, 250, y - 10, 100);
-    if (!landlordSigPlaced) {
-      doc.text('___________________', 250, y);
+    doc.text(`Landlord: ${landlord.name}`, 60, y);
+    if (signatureLandlord && signatureLandlord !== 'null') {
+      try {
+        // Remove data:image/png;base64, prefix if present
+        const base64 = signatureLandlord.replace(/^data:image\/png;base64,/, '');
+        const imgBuffer = Buffer.from(base64, 'base64');
+        doc.image(imgBuffer, 250, y - 10, { width: 100 });
+      } catch(e) { console.error('Failed to embed landlord signature', e); }
+    } else {
+      doc.text(`___________________`, 250, y);
     }
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 400, y);
+    doc.text(`Date: __________`, 400, y);
     y += 40;
 
     // Tenant signature
     doc.text(`Tenant: ${tenant.name}`, 60, y);
-    const tenantSigPlaced = await embedSignature(doc, signatureTenant, 250, y - 10, 100);
-    if (!tenantSigPlaced) {
-      doc.text('___________________', 250, y);
+    if (signatureTenant && signatureTenant !== 'null') {
+      try {
+        const base64 = signatureTenant.replace(/^data:image\/png;base64,/, '');
+        const imgBuffer = Buffer.from(base64, 'base64');
+        doc.image(imgBuffer, 250, y - 10, { width: 100 });
+      } catch(e) { console.error('Failed to embed tenant signature', e); }
+    } else {
+      doc.text(`___________________`, 250, y);
     }
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 400, y);
+    doc.text(`Date: __________`, 400, y);
 
     const pageCount = doc.bufferedPageRange().count;
     for (let i = 0; i < pageCount; i++) {
@@ -189,7 +186,7 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant) {
   return generatePDFWithSignatures(negotiation, house, landlord, tenant, null, null);
 }
 
-// ========== ROUTES (order matters) ==========
+// ========== ROUTES ==========
 
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
@@ -383,7 +380,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     }
     if (updated) await contract.save();
 
-    // If both have signed, regenerate PDF with signatures and set signedAt
+    // If both have signed, regenerate PDF with signatures
     if (contract.signedByLandlord && contract.signedByTenant) {
       contract.status = 'active';
       contract.signedAt = new Date();
@@ -394,6 +391,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
       const house = await House.findById(contract.houseId);
       const landlord = await User.findById(contract.landlordId);
       const tenant = await User.findById(contract.tenantId);
+      // Regenerate PDF with both signatures
       await generatePDFWithSignatures(negotiation, house, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
     }
     res.json(contract);
