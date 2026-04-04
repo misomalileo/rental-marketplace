@@ -161,11 +161,9 @@ async function loadUnreadCount() {
 }
 setInterval(loadUnreadCount, 30000);
 
-// Improved map initialization with retry
 function initMap() {
   const mapContainer = document.getElementById('map');
   if (!mapContainer) return;
-  // Ensure container is visible
   setTimeout(() => {
     map = L.map('map').setView([-15.7861, 35.0058], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
@@ -240,7 +238,7 @@ async function loadHouseStats() {
     const labels = viewsData.map(d => d.date);
     const views = viewsData.map(d => d.views);
     if (viewsChart) viewsChart.destroy();
-    viewsChart = new Chart(document.getElementById('viewsChart'), { type: 'line', data: { labels, datasets: [{ label: 'Views', data: views, borderColor: '#3498db', fill: true, tension: 0.3 }] }, options: { responsive: true, plugins: { legend: { position: 'top' } } } });
+    viewsChart = new Chart(document.getElementById('viewsChart'), { type: 'line', data: { labels, datasets: [{ label: 'Views', data: views, borderColor: '#3498db', fill: true, tension: 0.3 }] } });
     if (earningsChart) earningsChart.destroy();
     earningsChart = new Chart(document.getElementById('earningsChart'), { type: 'bar', data: { labels: ['Week 1','Week 2','Week 3','Week 4'], datasets: [{ label: 'MWK', data: [10000,15000,8000,20000], backgroundColor: '#2ecc71', borderRadius: 8 }] } });
     if (conversionChart) conversionChart.destroy();
@@ -260,7 +258,6 @@ function renderHouses(houses) {
     container.appendChild(card);
   });
 }
-// Helper to open booking modal (reuses existing modal)
 window.openBookingModalFromDashboard = function(houseId, houseName) {
   window.currentBookingHouseId = houseId;
   document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
@@ -435,7 +432,7 @@ function showCounterModal(offerId) {
   const comment = prompt('Optional message to tenant:');
   fetch(`/api/offers/${offerId}/counter`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ counterOfferPrice: parseInt(price), moveInDate, landlordComment: comment || '' }) }).then(res => res.json()).then(data => { if (data.message) alert(data.message); loadOffers(); }).catch(err => console.error(err));
 }
-// ========== LEASE NEGOTIATIONS (fixed) ==========
+// ========== LEASE NEGOTIATIONS (FIXED – loads signed date and contract download) ==========
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch("/api/lease/my", { headers: { Authorization: "Bearer " + token } });
@@ -447,7 +444,7 @@ async function loadLeaseNegotiations() {
     const leases = await res.json();
     const container = document.getElementById("leaseList");
     if (!container) return;
-    if (leases.length === 0) {
+    if (!leases || leases.length === 0) {
       container.innerHTML = "<p>No lease negotiations yet.</p>";
       return;
     }
@@ -466,7 +463,8 @@ async function loadLeaseNegotiations() {
         statusClass += ' rejected';
       }
       const tenantName = lease.tenantId?.name || 'Not joined';
-      // Use the new download endpoint (signed token) for security
+      const signedDate = lease.signedAt ? new Date(lease.signedAt).toLocaleDateString() : 'Not signed';
+      // Download button using the secure signed‑URL method
       const downloadButton = (lease.status === 'signed' || lease.status === 'active') 
         ? `<button class="btn" style="background: #2563eb; color: white; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; margin-left: 0.5rem;" onclick="downloadLeaseContract('${lease._id}')"><i class="fas fa-download"></i> Contract</button>`
         : '';
@@ -481,6 +479,7 @@ async function loadLeaseNegotiations() {
             <p><i class="fas fa-money-bill-wave"></i> Rent: MWK ${lease.rentAmount?.toLocaleString()}</p>
             <p><i class="fas fa-calendar-alt"></i> Start: ${new Date(lease.leaseStartDate).toLocaleDateString()}</p>
             <p><i class="fas fa-chart-line"></i> Lease Score: ${lease.leaseScore}/100</p>
+            <p><i class="fas fa-calendar-check"></i> Signed Date: ${signedDate}</p>
           </div>
           <div class="offer-actions">
             <button class="edit" onclick="window.location.href='lease-negotiation.html?id=${lease._id}'">Continue Negotiation</button>

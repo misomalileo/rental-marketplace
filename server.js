@@ -24,62 +24,22 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
-// ========== CSP FOR MOBILE & DESKTOP ==========
+// CSP (mobile‑friendly)
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "https://unpkg.com",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "https://cdn.socket.io",
-          "'unsafe-inline'",
-          "'unsafe-eval'",
-          "blob:"
-        ],
+        scriptSrc: ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.socket.io", "'unsafe-inline'", "'unsafe-eval'", "blob:"],
         scriptSrcAttr: null,
-        styleSrc: [
-          "'self'",
-          "https://unpkg.com",
-          "https://fonts.googleapis.com",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "'unsafe-inline'"
-        ],
+        styleSrc: ["'self'", "https://unpkg.com", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "data:"],
-        imgSrc: [
-          "'self'",
-          "data:",
-          "blob:",
-          "https://maps.google.com",
-          "https://*.tile.openstreetmap.org",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "https://res.cloudinary.com",
-          "https://images.pexels.com",
-          "https://maps.googleapis.com"
-        ],
+        imgSrc: ["'self'", "data:", "blob:", "https://maps.google.com", "https://*.tile.openstreetmap.org", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://res.cloudinary.com", "https://images.pexels.com", "https://maps.googleapis.com"],
         connectSrc: [
-          "'self'",
-          "https://maps.google.com",
-          "http://localhost:5000",
-          "https://unpkg.com",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "wss://*.ngrok-free.dev",
-          "https://*.ngrok-free.dev",
-          "https://*.tile.openstreetmap.org",
-          "https://fonts.googleapis.com",
-          "https://fonts.gstatic.com",
-          "https://rental-marketplace-irmj.onrender.com",
-          "wss://rental-marketplace-irmj.onrender.com",
-          "https://overpass-api.de",
-          "https://maps.googleapis.com",
-          "wss://*.render.com",
-          "blob:"
+          "'self'", "https://maps.google.com", "http://localhost:5000", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com",
+          "wss://*.ngrok-free.dev", "https://*.ngrok-free.dev", "https://*.tile.openstreetmap.org", "https://fonts.googleapis.com", "https://fonts.gstatic.com",
+          "https://rental-marketplace-irmj.onrender.com", "wss://rental-marketplace-irmj.onrender.com", "https://overpass-api.de", "https://maps.googleapis.com",
+          "wss://*.render.com", "blob:"
         ],
         upgradeInsecureRequests: [],
       },
@@ -94,11 +54,9 @@ app.use("/api/", limiter);
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
-// Contracts folder – ensure it exists
+// Contracts folder (exists but not statically served)
 const contractsDir = path.join(__dirname, "contracts");
 if (!fs.existsSync(contractsDir)) fs.mkdirSync(contractsDir, { recursive: true });
-// Do NOT serve contracts statically – we'll use authenticated download endpoint
-// app.use("/contracts", express.static(contractsDir)); // COMMENTED to prevent direct access
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "your-secret-key",
@@ -108,12 +66,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Database connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
-// Socket.IO (unchanged)
+// Socket.IO
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error("Authentication error"));
@@ -128,10 +85,7 @@ io.on("connection", async (socket) => {
   console.log("🟢 User connected:", socket.userId);
   socket.join(socket.userId);
   socket.broadcast.emit("userOnline", { userId: socket.userId, online: true });
-
-  try {
-    await User.findByIdAndUpdate(socket.userId, { lastSeen: new Date() });
-  } catch (err) { console.error(err); }
+  try { await User.findByIdAndUpdate(socket.userId, { lastSeen: new Date() }); } catch (err) { console.error(err); }
 
   socket.on("sendMessage", async (data) => {
     try {
@@ -191,9 +145,7 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", async () => {
     console.log("🔴 User disconnected:", socket.userId);
-    try {
-      await User.findByIdAndUpdate(socket.userId, { lastSeen: new Date() });
-    } catch (err) { console.error(err); }
+    try { await User.findByIdAndUpdate(socket.userId, { lastSeen: new Date() }); } catch (err) { console.error(err); }
     socket.broadcast.emit("userOnline", { userId: socket.userId, online: false });
   });
 });
@@ -234,16 +186,17 @@ try {
   console.log("✅ /api/offers");
 } catch (err) { console.error("❌ Failed to load offers route:", err.message); }
 
-// Lease route
+// Lease route – critical
 try {
   const leaseRoutes = require("./routes/lease");
   app.use("/api/lease", leaseRoutes);
   console.log("✅ /api/lease");
 } catch (err) { 
   console.error("❌ Failed to load lease route:", err.message);
+  console.error("Make sure routes/lease.js exists and has no syntax errors");
 }
 
-// Test endpoint for lease API
+// Test lease endpoint
 app.get("/api/lease-test", (req, res) => {
   res.json({ message: "Lease API test endpoint is reachable", timestamp: new Date().toISOString() });
 });
