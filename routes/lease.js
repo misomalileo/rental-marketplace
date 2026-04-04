@@ -72,6 +72,14 @@ function generateAiSuggestions(negotiation) {
   return suggestions;
 }
 
+// Helper: convert data URL to buffer
+function dataURLToBuffer(dataURL) {
+  if (!dataURL) return null;
+  // Remove the data:image/png;base64, prefix
+  const base64 = dataURL.replace(/^data:image\/\w+;base64,/, '');
+  return Buffer.from(base64, 'base64');
+}
+
 // Generate PDF with embedded signatures
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
@@ -142,26 +150,34 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.font('Helvetica').text('Signed by:', 50, y);
     y += 20;
 
+    // Landlord signature
     doc.text(`Landlord: ${landlord.name}`, 60, y);
     if (signatureLandlord) {
       try {
-        const imgData = signatureLandlord.replace(/^data:image\/png;base64,/, '');
-        const imgBuffer = Buffer.from(imgData, 'base64');
-        doc.image(imgBuffer, 250, y - 10, { width: 100 });
-      } catch(e) { console.error('Failed to embed landlord signature', e); }
+        const imgBuffer = dataURLToBuffer(signatureLandlord);
+        if (imgBuffer && imgBuffer.length > 0) {
+          doc.image(imgBuffer, 250, y - 10, { width: 100, height: 40, fit: [100, 40] });
+        } else {
+          doc.text(`___________________`, 250, y);
+        }
+      } catch(e) { console.error('Failed to embed landlord signature', e); doc.text(`___________________`, 250, y); }
     } else {
       doc.text(`___________________`, 250, y);
     }
     doc.text(`Date: __________`, 400, y);
     y += 40;
 
+    // Tenant signature
     doc.text(`Tenant: ${tenant.name}`, 60, y);
     if (signatureTenant) {
       try {
-        const imgData = signatureTenant.replace(/^data:image\/png;base64,/, '');
-        const imgBuffer = Buffer.from(imgData, 'base64');
-        doc.image(imgBuffer, 250, y - 10, { width: 100 });
-      } catch(e) { console.error('Failed to embed tenant signature', e); }
+        const imgBuffer = dataURLToBuffer(signatureTenant);
+        if (imgBuffer && imgBuffer.length > 0) {
+          doc.image(imgBuffer, 250, y - 10, { width: 100, height: 40, fit: [100, 40] });
+        } else {
+          doc.text(`___________________`, 250, y);
+        }
+      } catch(e) { console.error('Failed to embed tenant signature', e); doc.text(`___________________`, 250, y); }
     } else {
       doc.text(`___________________`, 250, y);
     }
@@ -186,12 +202,10 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant) {
 
 // ========== ROUTES (order matters – static routes before dynamic :id) ==========
 
-// Test endpoint
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
 });
 
-// Get all lease negotiations for landlord (must be BEFORE /:negotiationId)
 router.get('/my', auth, async (req, res) => {
   try {
     const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
@@ -205,7 +219,6 @@ router.get('/my', auth, async (req, res) => {
   }
 });
 
-// Check existing negotiation for tenant
 router.get('/check/:houseId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findOne({
@@ -219,7 +232,6 @@ router.get('/check/:houseId', auth, async (req, res) => {
   }
 });
 
-// Start a new lease negotiation (landlord)
 router.post('/start', auth, async (req, res) => {
   try {
     const { houseId, rentAmount, depositAmount, leaseStartDate, leaseEndDate } = req.body;
@@ -255,7 +267,6 @@ router.post('/start', auth, async (req, res) => {
   }
 });
 
-// Join negotiation (tenant)
 router.post('/join/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -271,7 +282,6 @@ router.post('/join/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Add or update a clause
 router.put('/clause/:negotiationId', auth, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -306,7 +316,6 @@ router.put('/clause/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Agree to a clause
 router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -329,7 +338,6 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
-// Finalize and generate initial PDF
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -366,7 +374,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Sign contract (with signature embedding)
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const { signature } = req.body;
@@ -387,6 +394,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     }
     if (updated) await contract.save();
 
+    // If both have signed, regenerate PDF with signatures
     if (contract.signedByLandlord && contract.signedByTenant) {
       contract.status = 'active';
       contract.signedAt = new Date();
@@ -397,6 +405,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
       const house = await House.findById(contract.houseId);
       const landlord = await User.findById(contract.landlordId);
       const tenant = await User.findById(contract.tenantId);
+      // Wait for PDF generation to complete
       await generatePDFWithSignatures(negotiation, house, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
     }
     res.json(contract);
@@ -406,7 +415,6 @@ router.put('/sign/:contractId', auth, async (req, res) => {
   }
 });
 
-// Get contract details
 router.get('/contract/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId)
@@ -421,7 +429,6 @@ router.get('/contract/:contractId', auth, async (req, res) => {
   }
 });
 
-// Generate a temporary signed download URL (valid 5 minutes)
 router.get('/download-temp/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -441,7 +448,6 @@ router.get('/download-temp/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Serve signed download (no auth required, token is enough)
 router.get('/download-signed/:token', async (req, res) => {
   try {
     const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
@@ -456,7 +462,6 @@ router.get('/download-signed/:token', async (req, res) => {
   }
 });
 
-// Setup recurring payment
 router.post('/setup-payment', auth, async (req, res) => {
   try {
     const { contractId, paymentMethod, phoneNumber } = req.body;
@@ -483,7 +488,6 @@ router.post('/setup-payment', auth, async (req, res) => {
   }
 });
 
-// Process auto payment
 router.post('/process-payment/:paymentId', auth, async (req, res) => {
   try {
     const payment = await RecurringPayment.findById(req.params.paymentId);
@@ -502,7 +506,6 @@ router.post('/process-payment/:paymentId', auth, async (req, res) => {
   }
 });
 
-// Terminate lease
 router.put('/terminate/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId);
@@ -522,7 +525,6 @@ router.put('/terminate/:contractId', auth, async (req, res) => {
   }
 });
 
-// Get lease negotiation details (must be LAST – catches :negotiationId)
 router.get('/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId)
