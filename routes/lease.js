@@ -82,7 +82,6 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
 
-    // Background and header
     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#fef9e8');
     doc.rect(0, 0, doc.page.width, 80).fill('#1e3a5f');
     doc.fillColor('white').fontSize(22).font('Helvetica-Bold')
@@ -138,13 +137,11 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       .text('This agreement is governed by the laws of Malawi, including the Rented Premises (Control of Rent) Act and common law principles.', 60, y);
     y += 40;
 
-    // Signature area
     doc.moveTo(50, y).lineTo(doc.page.width - 50, y).stroke();
     y += 10;
     doc.font('Helvetica').text('Signed by:', 50, y);
     y += 20;
 
-    // Landlord signature
     doc.text(`Landlord: ${landlord.name}`, 60, y);
     if (signatureLandlord) {
       try {
@@ -158,7 +155,6 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`Date: __________`, 400, y);
     y += 40;
 
-    // Tenant signature
     doc.text(`Tenant: ${tenant.name}`, 60, y);
     if (signatureTenant) {
       try {
@@ -171,7 +167,6 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     }
     doc.text(`Date: __________`, 400, y);
 
-    // Footer
     const pageCount = doc.bufferedPageRange().count;
     for (let i = 0; i < pageCount; i++) {
       doc.switchToPage(i);
@@ -185,12 +180,44 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
   });
 }
 
-// Generate initial PDF (no signatures)
 async function generateBeautifulPDF(negotiation, house, landlord, tenant) {
   return generatePDFWithSignatures(negotiation, house, landlord, tenant, null, null);
 }
 
-// ========== ROUTES ==========
+// ========== ROUTES (order matters – static routes before dynamic :id) ==========
+
+// Test endpoint
+router.get('/test', (req, res) => {
+  res.json({ message: 'Lease route is working!' });
+});
+
+// Get all lease negotiations for landlord (must be BEFORE /:negotiationId)
+router.get('/my', auth, async (req, res) => {
+  try {
+    const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
+      .populate('houseId', 'name location')
+      .populate('tenantId', 'name email')
+      .sort({ createdAt: -1 });
+    res.json(leases);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Check existing negotiation for tenant
+router.get('/check/:houseId', auth, async (req, res) => {
+  try {
+    const negotiation = await LeaseNegotiation.findOne({
+      houseId: req.params.houseId,
+      status: { $in: ['draft', 'negotiating', 'agreed'] }
+    });
+    res.json(negotiation);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // Start a new lease negotiation (landlord)
 router.post('/start', auth, async (req, res) => {
@@ -360,7 +387,6 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     }
     if (updated) await contract.save();
 
-    // If both have signed, regenerate PDF with signatures
     if (contract.signedByLandlord && contract.signedByTenant) {
       contract.status = 'active';
       contract.signedAt = new Date();
@@ -406,7 +432,6 @@ router.get('/download-temp/:negotiationId', auth, async (req, res) => {
     if (!isLandlord && !isTenant) return res.status(403).json({ message: 'Not authorized' });
     const filePath = path.join(__dirname, '../contracts', `contract_${negotiation._id}.pdf`);
     if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'PDF not found' });
-    // Create a signed token valid for 5 minutes
     const token = jwt.sign({ negotiationId: negotiation._id, userId }, process.env.JWT_SECRET, { expiresIn: '5m' });
     const downloadUrl = `/api/lease/download-signed/${token}`;
     res.json({ downloadUrl });
@@ -431,7 +456,7 @@ router.get('/download-signed/:token', async (req, res) => {
   }
 });
 
-// Setup recurring payment (unchanged)
+// Setup recurring payment
 router.post('/setup-payment', auth, async (req, res) => {
   try {
     const { contractId, paymentMethod, phoneNumber } = req.body;
@@ -477,49 +502,6 @@ router.post('/process-payment/:paymentId', auth, async (req, res) => {
   }
 });
 
-// Get lease negotiation details
-router.get('/:negotiationId', auth, async (req, res) => {
-  try {
-    const negotiation = await LeaseNegotiation.findById(req.params.negotiationId)
-      .populate('houseId', 'name location images')
-      .populate('landlordId', 'name email')
-      .populate('tenantId', 'name email');
-    if (!negotiation) return res.status(404).json({ message: 'Not found' });
-    res.json(negotiation);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Get all lease negotiations for landlord
-router.get('/my', auth, async (req, res) => {
-  try {
-    const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
-      .populate('houseId', 'name location')
-      .populate('tenantId', 'name email')
-      .sort({ createdAt: -1 });
-    res.json(leases);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Check existing negotiation for tenant
-router.get('/check/:houseId', auth, async (req, res) => {
-  try {
-    const negotiation = await LeaseNegotiation.findOne({
-      houseId: req.params.houseId,
-      status: { $in: ['draft', 'negotiating', 'agreed'] }
-    });
-    res.json(negotiation);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // Terminate lease
 router.put('/terminate/:contractId', auth, async (req, res) => {
   try {
@@ -540,9 +522,19 @@ router.put('/terminate/:contractId', auth, async (req, res) => {
   }
 });
 
-// Test endpoint
-router.get('/test', (req, res) => {
-  res.json({ message: 'Lease route is working!' });
+// Get lease negotiation details (must be LAST – catches :negotiationId)
+router.get('/:negotiationId', auth, async (req, res) => {
+  try {
+    const negotiation = await LeaseNegotiation.findById(req.params.negotiationId)
+      .populate('houseId', 'name location images')
+      .populate('landlordId', 'name email')
+      .populate('tenantId', 'name email');
+    if (!negotiation) return res.status(404).json({ message: 'Not found' });
+    res.json(negotiation);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 module.exports = router;
