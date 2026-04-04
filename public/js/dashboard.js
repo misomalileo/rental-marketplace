@@ -160,16 +160,38 @@ async function loadUnreadCount() {
   } catch (err) { console.error(err); }
 }
 setInterval(loadUnreadCount, 30000);
+
+// Improved map initialization with retry
 function initMap() {
-  map = L.map('map').setView([-15.7861, 35.0058], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-  map.on("click", function (e) { document.getElementById("latitude").value = e.latlng.lat; document.getElementById("longitude").value = e.latlng.lng; if (marker) map.removeLayer(marker); marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map); });
+  const mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  // Ensure container is visible
+  setTimeout(() => {
+    map = L.map('map').setView([-15.7861, 35.0058], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    map.on("click", function (e) {
+      document.getElementById("latitude").value = e.latlng.lat;
+      document.getElementById("longitude").value = e.latlng.lng;
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+    });
+  }, 100);
 }
 function getLocation() {
+  const statusDiv = document.getElementById('gpsStatus');
+  if (!statusDiv) return;
+  statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Getting location...';
   navigator.geolocation.getCurrentPosition(position => {
     const lat = position.coords.latitude, lng = position.coords.longitude;
-    document.getElementById("latitude").value = lat; document.getElementById("longitude").value = lng;
-    map.setView([lat, lng], 16); if (marker) map.removeLayer(marker); marker = L.marker([lat, lng]).addTo(map);
+    document.getElementById("latitude").value = lat;
+    document.getElementById("longitude").value = lng;
+    map.setView([lat, lng], 16);
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Location captured!';
+    setTimeout(() => statusDiv.innerHTML = '', 3000);
+  }, () => {
+    statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Unable to get location. Please allow permissions.';
   });
 }
 async function loadMyHouses() {
@@ -218,9 +240,9 @@ async function loadHouseStats() {
     const labels = viewsData.map(d => d.date);
     const views = viewsData.map(d => d.views);
     if (viewsChart) viewsChart.destroy();
-    viewsChart = new Chart(document.getElementById('viewsChart'), { type: 'line', data: { labels, datasets: [{ label: 'Views', data: views, borderColor: '#3498db', fill: true }] } });
+    viewsChart = new Chart(document.getElementById('viewsChart'), { type: 'line', data: { labels, datasets: [{ label: 'Views', data: views, borderColor: '#3498db', fill: true, tension: 0.3 }] }, options: { responsive: true, plugins: { legend: { position: 'top' } } } });
     if (earningsChart) earningsChart.destroy();
-    earningsChart = new Chart(document.getElementById('earningsChart'), { type: 'bar', data: { labels: ['Week 1','Week 2','Week 3','Week 4'], datasets: [{ label: 'MWK', data: [10000,15000,8000,20000], backgroundColor: '#2ecc71' }] } });
+    earningsChart = new Chart(document.getElementById('earningsChart'), { type: 'bar', data: { labels: ['Week 1','Week 2','Week 3','Week 4'], datasets: [{ label: 'MWK', data: [10000,15000,8000,20000], backgroundColor: '#2ecc71', borderRadius: 8 }] } });
     if (conversionChart) conversionChart.destroy();
     conversionChart = new Chart(document.getElementById('conversionChart'), { type: 'doughnut', data: { labels: ['Converted','Not'], datasets: [{ data: [5,95], backgroundColor: ['#f1c40f','#95a5a6'] }] } });
     const avgViews = views.reduce((a,b)=>a+b,0)/views.length;
@@ -234,10 +256,20 @@ function renderHouses(houses) {
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     const card = document.createElement("div"); card.className = "house-card";
     const featureButton = house.featured ? '<span class="featured-badge"><i class="fas fa-star"></i> Featured</span>' : `<button class="feature-btn" onclick="featureHouse('${house._id}')"><i class="fas fa-crown"></i> Feature (K5000)</button>`;
-    card.innerHTML = `<img src="${img}"><div class="house-content"><h3>${house.name}</h3><p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p><p><i class="fas fa-money-bill-wave"></i> MWK ${house.price?.toLocaleString()}</p><p><i class="fas fa-eye"></i> ${house.views||0}</p><p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'No ratings'}</p><div class="house-actions"><button class="edit" onclick="openEditModal('${house._id}')"><i class="fas fa-edit"></i> Edit</button><button class="delete" onclick="deleteHouse('${house._id}')"><i class="fas fa-trash-alt"></i> Delete</button>${featureButton}</div></div>`;
+    card.innerHTML = `<img src="${img}"><div class="house-content"><h3>${house.name}</h3><p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p><p><i class="fas fa-money-bill-wave"></i> MWK ${house.price?.toLocaleString()}</p><p><i class="fas fa-eye"></i> ${house.views||0}</p><p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'No ratings'}</p><div class="house-actions"><button class="edit" onclick="openEditModal('${house._id}')"><i class="fas fa-edit"></i> Edit</button><button class="delete" onclick="deleteHouse('${house._id}')"><i class="fas fa-trash-alt"></i> Delete</button>${featureButton}<button class="booking-btn" onclick="openBookingModalFromDashboard('${house._id}', '${house.name}')"><i class="fas fa-calendar-check"></i> Request Booking</button></div></div>`;
     container.appendChild(card);
   });
 }
+// Helper to open booking modal (reuses existing modal)
+window.openBookingModalFromDashboard = function(houseId, houseName) {
+  window.currentBookingHouseId = houseId;
+  document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
+  document.getElementById("bookingStart").value = '';
+  document.getElementById("bookingEnd").value = '';
+  document.getElementById("bookingMessage").value = '';
+  document.getElementById("bookingStatus").innerHTML = '';
+  document.getElementById("bookingModal").style.display = "block";
+};
 async function deleteHouse(id) {
   if (!confirm("Delete permanently?")) return;
   showLoading();
@@ -403,11 +435,15 @@ function showCounterModal(offerId) {
   const comment = prompt('Optional message to tenant:');
   fetch(`/api/offers/${offerId}/counter`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ counterOfferPrice: parseInt(price), moveInDate, landlordComment: comment || '' }) }).then(res => res.json()).then(data => { if (data.message) alert(data.message); loadOffers(); }).catch(err => console.error(err));
 }
-// ========== LEASE NEGOTIATIONS (with download button for signed contracts) ==========
+// ========== LEASE NEGOTIATIONS (fixed) ==========
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch("/api/lease/my", { headers: { Authorization: "Bearer " + token } });
-    if (!res.ok) throw new Error('Failed to fetch leases');
+    if (!res.ok) {
+      console.error("Failed to fetch leases:", res.status, res.statusText);
+      document.getElementById("leaseList").innerHTML = "<p>Error loading lease negotiations. Please ensure the lease route is configured.</p>";
+      return;
+    }
     const leases = await res.json();
     const container = document.getElementById("leaseList");
     if (!container) return;
@@ -430,8 +466,9 @@ async function loadLeaseNegotiations() {
         statusClass += ' rejected';
       }
       const tenantName = lease.tenantId?.name || 'Not joined';
+      // Use the new download endpoint (signed token) for security
       const downloadButton = (lease.status === 'signed' || lease.status === 'active') 
-        ? `<a href="/contracts/contract_${lease._id}.pdf" target="_blank" class="btn" style="background: #2563eb; color: white; padding: 0.3rem 0.8rem; border-radius: 30px; text-decoration: none; font-size: 0.7rem; display: inline-block; margin-left: 0.5rem;"><i class="fas fa-download"></i> Contract</a>`
+        ? `<button class="btn" style="background: #2563eb; color: white; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; margin-left: 0.5rem;" onclick="downloadLeaseContract('${lease._id}')"><i class="fas fa-download"></i> Contract</button>`
         : '';
       return `
         <div class="lease-card">
@@ -457,6 +494,22 @@ async function loadLeaseNegotiations() {
     document.getElementById("leaseList").innerHTML = "<p>Error loading lease negotiations. Please refresh.</p>";
   }
 }
+// Helper to download contract via signed URL
+window.downloadLeaseContract = async function(negotiationId) {
+  try {
+    const res = await fetch(`/api/lease/download-temp/${negotiationId}`, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const data = await res.json();
+    if (res.ok && data.downloadUrl) {
+      window.open(data.downloadUrl, '_blank');
+    } else {
+      alert('Failed to get download link');
+    }
+  } catch (err) {
+    alert('Network error');
+  }
+};
 
 // Initialize everything
 initMap();
@@ -477,3 +530,4 @@ window.updateBooking = updateBooking;
 window.openEditProfile = openEditProfile;
 window.closeProfileModal = closeProfileModal;
 window.deleteOffer = deleteOffer;
+window.downloadLeaseContract = downloadLeaseContract;
