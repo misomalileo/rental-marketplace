@@ -12,6 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Icon Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Swiper CSS (for carousel) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   <!-- Leaflet, Draw, MarkerCluster, noUiSlider -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
@@ -26,7 +28,7 @@
   <!-- Signature Pad for leases -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <style>
-    /* ========== THEME VARIABLES (same as before – keep your existing CSS) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -116,6 +118,138 @@
       font-family: 'Poppins', 'Inter', sans-serif;
       font-weight: 700;
       letter-spacing: -0.02em;
+    }
+
+    /* ========== HERO CAROUSEL (3D, modern, wow) ========== */
+    .carousel-section {
+      margin: 1.5rem 1.5rem 2rem;
+      position: relative;
+    }
+    .carousel-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      padding: 1.5rem 0.5rem 2rem 0.5rem;
+      box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .carousel-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0 1.5rem;
+      margin-bottom: 1.2rem;
+      color: var(--text-color);
+    }
+    .carousel-title i {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-size: 1.6rem;
+    }
+    .carousel-subtitle {
+      font-size: 0.8rem;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-left: 0.5rem;
+    }
+    .hero-swiper {
+      width: 100%;
+      padding: 0.5rem 0.8rem;
+      overflow: hidden;
+    }
+    .swiper-slide {
+      background: var(--card-bg);
+      border-radius: 24px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+    .swiper-slide:hover {
+      transform: translateY(-8px) rotateX(3deg);
+      box-shadow: 0 20px 30px -8px rgba(0,0,0,0.2);
+    }
+    .carousel-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .carousel-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .carousel-card-content {
+      padding: 1rem;
+    }
+    .carousel-card-content h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .carousel-card-content p {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin: 0.2rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .carousel-price {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0.5rem 0;
+    }
+    .carousel-btn {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    .carousel-btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
+    .swiper-pagination-bullet {
+      background: var(--text-color);
+      opacity: 0.5;
+    }
+    .swiper-pagination-bullet-active {
+      background: var(--primary);
+      opacity: 1;
+    }
+    .swiper-button-next, .swiper-button-prev {
+      color: var(--primary);
+      background: rgba(255,255,255,0.8);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      backdrop-filter: blur(4px);
+    }
+    .swiper-button-next:after, .swiper-button-prev:after {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    @media (max-width: 768px) {
+      .carousel-section { margin: 1rem; }
+      .carousel-title { font-size: 1.2rem; }
+      .swiper-slide { width: 80%; }
     }
 
     /* ========== OFFER STATUS CARDS (RENTAL BIDDING) ========== */
@@ -364,6 +498,24 @@
     </div>
   </header>
 
+  <!-- ========== NEW 3D HERO CAROUSEL ========== -->
+  <div class="carousel-section">
+    <div class="carousel-container">
+      <div class="carousel-title">
+        <i class="fas fa-fire"></i> Featured Properties
+        <span class="carousel-subtitle">Handpicked for you</span>
+      </div>
+      <div class="swiper hero-swiper">
+        <div class="swiper-wrapper" id="carousel-wrapper">
+          <!-- Slides will be injected by JS -->
+        </div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+      </div>
+    </div>
+  </div>
+
   <main class="main-container">
     <div class="filters-row">
       <div class="price-range">
@@ -492,7 +644,72 @@
   <script src="js/script.js"></script>
   <script src="js/chatbot.js"></script>
   <script src="js/lease.js"></script>
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
+    // ========== HERO CAROUSEL LOADER ==========
+    let heroSwiper = null;
+
+    async function loadHeroCarousel() {
+      try {
+        const res = await fetch('/api/houses?page=1&limit=6');
+        const data = await res.json();
+        const houses = data.houses || [];
+        const wrapper = document.getElementById('carousel-wrapper');
+        if (!wrapper) return;
+        if (houses.length === 0) {
+          wrapper.innerHTML = '<div class="swiper-slide">No properties to display</div>';
+          return;
+        }
+        wrapper.innerHTML = houses.map(house => `
+          <div class="swiper-slide">
+            <div class="carousel-card">
+              <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}">
+              <div class="carousel-card-content">
+                <h3>${escapeHtml(house.name)}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
+                <div class="carousel-price">MWK ${Number(house.price).toLocaleString()}</div>
+                <button class="carousel-btn" onclick="showDetails('${house._id}')">View Details</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        if (heroSwiper) heroSwiper.destroy(true, true);
+        heroSwiper = new Swiper('.hero-swiper', {
+          loop: true,
+          autoplay: { delay: 5000, disableOnInteraction: false },
+          effect: 'slide',
+          grabCursor: true,
+          slidesPerView: 1,
+          spaceBetween: 20,
+          breakpoints: {
+            640: { slidesPerView: 2 },
+            1024: { slidesPerView: 3 },
+            1280: { slidesPerView: 4 }
+          },
+          pagination: { el: '.swiper-pagination', clickable: true },
+          navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
+        });
+      } catch (err) {
+        console.error('Failed to load carousel:', err);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
+
+    // Load carousel after page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      loadHeroCarousel();
+    });
+
     // Lightbox functions (no conflict)
     let currentLightboxImages = [];
     let currentImageIndex = 0;
@@ -500,12 +717,16 @@
     function closeLightbox() { document.getElementById('lightboxModal').style.display = 'none'; document.body.style.overflow = ''; }
     function showPrevImage() { if (currentLightboxImages.length === 0) return; currentImageIndex = (currentImageIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length; document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex]; document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`; }
     function showNextImage() { if (currentLightboxImages.length === 0) return; currentImageIndex = (currentImageIndex + 1) % currentLightboxImages.length; document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex]; document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${currentLightboxImages.length}`; }
-    document.addEventListener('DOMContentLoaded', () => { const modal = document.getElementById('lightboxModal'); const closeBtn = document.querySelector('.lightbox-close'); const prevBtn = document.querySelector('.lightbox-prev'); const nextBtn = document.querySelector('.lightbox-next'); if (closeBtn) closeBtn.addEventListener('click', closeLightbox); if (prevBtn) prevBtn.addEventListener('click', showPrevImage); if (nextBtn) nextBtn.addEventListener('click', showNextImage); if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeLightbox(); }); });
+    document.querySelector('.lightbox-close')?.addEventListener('click', closeLightbox);
+    document.querySelector('.lightbox-prev')?.addEventListener('click', showPrevImage);
+    document.querySelector('.lightbox-next')?.addEventListener('click', showNextImage);
+    document.getElementById('lightboxModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('lightboxModal')) closeLightbox(); });
+
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
     window.openBookingModal = function(houseId, houseName) { window.currentBookingHouseId = houseId; document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`; document.getElementById("bookingStart").value = ''; document.getElementById("bookingEnd").value = ''; document.getElementById("bookingMessage").value = ''; document.getElementById("bookingStatus").innerHTML = ''; document.getElementById("bookingModal").style.display = "block"; };
     window.closeBookingModal = function() { document.getElementById("bookingModal").style.display = "none"; window.currentBookingHouseId = null; };
-    document.getElementById("bookingForm").addEventListener("submit", async e => { e.preventDefault(); const token = localStorage.getItem("token"); if (!token) { alert("Please login to book"); return; } const start = document.getElementById("bookingStart").value; const end = document.getElementById("bookingEnd").value; const message = document.getElementById("bookingMessage").value; if (!start || !end) { alert("Please select both dates"); return; } const statusDiv = document.getElementById("bookingStatus"); statusDiv.innerHTML = "Sending..."; try { const res = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ houseId: window.currentBookingHouseId, startDate: start, endDate: end, message }) }); const data = await res.json(); if (res.ok) { statusDiv.innerHTML = "✅ Booking request sent!"; setTimeout(() => window.closeBookingModal(), 2000); } else { statusDiv.innerHTML = "❌ " + (data.message || "Error"); } } catch (err) { statusDiv.innerHTML = "❌ Network error"; } });
+    document.getElementById("bookingForm")?.addEventListener("submit", async e => { e.preventDefault(); const token = localStorage.getItem("token"); if (!token) { alert("Please login to book"); return; } const start = document.getElementById("bookingStart").value; const end = document.getElementById("bookingEnd").value; const message = document.getElementById("bookingMessage").value; if (!start || !end) { alert("Please select both dates"); return; } const statusDiv = document.getElementById("bookingStatus"); statusDiv.innerHTML = "Sending..."; try { const res = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ houseId: window.currentBookingHouseId, startDate: start, endDate: end, message }) }); const data = await res.json(); if (res.ok) { statusDiv.innerHTML = "✅ Booking request sent!"; setTimeout(() => window.closeBookingModal(), 2000); } else { statusDiv.innerHTML = "❌ " + (data.message || "Error"); } } catch (err) { statusDiv.innerHTML = "❌ Network error"; } });
     window.openLightbox = openLightbox;
     window.closeSaveSearchModal = function() { document.getElementById('saveSearchModal').style.display = 'none'; };
 
@@ -513,7 +734,7 @@
     const newsletterForm = document.getElementById('footerNewsletterForm');
     if (newsletterForm) { newsletterForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = newsletterForm.querySelector('input').value.trim(); const statusDiv = document.getElementById('newsletterStatus'); if (!email) return; statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Subscribing...'; setTimeout(() => { statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Thanks for subscribing!'; newsletterForm.reset(); setTimeout(() => { statusDiv.innerHTML = ''; }, 3000); }, 500); }); }
 
-    // User menu (fixed – no stray HTML)
+    // User menu
     let currentUser = null;
     const userMenu = document.getElementById('userMenu');
     const userAvatar = document.getElementById('userAvatar');
@@ -526,22 +747,10 @@
       if (!token) {
         userMenu.style.display = 'block';
         userDropdown.innerHTML = `
-          <div class="dropdown-header">
-            <div class="avatar"><i class="fas fa-user"></i></div>
-            <div class="info">
-              <h4>Guest User</h4>
-              <p>Sign in for more features</p>
-            </div>
-          </div>
-          <div class="dropdown-item" id="becomeLandlordGuest">
-            <i class="fas fa-building"></i> Become a Landlord
-          </div>
-          <div class="dropdown-item" id="becomePremiumGuest">
-            <i class="fas fa-gem"></i> Become a Premium User <span class="premium-badge">MWK 500/mo</span>
-          </div>
-          <div class="dropdown-item" id="loginGuest">
-            <i class="fas fa-sign-in-alt"></i> Login / Register
-          </div>
+          <div class="dropdown-header"><div class="avatar"><i class="fas fa-user"></i></div><div class="info"><h4>Guest User</h4><p>Sign in for more features</p></div></div>
+          <div class="dropdown-item" id="becomeLandlordGuest"><i class="fas fa-building"></i> Become a Landlord</div>
+          <div class="dropdown-item" id="becomePremiumGuest"><i class="fas fa-gem"></i> Become a Premium User <span class="premium-badge">MWK 500/mo</span></div>
+          <div class="dropdown-item" id="loginGuest"><i class="fas fa-sign-in-alt"></i> Login / Register</div>
         `;
         document.getElementById('becomeLandlordGuest')?.addEventListener('click', () => { window.location.href = 'register.html?role=landlord'; });
         document.getElementById('becomePremiumGuest')?.addEventListener('click', () => { window.location.href = 'register.html?role=premium_user'; });
@@ -565,13 +774,7 @@
       const avatarDiv = userAvatar;
       avatarDiv.innerHTML = currentUser.profilePicture ? `<img src="${currentUser.profilePicture}">` : `<span>${userInitial}</span>`;
       userDropdown.innerHTML = `
-        <div class="dropdown-header">
-          <div class="avatar">${currentUser.profilePicture ? `<img src="${currentUser.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`}</div>
-          <div class="info">
-            <h4>${escapeHtml(userName)}</h4>
-            <p>${currentUser.role === 'premium_user' ? 'Premium User' : (currentUser.role === 'premium_landlord' ? 'Premium Landlord' : (currentUser.role === 'admin' ? 'Admin' : 'Free User'))}</p>
-          </div>
-        </div>
+        <div class="dropdown-header"><div class="avatar">${currentUser.profilePicture ? `<img src="${currentUser.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`}</div><div class="info"><h4>${escapeHtml(userName)}</h4><p>${currentUser.role === 'premium_user' ? 'Premium User' : (currentUser.role === 'premium_landlord' ? 'Premium Landlord' : (currentUser.role === 'admin' ? 'Admin' : 'Free User'))}</p></div></div>
         <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
         <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
         <div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>
@@ -585,7 +788,6 @@
       document.getElementById('logoutLink')?.addEventListener('click', () => { localStorage.removeItem('token'); localStorage.removeItem('role'); window.location.reload(); });
     }
 
-    function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
     loadCurrentUser();
   </script>
 </body>

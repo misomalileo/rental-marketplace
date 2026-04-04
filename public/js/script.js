@@ -17,6 +17,68 @@ let currentShareHouseId = null;
 let comparisonList = [];
 let currentRegion = '';
 
+// ========== NEW: HERO CAROUSEL ==========
+let heroSwiper = null;
+
+// ========== HELPER: ESCAPE HTML (used by carousel) ==========
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+// ========== LOAD CAROUSEL SLIDES ==========
+async function loadHeroCarousel() {
+  try {
+    // Fetch first 6 houses (will later be filtered for premium/featured)
+    const res = await fetch('/api/houses?page=1&limit=6');
+    const data = await res.json();
+    const houses = data.houses || [];
+    const wrapper = document.getElementById('carousel-wrapper');
+    if (!wrapper) return;
+    if (houses.length === 0) {
+      wrapper.innerHTML = '<div class="swiper-slide">No properties to display</div>';
+      return;
+    }
+    wrapper.innerHTML = houses.map(house => `
+      <div class="swiper-slide">
+        <div class="carousel-card">
+          <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}">
+          <div class="carousel-card-content">
+            <h3>${escapeHtml(house.name)}</h3>
+            <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
+            <div class="carousel-price">MWK ${Number(house.price).toLocaleString()}</div>
+            <button class="carousel-btn" onclick="showDetails('${house._id}')">View Details</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    // Destroy existing Swiper if any, then create new one
+    if (heroSwiper) heroSwiper.destroy(true, true);
+    heroSwiper = new Swiper('.hero-swiper', {
+      loop: true,
+      autoplay: { delay: 5000, disableOnInteraction: false },
+      effect: 'slide',
+      grabCursor: true,
+      slidesPerView: 1,
+      spaceBetween: 20,
+      breakpoints: {
+        640: { slidesPerView: 2 },
+        1024: { slidesPerView: 3 },
+        1280: { slidesPerView: 4 }
+      },
+      pagination: { el: '.swiper-pagination', clickable: true },
+      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
+    });
+  } catch (err) {
+    console.error('Failed to load carousel:', err);
+  }
+}
+
 // Region mapping (districts to regions)
 const regionMap = {
   'Mzuzu': 'Northern', 'Rumphi': 'Northern', 'Karonga': 'Northern', 'Chitipa': 'Northern',
@@ -367,7 +429,7 @@ function openComparisonModal() {
     { label: '<i class="fas fa-star"></i> Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
   ];
   features.forEach(feature => {
-    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
+    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}<td>`;
     housesToCompare.forEach(house => {
       let value = house[feature.key];
       if (feature.format) {
@@ -385,7 +447,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</tr></tbody></td>`;
+  tableHtml += `</tr></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -1091,16 +1153,28 @@ const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (co
 // ======================================
 // INITIALIZATION
 // ======================================
-initMap();
-initPriceSlider();
-const sortSelect = document.getElementById('sortSelect'); if (sortSelect) sortSelect.addEventListener('change', handleSortChange);
-const saveBtn = document.getElementById('saveSearchBtn'); if (saveBtn) saveBtn.addEventListener('click', saveSearch);
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('page')) currentPage = parseInt(urlParams.get('page'));
-if (urlParams.has('type')) { currentType = urlParams.get('type'); document.querySelectorAll('.tab-btn').forEach(btn => { if (btn.dataset.type === currentType) btn.classList.add('active'); else btn.classList.remove('active'); }); }
-if (urlParams.has('sort')) currentSort = urlParams.get('sort');
-if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
-loadHouses(currentPage, currentType, currentFilters, currentSort);
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  initPriceSlider();
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) sortSelect.addEventListener('change', handleSortChange);
+  const saveBtn = document.getElementById('saveSearchBtn');
+  if (saveBtn) saveBtn.addEventListener('click', saveSearch);
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('page')) currentPage = parseInt(urlParams.get('page'));
+  if (urlParams.has('type')) {
+    currentType = urlParams.get('type');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      if (btn.dataset.type === currentType) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+  }
+  if (urlParams.has('sort')) currentSort = urlParams.get('sort');
+  if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
+  loadHouses(currentPage, currentType, currentFilters, currentSort);
+  // Load the hero carousel
+  loadHeroCarousel();
+});
 
 // Expose functions globally
 window.showDetails = showDetails;
