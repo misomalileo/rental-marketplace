@@ -120,45 +120,64 @@
       letter-spacing: -0.02em;
     }
 
-    /* ========== HERO CAROUSEL (3D, modern, wow) ========== */
+    /* ========== HERO CAROUSEL (Ultra-modern, compact, wow) ========== */
     .carousel-section {
-      margin: 1.5rem 1.5rem 2rem;
+      margin: 1rem 1.5rem 2rem;
       position: relative;
     }
     .carousel-container {
       background: var(--card-bg);
       backdrop-filter: blur(12px);
       border-radius: 32px;
-      padding: 1.5rem 0.5rem 2rem 0.5rem;
+      padding: 1rem 0.5rem 1.8rem 0.5rem;
       box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
       border: 1px solid rgba(255,255,255,0.2);
     }
     .carousel-title {
-      font-size: 1.4rem;
-      font-weight: 700;
+      font-size: 1.6rem;
+      font-weight: 800;
       display: flex;
       align-items: center;
       gap: 0.8rem;
       padding: 0 1.5rem;
-      margin-bottom: 1.2rem;
+      margin-bottom: 1rem;
       color: var(--text-color);
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     .carousel-title i {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
+      background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
+      background-size: 200% auto;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      font-size: 1.6rem;
+      font-size: 2rem;
+      animation: glowPulse 2s ease infinite, gradientShift 3s ease infinite;
+      filter: drop-shadow(0 0 6px rgba(245,158,11,0.4));
+    }
+    @keyframes glowPulse {
+      0% { filter: drop-shadow(0 0 2px rgba(245,158,11,0.2)); }
+      50% { filter: drop-shadow(0 0 12px rgba(245,158,11,0.8)); }
+      100% { filter: drop-shadow(0 0 2px rgba(245,158,11,0.2)); }
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
     .carousel-subtitle {
-      font-size: 0.8rem;
-      font-weight: 400;
-      opacity: 0.7;
+      font-size: 0.75rem;
+      font-weight: 500;
+      opacity: 0.8;
       margin-left: 0.5rem;
+      background: rgba(139,92,246,0.15);
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      letter-spacing: normal;
     }
     .hero-swiper {
       width: 100%;
-      padding: 0.5rem 0.8rem;
+      padding: 0.3rem 0.8rem;
       overflow: hidden;
     }
     .swiper-slide {
@@ -171,7 +190,7 @@
       perspective: 1000px;
     }
     .swiper-slide:hover {
-      transform: translateY(-8px) rotateX(3deg);
+      transform: translateY(-6px) rotateX(2deg);
       box-shadow: 0 20px 30px -8px rgba(0,0,0,0.2);
     }
     .carousel-card {
@@ -181,22 +200,22 @@
     }
     .carousel-card img {
       width: 100%;
-      height: 180px;
+      height: 140px;
       object-fit: cover;
     }
     .carousel-card-content {
-      padding: 1rem;
+      padding: 0.8rem;
     }
     .carousel-card-content h3 {
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.2rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .carousel-card-content p {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       opacity: 0.8;
       margin: 0.2rem 0;
       display: flex;
@@ -204,23 +223,23 @@
       gap: 0.3rem;
     }
     .carousel-price {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: var(--primary);
-      margin: 0.5rem 0;
+      margin: 0.4rem 0;
     }
     .carousel-btn {
       background: var(--button-bg);
       color: white;
       border: none;
       border-radius: 40px;
-      padding: 0.4rem 0.8rem;
-      font-size: 0.7rem;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.65rem;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
       width: 100%;
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
     }
     .carousel-btn:hover {
       background: var(--button-hover);
@@ -237,18 +256,19 @@
     .swiper-button-next, .swiper-button-prev {
       color: var(--primary);
       background: rgba(255,255,255,0.8);
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       backdrop-filter: blur(4px);
     }
     .swiper-button-next:after, .swiper-button-prev:after {
-      font-size: 1.2rem;
+      font-size: 1rem;
       font-weight: bold;
     }
     @media (max-width: 768px) {
-      .carousel-section { margin: 1rem; }
-      .carousel-title { font-size: 1.2rem; }
+      .carousel-section { margin: 0.5rem 1rem; }
+      .carousel-title { font-size: 1.3rem; }
+      .carousel-title i { font-size: 1.6rem; }
       .swiper-slide { width: 80%; }
     }
 
@@ -498,7 +518,7 @@
     </div>
   </header>
 
-  <!-- ========== NEW 3D HERO CAROUSEL ========== -->
+  <!-- ========== STUNNING 3D HERO CAROUSEL (Compact & WOW) ========== -->
   <div class="carousel-section">
     <div class="carousel-container">
       <div class="carousel-title">

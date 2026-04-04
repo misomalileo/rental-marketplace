@@ -17,10 +17,13 @@ let currentShareHouseId = null;
 let comparisonList = [];
 let currentRegion = '';
 
-// ========== NEW: HERO CAROUSEL ==========
+// ========== HERO CAROUSEL ==========
 let heroSwiper = null;
 
-// ========== HELPER: ESCAPE HTML (used by carousel) ==========
+// ========== DREAM MATCH CAROUSEL ==========
+let dreamSwiper = null;
+
+// ========== HELPER: ESCAPE HTML ==========
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>]/g, function(m) {
@@ -31,10 +34,9 @@ function escapeHtml(str) {
   });
 }
 
-// ========== LOAD CAROUSEL SLIDES ==========
+// ========== LOAD HERO CAROUSEL SLIDES ==========
 async function loadHeroCarousel() {
   try {
-    // Fetch first 6 houses (will later be filtered for premium/featured)
     const res = await fetch('/api/houses?page=1&limit=6');
     const data = await res.json();
     const houses = data.houses || [];
@@ -57,7 +59,6 @@ async function loadHeroCarousel() {
         </div>
       </div>
     `).join('');
-    // Destroy existing Swiper if any, then create new one
     if (heroSwiper) heroSwiper.destroy(true, true);
     heroSwiper = new Swiper('.hero-swiper', {
       loop: true,
@@ -79,7 +80,78 @@ async function loadHeroCarousel() {
   }
 }
 
-// Region mapping (districts to regions)
+// ========== DREAM HOME MATCH ==========
+async function submitDreamMatch(e) {
+  e.preventDefault();
+  const workFromHome = document.getElementById("dream_workFromHome").value;
+  const social = document.getElementById("dream_social").value;
+  const outdoor = document.getElementById("dream_outdoor").value;
+  const noise = document.getElementById("dream_noise").value;
+  const maxPrice = document.getElementById("dream_maxPrice").value;
+  const bedrooms = document.getElementById("dream_bedrooms").value;
+
+  const resultsDiv = document.getElementById("dreamMatchResults");
+  const wrapper = document.getElementById("dreamMatchWrapper");
+  resultsDiv.style.display = "block";
+  wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div></div></div>';
+
+  try {
+    const res = await fetch("/api/dream-match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workFromHome, social, outdoor, noise, maxPrice, bedrooms })
+    });
+    const data = await res.json();
+    if (!data.houses || data.houses.length === 0) {
+      wrapper.innerHTML = `<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content">${data.message || "No matches found. Adjust your preferences."}</div></div></div>`;
+      return;
+    }
+    wrapper.innerHTML = data.houses.map(house => `
+      <div class="swiper-slide">
+        <div class="dream-card">
+          <img src="${house.image}" alt="${escapeHtml(house.name)}">
+          <div class="dream-card-content">
+            <div class="dream-match-badge"><i class="fas fa-chart-line"></i> ${Math.round(house.score)}% Match</div>
+            <h3>${escapeHtml(house.name)}</h3>
+            <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
+            <div class="dream-price">MWK ${Number(house.price).toLocaleString()}</div>
+            <button class="carousel-btn" onclick="showDetails('${house.id}'); closeDreamMatchModal();">View Details</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    if (dreamSwiper) dreamSwiper.destroy(true, true);
+    dreamSwiper = new Swiper('.dream-swiper', {
+      loop: true,
+      slidesPerView: 1,
+      spaceBetween: 20,
+      breakpoints: {
+        640: { slidesPerView: 2 },
+        1024: { slidesPerView: 3 }
+      },
+      pagination: { el: '.swiper-pagination', clickable: true },
+      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
+    });
+  } catch (err) {
+    console.error(err);
+    wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content">Network error. Please try again.</div></div></div>';
+  }
+}
+
+function openDreamMatchModal() {
+  const modal = document.getElementById("dreamMatchModal");
+  if (modal) modal.style.display = "block";
+  document.getElementById("dreamMatchForm").reset();
+  document.getElementById("dreamMatchResults").style.display = "none";
+}
+
+function closeDreamMatchModal() {
+  const modal = document.getElementById("dreamMatchModal");
+  if (modal) modal.style.display = "none";
+}
+
+// ========== REGION MAPPING ==========
 const regionMap = {
   'Mzuzu': 'Northern', 'Rumphi': 'Northern', 'Karonga': 'Northern', 'Chitipa': 'Northern',
   'Nkhata Bay': 'Northern', 'Mzimba': 'Northern',
@@ -440,7 +512,7 @@ function openComparisonModal() {
       }
       tableHtml += `<td style="padding: 8px;">${value}</td>`;
     });
-    tableHtml += `</tr>`;
+    tableHtml += `<tr>`;
   });
   tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
   housesToCompare.forEach(house => {
@@ -1114,7 +1186,7 @@ async function showDetails(houseId) {
 }
 
 // ======================================
-// CLOSE PROPERTY MODAL (FIXED)
+// CLOSE PROPERTY MODAL
 // ======================================
 function closePropertyModal() {
   const modal = document.getElementById('propertyModal');
@@ -1149,6 +1221,15 @@ const nearBtn = document.getElementById("nearMeBtn"); if (nearBtn) { nearBtn.onc
 const gpsBtn = document.getElementById("getLocationBtn"); if (gpsBtn) { gpsBtn.addEventListener("click", () => { const status = document.getElementById("gpsStatus"); if (navigator.geolocation) { status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Getting location..."; navigator.geolocation.getCurrentPosition(pos => { document.getElementById("latitude").value = pos.coords.latitude; document.getElementById("longitude").value = pos.coords.longitude; status.innerHTML = `<i class="fas fa-check-circle"></i> Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`; }, () => { status.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Allow location access"; }, { enableHighAccuracy: true }); } else { status.innerHTML = "GPS not supported"; } }); }
 const regionSelect = document.getElementById('regionFilter'); if (regionSelect) regionSelect.addEventListener('change', () => { currentRegion = regionSelect.value; applyRegionFilter(); });
 const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (compareFloatingBtn) compareFloatingBtn.addEventListener('click', openComparisonModal);
+
+// ========== DREAM MATCH EVENT LISTENERS ==========
+const dreamLink = document.getElementById('dreamMatchLink');
+if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
+const dreamForm = document.getElementById('dreamMatchForm');
+if (dreamForm) dreamForm.addEventListener('submit', submitDreamMatch);
+const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
+if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
+window.closeDreamMatchModal = closeDreamMatchModal;
 
 // ======================================
 // INITIALIZATION
