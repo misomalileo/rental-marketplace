@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <!-- Add CSP to allow Leaflet images from cdn.jsdelivr.net (already allowed) -->
+  <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: blob: https://maps.google.com https://*.tile.openstreetmap.org https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://res.cloudinary.com https://images.pexels.com https://maps.googleapis.com;">
   <title>Landlord Dashboard | Khomo Lathu</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
@@ -14,10 +16,20 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Fix Leaflet marker icons to use allowed CDN -->
+  <script>
+    // Override Leaflet's default icon to use cdn.jsdelivr.net (allowed by CSP)
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ========== THEME VARIABLES ========== */
+    /* ========== THEME VARIABLES (same as before) ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -279,7 +291,7 @@
     .tab-content { display: none; animation: fadeIn 0.3s ease; }
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    /* Upload Wizard (same as before) */
+    /* Upload Wizard */
     .upload-wizard {
       background: var(--card-bg);
       border-radius: 28px;
@@ -341,6 +353,23 @@
     .modal-content { background: var(--card-bg-solid); margin: 20px auto; padding: 1.2rem; border-radius: 32px; width: 90%; max-width: 600px; }
     .close-btn { float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
     footer { text-align: center; padding: 1.5rem; background: var(--footer-bg); border-top: 1px solid var(--input-border); margin-top: 2rem; font-size: 0.75rem; }
+    /* Loading Overlay */
+    #loadingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 1rem;
+      display: none;
+    }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
       .stats-grid { grid-template-columns: repeat(2,1fr); }
@@ -349,6 +378,9 @@
   </style>
 </head>
 <body>
+  <!-- Loading Overlay (added to fix showLoading error) -->
+  <div id="loadingOverlay"><div><i class="fas fa-spinner fa-pulse"></i> Processing...</div></div>
+
   <nav class="navbar">
     <div class="logo"><i class="fas fa-crown"></i> Khomo Lathu</div>
     <div class="nav-links">
@@ -490,7 +522,7 @@
     </div>
   </div>
 
-  <!-- Modals (same as your original, kept intact) -->
+  <!-- Modals (unchanged) -->
   <div id="profileModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeProfileModal()">&times;</span><h2><i class="fas fa-user-edit"></i> Complete Your Profile</h2><form id="profileForm"><div class="form-group"><label>Full Name *</label><input type="text" id="profileName" required></div><div class="form-group"><label>Phone Number (265...)</label><input type="tel" id="profilePhone" pattern="265[0-9]{9}" required></div><div class="form-group"><label>Business Name</label><input type="text" id="profileBusinessName"></div><div class="form-group"><label>Address</label><input type="text" id="profileAddress"></div><div class="form-group"><label>Bio</label><textarea id="profileBio" rows="2"></textarea></div><div class="form-group"><label>Profile Picture</label><input type="file" id="profilePicture" accept="image/*"><div id="profilePreview"></div></div><button type="submit" class="upload-btn">Save Profile</button></form></div></div>
 
   <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit House</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId"><div class="form-group"><label>House Name</label><input type="text" id="editName" name="name" required></div><div class="form-group"><label>Location</label><input type="text" id="editLocation" name="location" required></div><div class="form-group"><label>Price</label><input type="number" id="editPrice" name="price" required></div><div class="form-group"><label>WhatsApp</label><input type="text" id="editPhone" name="phone" required></div><div class="form-group"><label>Description</label><textarea id="editDescription" name="description"></textarea></div><div class="form-group"><label>Type</label><select id="editType" name="type"><option>House</option><option>Hostel</option><option>Apartment</option><option>Room</option><option>Office</option></select></div><div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" name="bedrooms" value="0"></div><div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> Pool</label><label><input type="checkbox" id="editAC" name="ac"> AC</label></div><div class="form-group"><label>Unavailable Dates</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly></div><div class="form-group"><label>New Photos</label><input type="file" name="images" multiple accept="image/*"></div><div class="form-group"><label>Virtual Tour</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl"></div><div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div><div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div><button type="button" class="gps-btn" onclick="getEditLocation()">Use GPS</button><div id="editMap" style="height: 180px;"></div><button type="submit" class="upload-btn">Save Changes</button></form></div></div>
@@ -506,7 +538,7 @@
   <script src="js/dashboard.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
-    // ========== NOTIFICATION BELL (added to existing dashboard.js functions) ==========
+    // ========== NOTIFICATION BELL (added) ==========
     async function loadNotifications() {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -543,8 +575,7 @@
       return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
     }
     async function markNotificationRead(notifId) {
-      // In real backend, you would call an endpoint to mark as read.
-      // For now, just reload.
+      // Optional: call backend to mark as read
       loadNotifications();
     }
     document.getElementById('notificationBell')?.addEventListener('click', (e) => {
@@ -556,11 +587,10 @@
       const dropdown = document.getElementById('notificationDropdown');
       if (dropdown) dropdown.classList.remove('active');
     });
-    // Load notifications periodically
     setInterval(loadNotifications, 30000);
     loadNotifications();
 
-    // Tab switching (matches your original tab IDs)
+    // Tab switching (matches your dashboard.js)
     document.querySelectorAll('.tab-btn-dash').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn-dash').forEach(b => b.classList.remove('active'));
@@ -571,7 +601,7 @@
       });
     });
 
-    // Wizard navigation (same as your original)
+    // Wizard navigation
     let currentStep = 1;
     const steps = document.querySelectorAll('.wizard-step');
     const navBtns = document.querySelectorAll('.wizard-nav-btn');
