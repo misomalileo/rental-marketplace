@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ========== THEME VARIABLES (same as before) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -126,8 +126,9 @@
       position: sticky;
       top: 0;
       z-index: 1000;
+      flex-wrap: wrap;
     }
-    .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .logo { font-size: 1.6rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .logo i { margin-right: 6px; font-size: 1.4rem; }
     .nav-links { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
     .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
@@ -179,8 +180,8 @@
     .notification-item .message { font-size: 0.7rem; opacity: 0.8; margin-top: 0.2rem; }
     .notification-item .time { font-size: 0.6rem; color: var(--gray-500); margin-top: 0.2rem; }
     .lang-select, .theme-select { padding: 0.25rem 0.6rem; border-radius: 30px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; }
-    /* Main container */
-    .main-container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
+    /* Dashboard Container */
+    .dashboard-container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
     /* Profile Card */
     .profile-card {
       background: var(--card-bg);
@@ -228,7 +229,7 @@
       align-items: center;
       gap: 1rem;
     }
-    /* Charts */
+    /* Chart Containers */
     .chart-container {
       background: var(--card-bg);
       backdrop-filter: blur(8px);
@@ -278,7 +279,7 @@
     .tab-content { display: none; animation: fadeIn 0.3s ease; }
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    /* Upload Wizard */
+    /* Upload Wizard (same as before) */
     .upload-wizard {
       background: var(--card-bg);
       border-radius: 28px;
@@ -368,7 +369,7 @@
     </div>
   </nav>
 
-  <div class="main-container">
+  <div class="dashboard-container">
     <h1 style="margin-bottom: 1rem;"><i class="fas fa-chart-line"></i> Landlord Dashboard</h1>
 
     <!-- Profile Card -->
@@ -489,12 +490,14 @@
     </div>
   </div>
 
-  <!-- Edit Modal -->
-  <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit House</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId">...</form></div></div>
-  <!-- Profile Modal -->
-  <div id="profileModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeProfileModal()">&times;</span><h2>Edit Profile</h2><form id="profileForm">...</form></div></div>
-  <!-- Payment Modal -->
-  <div id="paymentModal" class="modal" style="display:none;"><div class="modal-content">...</div></div>
+  <!-- Modals (same as your original, kept intact) -->
+  <div id="profileModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeProfileModal()">&times;</span><h2><i class="fas fa-user-edit"></i> Complete Your Profile</h2><form id="profileForm"><div class="form-group"><label>Full Name *</label><input type="text" id="profileName" required></div><div class="form-group"><label>Phone Number (265...)</label><input type="tel" id="profilePhone" pattern="265[0-9]{9}" required></div><div class="form-group"><label>Business Name</label><input type="text" id="profileBusinessName"></div><div class="form-group"><label>Address</label><input type="text" id="profileAddress"></div><div class="form-group"><label>Bio</label><textarea id="profileBio" rows="2"></textarea></div><div class="form-group"><label>Profile Picture</label><input type="file" id="profilePicture" accept="image/*"><div id="profilePreview"></div></div><button type="submit" class="upload-btn">Save Profile</button></form></div></div>
+
+  <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit House</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId"><div class="form-group"><label>House Name</label><input type="text" id="editName" name="name" required></div><div class="form-group"><label>Location</label><input type="text" id="editLocation" name="location" required></div><div class="form-group"><label>Price</label><input type="number" id="editPrice" name="price" required></div><div class="form-group"><label>WhatsApp</label><input type="text" id="editPhone" name="phone" required></div><div class="form-group"><label>Description</label><textarea id="editDescription" name="description"></textarea></div><div class="form-group"><label>Type</label><select id="editType" name="type"><option>House</option><option>Hostel</option><option>Apartment</option><option>Room</option><option>Office</option></select></div><div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" name="bedrooms" value="0"></div><div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> Pool</label><label><input type="checkbox" id="editAC" name="ac"> AC</label></div><div class="form-group"><label>Unavailable Dates</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly></div><div class="form-group"><label>New Photos</label><input type="file" name="images" multiple accept="image/*"></div><div class="form-group"><label>Virtual Tour</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl"></div><div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div><div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div><button type="button" class="gps-btn" onclick="getEditLocation()">Use GPS</button><div id="editMap" style="height: 180px;"></div><button type="submit" class="upload-btn">Save Changes</button></form></div></div>
+
+  <div id="paymentModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePaymentModal()">&times;</span><div class="payment-modal-header"><h2><i class="fas fa-credit-card"></i> <span id="paymentTitle">Select Method</span></h2></div><div class="payment-amount" id="paymentAmount">MWK 0</div><div class="payment-phone"><label>Mobile Money Number</label><input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX"></div><div class="payment-options"><div class="payment-option" onclick="processPayment('Airtel Money')"><div class="payment-option-icon airtel-bg"><i class="fas fa-mobile-alt"></i></div><div><h4>Airtel Money</h4><p>Pay instantly</p></div></div><div class="payment-option" onclick="processPayment('TNM Mpamba')"><div class="payment-option-icon tnm-bg"><i class="fas fa-mobile-alt"></i></div><div><h4>TNM Mpamba</h4><p>Fast & secure</p></div></div><div class="payment-option" onclick="processPayment('Standard Bank')"><div class="payment-option-icon bank-bg"><i class="fas fa-university"></i></div><div><h4>Bank Transfer</h4><p>All banks</p></div></div></div><div id="paymentStatus" class="payment-status"></div></div></div>
+
+  <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="upload-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
 
   <footer>© 2026 Khomo Lathu – Premium Rental Marketplace</footer>
 
@@ -503,9 +506,7 @@
   <script src="js/dashboard.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
-    // ==== NOTIFICATION BELL FUNCTIONALITY ====
-    let unreadCount = 0;
-
+    // ========== NOTIFICATION BELL (added to existing dashboard.js functions) ==========
     async function loadNotifications() {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -515,7 +516,7 @@
         });
         const data = await res.json();
         const notifications = data.notifications || [];
-        unreadCount = notifications.filter(n => !n.read).length;
+        const unreadCount = notifications.filter(n => !n.read).length;
         const badge = document.getElementById('notificationBadge');
         if (unreadCount > 0) {
           badge.style.display = 'inline-block';
@@ -523,68 +524,43 @@
         } else {
           badge.style.display = 'none';
         }
-        renderNotificationDropdown(notifications);
-      } catch (err) {
-        console.error('Failed to load notifications', err);
-      }
+        const container = document.getElementById('notificationsList');
+        if (!notifications.length) {
+          container.innerHTML = '<div style="padding: 0.5rem; text-align: center;">No notifications</div>';
+        } else {
+          container.innerHTML = notifications.map(n => `
+            <div class="notification-item ${!n.read ? 'unread' : ''}" onclick="markNotificationRead('${n._id}')">
+              <div class="title">${escapeHtml(n.title)}</div>
+              <div class="message">${escapeHtml(n.message)}</div>
+              <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
+            </div>
+          `).join('');
+        }
+      } catch (err) { console.error(err); }
     }
-
-    function renderNotificationDropdown(notifications) {
-      const container = document.getElementById('notificationsList');
-      if (!notifications.length) {
-        container.innerHTML = '<div style="padding: 0.5rem; text-align: center;">No notifications</div>';
-        return;
-      }
-      container.innerHTML = notifications.map(n => `
-        <div class="notification-item ${!n.read ? 'unread' : ''}" data-id="${n._id}" onclick="markNotificationRead('${n._id}')">
-          <div class="title">${escapeHtml(n.title)}</div>
-          <div class="message">${escapeHtml(n.message)}</div>
-          <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
-        </div>
-      `).join('');
-    }
-
-    async function markNotificationRead(notifId) {
-      // In a real backend, you'd have an endpoint to mark as read.
-      // For now, we reload notifications (simulate).
-      loadNotifications();
-    }
-
     function escapeHtml(str) {
       if (!str) return '';
       return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
     }
-
-    // Toggle notification dropdown
-    document.getElementById('notificationBell').addEventListener('click', (e) => {
+    async function markNotificationRead(notifId) {
+      // In real backend, you would call an endpoint to mark as read.
+      // For now, just reload.
+      loadNotifications();
+    }
+    document.getElementById('notificationBell')?.addEventListener('click', (e) => {
       e.stopPropagation();
       const dropdown = document.getElementById('notificationDropdown');
       dropdown.classList.toggle('active');
     });
     document.addEventListener('click', () => {
-      document.getElementById('notificationDropdown').classList.remove('active');
+      const dropdown = document.getElementById('notificationDropdown');
+      if (dropdown) dropdown.classList.remove('active');
     });
-
-    // Initial load and periodic refresh
+    // Load notifications periodically
+    setInterval(loadNotifications, 30000);
     loadNotifications();
-    setInterval(loadNotifications, 30000); // every 30 seconds
 
-    // Wizard navigation (same as before)
-    let currentStep = 1, steps = document.querySelectorAll('.wizard-step'), navBtns = document.querySelectorAll('.wizard-nav-btn');
-    const prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), submitBtn = document.getElementById('submitBtn');
-    function updateWizard() {
-      steps.forEach((step, idx) => step.classList.toggle('active', idx + 1 === currentStep));
-      navBtns.forEach((btn, idx) => btn.classList.toggle('active', idx + 1 === currentStep));
-      prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
-      if (currentStep === 4) { nextBtn.style.display = 'none'; submitBtn.style.display = 'inline-block'; }
-      else { nextBtn.style.display = 'inline-block'; submitBtn.style.display = 'none'; }
-    }
-    prevBtn.addEventListener('click', () => { if (currentStep > 1) { currentStep--; updateWizard(); } });
-    nextBtn.addEventListener('click', () => { if (currentStep < 4) { currentStep++; updateWizard(); } });
-    navBtns.forEach((btn, idx) => btn.addEventListener('click', () => { currentStep = idx + 1; updateWizard(); }));
-    updateWizard();
-
-    // Tab switching
+    // Tab switching (matches your original tab IDs)
     document.querySelectorAll('.tab-btn-dash').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn-dash').forEach(b => b.classList.remove('active'));
@@ -595,8 +571,33 @@
       });
     });
 
-    // Property type toggles
-    document.getElementById('propertyType').addEventListener('change', function() {
+    // Wizard navigation (same as your original)
+    let currentStep = 1;
+    const steps = document.querySelectorAll('.wizard-step');
+    const navBtns = document.querySelectorAll('.wizard-nav-btn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    function updateWizard() {
+      steps.forEach((step, idx) => step.classList.toggle('active', idx + 1 === currentStep));
+      navBtns.forEach((btn, idx) => btn.classList.toggle('active', idx + 1 === currentStep));
+      if (prevBtn) prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+      if (currentStep === 4) {
+        if (nextBtn) nextBtn.style.display = 'none';
+        if (submitBtn) submitBtn.style.display = 'inline-block';
+      } else {
+        if (nextBtn) nextBtn.style.display = 'inline-block';
+        if (submitBtn) submitBtn.style.display = 'none';
+      }
+    }
+    if (prevBtn && nextBtn && submitBtn) {
+      prevBtn.addEventListener('click', () => { if (currentStep > 1) { currentStep--; updateWizard(); } });
+      nextBtn.addEventListener('click', () => { if (currentStep < 4) { currentStep++; updateWizard(); } });
+      navBtns.forEach((btn, idx) => btn.addEventListener('click', () => { currentStep = idx + 1; updateWizard(); }));
+      updateWizard();
+    }
+    // Property type toggle
+    document.getElementById('propertyType')?.addEventListener('change', function() {
       if (this.value === 'Hostel') {
         document.getElementById('bedroomsGroup').style.display = 'none';
         document.getElementById('vacanciesGroup').style.display = 'block';
@@ -607,8 +608,8 @@
     });
     document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
-
     function logout() { localStorage.removeItem('token'); localStorage.removeItem('role'); window.location = 'login.html'; }
+    window.closeBookingModal = function() { document.getElementById('bookingModal').style.display = 'none'; };
   </script>
 </body>
 </html>
