@@ -149,24 +149,42 @@ async function processPayment(method) {
   } catch (err) { statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Network error'; }
 }
 function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; currentPaymentAction = null; currentHouseId = null; }
+
+// ========== FIXED: loadUnreadCount – handles 404 / missing chat endpoint gracefully ==========
 async function loadUnreadCount() {
   try {
     const res = await fetch("/api/chat/my", { headers: { Authorization: "Bearer " + token } });
+    if (!res.ok) throw new Error(`Chat endpoint returned ${res.status}`);
     const chats = await res.json();
     let unread = 0;
-    chats.forEach(chat => { const lastMsg = chat.messages[chat.messages.length-1]; if (lastMsg && !lastMsg.read && lastMsg.sender !== currentUser?._id) unread++; });
+    chats.forEach(chat => {
+      const lastMsg = chat.messages[chat.messages.length - 1];
+      if (lastMsg && !lastMsg.read && lastMsg.sender !== currentUser?._id) unread++;
+    });
     const badge = document.getElementById("messageBadge");
-    if (badge) { if (unread > 0) { badge.textContent = unread; badge.style.display = 'inline'; } else badge.style.display = 'none'; }
-  } catch (err) { console.error(err); }
+    if (badge) {
+      if (unread > 0) { badge.textContent = unread; badge.style.display = 'inline'; }
+      else badge.style.display = 'none';
+    }
+  } catch (err) {
+    console.warn("Chat endpoint not available – hiding badge");
+    const badge = document.getElementById("messageBadge");
+    if (badge) badge.style.display = 'none';
+  }
 }
 setInterval(loadUnreadCount, 30000);
 
+// ========== FIXED: initMap – added invalidateSize to fix zoom & tile loading ==========
 function initMap() {
   const mapContainer = document.getElementById('map');
   if (!mapContainer) return;
   setTimeout(() => {
     map = L.map('map').setView([-15.7861, 35.0058], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+    map.invalidateSize(); // ✅ force map to recalculate size (fixes zoom/blank tiles)
     map.on("click", function (e) {
       document.getElementById("latitude").value = e.latlng.lat;
       document.getElementById("longitude").value = e.latlng.lng;
@@ -432,7 +450,7 @@ function showCounterModal(offerId) {
   const comment = prompt('Optional message to tenant:');
   fetch(`/api/offers/${offerId}/counter`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ counterOfferPrice: parseInt(price), moveInDate, landlordComment: comment || '' }) }).then(res => res.json()).then(data => { if (data.message) alert(data.message); loadOffers(); }).catch(err => console.error(err));
 }
-// ========== LEASE NEGOTIATIONS (FIXED – loads signed date and contract download) ==========
+// ========== LEASE NEGOTIATIONS ==========
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch("/api/lease/my", { headers: { Authorization: "Bearer " + token } });
@@ -464,7 +482,6 @@ async function loadLeaseNegotiations() {
       }
       const tenantName = lease.tenantId?.name || 'Not joined';
       const signedDate = lease.signedAt ? new Date(lease.signedAt).toLocaleDateString() : 'Not signed';
-      // Download button using the secure signed‑URL method
       const downloadButton = (lease.status === 'signed' || lease.status === 'active') 
         ? `<button class="btn" style="background: #2563eb; color: white; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; margin-left: 0.5rem;" onclick="downloadLeaseContract('${lease._id}')"><i class="fas fa-download"></i> Contract</button>`
         : '';
@@ -493,7 +510,6 @@ async function loadLeaseNegotiations() {
     document.getElementById("leaseList").innerHTML = "<p>Error loading lease negotiations. Please refresh.</p>";
   }
 }
-// Helper to download contract via signed URL
 window.downloadLeaseContract = async function(negotiationId) {
   try {
     const res = await fetch(`/api/lease/download-temp/${negotiationId}`, {
