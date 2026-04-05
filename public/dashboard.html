@@ -2,21 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Khomo Lathu | Landlord Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Landlord Dashboard | Khomo Lathu</title>
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#3498db">
-  <!-- Google Fonts -->
+  <meta name="theme-color" content="#2563eb">
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- Leaflet, Chart.js, Flatpickr -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ========== THEME VARIABLES ========== */
+    /* ========== THEME VARIABLES (same as before) ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -98,7 +99,6 @@
       --primary: #d4af37;
       --primary-dark: #c5a028;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
     body {
       background: var(--bg-gradient);
@@ -114,7 +114,6 @@
       font-weight: 700;
       letter-spacing: -0.02em;
     }
-
     /* Navbar */
     .navbar {
       background: var(--navbar-bg);
@@ -128,18 +127,122 @@
       top: 0;
       z-index: 1000;
     }
-    .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-color); }
-    .logo i { margin-right: 6px; font-size: 1.2rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .logo i { margin-right: 6px; font-size: 1.4rem; }
     .nav-links { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
-    .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; }
+    .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
     .nav-links a:hover { color: var(--primary); }
-    .lang-select, .theme-select { padding: 0.25rem 0.6rem; border-radius: 30px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; backdrop-filter: blur(4px); }
-
+    /* Notification Bell */
+    .notification-bell {
+      position: relative;
+      cursor: pointer;
+    }
+    .notification-bell i { font-size: 1.2rem; }
+    .notification-badge {
+      position: absolute;
+      top: -6px;
+      right: -8px;
+      background: #ef4444;
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 600;
+      padding: 0.1rem 0.3rem;
+      border-radius: 30px;
+      min-width: 18px;
+      text-align: center;
+    }
+    .notification-dropdown {
+      position: absolute;
+      top: 40px;
+      right: 0;
+      width: 320px;
+      background: var(--card-bg-solid);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1001;
+      display: none;
+      border: 1px solid rgba(255,255,255,0.1);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .notification-dropdown.active { display: block; }
+    .notification-item {
+      padding: 0.8rem;
+      border-bottom: 1px solid var(--input-border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notification-item:hover { background: rgba(37,99,235,0.1); }
+    .notification-item.unread { background: rgba(37,99,235,0.2); }
+    .notification-item .title { font-weight: 600; font-size: 0.8rem; }
+    .notification-item .message { font-size: 0.7rem; opacity: 0.8; margin-top: 0.2rem; }
+    .notification-item .time { font-size: 0.6rem; color: var(--gray-500); margin-top: 0.2rem; }
+    .lang-select, .theme-select { padding: 0.25rem 0.6rem; border-radius: 30px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; }
+    /* Main container */
+    .main-container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
+    /* Profile Card */
+    .profile-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border-radius: 28px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border-radius: 28px;
+      padding: 1.2rem;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
+      transform-style: preserve-3d;
+    }
+    .stat-card:hover {
+      transform: translateY(-6px) rotateX(2deg);
+      box-shadow: var(--shadow-lg);
+    }
+    .stat-card i { font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    /* Insight Card */
+    .insight-card {
+      background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(16,185,129,0.05));
+      border-radius: 28px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(37,99,235,0.3);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    /* Charts */
+    .chart-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border-radius: 28px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s;
+    }
+    .chart-container canvas { max-height: 250px; }
     /* 3D Tabs */
     .dashboard-tabs {
       display: flex;
       gap: 0.8rem;
-      margin: 1.5rem 0 1rem;
+      margin: 1rem 0 1.5rem;
       flex-wrap: wrap;
       perspective: 500px;
     }
@@ -157,12 +260,10 @@
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      box-shadow: var(--shadow-sm);
     }
     .tab-btn-dash i { font-size: 1.1rem; transition: transform 0.2s; }
     .tab-btn-dash:hover {
       transform: translateY(-3px) rotateX(3deg);
-      box-shadow: var(--shadow-md);
       background: var(--primary);
       color: white;
       border-color: var(--primary);
@@ -172,199 +273,103 @@
       color: white;
       border-color: var(--primary);
       box-shadow: 0 8px 20px rgba(37,99,235,0.3);
-      transform: translateY(-2px);
     }
     .tab-btn-dash.active i { transform: scale(1.1); }
-    .tab-content { display: none; margin-top: 1rem; animation: fadeIn 0.3s ease; }
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Stats Cards (3D) */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
-    .stat-card {
+    /* Upload Wizard */
+    .upload-wizard {
       background: var(--card-bg);
-      backdrop-filter: blur(8px);
-      border-radius: 24px;
-      padding: 1.2rem;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.2);
-      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-      box-shadow: var(--shadow-sm);
-      transform-style: preserve-3d;
-    }
-    .stat-card:hover {
-      transform: translateY(-8px) rotateX(3deg);
-      box-shadow: var(--shadow-lg);
-    }
-    .stat-card h3 { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; opacity: 0.8; }
-    .stat-card .value {
-      font-size: 2rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .stat-card i { font-size: 1.8rem; margin-bottom: 0.5rem; display: block; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-
-    /* Insight & Verification Cards */
-    .insight-card, .verification-card, .profile-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(8px);
-      border-radius: 24px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: var(--shadow-sm);
-    }
-
-    /* Chart Containers */
-    .chart-container {
-      background: var(--card-bg);
-      backdrop-filter: blur(8px);
       border-radius: 28px;
-      padding: 1rem;
+      padding: 1.2rem;
       margin-bottom: 1.5rem;
-      box-shadow: var(--shadow-md);
-      transition: transform 0.2s;
+      border: 1px solid var(--input-border);
     }
-    .chart-container:hover { transform: scale(1.01); }
-
+    .wizard-nav { display: flex; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--input-border); padding-bottom: 0.5rem; }
+    .wizard-nav button { background: none; border: none; font-size: 0.85rem; font-weight: 500; color: var(--text-color); opacity: 0.6; cursor: pointer; }
+    .wizard-nav button.active { opacity: 1; color: var(--primary); border-bottom: 2px solid var(--primary); }
+    .wizard-step { display: none; }
+    .wizard-step.active { display: block; }
+    .form-group { margin-bottom: 0.8rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.8rem; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem; border-radius: 16px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); font-size: 0.85rem; }
+    .amenities-group { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.5rem; }
+    .gps-btn, .upload-btn { background: var(--button-bg); color: white; border: none; padding: 0.6rem; border-radius: 40px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 0.5rem; transition: all 0.2s; }
+    .gps-btn:hover, .upload-btn:hover { background: var(--button-hover); transform: translateY(-2px); }
+    #map, #editMap { height: 200px; margin: 0.5rem 0; border-radius: 20px; overflow: hidden; }
     /* House Grid */
     #my-houses {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.2rem;
       margin-top: 1rem;
-      margin-bottom: 2rem;
     }
     .house-card {
       background: var(--card-bg-solid);
-      border-radius: 20px;
+      border-radius: 24px;
       overflow: hidden;
-      border: 1px solid var(--input-border);
       transition: all 0.3s;
-      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--input-border);
     }
     .house-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
-    .house-card img { width: 100%; height: 180px; object-fit: cover; }
-    .house-content { padding: 1rem; }
-    .house-content h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .house-card img { width: 100%; height: 160px; object-fit: cover; }
+    .house-content { padding: 0.8rem; }
+    .house-content h3 { font-size: 0.95rem; font-weight: 700; }
     .house-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
-    .edit, .delete, .feature-btn, .booking-btn {
-      border: none;
-      padding: 0.3rem 0.8rem;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    .edit, .delete, .feature-btn, .booking-btn { border: none; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; font-weight: 500; cursor: pointer; }
     .edit { background: #f39c12; color: white; }
     .delete { background: #e74c3c; color: white; }
     .feature-btn { background: #f1c40f; color: #2c3e50; }
     .booking-btn { background: #8b5cf6; color: white; }
-
-    /* Offer, Booking, Lease Cards */
+    /* Offer/Booking/Lease Cards */
     .offer-card, .booking-card, .lease-card {
       background: var(--card-bg-solid);
       border-radius: 20px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
       border: 1px solid var(--input-border);
-      transition: all 0.2s;
     }
-    .offer-card:hover, .booking-card:hover, .lease-card:hover { transform: translateX(4px); box-shadow: var(--shadow-sm); }
-    .offer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-    .offer-status {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
+    .offer-status { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.7rem; font-weight: 600; }
     .offer-status.pending { background: #fef3c7; color: #b45309; }
     .offer-status.accepted { background: #dcfce7; color: #15803d; }
     .offer-status.rejected { background: #fee2e2; color: #b91c1c; }
     .offer-status.countered { background: #e0e7ff; color: #1e40af; }
-    .offer-actions button, .booking-actions button { margin-right: 0.5rem; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; cursor: pointer; border: none; }
-
-    /* Upload Wizard (unchanged) */
-    .upload-wizard { background: var(--card-bg); border-radius: 28px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid var(--input-border); }
-    .wizard-step { display: none; }
-    .wizard-step.active { display: block; }
-    .wizard-nav { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--input-border); padding-bottom: 0.5rem; }
-    .wizard-nav button { background: none; border: none; font-size: 0.9rem; font-weight: 500; color: var(--text-color); opacity: 0.6; cursor: pointer; }
-    .wizard-nav button.active { opacity: 1; color: var(--primary); border-bottom: 2px solid var(--primary); }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.85rem; font-weight: 500; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text-color); font-size: 0.85rem; }
-    .gps-btn, .upload-btn { background: var(--button-bg); color: white; border: none; padding: 0.6rem; border-radius: 40px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 0.5rem; transition: all 0.2s; }
-    .amenities-group { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.5rem; }
-
-    /* Map (improved) */
-    #map, #editMap {
-      height: 300px;
-      margin: 1rem 0;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 2px solid var(--input-border);
-      box-shadow: var(--shadow-sm);
-    }
-    /* GPS status */
-    #gpsStatus { font-size: 0.8rem; margin-top: 0.3rem; color: var(--primary); }
-
     /* Modals */
-    .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-    .modal-content { background: var(--card-bg-solid); margin: 20px auto; padding: 1.2rem; border-radius: 28px; width: 90%; max-width: 500px; }
-    .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-    .payment-option { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 60px; padding: 10px 20px; cursor: pointer; }
-    .payment-option-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; }
-    .airtel-bg { background: #E50000; }
-    .tnm-bg { background: #00A651; }
-    .bank-bg { background: #0077B6; }
-
-    footer { text-align: center; padding: 1.5rem; background: var(--footer-bg); border-top: 1px solid var(--input-border); font-size: 0.75rem; margin-top: 2rem; }
-    #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; font-size: 1rem; display: none; }
-
+    .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(6px); }
+    .modal-content { background: var(--card-bg-solid); margin: 20px auto; padding: 1.2rem; border-radius: 32px; width: 90%; max-width: 600px; }
+    .close-btn { float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+    footer { text-align: center; padding: 1.5rem; background: var(--footer-bg); border-top: 1px solid var(--input-border); margin-top: 2rem; font-size: 0.75rem; }
     @media (max-width: 768px) {
-      .navbar { flex-direction: column; align-items: flex-start; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      #my-houses { grid-template-columns: 1fr; }
+      .navbar { flex-direction: column; align-items: stretch; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
       .dashboard-tabs { justify-content: center; }
-      .tab-btn-dash { padding: 0.5rem 1rem; font-size: 0.8rem; }
     }
   </style>
 </head>
 <body>
-  <div id="loadingOverlay"><div><i class="fas fa-spinner fa-pulse"></i> Processing...</div></div>
-
-  <!-- Profile Modal -->
-  <div id="profileModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeProfileModal()">&times;</span><h2><i class="fas fa-user-edit"></i> Complete Your Profile</h2><form id="profileForm"><div class="form-group"><label>Full Name *</label><input type="text" id="profileName" required></div><div class="form-group"><label>Phone Number (265...)</label><input type="tel" id="profilePhone" pattern="265[0-9]{9}" required></div><div class="form-group"><label>Business Name</label><input type="text" id="profileBusinessName"></div><div class="form-group"><label>Address</label><input type="text" id="profileAddress"></div><div class="form-group"><label>Bio</label><textarea id="profileBio" rows="2"></textarea></div><div class="form-group"><label>Profile Picture</label><input type="file" id="profilePicture" accept="image/*"><div id="profilePreview"></div></div><button type="submit" class="upload-btn">Save Profile</button></form></div></div>
-
   <nav class="navbar">
-    <div class="logo"><i class="fas fa-home"></i> Khomo Lathu</div>
+    <div class="logo"><i class="fas fa-crown"></i> Khomo Lathu</div>
     <div class="nav-links">
-      <a href="index.html"><i class="fas fa-globe"></i> Home</a>
+      <a href="index.html"><i class="fas fa-home"></i> Home</a>
       <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
-      <a href="chat.html"><i class="fas fa-comments"></i> Messages <span id="messageBadge" class="badge" style="display:none;">0</span></a>
+      <a href="chat.html"><i class="fas fa-comments"></i> Messages <span id="messageBadge" style="display:none;">0</span></a>
+      <!-- Notification Bell -->
+      <div class="notification-bell" id="notificationBell">
+        <i class="fas fa-bell"></i>
+        <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+        <div id="notificationDropdown" class="notification-dropdown">
+          <div style="padding: 0.5rem; border-bottom: 1px solid var(--input-border); font-weight: 600;">Notifications</div>
+          <div id="notificationsList">Loading...</div>
+        </div>
+      </div>
       <select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select>
       <select class="theme-select" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="aquatic">Aquatic</option><option value="minimal">Minimal</option><option value="luxury">Luxury</option></select>
     </div>
   </nav>
 
   <div class="main-container">
-    <h1><i class="fas fa-tachometer-alt"></i> Landlord Dashboard</h1>
+    <h1 style="margin-bottom: 1rem;"><i class="fas fa-chart-line"></i> Landlord Dashboard</h1>
 
     <!-- Profile Card -->
     <div class="profile-card" id="profileCard">
@@ -383,9 +388,9 @@
       <div class="stat-card"><i class="fas fa-calendar-check"></i><h3>Bookings</h3><div class="value" id="totalBookings">0</div></div>
     </div>
 
-    <!-- Insight Card -->
-    <div class="insight-card" id="insightCard">
-      <i class="fas fa-chart-line"></i>
+    <!-- AI Insight Card -->
+    <div class="insight-card">
+      <i class="fas fa-chart-line" style="font-size: 2rem; color: var(--primary);"></i>
       <div><h3>AI Insight</h3><p id="insightText">Analyzing your listings...</p></div>
     </div>
 
@@ -397,12 +402,12 @@
     </div>
 
     <!-- Verification Section -->
-    <div id="verification-section" class="verification-card">
-      <h3><i class="fas fa-shield-alt"></i> Account Verification</h3>
-      <div id="verification-status">Loading...</div>
+    <div class="insight-card" id="verification-section" style="background: var(--card-bg);">
+      <i class="fas fa-shield-alt"></i>
+      <div><h3>Account Verification</h3><div id="verification-status">Loading...</div></div>
     </div>
 
-    <!-- TABS (3D style) -->
+    <!-- 3D Tabs -->
     <div class="dashboard-tabs">
       <button class="tab-btn-dash active" data-tab="houses"><i class="fas fa-home"></i> My Houses</button>
       <button class="tab-btn-dash" data-tab="offers"><i class="fas fa-gavel"></i> Offers Received</button>
@@ -475,7 +480,7 @@
 
     <div id="bookings-tab" class="tab-content">
       <h2><i class="fas fa-calendar-alt"></i> Booking Requests</h2>
-      <div id="bookingRequests"></div>
+      <div id="bookingRequests">Loading...</div>
     </div>
 
     <div id="lease-tab" class="tab-content">
@@ -485,28 +490,86 @@
   </div>
 
   <!-- Edit Modal -->
-  <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit House</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId"><div class="form-group"><label>House Name</label><input type="text" id="editName" name="name" required></div><div class="form-group"><label>Location</label><input type="text" id="editLocation" name="location" required></div><div class="form-group"><label>Price</label><input type="number" id="editPrice" name="price" required></div><div class="form-group"><label>WhatsApp</label><input type="text" id="editPhone" name="phone" required></div><div class="form-group"><label>Description</label><textarea id="editDescription" name="description"></textarea></div><div class="form-group"><label>Type</label><select id="editType" name="type"><option>House</option><option>Hostel</option><option>Apartment</option><option>Room</option><option>Office</option></select></div><div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" name="bedrooms" value="0"></div><div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> Pool</label><label><input type="checkbox" id="editAC" name="ac"> AC</label></div><div class="form-group"><label>Unavailable Dates</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly></div><div class="form-group"><label>New Photos</label><input type="file" name="images" multiple accept="image/*"></div><div class="form-group"><label>Virtual Tour</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl"></div><div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div><div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div><button type="button" class="gps-btn" onclick="getEditLocation()">Use GPS</button><div id="editMap" style="height: 180px;"></div><button type="submit" class="upload-btn">Save Changes</button></form></div></div>
-
+  <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit House</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId">...</form></div></div>
+  <!-- Profile Modal -->
+  <div id="profileModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeProfileModal()">&times;</span><h2>Edit Profile</h2><form id="profileForm">...</form></div></div>
   <!-- Payment Modal -->
-  <div id="paymentModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePaymentModal()">&times;</span><div class="payment-modal-header"><h2><i class="fas fa-credit-card"></i> <span id="paymentTitle">Select Method</span></h2></div><div class="payment-amount" id="paymentAmount">MWK 0</div><div class="payment-phone"><label>Mobile Money Number</label><input type="tel" id="phoneNumber" placeholder="265XXXXXXXXX"></div><div class="payment-options"><div class="payment-option" onclick="processPayment('Airtel Money')"><div class="payment-option-icon airtel-bg"><i class="fas fa-mobile-alt"></i></div><div><h4>Airtel Money</h4><p>Pay instantly</p></div></div><div class="payment-option" onclick="processPayment('TNM Mpamba')"><div class="payment-option-icon tnm-bg"><i class="fas fa-mobile-alt"></i></div><div><h4>TNM Mpamba</h4><p>Fast & secure</p></div></div><div class="payment-option" onclick="processPayment('Standard Bank')"><div class="payment-option-icon bank-bg"><i class="fas fa-university"></i></div><div><h4>Bank Transfer</h4><p>All banks</p></div></div></div><div id="paymentStatus" class="payment-status"></div></div></div>
+  <div id="paymentModal" class="modal" style="display:none;"><div class="modal-content">...</div></div>
 
-  <footer>© 2026 Khomo Lathu – Connecting Renters Across Malawi</footer>
+  <footer>© 2026 Khomo Lathu – Premium Rental Marketplace</footer>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
-    function logout() { localStorage.removeItem("token"); localStorage.removeItem("role"); window.location = "login.html"; }
-    document.getElementById('propertyType').addEventListener('change', function() {
-      if (this.value === 'Hostel') { document.getElementById('bedroomsGroup').style.display = 'none'; document.getElementById('vacanciesGroup').style.display = 'block'; }
-      else { document.getElementById('bedroomsGroup').style.display = 'block'; document.getElementById('vacanciesGroup').style.display = 'none'; }
-    });
-    document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
-    document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
+    // ==== NOTIFICATION BELL FUNCTIONALITY ====
+    let unreadCount = 0;
 
-    // Wizard navigation
+    async function loadNotifications() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('/api/premium/status', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const data = await res.json();
+        const notifications = data.notifications || [];
+        unreadCount = notifications.filter(n => !n.read).length;
+        const badge = document.getElementById('notificationBadge');
+        if (unreadCount > 0) {
+          badge.style.display = 'inline-block';
+          badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        } else {
+          badge.style.display = 'none';
+        }
+        renderNotificationDropdown(notifications);
+      } catch (err) {
+        console.error('Failed to load notifications', err);
+      }
+    }
+
+    function renderNotificationDropdown(notifications) {
+      const container = document.getElementById('notificationsList');
+      if (!notifications.length) {
+        container.innerHTML = '<div style="padding: 0.5rem; text-align: center;">No notifications</div>';
+        return;
+      }
+      container.innerHTML = notifications.map(n => `
+        <div class="notification-item ${!n.read ? 'unread' : ''}" data-id="${n._id}" onclick="markNotificationRead('${n._id}')">
+          <div class="title">${escapeHtml(n.title)}</div>
+          <div class="message">${escapeHtml(n.message)}</div>
+          <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+
+    async function markNotificationRead(notifId) {
+      // In a real backend, you'd have an endpoint to mark as read.
+      // For now, we reload notifications (simulate).
+      loadNotifications();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    }
+
+    // Toggle notification dropdown
+    document.getElementById('notificationBell').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dropdown = document.getElementById('notificationDropdown');
+      dropdown.classList.toggle('active');
+    });
+    document.addEventListener('click', () => {
+      document.getElementById('notificationDropdown').classList.remove('active');
+    });
+
+    // Initial load and periodic refresh
+    loadNotifications();
+    setInterval(loadNotifications, 30000); // every 30 seconds
+
+    // Wizard navigation (same as before)
     let currentStep = 1, steps = document.querySelectorAll('.wizard-step'), navBtns = document.querySelectorAll('.wizard-nav-btn');
     const prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), submitBtn = document.getElementById('submitBtn');
     function updateWizard() {
@@ -531,6 +594,21 @@
         document.getElementById(`${tab}-tab`).classList.add('active');
       });
     });
+
+    // Property type toggles
+    document.getElementById('propertyType').addEventListener('change', function() {
+      if (this.value === 'Hostel') {
+        document.getElementById('bedroomsGroup').style.display = 'none';
+        document.getElementById('vacanciesGroup').style.display = 'block';
+      } else {
+        document.getElementById('bedroomsGroup').style.display = 'block';
+        document.getElementById('vacanciesGroup').style.display = 'none';
+      }
+    });
+    document.querySelector('.lang-select').value = localStorage.getItem('language') || 'en';
+    document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
+
+    function logout() { localStorage.removeItem('token'); localStorage.removeItem('role'); window.location = 'login.html'; }
   </script>
 </body>
 </html>
