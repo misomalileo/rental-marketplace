@@ -1,5 +1,3 @@
-Here is the complete, fully updated HTML document with the profile picture circular fix applied.
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -144,7 +142,7 @@ Here is the complete, fully updated HTML document with the profile picture circu
     .slider {
       position: relative;
       width: 100%;
-      height: 160px;
+      height: 140px;
       overflow: hidden;
       touch-action: pan-y pinch-zoom;
     }
@@ -157,9 +155,7 @@ Here is the complete, fully updated HTML document with the profile picture circu
       scrollbar-width: none;
       height: 100%;
     }
-    .slider .slides-container::-webkit-scrollbar {
-      display: none;
-    }
+    .slider .slides-container::-webkit-scrollbar { display: none; }
     .slider .slide {
       flex: 0 0 100%;
       scroll-snap-align: start;
@@ -216,34 +212,21 @@ Here is the complete, fully updated HTML document with the profile picture circu
       justify-content: center;
       flex-shrink: 0;
     }
-    .user-avatar {
-      width: 42px;
-      height: 42px;
-    }
-    .dropdown-header .avatar {
-      width: 44px;
-      height: 44px;
-    }
-    .landlord-avatar {
-      width: 36px;
-      height: 36px;
-    }
+    .user-avatar { width: 42px; height: 42px; }
+    .dropdown-header .avatar { width: 44px; height: 44px; }
+    .landlord-avatar { width: 36px; height: 36px; }
 
     /* Favorite button icon visibility */
-    .fav-btn i {
-      color: var(--icon-color) !important;
-    }
-    .fav-btn .fas.fa-heart {
-      color: #e74c3c !important;
-    }
+    .fav-btn i { color: var(--icon-color) !important; }
+    .fav-btn .fas.fa-heart { color: #e74c3c !important; }
 
-    /* Hero Carousel */
+    /* Hero Carousel – compact cards */
     .carousel-section { margin: 1rem 1.5rem 2rem; }
     .carousel-container {
       background: var(--card-bg);
       backdrop-filter: blur(12px);
       border-radius: 32px;
-      padding: 1rem 0.5rem 1.8rem;
+      padding: 1rem 0.5rem 1.5rem;
       box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
       border: 1px solid rgba(255,255,255,0.2);
     }
@@ -254,7 +237,7 @@ Here is the complete, fully updated HTML document with the profile picture circu
       align-items: center;
       gap: 0.8rem;
       padding: 0 1.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
     }
     .carousel-title i { font-size: 2rem; }
     .carousel-subtitle {
@@ -268,55 +251,55 @@ Here is the complete, fully updated HTML document with the profile picture circu
     .hero-swiper { width: 100%; padding: 0.3rem 0.8rem; overflow: hidden; }
     .swiper-slide {
       background: var(--card-bg);
-      border-radius: 24px;
+      border-radius: 20px;
       overflow: hidden;
       transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    .swiper-slide:hover { transform: translateY(-6px); box-shadow: 0 20px 30px -8px rgba(0,0,0,0.2); }
+    .swiper-slide:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -8px rgba(0,0,0,0.15); }
     .carousel-card { display: flex; flex-direction: column; height: 100%; }
-    .carousel-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
-    .carousel-card-content { padding: 0.8rem; flex: 1; display: flex; flex-direction: column; }
-    .carousel-card-content h3 { font-size: 0.9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .carousel-card-content p { font-size: 0.7rem; opacity: 0.8; margin: 0.2rem 0; display: flex; align-items: center; gap: 0.3rem; }
-    .carousel-price { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin: 0.4rem 0; }
+    .carousel-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .carousel-card-content { padding: 0.6rem; flex: 1; display: flex; flex-direction: column; }
+    .carousel-card-content h3 { font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.2rem; }
+    .carousel-card-content p { font-size: 0.65rem; opacity: 0.8; margin: 0.1rem 0; display: flex; align-items: center; gap: 0.3rem; }
+    .carousel-price { font-size: 0.75rem; font-weight: 700; color: var(--primary); margin: 0.3rem 0; }
     .carousel-btn {
       background: var(--button-bg); color: white; border: none; border-radius: 40px;
-      padding: 0.35rem 0.7rem; font-size: 0.65rem; font-weight: 500; cursor: pointer;
-      width: 100%; margin-top: 0.4rem; transition: all 0.2s;
+      padding: 0.25rem 0.5rem; font-size: 0.6rem; font-weight: 500; cursor: pointer;
+      width: 100%; margin-top: 0.3rem; transition: all 0.2s;
     }
     .carousel-btn:hover { background: var(--button-hover); transform: translateY(-2px); }
     .swiper-pagination-bullet { background: var(--text-color); opacity: 0.5; }
     .swiper-pagination-bullet-active { background: var(--primary); opacity: 1; }
     .swiper-button-next, .swiper-button-prev {
-      color: var(--primary); background: rgba(255,255,255,0.8); width: 34px; height: 34px;
+      color: var(--primary); background: rgba(255,255,255,0.8); width: 30px; height: 30px;
       border-radius: 50%; backdrop-filter: blur(4px);
     }
-    .swiper-button-next:after, .swiper-button-prev:after { font-size: 1rem; font-weight: bold; }
+    .swiper-button-next:after, .swiper-button-prev:after { font-size: 0.8rem; font-weight: bold; }
 
-    /* Dream Match Cards */
+    /* Dream Match Cards – compact */
     .dream-card {
       display: flex;
       flex-direction: column;
       height: 100%;
       background: var(--card-bg);
-      border-radius: 24px;
+      border-radius: 20px;
       overflow: hidden;
     }
-    .dream-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
-    .dream-card-content { padding: 0.8rem; flex: 1; display: flex; flex-direction: column; }
+    .dream-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .dream-card-content { padding: 0.6rem; flex: 1; display: flex; flex-direction: column; }
     .dream-match-badge {
       background: linear-gradient(135deg, #8B5CF6, #EC4899);
       color: white;
       border-radius: 20px;
-      padding: 0.2rem 0.6rem;
-      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.65rem;
       font-weight: 600;
       display: inline-block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
       align-self: flex-start;
     }
-    .dream-price { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin: 0.4rem 0; }
+    .dream-price { font-size: 0.75rem; font-weight: 700; color: var(--primary); margin: 0.3rem 0; }
     #dreamMatchModal .form-group i,
     #dreamMatchModal h2 i {
       background: linear-gradient(135deg, #8B5CF6, #EC4899);
@@ -329,29 +312,29 @@ Here is the complete, fully updated HTML document with the profile picture circu
     .category-tabs {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
-      margin: 2rem 0;
+      gap: 0.8rem;
+      margin: 1.5rem 0;
       justify-content: center;
     }
     .tab-btn {
       background: var(--card-bg);
       border: none;
       border-radius: 60px;
-      padding: 0.7rem 1.6rem;
-      font-size: 0.9rem;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
       color: var(--text-color);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       backdrop-filter: blur(4px);
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       border: 1px solid var(--input-border);
       font-family: 'Poppins', sans-serif;
     }
-    .tab-btn i { font-size: 1.1rem; transition: transform 0.2s; }
+    .tab-btn i { font-size: 1rem; transition: transform 0.2s; }
     .tab-btn:hover { transform: translateY(-3px); background: var(--button-bg); color: white; border-color: var(--button-bg); box-shadow: 0 10px 20px -5px rgba(37,99,235,0.3); }
     .tab-btn:hover i { transform: scale(1.1); color: white !important; }
     .tab-btn.active {
@@ -362,7 +345,7 @@ Here is the complete, fully updated HTML document with the profile picture circu
     }
     .tab-btn.active i { color: white !important; }
 
-    /* Navbar */
+    /* Navbar – login icon at far right */
     .navbar {
       background: var(--navbar-bg);
       backdrop-filter: blur(12px);
@@ -377,7 +360,18 @@ Here is the complete, fully updated HTML document with the profile picture circu
     }
     .logo { font-size: 1.6rem; font-weight: 800; }
     .logo i { margin-right: 6px; font-size: 1.4rem; }
-    .nav-links { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex: 1;
+      margin-left: 2rem;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
     .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: color 0.2s; display: flex; align-items: center; gap: 6px; }
     .nav-links a:hover { color: var(--primary); }
     .lang-select, .theme-select {
@@ -428,51 +422,51 @@ Here is the complete, fully updated HTML document with the profile picture circu
 
     /* Hero section */
     .hero {
-      text-align: center; padding: 4rem 2rem 3rem;
+      text-align: center; padding: 3rem 2rem 2rem;
       background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(14,165,164,0.05) 100%);
       border-radius: 64px; margin: 1.5rem;
     }
-    .hero h1 { font-size: 3rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
-    .hero h1 i { font-size: 4.5rem; animation: pulse 2s infinite; }
+    .hero h1 { font-size: 2.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
+    .hero h1 i { font-size: 3.5rem; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
-    .hero p { font-size: 1.2rem; font-weight: 400; color: var(--gray-500); margin-top: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
+    .hero p { font-size: 1rem; font-weight: 400; color: var(--gray-500); margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
 
     .main-container { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
 
     /* Filters */
     .filters-row {
-      display: flex; flex-wrap: wrap; gap: 1rem; margin: 2rem 0; justify-content: center;
-      align-items: center; background: var(--card-bg); padding: 0.8rem 1.5rem;
+      display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.5rem 0; justify-content: center;
+      align-items: center; background: var(--card-bg); padding: 0.6rem 1.2rem;
       border-radius: 60px; border: 1px solid var(--input-border);
     }
-    .price-range { min-width: 200px; background: var(--input-bg); border-radius: 40px; padding: 0.2rem 1rem; border: 1px solid var(--input-border); }
-    .price-range .range-values { display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 0.2rem; }
-    #priceSlider { margin: 0.4rem 0; }
+    .price-range { min-width: 180px; background: var(--input-bg); border-radius: 40px; padding: 0.2rem 1rem; border: 1px solid var(--input-border); }
+    .price-range .range-values { display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.2rem; }
+    #priceSlider { margin: 0.3rem 0; }
     .sort-select, .save-search-btn {
-      padding: 0.5rem 1.2rem; border-radius: 40px; border: 1px solid var(--input-border);
-      background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.85rem; font-weight: 500;
+      padding: 0.4rem 1rem; border-radius: 40px; border: 1px solid var(--input-border);
+      background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; font-weight: 500;
     }
     .save-search-btn { background: var(--button-bg); color: white; border: none; }
     .save-search-btn:hover { background: var(--button-hover); transform: translateY(-2px); }
     .amenities-filters {
-      display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center; margin: 1rem 0 1.5rem;
+      display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 1rem 0 1.2rem;
     }
     .amenities-filters label {
-      display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-color);
-      background: var(--input-bg); padding: 0.4rem 1rem; border-radius: 40px;
+      display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-color);
+      background: var(--input-bg); padding: 0.3rem 0.8rem; border-radius: 40px;
       border: 1px solid var(--input-border); cursor: pointer;
     }
     .amenities-filters label:hover { background: var(--button-bg); color: white; border-color: var(--button-bg); }
     #searchInput {
-      width: 100%; max-width: 500px; display: block; margin: 1rem auto;
-      padding: 0.7rem 1.2rem; border: 1px solid var(--input-border); border-radius: 60px;
-      background: var(--input-bg); color: var(--text-color); font-size: 0.9rem;
+      width: 100%; max-width: 450px; display: block; margin: 0.8rem auto;
+      padding: 0.6rem 1rem; border: 1px solid var(--input-border); border-radius: 60px;
+      background: var(--input-bg); color: var(--text-color); font-size: 0.85rem;
     }
 
     /* Property grid */
     #houses-container {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem; margin: 2rem 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.2rem; margin: 1.5rem 0;
     }
     .house-card {
       background: var(--card-bg); border-radius: 20px; overflow: hidden;
@@ -480,14 +474,14 @@ Here is the complete, fully updated HTML document with the profile picture circu
       box-shadow: 0 4px 12px rgba(0,0,0,0.05); cursor: pointer;
       border: 1px solid var(--input-border);
     }
-    .house-card:hover { transform: translateY(-6px); box-shadow: 0 20px 30px -8px rgba(0,0,0,0.15); }
-    .house-card-content { padding: 0.8rem; }
-    .house-card-content h3 { font-size: 0.9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .house-card-content p { margin: 0.2rem 0; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem; }
-    .house-card-content .price { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin: 0.3rem 0; }
+    .house-card:hover { transform: translateY(-5px); box-shadow: 0 15px 25px -8px rgba(0,0,0,0.15); }
+    .house-card-content { padding: 0.7rem; }
+    .house-card-content h3 { font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .house-card-content p { margin: 0.15rem 0; font-size: 0.65rem; display: flex; align-items: center; gap: 0.3rem; }
+    .house-card-content .price { font-size: 0.8rem; font-weight: 700; color: var(--primary); margin: 0.25rem 0; }
     .badge {
-      display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.6rem; font-weight: 600;
-      border-radius: 30px; margin-right: 0.3rem; text-transform: uppercase;
+      display: inline-block; padding: 0.15rem 0.4rem; font-size: 0.55rem; font-weight: 600;
+      border-radius: 30px; margin-right: 0.2rem; text-transform: uppercase;
     }
     .badge.verified { background: #2ecc71; color: white; }
     .badge.premium { background: #f1c40f; color: #2c3e50; }
@@ -496,82 +490,66 @@ Here is the complete, fully updated HTML document with the profile picture circu
     .badge.gender-boys { background: #3498db; color: white; }
     .badge.gender-girls { background: #e84393; color: white; }
     .badge.gender-mixed { background: #f1c40f; color: #2c3e50; }
-    .action-buttons { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+    .action-buttons { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
     .read-more-btn {
       background: none; border: 1px solid var(--input-border); border-radius: 30px;
-      padding: 0.2rem 0.5rem; font-size: 0.6rem; cursor: pointer; color: var(--primary);
-      margin-top: 0.5rem; align-self: flex-start;
+      padding: 0.15rem 0.4rem; font-size: 0.55rem; cursor: pointer; color: var(--primary);
+      margin-top: 0.4rem; align-self: flex-start;
     }
     .read-more-btn:hover { background: var(--primary); color: white; }
     .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn {
-      background: var(--button-bg); color: white; border: none; padding: 0.2rem 0.5rem;
-      border-radius: 30px; font-size: 0.6rem; cursor: pointer;
+      background: var(--button-bg); color: white; border: none; padding: 0.15rem 0.4rem;
+      border-radius: 30px; font-size: 0.55rem; cursor: pointer;
     }
     .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
 
     /* Pagination */
-    .pagination { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 2rem 0; }
+    .pagination { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin: 1.5rem 0; }
     .page-btn {
       background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 40px;
-      padding: 0.5rem 1rem; font-size: 0.8rem; cursor: pointer; color: var(--text-color);
+      padding: 0.4rem 0.8rem; font-size: 0.75rem; cursor: pointer; color: var(--text-color);
     }
     .page-btn:hover, .page-btn.active { background: var(--button-bg); color: white; }
 
     /* Map */
-    .map-section { margin: 2rem 0; }
-    #map { height: 420px; width: 100%; border-radius: 28px; overflow: hidden; border: 1px solid var(--input-border); }
-    .map-controls { margin: 0.8rem 0; display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; }
+    .map-section { margin: 1.5rem 0; }
+    #map { height: 380px; width: 100%; border-radius: 28px; overflow: hidden; border: 1px solid var(--input-border); }
+    .map-controls { margin: 0.6rem 0; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
     .map-controls button, .map-controls label {
       background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 40px;
-      padding: 0.4rem 1rem; font-size: 0.8rem; cursor: pointer;
+      padding: 0.3rem 0.8rem; font-size: 0.75rem; cursor: pointer;
     }
     .gps-section {
-      background: var(--card-bg); border-radius: 28px; padding: 1.8rem; margin: 2rem 0;
+      background: var(--card-bg); border-radius: 28px; padding: 1.2rem; margin: 1.5rem 0;
       text-align: center; border: 1px solid var(--input-border);
     }
-    #getLocationBtn { background: var(--button-bg); color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 40px; font-size: 0.9rem; cursor: pointer; }
+    #getLocationBtn { background: var(--button-bg); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 40px; font-size: 0.85rem; cursor: pointer; }
 
     /* Footer */
     .footer {
       background: var(--footer-bg); border-top: 1px solid var(--input-border);
-      margin-top: 3rem; padding: 2.5rem 1rem 1.5rem; font-size: 0.85rem;
+      margin-top: 2rem; padding: 2rem 1rem 1rem; font-size: 0.8rem;
     }
-    .footer-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 2rem; margin-bottom: 2rem; }
-    .footer-logo { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .footer-tagline { opacity: 0.7; margin-bottom: 0.5rem; }
-    .footer-copyright { opacity: 0.5; font-size: 0.7rem; margin-top: 0.5rem; }
-    .footer-col h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.8rem; }
-    .footer-col ul { list-style: none; }
-    .footer-col ul li { margin-bottom: 0.5rem; }
-    .footer-col ul li a { color: var(--text-color); text-decoration: none; opacity: 0.7; }
-    .footer-col ul li a:hover { opacity: 1; color: var(--primary); }
-    .social-links { display: flex; gap: 1rem; margin-bottom: 1rem; }
-    .social-links a {
-      background: var(--input-bg); width: 34px; height: 34px; border-radius: 50%;
-      display: inline-flex; align-items: center; justify-content: center;
-      border: 1px solid var(--input-border); transition: all 0.2s;
-    }
-    .social-links a:hover { background: var(--primary); color: white; transform: translateY(-3px); }
-    .contact-info p { margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem; }
-    .contact-info i { width: 22px; }
-    .footer-newsletter {
-      max-width: 520px; margin: 0 auto 2rem; text-align: center; padding: 1.2rem;
-      background: var(--card-bg); border-radius: 60px; border: 1px solid var(--input-border);
-    }
-    .footer-newsletter form { display: flex; gap: 0.5rem; justify-content: center; }
-    .footer-newsletter input {
-      padding: 0.6rem 1rem; border-radius: 40px; border: 1px solid var(--input-border);
-      background: var(--input-bg); color: var(--text-color); width: 260px;
-    }
-    .footer-newsletter button { background: #25D366; color: white; border: none; border-radius: 40px; padding: 0.6rem 1.2rem; cursor: pointer; }
-    .footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--input-border); font-size: 0.75rem; opacity: 0.7; }
+    .footer-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+    .footer-logo { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .footer-tagline { opacity: 0.7; margin-bottom: 0.3rem; font-size: 0.75rem; }
+    .footer-copyright { opacity: 0.5; font-size: 0.65rem; margin-top: 0.3rem; }
+    .footer-col h3 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.6rem; }
+    .footer-col ul li { margin-bottom: 0.3rem; }
+    .footer-col ul li a { font-size: 0.75rem; }
+    .social-links a { width: 30px; height: 30px; }
+    .contact-info p { font-size: 0.75rem; }
+    .footer-newsletter { max-width: 480px; margin: 0 auto 1.5rem; padding: 1rem; }
+    .footer-newsletter input { width: 220px; padding: 0.5rem 0.8rem; }
+    .footer-newsletter button { padding: 0.5rem 1rem; }
+    .footer-bottom { font-size: 0.7rem; }
 
     /* Modals */
     .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(6px); }
-    .modal-content { background-color: var(--card-bg); margin: 20px auto; padding: 24px; border-radius: 32px; width: 90%; max-width: 700px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
-    .close-btn { position: absolute; top: 16px; right: 20px; color: #aaa; font-size: 32px; font-weight: 300; cursor: pointer; }
+    .modal-content { background-color: var(--card-bg); margin: 20px auto; padding: 20px; border-radius: 28px; width: 90%; max-width: 650px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
+    .close-btn { position: absolute; top: 12px; right: 16px; color: #aaa; font-size: 28px; font-weight: 300; cursor: pointer; }
     .close-btn:hover { color: var(--text-color); }
-    .modal-tab { background: var(--card-bg); border: 1px solid var(--input-border); padding: 6px 16px; border-radius: 40px; cursor: pointer; font-weight: 500; }
+    .modal-tab { background: var(--card-bg); border: 1px solid var(--input-border); padding: 4px 12px; border-radius: 40px; cursor: pointer; font-weight: 500; font-size: 0.8rem; }
     .modal-tab.active { background: var(--button-bg); color: white; }
     .lightbox-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .lightbox-content img { max-width: 90%; max-height: 90%; border-radius: 12px; }
@@ -588,15 +566,17 @@ Here is the complete, fully updated HTML document with the profile picture circu
       overflow: hidden;
     }
     #compareFloatingBtn {
-      position: fixed; bottom: 100px; right: 25px; background: var(--button-bg); color: white;
-      border-radius: 60px; padding: 10px 20px; display: none; align-items: center; gap: 8px;
-      cursor: pointer; z-index: 9998; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 0.85rem; font-weight: 600;
+      position: fixed; bottom: 80px; right: 20px; background: var(--button-bg); color: white;
+      border-radius: 60px; padding: 8px 16px; display: none; align-items: center; gap: 6px;
+      cursor: pointer; z-index: 9998; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 0.75rem; font-weight: 600;
     }
     @media (max-width: 768px) {
-      .navbar { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
-      .hero { margin: 1rem; padding: 2rem 1rem; }
-      .hero h1 { font-size: 2rem; }
-      .hero h1 i { font-size: 3rem; }
+      .navbar { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+      .nav-links { margin-left: 0; justify-content: center; }
+      .nav-right { justify-content: center; }
+      .hero { margin: 1rem; padding: 1.5rem 1rem; }
+      .hero h1 { font-size: 1.8rem; }
+      .hero h1 i { font-size: 2.5rem; }
       .filters-row { flex-direction: column; border-radius: 28px; }
       #houses-container { grid-template-columns: 1fr; }
       #map { height: 280px; }
@@ -613,6 +593,8 @@ Here is the complete, fully updated HTML document with the profile picture circu
       <a href="#"><i class="fas fa-home"></i> Home</a>
       <a href="#map"><i class="fas fa-map"></i> Explore Map</a>
       <a href="#" id="dreamMatchLink"><i class="fas fa-magic"></i> Dream Match</a>
+    </div>
+    <div class="nav-right">
       <div class="user-menu" id="userMenu">
         <div class="user-avatar" id="userAvatar"><i class="fas fa-user-circle"></i></div>
         <div class="user-dropdown" id="userDropdown"></div>
@@ -683,7 +665,7 @@ Here is the complete, fully updated HTML document with the profile picture circu
       <button class="tab-btn" data-type="Office"><i class="fas fa-briefcase"></i> Offices</button>
     </div>
 
-    <h2 style="margin:1rem 0 0.5rem"><i class="fas fa-list"></i> Available Properties</h2>
+    <h2 style="margin:0.8rem 0 0.3rem"><i class="fas fa-list"></i> Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
     <div class="pagination" id="pagination"></div>
 
@@ -692,7 +674,7 @@ Here is the complete, fully updated HTML document with the profile picture circu
       <div class="map-controls">
         <button id="drawAreaBtn" class="save-search-btn"><i class="fas fa-draw-polygon"></i> Draw Area</button>
         <button id="clearDrawBtn" class="save-search-btn" style="background:#e74c3c;"><i class="fas fa-trash-alt"></i> Clear</button>
-        <div style="display:flex; align-items:center; gap:12px;">
+        <div style="display:flex; align-items:center; gap:10px;">
           <label><i class="fas fa-location-dot"></i> Radius:</label>
           <input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2">
           <span id="radiusValueControl">2 km</span>
@@ -741,9 +723,9 @@ Here is the complete, fully updated HTML document with the profile picture circu
         <div class="form-group"><label><i class="fas fa-volume-down"></i> Preferred noise level?</label><select id="dream_noise" class="sort-select" style="width:100%"><option value="quiet">Very quiet (no traffic, no parties)</option><option value="moderate">Moderate (normal city life)</option><option value="lively">Lively (restaurants, bars nearby)</option></select></div>
         <div class="form-group"><label><i class="fas fa-money-bill-wave"></i> Maximum monthly rent (MWK)</label><input type="number" id="dream_maxPrice" placeholder="e.g., 500000" style="width:100%"></div>
         <div class="form-group"><label><i class="fas fa-bed"></i> Minimum bedrooms</label><input type="number" id="dream_bedrooms" placeholder="e.g., 2" value="1" style="width:100%"></div>
-        <button type="submit" class="save-search-btn" style="width:100%; margin-top:1rem;"><i class="fas fa-magic"></i> Find My Dream Home</button>
+        <button type="submit" class="save-search-btn" style="width:100%; margin-top:0.8rem;"><i class="fas fa-magic"></i> Find My Dream Home</button>
       </form>
-      <div id="dreamMatchResults" style="margin-top: 2rem; display: none;">
+      <div id="dreamMatchResults" style="margin-top: 1.5rem; display: none;">
         <h3><i class="fas fa-chart-line"></i> Your Top Matches</h3>
         <div id="dreamMatchCarousel" class="swiper dream-swiper" style="overflow:hidden;">
           <div class="swiper-wrapper" id="dreamMatchWrapper"></div>
@@ -755,6 +737,7 @@ Here is the complete, fully updated HTML document with the profile picture circu
     </div>
   </div>
 
+  <!-- Other modals (property, booking, lightbox, etc.) – same as before -->
   <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePropertyModal()">&times;</span><div id="propertyModalContent"></div><div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;"><button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button><button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button><button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button><button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button><button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button></div><div id="modalDetails" style="display:block;"></div><div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div><div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div><div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div><div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div></div></div>
   <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
   <div id="lightboxModal" class="lightbox-modal" style="display:none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
@@ -802,7 +785,7 @@ Here is the complete, fully updated HTML document with the profile picture circu
         if (heroSwiper) heroSwiper.destroy(true, true);
         heroSwiper = new Swiper('.hero-swiper', {
           loop: true, autoplay: { delay: 5000, disableOnInteraction: false },
-          slidesPerView: 1, spaceBetween: 20,
+          slidesPerView: 1, spaceBetween: 16,
           breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
           pagination: { el: '.swiper-pagination', clickable: true },
           navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
@@ -814,4 +797,3 @@ Here is the complete, fully updated HTML document with the profile picture circu
   </script>
 </body>
 </html>
-```
