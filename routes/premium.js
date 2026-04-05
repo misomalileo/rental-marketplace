@@ -134,4 +134,49 @@ router.get('/early-access', auth, async (req, res) => {
   }
 });
 
+// ========== PRIORITY VIEWING REQUEST ==========
+// POST /api/premium/priority-viewing – premium tenant requests priority viewing
+router.post('/priority-viewing', auth, async (req, res) => {
+  try {
+    const { houseId } = req.body;
+    if (!houseId) return res.status(400).json({ message: 'House ID required' });
+
+    const user = await User.findById(req.user.id);
+    if (!isPremiumUser(user)) {
+      return res.status(403).json({ message: 'Premium subscription required' });
+    }
+
+    const house = await House.findById(houseId).populate('owner');
+    if (!house) return res.status(404).json({ message: 'Property not found' });
+
+    const landlord = house.owner;
+    if (!landlord) return res.status(404).json({ message: 'Landlord not found' });
+
+    // Create a notification for the landlord
+    const notification = {
+      title: '🌟 Priority Viewing Request',
+      message: `${user.name} (Premium User) has requested priority viewing for your property "${house.name}". Contact them via WhatsApp: ${user.phone || 'not provided'}.`,
+      read: false,
+      createdAt: new Date(),
+      type: 'priority_viewing',
+      metadata: { tenantId: user._id, houseId: house._id }
+    };
+
+    landlord.notifications = landlord.notifications || [];
+    landlord.notifications.unshift(notification);
+    await landlord.save();
+
+    // Optional: Send email to landlord (uncomment if you have nodemailer configured)
+    // if (landlord.email) {
+    //   const sendEmail = require('../utils/sendEmail');
+    //   await sendEmail(landlord.email, 'Priority Viewing Request', notification.message);
+    // }
+
+    res.json({ success: true, message: 'Landlord notified successfully.' });
+  } catch (err) {
+    console.error('Priority viewing error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

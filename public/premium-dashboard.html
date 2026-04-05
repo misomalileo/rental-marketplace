@@ -137,7 +137,7 @@
           <div id="negotiationResult"></div>
         </div>
 
-        <!-- Priority Viewing (dropdown) -->
+        <!-- Priority Viewing (dropdown) – NOW WITH REAL BACKEND CALL -->
         <div class="card">
           <h2><i class="fas fa-calendar-star"></i> Priority Viewing</h2>
           <p style="font-size:0.75rem; color:#94a3b8;">Select a property to request priority viewing – landlords see your premium badge first.</p>
@@ -383,17 +383,30 @@
       }
     });
 
-    // Priority Viewing (simulated, works)
+    // ========== UPDATED PRIORITY VIEWING (real backend call) ==========
     document.getElementById("requestPriorityBtn").addEventListener("click", async () => {
       if (!isActivePremium) { alert("Activate premium to request priority viewing."); return; }
       const houseId = document.getElementById("priorityHouseSelect").value;
       if (!houseId) { alert("Please select a property."); return; }
       const statusDiv = document.getElementById("priorityStatus");
       statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending request...';
-      setTimeout(() => {
-        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Priority viewing requested! The landlord has been notified and will see your premium badge.';
-        addDemoNotification("Priority Viewing Requested", `You requested priority viewing for property ID ${houseId}. The landlord will contact you soon.`);
-      }, 1000);
+      try {
+        const res = await fetch("/api/premium/priority-viewing", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ houseId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Priority viewing requested! The landlord has been notified and will see your premium badge.';
+          addDemoNotification("Priority Viewing Requested", `You requested priority viewing for property ID ${houseId}. The landlord will contact you soon.`);
+        } else {
+          statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error: ' + (data.message || "Failed to notify landlord");
+        }
+      } catch (err) {
+        console.error("Priority viewing error:", err);
+        statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Network error. Please try again.';
+      }
     });
 
     function renderPriceAlerts(searches) {
