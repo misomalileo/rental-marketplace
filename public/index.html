@@ -22,10 +22,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
-  <!-- Photo Sphere Viewer -->
   <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
   <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
-  <!-- Signature Pad -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <style>
     /* ========== THEME VARIABLES ========== */
@@ -119,7 +117,7 @@
     }
     h1, h2, h3, .logo { font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
 
-    /* Icons – special blooming for fire, but regular icons use theme color */
+    /* Icons – blooming for special, solid for regular */
     i, .fas, .far, .fab { color: var(--icon-color); transition: all 0.2s; }
     .carousel-title i, .hero h1 i, .logo i {
       background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
@@ -141,7 +139,7 @@
     }
     button i, .save-search-btn i, .carousel-btn i, .tab-btn i { color: white !important; }
 
-    /* Hero Carousel (compact, 3D) */
+    /* Hero Carousel (compact) */
     .carousel-section { margin: 1rem 1.5rem 2rem; }
     .carousel-container {
       background: var(--card-bg);
@@ -481,8 +479,7 @@
     <div class="nav-links">
       <a href="#"><i class="fas fa-home"></i> Home</a>
       <a href="#map"><i class="fas fa-map"></i> Explore Map</a>
-      <!-- Direct login link as fallback (optional) -->
-      <a href="login.html" id="directLoginLink"><i class="fas fa-sign-in-alt"></i> Login</a>
+      <a href="#" id="dreamMatchLink"><i class="fas fa-magic"></i> Dream Match</a>
       <div class="user-menu" id="userMenu">
         <div class="user-avatar" id="userAvatar"><i class="fas fa-user-circle"></i></div>
         <div class="user-dropdown" id="userDropdown"></div>
@@ -600,7 +597,34 @@
     <div class="footer-bottom"><div class="footer-bottom-left"><select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select></div><div class="footer-bottom-right">Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</div></div>
   </footer>
 
-  <!-- MODALS (simplified but functional) -->
+  <!-- DREAM MATCH MODAL -->
+  <div id="dreamMatchModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeDreamMatchModal()">&times;</span>
+      <h2><i class="fas fa-magic"></i> Dream Home Match</h2>
+      <p>Answer a few quick questions – we'll find properties that match your lifestyle.</p>
+      <form id="dreamMatchForm">
+        <div class="form-group"><label><i class="fas fa-briefcase"></i> Do you work from home?</label><select id="dream_workFromHome" class="sort-select" style="width:100%"><option value="essential">Essential – need a dedicated office</option><option value="nice">Nice to have</option><option value="no">Not needed</option></select></div>
+        <div class="form-group"><label><i class="fas fa-utensils"></i> How often do you host friends?</label><select id="dream_social" class="sort-select" style="width:100%"><option value="often">Often – I love entertaining</option><option value="sometimes">Sometimes</option><option value="rarely">Rarely – I prefer quiet</option></select></div>
+        <div class="form-group"><label><i class="fas fa-tree"></i> How important is outdoor space?</label><select id="dream_outdoor" class="sort-select" style="width:100%"><option value="essential">Essential – garden or balcony</option><option value="nice">Nice to have</option><option value="no">Not important</option></select></div>
+        <div class="form-group"><label><i class="fas fa-volume-down"></i> Preferred noise level?</label><select id="dream_noise" class="sort-select" style="width:100%"><option value="quiet">Very quiet (no traffic, no parties)</option><option value="moderate">Moderate (normal city life)</option><option value="lively">Lively (restaurants, bars nearby)</option></select></div>
+        <div class="form-group"><label><i class="fas fa-money-bill-wave"></i> Maximum monthly rent (MWK)</label><input type="number" id="dream_maxPrice" placeholder="e.g., 500000" style="width:100%"></div>
+        <div class="form-group"><label><i class="fas fa-bed"></i> Minimum bedrooms</label><input type="number" id="dream_bedrooms" placeholder="e.g., 2" value="1" style="width:100%"></div>
+        <button type="submit" class="save-search-btn" style="width:100%; margin-top:1rem;"><i class="fas fa-magic"></i> Find My Dream Home</button>
+      </form>
+      <div id="dreamMatchResults" style="margin-top: 2rem; display: none;">
+        <h3><i class="fas fa-chart-line"></i> Your Top Matches</h3>
+        <div id="dreamMatchCarousel" class="swiper dream-swiper" style="overflow:hidden;">
+          <div class="swiper-wrapper" id="dreamMatchWrapper"></div>
+          <div class="swiper-pagination"></div>
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OTHER MODALS (simplified) -->
   <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePropertyModal()">&times;</span><div id="propertyModalContent"></div><div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;"><button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button><button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button><button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button><button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button><button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button></div><div id="modalDetails" style="display:block;"></div><div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div><div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div><div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div><div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div></div></div>
   <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
   <div id="lightboxModal" class="lightbox-modal" style="display:none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
@@ -623,7 +647,7 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    // ========== HERO CAROUSEL LOADER ==========
+    // Only carousel loader – all other JS (user menu, etc.) is in script.js
     let heroSwiper = null;
     async function loadHeroCarousel() {
       try {
@@ -658,177 +682,6 @@
     }
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     document.addEventListener('DOMContentLoaded', () => { loadHeroCarousel(); });
-
-    // ========== USER MENU – WORKING DROPDOWN ==========
-    const userMenu = document.getElementById('userMenu');
-    const userAvatar = document.getElementById('userAvatar');
-    const userDropdown = document.getElementById('userDropdown');
-
-    // Guest dropdown (always available as fallback)
-    function setGuestDropdown() {
-      userDropdown.innerHTML = `
-        <div class="dropdown-header"><div class="avatar"><i class="fas fa-user"></i></div><div class="info"><h4>Guest User</h4><p>Sign in for more features</p></div></div>
-        <div class="dropdown-item" id="becomeLandlordGuest"><i class="fas fa-building"></i> Become a Landlord</div>
-        <div class="dropdown-item" id="becomePremiumGuest"><i class="fas fa-gem"></i> Become a Premium User <span class="premium-badge">MWK 500/mo</span></div>
-        <div class="dropdown-item" id="loginGuest"><i class="fas fa-sign-in-alt"></i> Login / Register</div>
-      `;
-      document.getElementById('becomeLandlordGuest')?.addEventListener('click', () => window.location.href = 'register.html?role=landlord');
-      document.getElementById('becomePremiumGuest')?.addEventListener('click', () => window.location.href = 'register.html?role=premium_user');
-      document.getElementById('loginGuest')?.addEventListener('click', () => window.location.href = 'login.html');
-    }
-
-    // Logged-in dropdown
-    function setLoggedInDropdown(user) {
-      const userName = user.name || 'User';
-      const userInitial = userName.charAt(0).toUpperCase();
-      const avatarHtml = user.profilePicture ? `<img src="${user.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`;
-      userDropdown.innerHTML = `
-        <div class="dropdown-header"><div class="avatar">${avatarHtml}</div><div class="info"><h4>${escapeHtml(userName)}</h4><p>${user.role === 'premium_user' ? 'Premium User' : (user.role === 'premium_landlord' ? 'Premium Landlord' : (user.role === 'admin' ? 'Admin' : 'Free User'))}</p></div></div>
-        <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
-        <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
-        <div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>
-        <div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>
-        <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
-      `;
-      document.getElementById('profileLink')?.addEventListener('click', () => window.location.href = 'profile.html');
-      document.getElementById('premiumDashboardLink')?.addEventListener('click', () => window.location.href = 'premium-dashboard.html');
-      document.getElementById('becomeLandlordLink')?.addEventListener('click', () => window.location.href = 'dashboard.html');
-      document.getElementById('upgradePremiumLink')?.addEventListener('click', async () => {
-        const token = localStorage.getItem('token');
-        try {
-          const res = await fetch('/api/payment/premium-user', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
-          const data = await res.json();
-          if (data.payment_url) window.location.href = data.payment_url;
-          else alert('Payment initiation failed');
-        } catch (err) { alert('Error starting upgrade'); }
-      });
-      document.getElementById('logoutLink')?.addEventListener('click', () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        window.location.reload();
-      });
-    }
-
-    // Load user and set appropriate dropdown
-    async function loadAndUpdateUserMenu() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setGuestDropdown();
-        return;
-      }
-      try {
-        const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
-        if (res.ok) {
-          const user = await res.json();
-          setLoggedInDropdown(user);
-          // Update avatar if needed
-          if (user.profilePicture) userAvatar.innerHTML = `<img src="${user.profilePicture}">`;
-          else userAvatar.innerHTML = `<span>${user.name?.charAt(0).toUpperCase() || 'U'}</span>`;
-        } else {
-          localStorage.removeItem('token');
-          setGuestDropdown();
-          userAvatar.innerHTML = '<i class="fas fa-user-circle"></i>';
-        }
-      } catch (err) {
-        console.error('User fetch error', err);
-        setGuestDropdown();
-      }
-    }
-
-    // Toggle dropdown on avatar click
-    userAvatar.addEventListener('click', (e) => {
-      e.stopPropagation();
-      userMenu.classList.toggle('active');
-    });
-    document.addEventListener('click', (e) => {
-      if (!userMenu.contains(e.target)) userMenu.classList.remove('active');
-    });
-
-    loadAndUpdateUserMenu();
-
-    // Lightbox functions
-    let currentLightboxImages = [];
-    let currentImageIndex = 0;
-    window.openLightbox = function(images, startIndex = 0) {
-      if (!images || images.length === 0) return;
-      currentLightboxImages = images;
-      currentImageIndex = startIndex;
-      const modal = document.getElementById('lightboxModal');
-      const img = document.getElementById('lightboxImage');
-      const counter = document.getElementById('lightboxCounter');
-      img.src = images[startIndex];
-      counter.textContent = `${startIndex+1} / ${images.length}`;
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    };
-    window.closeLightbox = function() {
-      document.getElementById('lightboxModal').style.display = 'none';
-      document.body.style.overflow = '';
-    };
-    window.showPrevImage = function() {
-      if (!currentLightboxImages.length) return;
-      currentImageIndex = (currentImageIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
-      document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex];
-      document.getElementById('lightboxCounter').textContent = `${currentImageIndex+1} / ${currentLightboxImages.length}`;
-    };
-    window.showNextImage = function() {
-      if (!currentLightboxImages.length) return;
-      currentImageIndex = (currentImageIndex + 1) % currentLightboxImages.length;
-      document.getElementById('lightboxImage').src = currentLightboxImages[currentImageIndex];
-      document.getElementById('lightboxCounter').textContent = `${currentImageIndex+1} / ${currentLightboxImages.length}`;
-    };
-    document.querySelector('.lightbox-close')?.addEventListener('click', closeLightbox);
-    document.querySelector('.lightbox-prev')?.addEventListener('click', showPrevImage);
-    document.querySelector('.lightbox-next')?.addEventListener('click', showNextImage);
-    document.getElementById('lightboxModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('lightboxModal')) closeLightbox(); });
-
-    // Modal close functions (to avoid errors)
-    window.closePropertyModal = function() { document.getElementById('propertyModal').style.display = 'none'; };
-    window.closeBookingModal = function() { document.getElementById('bookingModal').style.display = 'none'; };
-    window.closeSaveSearchModal = function() { document.getElementById('saveSearchModal').style.display = 'none'; };
-    window.closeLandlordModal = function() { document.getElementById('landlordModal').style.display = 'none'; };
-    window.closeShareModal = function() { document.getElementById('shareModal').style.display = 'none'; };
-    window.closeComparisonModal = function() { document.getElementById('comparisonModal').style.display = 'none'; };
-    window.shareOnFacebook = function() { alert('Share on Facebook'); };
-    window.shareOnWhatsApp = function() { alert('Share on WhatsApp'); };
-    window.shareOnTwitter = function() { alert('Share on Twitter'); };
-    window.copyShareLink = function() { alert('Link copied'); };
-    window.openBookingModal = function(houseId, houseName) {
-      window.currentBookingHouseId = houseId;
-      document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
-      document.getElementById("bookingStart").value = '';
-      document.getElementById("bookingEnd").value = '';
-      document.getElementById("bookingMessage").value = '';
-      document.getElementById("bookingStatus").innerHTML = '';
-      document.getElementById("bookingModal").style.display = "block";
-    };
-    document.getElementById("bookingForm")?.addEventListener("submit", async e => {
-      e.preventDefault();
-      const token = localStorage.getItem("token");
-      if (!token) { alert("Please login to book"); return; }
-      const start = document.getElementById("bookingStart").value;
-      const end = document.getElementById("bookingEnd").value;
-      const message = document.getElementById("bookingMessage").value;
-      if (!start || !end) { alert("Please select both dates"); return; }
-      const statusDiv = document.getElementById("bookingStatus");
-      statusDiv.innerHTML = "Sending...";
-      try {
-        const res = await fetch("/api/bookings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-          body: JSON.stringify({ houseId: window.currentBookingHouseId, startDate: start, endDate: end, message })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          statusDiv.innerHTML = "✅ Booking request sent!";
-          setTimeout(() => window.closeBookingModal(), 2000);
-        } else {
-          statusDiv.innerHTML = "❌ " + (data.message || "Error");
-        }
-      } catch (err) {
-        statusDiv.innerHTML = "❌ Network error";
-      }
-    });
   </script>
 </body>
 </html>

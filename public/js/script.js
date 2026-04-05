@@ -501,7 +501,7 @@ function openComparisonModal() {
     { label: '<i class="fas fa-star"></i> Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
   ];
   features.forEach(feature => {
-    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}<td>`;
+    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}<tr>`;
     housesToCompare.forEach(house => {
       let value = house[feature.key];
       if (feature.format) {
@@ -512,7 +512,7 @@ function openComparisonModal() {
       }
       tableHtml += `<td style="padding: 8px;">${value}</td>`;
     });
-    tableHtml += `<tr>`;
+    tableHtml += `</tr>`;
   });
   tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
   housesToCompare.forEach(house => {
@@ -1105,7 +1105,6 @@ async function showDetails(houseId) {
         const data = await res.json();
         if (res.ok) {
           const negotiationUrl = `${window.location.origin}/lease-negotiation.html?id=${data._id}`;
-          // Show the link and allow copying
           const copyLink = confirm(`Lease negotiation created!\n\nShare this link with the tenant:\n${negotiationUrl}\n\nClick OK to copy the link to clipboard.`);
           if (copyLink) {
             await navigator.clipboard.writeText(negotiationUrl);
@@ -1131,7 +1130,6 @@ async function showDetails(houseId) {
       if (checkRes.ok) {
         const existingNegotiation = await checkRes.json();
         if (existingNegotiation && existingNegotiation.status !== 'signed') {
-          // Show "Join Negotiation" button
           const joinBtn = document.createElement('button');
           joinBtn.className = 'save-search-btn';
           joinBtn.style.background = '#8b5cf6';
@@ -1143,7 +1141,6 @@ async function showDetails(houseId) {
           };
           document.getElementById('modalDetails').appendChild(joinBtn);
         } else {
-          // No active negotiation – show message
           const msg = document.createElement('p');
           msg.style.marginTop = '0.5rem';
           msg.style.fontSize = '0.8rem';
@@ -1154,7 +1151,6 @@ async function showDetails(houseId) {
       }
     } catch (err) {
       console.error('Failed to check existing negotiation', err);
-      // Fallback: show a generic message
       const msg = document.createElement('p');
       msg.style.marginTop = '0.5rem';
       msg.style.fontSize = '0.8rem';
@@ -1164,7 +1160,6 @@ async function showDetails(houseId) {
     }
   }
   else {
-    // Not logged in – show login prompt
     const loginMsg = document.createElement('p');
     loginMsg.style.marginTop = '0.5rem';
     loginMsg.style.fontSize = '0.8rem';
@@ -1231,6 +1226,88 @@ const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
 if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
 window.closeDreamMatchModal = closeDreamMatchModal;
 
+// ========== USER MENU – WORKING DROPDOWN (ADD THIS) ==========
+const userMenu = document.getElementById('userMenu');
+const userAvatar = document.getElementById('userAvatar');
+const userDropdown = document.getElementById('userDropdown');
+
+function setGuestDropdown() {
+  userDropdown.innerHTML = `
+    <div class="dropdown-header"><div class="avatar"><i class="fas fa-user"></i></div><div class="info"><h4>Guest User</h4><p>Sign in for more features</p></div></div>
+    <div class="dropdown-item" id="becomeLandlordGuest"><i class="fas fa-building"></i> Become a Landlord</div>
+    <div class="dropdown-item" id="becomePremiumGuest"><i class="fas fa-gem"></i> Become a Premium User <span class="premium-badge">MWK 500/mo</span></div>
+    <div class="dropdown-item" id="loginGuest"><i class="fas fa-sign-in-alt"></i> Login / Register</div>
+  `;
+  document.getElementById('becomeLandlordGuest')?.addEventListener('click', () => window.location.href = 'register.html?role=landlord');
+  document.getElementById('becomePremiumGuest')?.addEventListener('click', () => window.location.href = 'register.html?role=premium_user');
+  document.getElementById('loginGuest')?.addEventListener('click', () => window.location.href = 'login.html');
+}
+
+function setLoggedInDropdown(user) {
+  const userName = user.name || 'User';
+  const userInitial = userName.charAt(0).toUpperCase();
+  const avatarHtml = user.profilePicture ? `<img src="${user.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`;
+  userDropdown.innerHTML = `
+    <div class="dropdown-header"><div class="avatar">${avatarHtml}</div><div class="info"><h4>${escapeHtml(userName)}</h4><p>${user.role === 'premium_user' ? 'Premium User' : (user.role === 'premium_landlord' ? 'Premium Landlord' : (user.role === 'admin' ? 'Admin' : 'Free User'))}</p></div></div>
+    <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
+    <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
+    <div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>
+    <div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>
+    <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
+  `;
+  document.getElementById('profileLink')?.addEventListener('click', () => window.location.href = 'profile.html');
+  document.getElementById('premiumDashboardLink')?.addEventListener('click', () => window.location.href = 'premium-dashboard.html');
+  document.getElementById('becomeLandlordLink')?.addEventListener('click', () => window.location.href = 'dashboard.html');
+  document.getElementById('upgradePremiumLink')?.addEventListener('click', async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch('/api/payment/premium-user', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+      const data = await res.json();
+      if (data.payment_url) window.location.href = data.payment_url;
+      else alert('Payment initiation failed');
+    } catch (err) { alert('Error starting upgrade'); }
+  });
+  document.getElementById('logoutLink')?.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    window.location.reload();
+  });
+}
+
+async function loadAndUpdateUserMenu() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setGuestDropdown();
+    return;
+  }
+  try {
+    const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
+    if (res.ok) {
+      const user = await res.json();
+      setLoggedInDropdown(user);
+      if (user.profilePicture) userAvatar.innerHTML = `<img src="${user.profilePicture}">`;
+      else userAvatar.innerHTML = `<span>${user.name?.charAt(0).toUpperCase() || 'U'}</span>`;
+    } else {
+      localStorage.removeItem('token');
+      setGuestDropdown();
+      userAvatar.innerHTML = '<i class="fas fa-user-circle"></i>';
+    }
+  } catch (err) {
+    console.error('User fetch error', err);
+    setGuestDropdown();
+  }
+}
+
+userAvatar.addEventListener('click', (e) => {
+  e.stopPropagation();
+  userMenu.classList.toggle('active');
+});
+document.addEventListener('click', (e) => {
+  if (!userMenu.contains(e.target)) userMenu.classList.remove('active');
+});
+
+loadAndUpdateUserMenu();
+
 // ======================================
 // INITIALIZATION
 // ======================================
@@ -1253,7 +1330,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (urlParams.has('sort')) currentSort = urlParams.get('sort');
   if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
   loadHouses(currentPage, currentType, currentFilters, currentSort);
-  // Load the hero carousel
   loadHeroCarousel();
 });
 
