@@ -1,3 +1,5 @@
+Here is the complete, fully updated HTML document with the profile picture circular fix applied.
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -194,6 +196,39 @@
       background: white;
     }
 
+    /* ========== PROFILE PICTURE CIRCULAR FIX ========== */
+    .user-avatar img,
+    .dropdown-header .avatar img,
+    .landlord-avatar img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      border-radius: 50% !important;
+      display: block;
+    }
+    .user-avatar,
+    .dropdown-header .avatar,
+    .landlord-avatar {
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .user-avatar {
+      width: 42px;
+      height: 42px;
+    }
+    .dropdown-header .avatar {
+      width: 44px;
+      height: 44px;
+    }
+    .landlord-avatar {
+      width: 36px;
+      height: 36px;
+    }
+
     /* Favorite button icon visibility */
     .fav-btn i {
       color: var(--icon-color) !important;
@@ -351,8 +386,12 @@
     }
     .user-menu { position: relative; cursor: pointer; }
     .user-avatar {
-      width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
       transition: transform 0.2s;
     }
     .user-avatar:hover { transform: scale(1.05); }
@@ -366,8 +405,13 @@
     .user-menu.active .user-dropdown { opacity: 1; visibility: visible; transform: translateY(5px); }
     .dropdown-header { padding: 1rem; border-bottom: 1px solid var(--input-border); display: flex; align-items: center; gap: 0.8rem; }
     .dropdown-header .avatar {
-      width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; color: white;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1rem;
+      color: white;
     }
     .dropdown-header .info h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
     .dropdown-header .info p { font-size: 0.7rem; opacity: 0.7; }
@@ -531,7 +575,18 @@
     .modal-tab.active { background: var(--button-bg); color: white; }
     .lightbox-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .lightbox-content img { max-width: 90%; max-height: 90%; border-radius: 12px; }
-    .landlord-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: inline-flex; align-items: center; justify-content: center; font-weight: 500; color: white; font-size: 0.9rem; cursor: pointer; margin-right: 8px; overflow: hidden; }
+    .landlord-avatar {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      color: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-right: 8px;
+      overflow: hidden;
+    }
     #compareFloatingBtn {
       position: fixed; bottom: 100px; right: 25px; background: var(--button-bg); color: white;
       border-radius: 60px; padding: 10px 20px; display: none; align-items: center; gap: 8px;
@@ -759,3 +814,4 @@
   </script>
 </body>
 </html>
+```
