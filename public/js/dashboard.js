@@ -150,7 +150,7 @@ async function processPayment(method) {
 }
 function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; currentPaymentAction = null; currentHouseId = null; }
 
-// ========== FIXED: loadUnreadCount – handles 404 / missing chat endpoint gracefully ==========
+// ========== loadUnreadCount – handles 404 gracefully ==========
 async function loadUnreadCount() {
   try {
     const res = await fetch("/api/chat/my", { headers: { Authorization: "Bearer " + token } });
@@ -174,7 +174,7 @@ async function loadUnreadCount() {
 }
 setInterval(loadUnreadCount, 30000);
 
-// ========== FIXED: initMap – added invalidateSize to fix zoom & tile loading ==========
+// ========== UPDATED initMap – no invalidateSize (matches working index.html) ==========
 function initMap() {
   const mapContainer = document.getElementById('map');
   if (!mapContainer) return;
@@ -184,7 +184,7 @@ function initMap() {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
-    map.invalidateSize(); // ✅ force map to recalculate size (fixes zoom/blank tiles)
+    // Removed map.invalidateSize() – causes issues on some setups
     map.on("click", function (e) {
       document.getElementById("latitude").value = e.latlng.lat;
       document.getElementById("longitude").value = e.latlng.lng;

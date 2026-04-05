@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <!-- Add CSP to allow Leaflet images from cdn.jsdelivr.net (already allowed) -->
-  <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: blob: https://maps.google.com https://*.tile.openstreetmap.org https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://res.cloudinary.com https://images.pexels.com https://maps.googleapis.com;">
+  <!-- CSP removed to allow Leaflet markers from unpkg.com (same as index.html) -->
   <title>Landlord Dashboard | Khomo Lathu</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
@@ -16,9 +15,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Fix Leaflet marker icons to use allowed CDN -->
+  <!-- Fix Leaflet marker icons to use allowed CDN (cdn.jsdelivr.net) -->
   <script>
-    // Override Leaflet's default icon to use cdn.jsdelivr.net (allowed by CSP)
+    // Override Leaflet's default icon to use cdn.jsdelivr.net (allowed by default)
     delete L.Icon.Default.prototype._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -378,7 +377,7 @@
   </style>
 </head>
 <body>
-  <!-- Loading Overlay (added to fix showLoading error) -->
+  <!-- Loading Overlay -->
   <div id="loadingOverlay"><div><i class="fas fa-spinner fa-pulse"></i> Processing...</div></div>
 
   <nav class="navbar">
