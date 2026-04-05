@@ -1,5 +1,14 @@
 const mongoose = require("mongoose");
 
+const NotificationSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  type: { type: String, default: 'general' },
+  read: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  metadata: { type: Object, default: {} }  // ✅ Added for priority viewing data
+});
+
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, unique: true, sparse: true },
@@ -8,25 +17,21 @@ const UserSchema = new mongoose.Schema({
     googleId: { type: String, unique: true, sparse: true },
     authProvider: { type: String, enum: ["local", "google"], default: "local" },
 
-    // Role system: free, landlord, premium_user, premium_landlord, admin
     role: { 
         type: String, 
         enum: ["free", "landlord", "premium_user", "premium_landlord", "admin"], 
         default: "free" 
     },
     
-    // Landlord verification (legacy)
     verified: { type: Boolean, default: false },
     verificationType: { type: String, enum: ["none", "official", "premium"], default: "none" },
     
-    // General
     createdAt: { type: Date, default: Date.now },
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: String,
     passwordResetToken: String,
     resetTokenExpiry: Date,
 
-    // Profile details
     profile: {
         bio: String,
         avatar: String,
@@ -39,10 +44,8 @@ const UserSchema = new mongoose.Schema({
     bio: { type: String, default: '' },
     profileCompleted: { type: Boolean, default: false },
     
-    // Subscription & premium
     subscriptionExpiresAt: { type: Date, default: null },
     
-    // Premium user features
     savedSearches: [{
         name: { type: String, required: true },
         filters: { type: Object, default: {} },
@@ -50,19 +53,10 @@ const UserSchema = new mongoose.Schema({
         createdAt: { type: Date, default: Date.now },
         lastNotified: Date
     }],
-    notifications: [{
-        title: String,
-        message: String,
-        type: String, // e.g., 'price_drop', 'new_listing', 'alert', 'priority_viewing'
-        read: { type: Boolean, default: false },
-        createdAt: { type: Date, default: Date.now },
-        metadata: { type: Object, default: {} }  // added for extra data like tenantId, houseId
-    }],
     
-    // Trust score (0-100) for premium users
+    notifications: [NotificationSchema],  // ✅ Use the subdocument schema
+    
     trustScore: { type: Number, default: 0 },
-    
-    // Last seen for chat
     lastSeen: { type: Date, default: Date.now }
 });
 
