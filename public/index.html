@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- Swiper CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-  <!-- Leaflet & other libraries -->
+  <!-- Leaflet, Draw, MarkerCluster, noUiSlider -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
@@ -22,8 +22,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
+  <!-- Photo Sphere Viewer -->
   <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
   <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
+  <!-- Signature Pad -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <style>
     /* ========== THEME VARIABLES ========== */
@@ -117,7 +119,7 @@
     }
     h1, h2, h3, .logo { font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
 
-    /* Icons */
+    /* Icons – special blooming for fire, but regular icons use theme color */
     i, .fas, .far, .fab { color: var(--icon-color); transition: all 0.2s; }
     .carousel-title i, .hero h1 i, .logo i {
       background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
@@ -139,7 +141,7 @@
     }
     button i, .save-search-btn i, .carousel-btn i, .tab-btn i { color: white !important; }
 
-    /* Hero Carousel (compact) */
+    /* Hero Carousel (compact, 3D) */
     .carousel-section { margin: 1rem 1.5rem 2rem; }
     .carousel-container {
       background: var(--card-bg);
@@ -479,7 +481,7 @@
     <div class="nav-links">
       <a href="#"><i class="fas fa-home"></i> Home</a>
       <a href="#map"><i class="fas fa-map"></i> Explore Map</a>
-      <!-- Direct login link as fallback -->
+      <!-- Direct login link as fallback (optional) -->
       <a href="login.html" id="directLoginLink"><i class="fas fa-sign-in-alt"></i> Login</a>
       <div class="user-menu" id="userMenu">
         <div class="user-avatar" id="userAvatar"><i class="fas fa-user-circle"></i></div>
@@ -598,14 +600,14 @@
     <div class="footer-bottom"><div class="footer-bottom-left"><select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select></div><div class="footer-bottom-right">Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</div></div>
   </footer>
 
-  <!-- MODALS -->
-  <div id="propertyModal" class="modal" style="display:none;">...</div>
-  <div id="bookingModal" class="modal" style="display:none;">...</div>
-  <div id="lightboxModal" class="lightbox-modal" style="display:none;">...</div>
-  <div id="saveSearchModal" class="modal" style="display:none;">...</div>
-  <div id="landlordModal" class="modal" style="display:none;">...</div>
-  <div id="shareModal" class="modal" style="display:none;">...</div>
-  <div id="comparisonModal" class="modal" style="display:none;">...</div>
+  <!-- MODALS (simplified but functional) -->
+  <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePropertyModal()">&times;</span><div id="propertyModalContent"></div><div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;"><button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button><button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button><button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button><button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button><button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button></div><div id="modalDetails" style="display:block;"></div><div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div><div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div><div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div><div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div></div></div>
+  <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
+  <div id="lightboxModal" class="lightbox-modal" style="display:none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
+  <div id="saveSearchModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeSaveSearchModal()">&times;</span><h2>Save This Search</h2><p>Get email alerts when new houses match.</p><form id="saveSearchForm"><div class="form-group"><label>Your Email</label><input type="email" id="searchEmail" required></div><div class="form-group"><label>Search Name</label><input type="text" id="searchName"></div><button type="submit" class="save-search-btn">Save & Get Alerts</button></form><div id="saveSearchStatus"></div></div></div>
+  <div id="landlordModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:500px;"><span class="close-btn" onclick="closeLandlordModal()">&times;</span><div id="landlordModalContent"></div></div></div>
+  <div id="shareModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:400px;"><span class="close-btn" onclick="closeShareModal()">&times;</span><h3><i class="fas fa-share-alt"></i> Share this property</h3><div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;"><button onclick="shareOnFacebook()" style="background:#1877f2;">Facebook</button><button onclick="shareOnWhatsApp()" style="background:#25D366;">WhatsApp</button><button onclick="shareOnTwitter()" style="background:#1DA1F2;">Twitter</button><button onclick="copyShareLink()" style="background:#6c757d;">Copy Link</button></div><div id="shareStatus"></div></div></div>
+  <div id="comparisonModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:900px;"><span class="close-btn" onclick="closeComparisonModal()">&times;</span><h2><i class="fas fa-chart-simple"></i> Compare Properties</h2><div id="comparisonTable">Select up to 3 houses to compare.</div></div></div>
   <div id="compareFloatingBtn"><i class="fas fa-chart-simple"></i> Compare (<span id="compareCount">0</span>/3)</div>
 
   <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';</script>
@@ -621,7 +623,7 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    // ========== HERO CAROUSEL ==========
+    // ========== HERO CAROUSEL LOADER ==========
     let heroSwiper = null;
     async function loadHeroCarousel() {
       try {
@@ -657,12 +659,12 @@
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     document.addEventListener('DOMContentLoaded', () => { loadHeroCarousel(); });
 
-    // ========== USER MENU – GUARANTEED TO WORK ==========
+    // ========== USER MENU – WORKING DROPDOWN ==========
     const userMenu = document.getElementById('userMenu');
     const userAvatar = document.getElementById('userAvatar');
     const userDropdown = document.getElementById('userDropdown');
 
-    // Always populate dropdown with default guest options immediately (so it's never empty)
+    // Guest dropdown (always available as fallback)
     function setGuestDropdown() {
       userDropdown.innerHTML = `
         <div class="dropdown-header"><div class="avatar"><i class="fas fa-user"></i></div><div class="info"><h4>Guest User</h4><p>Sign in for more features</p></div></div>
@@ -675,7 +677,7 @@
       document.getElementById('loginGuest')?.addEventListener('click', () => window.location.href = 'login.html');
     }
 
-    // Set logged-in dropdown
+    // Logged-in dropdown
     function setLoggedInDropdown(user) {
       const userName = user.name || 'User';
       const userInitial = userName.charAt(0).toUpperCase();
@@ -707,7 +709,7 @@
       });
     }
 
-    // Load user and update dropdown
+    // Load user and set appropriate dropdown
     async function loadAndUpdateUserMenu() {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -719,13 +721,13 @@
         if (res.ok) {
           const user = await res.json();
           setLoggedInDropdown(user);
-          // Also update avatar icon if needed (optional)
-          const avatarDiv = userAvatar;
-          if (user.profilePicture) avatarDiv.innerHTML = `<img src="${user.profilePicture}">`;
-          else avatarDiv.innerHTML = `<span>${user.name?.charAt(0).toUpperCase() || 'U'}</span>`;
+          // Update avatar if needed
+          if (user.profilePicture) userAvatar.innerHTML = `<img src="${user.profilePicture}">`;
+          else userAvatar.innerHTML = `<span>${user.name?.charAt(0).toUpperCase() || 'U'}</span>`;
         } else {
           localStorage.removeItem('token');
           setGuestDropdown();
+          userAvatar.innerHTML = '<i class="fas fa-user-circle"></i>';
         }
       } catch (err) {
         console.error('User fetch error', err);
@@ -742,10 +744,9 @@
       if (!userMenu.contains(e.target)) userMenu.classList.remove('active');
     });
 
-    // Initial load
     loadAndUpdateUserMenu();
 
-    // Lightbox functions (simplified)
+    // Lightbox functions
     let currentLightboxImages = [];
     let currentImageIndex = 0;
     window.openLightbox = function(images, startIndex = 0) {
@@ -781,8 +782,7 @@
     document.querySelector('.lightbox-next')?.addEventListener('click', showNextImage);
     document.getElementById('lightboxModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('lightboxModal')) closeLightbox(); });
 
-    // Other global functions (stubs for compatibility)
-    window.showDetails = function(id) { console.log('Show details', id); alert('Function showDetails will be defined in script.js'); };
+    // Modal close functions (to avoid errors)
     window.closePropertyModal = function() { document.getElementById('propertyModal').style.display = 'none'; };
     window.closeBookingModal = function() { document.getElementById('bookingModal').style.display = 'none'; };
     window.closeSaveSearchModal = function() { document.getElementById('saveSearchModal').style.display = 'none'; };
@@ -793,6 +793,42 @@
     window.shareOnWhatsApp = function() { alert('Share on WhatsApp'); };
     window.shareOnTwitter = function() { alert('Share on Twitter'); };
     window.copyShareLink = function() { alert('Link copied'); };
+    window.openBookingModal = function(houseId, houseName) {
+      window.currentBookingHouseId = houseId;
+      document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
+      document.getElementById("bookingStart").value = '';
+      document.getElementById("bookingEnd").value = '';
+      document.getElementById("bookingMessage").value = '';
+      document.getElementById("bookingStatus").innerHTML = '';
+      document.getElementById("bookingModal").style.display = "block";
+    };
+    document.getElementById("bookingForm")?.addEventListener("submit", async e => {
+      e.preventDefault();
+      const token = localStorage.getItem("token");
+      if (!token) { alert("Please login to book"); return; }
+      const start = document.getElementById("bookingStart").value;
+      const end = document.getElementById("bookingEnd").value;
+      const message = document.getElementById("bookingMessage").value;
+      if (!start || !end) { alert("Please select both dates"); return; }
+      const statusDiv = document.getElementById("bookingStatus");
+      statusDiv.innerHTML = "Sending...";
+      try {
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ houseId: window.currentBookingHouseId, startDate: start, endDate: end, message })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          statusDiv.innerHTML = "✅ Booking request sent!";
+          setTimeout(() => window.closeBookingModal(), 2000);
+        } else {
+          statusDiv.innerHTML = "❌ " + (data.message || "Error");
+        }
+      } catch (err) {
+        statusDiv.innerHTML = "❌ Network error";
+      }
+    });
   </script>
 </body>
 </html>
