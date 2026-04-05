@@ -8,7 +8,6 @@ const auth = require("../middleware/auth");
 const PAYCHANGU_SECRET = process.env.PAYCHANGU_SECRET_KEY;
 const PAYCHANGU_API = process.env.PAYCHANGU_API_URL;
 
-// Helper to determine mobile money provider (optional, kept for completeness)
 function getProvider(phone) {
   const digits = phone.replace(/\D/g, '');
   if (digits.startsWith('26588')) return 'airtel';
@@ -147,13 +146,30 @@ router.put("/house/:id/feature", auth, async (req, res) => {
   }
 });
 
-// ========== PREMIUM USER SUBSCRIPTION PAYMENT ==========
+// ========== PREMIUM USER SUBSCRIPTION PAYMENT (with Test Mode) ==========
 router.post("/premium-user", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (user.role === 'premium_user' && user.subscriptionExpiresAt > new Date()) {
       return res.status(400).json({ message: "You are already a premium user" });
     }
+
+    // ---- TEST MODE ----
+    if (req.query.test === 'true') {
+      let expiryDate = new Date();
+      if (user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date()) {
+        expiryDate = new Date(user.subscriptionExpiresAt);
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+      } else {
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+      }
+      user.role = 'premium_user';
+      user.subscriptionExpiresAt = expiryDate;
+      await user.save();
+      console.log(`✅ TEST MODE: User ${user._id} upgraded to premium, expires ${expiryDate}`);
+      return res.json({ message: "Test activation successful (no payment)", test: true });
+    }
+    // ---- END TEST MODE ----
 
     const amount = 500;
     const txRef = `USER_PREMIUM_${user._id}_${Date.now()}`;
