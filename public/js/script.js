@@ -80,63 +80,109 @@ async function loadHeroCarousel() {
   }
 }
 
-// ========== DREAM HOME MATCH ==========
+// ========== DREAM HOME MATCH – FRONTEND ONLY ==========
+function scoreHouseForDream(house, answers) {
+  let score = 0;
+  if (answers.workFromHome === "essential") {
+    if (house.bedrooms >= 2 || house.selfContained) score += 30;
+    else if (house.bedrooms >= 1) score += 10;
+  } else if (answers.workFromHome === "nice") {
+    if (house.bedrooms >= 2 || house.selfContained) score += 15;
+  }
+  if (answers.social === "often") {
+    if (house.pool) score += 25;
+    if (house.furnished) score += 15;
+    if (house.parking) score += 10;
+  } else if (answers.social === "sometimes") {
+    if (house.furnished) score += 10;
+  }
+  if (answers.outdoor === "essential") {
+    if (house.petFriendly) score += 20;
+    if (house.selfContained) score += 10;
+  } else if (answers.outdoor === "nice") {
+    if (house.petFriendly) score += 10;
+  }
+  if (answers.noise === "quiet") {
+    if (house.pool) score -= 15;
+    if (house.selfContained) score += 10;
+  } else if (answers.noise === "lively") {
+    if (house.pool) score += 15;
+    if (house.furnished) score += 5;
+  }
+  if (answers.maxPrice && house.price > answers.maxPrice) score -= 100;
+  if (answers.bedrooms && house.bedrooms < answers.bedrooms) score -= 100;
+  if (house.averageRating) score += house.averageRating * 5;
+  return Math.max(0, score);
+}
+
 async function submitDreamMatch(e) {
   e.preventDefault();
   const workFromHome = document.getElementById("dream_workFromHome").value;
   const social = document.getElementById("dream_social").value;
   const outdoor = document.getElementById("dream_outdoor").value;
   const noise = document.getElementById("dream_noise").value;
-  const maxPrice = document.getElementById("dream_maxPrice").value;
-  const bedrooms = document.getElementById("dream_bedrooms").value;
+  const maxPrice = parseInt(document.getElementById("dream_maxPrice").value) || Infinity;
+  const bedrooms = parseInt(document.getElementById("dream_bedrooms").value) || 0;
 
   const resultsDiv = document.getElementById("dreamMatchResults");
   const wrapper = document.getElementById("dreamMatchWrapper");
   resultsDiv.style.display = "block";
   wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div></div></div>';
 
-  try {
-    const res = await fetch("/api/dream-match", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ workFromHome, social, outdoor, noise, maxPrice, bedrooms })
-    });
-    const data = await res.json();
-    if (!data.houses || data.houses.length === 0) {
-      wrapper.innerHTML = `<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content">${data.message || "No matches found. Adjust your preferences."}</div></div></div>`;
-      return;
-    }
-    wrapper.innerHTML = data.houses.map(house => `
-      <div class="swiper-slide">
-        <div class="dream-card">
-          <img src="${house.image}" alt="${escapeHtml(house.name)}">
-          <div class="dream-card-content">
-            <div class="dream-match-badge"><i class="fas fa-chart-line"></i> ${Math.round(house.score)}% Match</div>
-            <h3>${escapeHtml(house.name)}</h3>
-            <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
-            <div class="dream-price">MWK ${Number(house.price).toLocaleString()}</div>
-            <button class="carousel-btn" onclick="showDetails('${house.id}'); closeDreamMatchModal();">View Details</button>
-          </div>
+  let candidates = allHouses.filter(house => {
+    if (maxPrice && house.price > maxPrice) return false;
+    if (bedrooms && house.bedrooms < bedrooms) return false;
+    return true;
+  });
+
+  if (candidates.length === 0) {
+    wrapper.innerHTML = `<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content">No properties match your basic criteria. Try increasing budget or reducing bedrooms.</div></div></div>`;
+    return;
+  }
+
+  const answers = { workFromHome, social, outdoor, noise, maxPrice, bedrooms };
+  const scored = candidates.map(house => ({
+    house,
+    score: scoreHouseForDream(house, answers)
+  }));
+  scored.sort((a, b) => b.score - a.score);
+  const top = scored.slice(0, 12).map(s => ({
+    id: s.house._id,
+    name: s.house.name,
+    price: s.house.price,
+    location: s.house.location,
+    image: s.house.images?.[0] || "placeholder.jpg",
+    type: s.house.type,
+    score: s.score
+  }));
+
+  wrapper.innerHTML = top.map(house => `
+    <div class="swiper-slide">
+      <div class="dream-card">
+        <img src="${house.image}" alt="${escapeHtml(house.name)}">
+        <div class="dream-card-content">
+          <div class="dream-match-badge"><i class="fas fa-chart-line"></i> ${Math.round(house.score)}% Match</div>
+          <h3>${escapeHtml(house.name)}</h3>
+          <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
+          <div class="dream-price">MWK ${Number(house.price).toLocaleString()}</div>
+          <button class="carousel-btn" onclick="showDetails('${house.id}'); closeDreamMatchModal();">View Details</button>
         </div>
       </div>
-    `).join('');
+    </div>
+  `).join('');
 
-    if (dreamSwiper) dreamSwiper.destroy(true, true);
-    dreamSwiper = new Swiper('.dream-swiper', {
-      loop: true,
-      slidesPerView: 1,
-      spaceBetween: 20,
-      breakpoints: {
-        640: { slidesPerView: 2 },
-        1024: { slidesPerView: 3 }
-      },
-      pagination: { el: '.swiper-pagination', clickable: true },
-      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
-    });
-  } catch (err) {
-    console.error(err);
-    wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content">Network error. Please try again.</div></div></div>';
-  }
+  if (dreamSwiper) dreamSwiper.destroy(true, true);
+  dreamSwiper = new Swiper('.dream-swiper', {
+    loop: true,
+    slidesPerView: 1,
+    spaceBetween: 20,
+    breakpoints: {
+      640: { slidesPerView: 2 },
+      1024: { slidesPerView: 3 }
+    },
+    pagination: { el: '.swiper-pagination', clickable: true },
+    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
+  });
 }
 
 function openDreamMatchModal() {
@@ -543,7 +589,7 @@ function openComparisonModal() {
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
 // ======================================
-// RENDER HOUSE CARDS
+// RENDER HOUSE CARDS (with modern image slider & dots)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -556,7 +602,15 @@ function renderHouses(houses) {
     const card = document.createElement("div");
     card.className = "house-card";
     const images = house.images && house.images.length ? house.images : ["placeholder.jpg"];
-    let currentIndex = 0;
+    
+    // Build slider HTML with dots
+    let slidesHtml = '';
+    let dotsHtml = '';
+    images.forEach((img, idx) => {
+      slidesHtml += `<div class="slide"><img src="${img}" alt="${escapeHtml(house.name)}"></div>`;
+      dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
+    });
+    
     let avatarHtml = '';
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
@@ -594,10 +648,21 @@ function renderHouses(houses) {
     const reportBtn = isLoggedIn ? `<button class="report-btn" onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>` : '';
     const favBtn = `<button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>`;
     const readMoreBtn = `<button class="read-more-btn" onclick="showDetails('${house._id}')"><i class="fas fa-book-open"></i> Read more</button>`;
+    
+    // Rating stars widget (interactive)
+    const ratingWidgetHtml = `
+      <div class="rating-widget" data-house-id="${house._id}">
+        ${[1,2,3,4,5].map(v => `<span class="star" data-value="${v}">☆</span>`).join('')}
+        <span class="rating-message" style="font-size:0.6rem; margin-left:0.5rem;"></span>
+      </div>
+    `;
+    
     card.innerHTML = `
       <div class="slider">
-        <img id="img-${house._id}" src="${images[0]}" data-current-index="0" style="cursor:pointer">
-        ${images.length > 1 ? `<button class="prev"><i class="fas fa-chevron-left"></i></button><button class="next"><i class="fas fa-chevron-right"></i></button>` : ""}
+        <div class="slides-container" data-house-id="${house._id}">
+          ${slidesHtml}
+        </div>
+        <div class="dots">${dotsHtml}</div>
       </div>
       <div class="house-card-content">
         ${landlordInfoHtml}
@@ -609,6 +674,7 @@ function renderHouses(houses) {
         ${priceHtml}
         <p><i class="fas fa-building"></i> ${house.type || 'House'}</p>
         <p><i class="fas fa-star"></i> Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
+        ${ratingWidgetHtml}
         <div class="action-buttons">
           ${chatBtn}
           ${favBtn}
@@ -620,36 +686,123 @@ function renderHouses(houses) {
       </div>
     `;
     container.appendChild(card);
-    const img = card.querySelector(`#img-${house._id}`);
-    if (images.length > 1) {
-      const prevBtn = card.querySelector(".prev");
-      const nextBtn = card.querySelector(".next");
-      const updateImage = (newIndex) => {
-        currentIndex = newIndex;
-        img.src = images[currentIndex];
-        img.setAttribute('data-current-index', currentIndex);
+    
+    // Initialize slider touch & dots for this card
+    const sliderContainer = card.querySelector('.slides-container');
+    const dots = card.querySelectorAll('.dot');
+    if (sliderContainer && dots.length) {
+      let activeIndex = 0;
+      const updateActiveDot = () => {
+        const scrollLeft = sliderContainer.scrollLeft;
+        const slideWidth = sliderContainer.clientWidth;
+        const newIndex = Math.round(scrollLeft / slideWidth);
+        if (newIndex !== activeIndex && newIndex >= 0 && newIndex < dots.length) {
+          activeIndex = newIndex;
+          dots.forEach((dot, idx) => {
+            if (idx === activeIndex) dot.classList.add('active');
+            else dot.classList.remove('active');
+          });
+        }
       };
-      prevBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const newIndex = (currentIndex - 1 + images.length) % images.length;
-        updateImage(newIndex);
-      });
-      nextBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const newIndex = (currentIndex + 1) % images.length;
-        updateImage(newIndex);
+      sliderContainer.addEventListener('scroll', updateActiveDot);
+      sliderContainer.addEventListener('touchmove', updateActiveDot);
+      updateActiveDot();
+      dots.forEach((dot, idx) => {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sliderContainer.scrollTo({
+            left: idx * sliderContainer.clientWidth,
+            behavior: 'smooth'
+          });
+        });
       });
     }
-    img.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const currentIdx = parseInt(img.getAttribute('data-current-index') || "0");
-      if (typeof window.openLightbox === 'function') window.openLightbox(images, currentIdx);
-    });
+    
+    // Rating stars functionality
+    const ratingWidget = card.querySelector('.rating-widget');
+    if (ratingWidget) {
+      const stars = ratingWidget.querySelectorAll('.star');
+      const houseId = ratingWidget.dataset.houseId;
+      const messageSpan = ratingWidget.querySelector('.rating-message');
+      
+      const highlightStars = (value) => {
+        stars.forEach((star, idx) => {
+          star.textContent = idx < value ? '★' : '☆';
+        });
+      };
+      const resetStars = () => {
+        const currentRating = house.averageRating || 0;
+        const rounded = Math.round(currentRating);
+        stars.forEach((star, idx) => {
+          star.textContent = idx < rounded ? '★' : '☆';
+        });
+      };
+      stars.forEach(star => {
+        star.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const value = parseInt(star.dataset.value);
+          const token = localStorage.getItem('token');
+          if (!token) {
+            messageSpan.textContent = 'Please login to rate';
+            setTimeout(() => messageSpan.textContent = '', 2000);
+            return;
+          }
+          try {
+            const res = await fetch(`/api/houses/${houseId}/rate`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+              body: JSON.stringify({ value })
+            });
+            const data = await res.json();
+            if (res.ok) {
+              messageSpan.textContent = '✅ Rated!';
+              setTimeout(() => messageSpan.textContent = '', 1500);
+              const ratingValueSpan = card.querySelector('.rating-value');
+              const ratingStarsSpan = card.querySelector('.rating-stars');
+              if (data.average) {
+                ratingValueSpan.textContent = data.average.toFixed(1);
+                ratingStarsSpan.textContent = getStarRating(data.average);
+              }
+              const foundHouse = allHouses.find(h => h._id === houseId);
+              if (foundHouse) foundHouse.averageRating = data.average;
+              resetStars();
+            } else {
+              messageSpan.textContent = data.message || 'Error';
+              setTimeout(() => messageSpan.textContent = '', 2000);
+            }
+          } catch (err) {
+            messageSpan.textContent = 'Network error';
+            setTimeout(() => messageSpan.textContent = '', 2000);
+          }
+        });
+        star.addEventListener('mouseenter', () => {
+          const val = parseInt(star.dataset.value);
+          highlightStars(val);
+        });
+        star.addEventListener('mouseleave', resetStars);
+      });
+      resetStars();
+    }
+    
+    // Click on image to open lightbox
+    const slidesContainer = card.querySelector('.slides-container');
+    if (slidesContainer) {
+      slidesContainer.addEventListener('click', (e) => {
+        if (e.target.tagName === 'IMG') {
+          e.stopPropagation();
+          const currentIdx = Math.round(slidesContainer.scrollLeft / slidesContainer.clientWidth);
+          if (typeof window.openLightbox === 'function') window.openLightbox(images, currentIdx);
+        }
+      });
+    }
+    
+    // Record view on card click
     card.addEventListener("click", (e) => {
-      if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star")) return;
+      if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star") || e.target.classList.contains("dot")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" }).catch(err => console.error("Failed to record view", err));
     });
   });
+  
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
@@ -657,22 +810,10 @@ function renderHouses(houses) {
 }
 
 function handleLandlordClick(e) { e.preventDefault(); e.stopPropagation(); const landlordId = this.getAttribute('data-landlord-id'); if (landlordId) showLandlordProfile(landlordId); }
-function highlightStars(stars, value) { stars.forEach(s => { s.textContent = s.dataset.value <= value ? "★" : "☆"; }); }
-function resetStars(stars) { stars.forEach(s => s.textContent = "☆"); }
-async function submitRating(houseId, value, stars, messageSpan) {
-  const token = localStorage.getItem("token");
-  if (!token) { messageSpan.textContent = "Please login first."; return; }
-  try {
-    const res = await fetch(`/api/houses/${houseId}/rate`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ value }) });
-    const data = await res.json();
-    if (res.ok) {
-      messageSpan.textContent = "✅ Rating submitted!";
-      const ratingValueSpan = stars[0].closest(".house-card-content").querySelector(".rating-value");
-      const ratingStarsSpan = stars[0].closest(".house-card-content").querySelector(".rating-stars");
-      if (data.average) { ratingValueSpan.textContent = data.average.toFixed(1); ratingStarsSpan.textContent = getStarRating(data.average); }
-    } else { messageSpan.textContent = "❌ " + (data.message || "Error"); }
-  } catch (err) { messageSpan.textContent = "❌ Network error"; }
-}
+
+// ======================================
+// REMAINING FUNCTIONS (unchanged from your original script)
+// ======================================
 async function reportHouse(houseId) {
   const token = localStorage.getItem("token");
   if (!token) { alert("Please login to report."); return; }
@@ -684,6 +825,7 @@ async function reportHouse(houseId) {
     alert(data.message);
   } catch (err) { alert("Network error. Please try again."); }
 }
+
 async function startChat(recipientId, houseId = null) {
   const token = localStorage.getItem("token");
   if (!token) { alert("Please log in to message the landlord."); window.location = "login.html"; return; }
@@ -694,6 +836,7 @@ async function startChat(recipientId, houseId = null) {
     else alert("Could not start chat: " + (data.message || "Unknown error"));
   } catch (error) { console.error("Error starting chat:", error); alert("Network error. Please try again."); }
 }
+
 async function showLandlordProfile(landlordId) {
   try {
     const res = await fetch(`/api/profile/landlord/${landlordId}`);
@@ -1079,9 +1222,7 @@ async function showDetails(houseId) {
   }
 
   // ========== LEASE NEGOTIATION FLOW ==========
-  // Only show if user is logged in and is landlord of this property
   if (isLoggedIn && house.owner && house.owner._id === currentUserId) {
-    // Landlord: Start Lease Negotiation
     const leaseBtn = document.createElement('button');
     leaseBtn.className = 'save-search-btn';
     leaseBtn.style.background = '#0d9488';
@@ -1121,7 +1262,6 @@ async function showDetails(houseId) {
     document.getElementById('modalDetails').appendChild(leaseBtn);
   } 
   else if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
-    // Logged-in tenant: check if a lease negotiation already exists for this house
     try {
       const token = localStorage.getItem('token');
       const checkRes = await fetch(`/api/lease/check/${house._id}`, {
@@ -1180,17 +1320,11 @@ async function showDetails(houseId) {
   tabs.forEach(tab => { tab.addEventListener('click', () => { const target = tab.getAttribute('data-tab'); tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); if (target === 'details') { detailsPanel.style.display = 'block'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'insights') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'block'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'streetview') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'block'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'none'; } else if (target === 'pricing') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'block'; virtualTourPanel.style.display = 'none'; } else if (target === 'virtualtour') { detailsPanel.style.display = 'none'; insightsPanel.style.display = 'none'; streetViewPanel.style.display = 'none'; pricingPanel.style.display = 'none'; virtualTourPanel.style.display = 'block'; loadVirtualTour(house.virtualTourUrl); } }); });
 }
 
-// ======================================
-// CLOSE PROPERTY MODAL
-// ======================================
 function closePropertyModal() {
   const modal = document.getElementById('propertyModal');
   if (modal) modal.style.display = 'none';
 }
 
-// ======================================
-// TOGGLE FAVORITE
-// ======================================
 function toggleFavorite(id) {
   let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
   if (favs.includes(id)) favs = favs.filter(x => x !== id);
@@ -1199,34 +1333,13 @@ function toggleFavorite(id) {
   renderHouses(allHouses);
 }
 
-// ======================================
-// GENERATE LEASE (stub – will be replaced by lease.js)
-// ======================================
 function generateLease() {
   console.log("Lease generation function called – implement if needed");
 }
 
 // ======================================
-// EVENT LISTENERS
+// USER MENU (fully functional)
 // ======================================
-document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', function() { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); currentType = this.dataset.type; currentPage = 1; loadHouses(currentPage, currentType, currentFilters, currentSort); }); });
-const filterBtn = document.getElementById("applyFiltersBtn"); if (filterBtn) filterBtn.onclick = applyFilters;
-const searchInput = document.getElementById("searchInput"); if (searchInput) { searchInput.addEventListener("keyup", () => { const term = searchInput.value.toLowerCase(); const filtered = allHouses.filter(h => (h.name.toLowerCase().includes(term) || (h.location && h.location.toLowerCase().includes(term))) && filterByRegion(h)); renderHouses(filtered); renderMarkers(filtered); }); }
-const nearBtn = document.getElementById("nearMeBtn"); if (nearBtn) { nearBtn.onclick = () => { if (!navigator.geolocation) { alert("GPS not supported"); return; } navigator.geolocation.getCurrentPosition(pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; map.setView([userLocation.lat, userLocation.lng], 14); L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("<i class='fas fa-map-pin'></i> You are here").openPopup(); const nearby = allHouses.filter(h => { if (!h.lat || !h.lng) return false; const dist = getDistance(userLocation.lat, userLocation.lng, h.lat, h.lng); return dist <= radius; }); renderHouses(nearby); renderMarkers(nearby); }); }; }
-const gpsBtn = document.getElementById("getLocationBtn"); if (gpsBtn) { gpsBtn.addEventListener("click", () => { const status = document.getElementById("gpsStatus"); if (navigator.geolocation) { status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Getting location..."; navigator.geolocation.getCurrentPosition(pos => { document.getElementById("latitude").value = pos.coords.latitude; document.getElementById("longitude").value = pos.coords.longitude; status.innerHTML = `<i class="fas fa-check-circle"></i> Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`; }, () => { status.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Allow location access"; }, { enableHighAccuracy: true }); } else { status.innerHTML = "GPS not supported"; } }); }
-const regionSelect = document.getElementById('regionFilter'); if (regionSelect) regionSelect.addEventListener('change', () => { currentRegion = regionSelect.value; applyRegionFilter(); });
-const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (compareFloatingBtn) compareFloatingBtn.addEventListener('click', openComparisonModal);
-
-// ========== DREAM MATCH EVENT LISTENERS ==========
-const dreamLink = document.getElementById('dreamMatchLink');
-if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
-const dreamForm = document.getElementById('dreamMatchForm');
-if (dreamForm) dreamForm.addEventListener('submit', submitDreamMatch);
-const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
-if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
-window.closeDreamMatchModal = closeDreamMatchModal;
-
-// ========== USER MENU – WORKING DROPDOWN (ADD THIS) ==========
 const userMenu = document.getElementById('userMenu');
 const userAvatar = document.getElementById('userAvatar');
 const userDropdown = document.getElementById('userDropdown');
@@ -1306,7 +1419,25 @@ document.addEventListener('click', (e) => {
   if (!userMenu.contains(e.target)) userMenu.classList.remove('active');
 });
 
-loadAndUpdateUserMenu();
+// ======================================
+// EVENT LISTENERS
+// ======================================
+document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', function() { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); currentType = this.dataset.type; currentPage = 1; loadHouses(currentPage, currentType, currentFilters, currentSort); }); });
+const filterBtn = document.getElementById("applyFiltersBtn"); if (filterBtn) filterBtn.onclick = applyFilters;
+const searchInput = document.getElementById("searchInput"); if (searchInput) { searchInput.addEventListener("keyup", () => { const term = searchInput.value.toLowerCase(); const filtered = allHouses.filter(h => (h.name.toLowerCase().includes(term) || (h.location && h.location.toLowerCase().includes(term))) && filterByRegion(h)); renderHouses(filtered); renderMarkers(filtered); }); }
+const nearBtn = document.getElementById("nearMeBtn"); if (nearBtn) { nearBtn.onclick = () => { if (!navigator.geolocation) { alert("GPS not supported"); return; } navigator.geolocation.getCurrentPosition(pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; map.setView([userLocation.lat, userLocation.lng], 14); L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("<i class='fas fa-map-pin'></i> You are here").openPopup(); const nearby = allHouses.filter(h => { if (!h.lat || !h.lng) return false; const dist = getDistance(userLocation.lat, userLocation.lng, h.lat, h.lng); return dist <= radius; }); renderHouses(nearby); renderMarkers(nearby); }); }; }
+const gpsBtn = document.getElementById("getLocationBtn"); if (gpsBtn) { gpsBtn.addEventListener("click", () => { const status = document.getElementById("gpsStatus"); if (navigator.geolocation) { status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Getting location..."; navigator.geolocation.getCurrentPosition(pos => { document.getElementById("latitude").value = pos.coords.latitude; document.getElementById("longitude").value = pos.coords.longitude; status.innerHTML = `<i class="fas fa-check-circle"></i> Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`; }, () => { status.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Allow location access"; }, { enableHighAccuracy: true }); } else { status.innerHTML = "GPS not supported"; } }); }
+const regionSelect = document.getElementById('regionFilter'); if (regionSelect) regionSelect.addEventListener('change', () => { currentRegion = regionSelect.value; applyRegionFilter(); });
+const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (compareFloatingBtn) compareFloatingBtn.addEventListener('click', openComparisonModal);
+
+// ========== DREAM MATCH EVENT LISTENERS ==========
+const dreamLink = document.getElementById('dreamMatchLink');
+if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
+const dreamForm = document.getElementById('dreamMatchForm');
+if (dreamForm) dreamForm.addEventListener('submit', submitDreamMatch);
+const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
+if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
+window.closeDreamMatchModal = closeDreamMatchModal;
 
 // ======================================
 // INITIALIZATION
@@ -1331,6 +1462,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
   loadHouses(currentPage, currentType, currentFilters, currentSort);
   loadHeroCarousel();
+  loadAndUpdateUserMenu();
 });
 
 // Expose functions globally
