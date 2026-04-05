@@ -134,8 +134,7 @@ router.get('/early-access', auth, async (req, res) => {
   }
 });
 
-// ========== PRIORITY VIEWING REQUEST ==========
-// POST /api/premium/priority-viewing – premium tenant requests priority viewing
+// ========== PRIORITY VIEWING REQUEST (FIXED) ==========
 router.post('/priority-viewing', auth, async (req, res) => {
   try {
     const { houseId } = req.body;
@@ -152,21 +151,26 @@ router.post('/priority-viewing', auth, async (req, res) => {
     const landlord = house.owner;
     if (!landlord) return res.status(404).json({ message: 'Landlord not found' });
 
-    // Create a notification for the landlord
+    // Ensure landlord has a notifications array
+    if (!landlord.notifications) landlord.notifications = [];
+
+    // Get tenant's phone (if available)
+    const tenantPhone = user.phone ? `Contact them via WhatsApp: ${user.phone}.` : '';
+
+    // Create notification object (matching your User model schema)
     const notification = {
       title: '🌟 Priority Viewing Request',
-      message: `${user.name} (Premium User) has requested priority viewing for your property "${house.name}". Contact them via WhatsApp: ${user.phone || 'not provided'}.`,
+      message: `${user.name} (Premium User) has requested priority viewing for your property "${house.name}". ${tenantPhone}`,
       read: false,
       createdAt: new Date(),
       type: 'priority_viewing',
       metadata: { tenantId: user._id, houseId: house._id }
     };
 
-    landlord.notifications = landlord.notifications || [];
     landlord.notifications.unshift(notification);
     await landlord.save();
 
-    // Optional: Send email to landlord (uncomment if you have nodemailer configured)
+    // Optional: Send email (uncomment if you have nodemailer configured)
     // if (landlord.email) {
     //   const sendEmail = require('../utils/sendEmail');
     //   await sendEmail(landlord.email, 'Priority Viewing Request', notification.message);
@@ -175,7 +179,7 @@ router.post('/priority-viewing', auth, async (req, res) => {
     res.json({ success: true, message: 'Landlord notified successfully.' });
   } catch (err) {
     console.error('Priority viewing error:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error: ' + err.message });
   }
 });
 

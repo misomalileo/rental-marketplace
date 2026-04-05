@@ -53,9 +53,10 @@ const UserSchema = new mongoose.Schema({
     notifications: [{
         title: String,
         message: String,
-        type: String, // e.g., 'price_drop', 'new_listing', 'alert'
+        type: String, // e.g., 'price_drop', 'new_listing', 'alert', 'priority_viewing'
         read: { type: Boolean, default: false },
-        createdAt: { type: Date, default: Date.now }
+        createdAt: { type: Date, default: Date.now },
+        metadata: { type: Object, default: {} }  // added for extra data like tenantId, houseId
     }],
     
     // Trust score (0-100) for premium users
