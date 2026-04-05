@@ -5,28 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Premium User | Khomo Lathu</title>
   <link rel="icon" type="image/png" href="/favicon.png">
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Chart.js for Rent Predictor -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b);
       color: #f1f5f9;
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
-      overflow-x: hidden;
     }
     /* Navbar */
     .navbar {
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15,23,42,0.6);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex;
@@ -70,7 +62,6 @@
     }
     .nav-links a i { color: #FF8C42; }
     .nav-links a:hover { color: #FFB347; transform: translateY(-2px); }
-    /* Dashboard container */
     .dashboard-container {
       max-width: 1400px;
       margin: 2rem auto;
@@ -81,13 +72,13 @@
       background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9));
       border-radius: 48px;
       padding: 2rem;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 1rem;
-      border: 1px solid rgba(255, 140, 66, 0.4);
+      border: 1px solid rgba(255,140,66,0.4);
       box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,140,66,0.2);
       backdrop-filter: blur(4px);
       position: relative;
@@ -187,6 +178,42 @@
       margin-bottom: 2rem;
       backdrop-filter: blur(8px);
     }
+    /* Tabs – professional and modern */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 0.7rem 1.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn i { font-size: 1.1rem; }
+    .tab-btn:hover { color: #FFB347; background: rgba(255,140,66,0.1); }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #FF8C42, #E67E22);
+      color: white;
+      box-shadow: 0 4px 12px rgba(230,126,34,0.3);
+    }
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     /* Dashboard Grid – 3D Cards */
     .dashboard-grid {
       display: grid;
@@ -228,8 +255,8 @@
       background-clip: text;
       color: transparent;
     }
-    /* Saved searches & notifications */
-    .saved-search-item, .notification-item {
+    /* Lists inside cards */
+    .saved-search-item, .notification-item, .price-alert-item {
       background: rgba(10, 15, 25, 0.7);
       border-radius: 24px;
       padding: 0.9rem;
@@ -237,24 +264,11 @@
       border: 1px solid rgba(255,255,255,0.05);
       transition: all 0.2s;
     }
-    .saved-search-item:hover, .notification-item:hover {
+    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover {
       border-color: #FF8C42;
       transform: translateX(6px);
     }
-    .saved-search-item .name {
-      font-weight: 700;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .saved-search-item .filters {
-      font-size: 0.7rem;
-      color: #94a3b8;
-      margin-top: 0.3rem;
-      word-break: break-all;
-    }
-    .saved-search-actions {
+    .saved-search-actions, .alert-actions {
       display: flex;
       gap: 1rem;
       margin-top: 0.7rem;
@@ -286,7 +300,7 @@
       gap: 6px;
       font-size: 0.75rem;
     }
-    input, select {
+    input, select, textarea {
       background: rgba(10, 15, 25, 0.8);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 60px;
@@ -296,93 +310,38 @@
       font-size: 0.9rem;
       margin-bottom: 0.8rem;
     }
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: #FF8C42;
       box-shadow: 0 0 0 2px rgba(255,140,66,0.2);
     }
-    canvas {
-      max-height: 200px;
-      margin: 0.5rem 0;
+    canvas { max-height: 200px; margin: 0.5rem 0; }
+    .notification-scroll {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
     }
-    .boost-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(10,15,25,0.6);
-      border-radius: 28px;
-      padding: 0.6rem 1rem;
-      margin-bottom: 0.6rem;
+    .notification-scroll::-webkit-scrollbar { width: 4px; }
+    .notification-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+    .notification-scroll::-webkit-scrollbar-thumb { background: #FF8C42; border-radius: 4px; }
+    .view-all-btn {
+      margin-top: 0.5rem;
+      text-align: center;
     }
-    .boost-item .house-name {
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-    .boost-btn {
-      background: linear-gradient(135deg, #FF8C42, #E67E22);
-      border: none;
-      border-radius: 40px;
-      padding: 0.3rem 1rem;
-      font-size: 0.7rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: white;
-    }
-    .boost-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .timer {
-      font-size: 0.7rem;
-      color: #FFB347;
+    .priority-badge {
+      background: #FF8C42;
+      color: #0a0f1e;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
       margin-left: 0.5rem;
     }
-    .portfolio-link {
-      background: rgba(0,0,0,0.3);
-      border-radius: 60px;
-      padding: 0.5rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 0.5rem;
-    }
-    .portfolio-link a {
-      color: #FFB347;
-      text-decoration: none;
-      word-break: break-all;
-    }
-    /* Early access listing grid */
-    .early-access-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1.2rem;
-      margin-top: 1rem;
-    }
-    .house-card {
-      background: rgba(10, 15, 25, 0.8);
-      border-radius: 24px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.05);
-      transition: all 0.3s;
-    }
-    .house-card:hover {
-      transform: translateY(-6px) scale(1.02);
-      border-color: #FF8C42;
-    }
-    .house-card img {
-      width: 100%;
-      height: 140px;
-      object-fit: cover;
-    }
-    .house-card .info { padding: 0.8rem; }
-    .house-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
-    .house-card p { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin: 0.2rem 0; }
-    .house-card a { color: #FFB347; text-decoration: none; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; margin-top: 0.3rem; }
     @media (max-width: 768px) {
       .dashboard-grid { grid-template-columns: 1fr; }
       .premium-header { flex-direction: column; text-align: center; }
       .nav-links { gap: 1rem; }
+      .tab-btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
     }
   </style>
 </head>
@@ -411,74 +370,121 @@
 
     <div id="upgradeBanner" class="upgrade-banner" style="display: none;">
       <h2><i class="fas fa-lock"></i> Unlock the Full Premium Experience</h2>
-      <p>Get early access, AI rent predictor, instant boosts, and a premium portfolio.</p>
+      <p>Price drop alerts, AI negotiation assistant, priority viewing, and more.</p>
       <button id="activateFromBannerBtn" class="activate-btn"><i class="fas fa-crown"></i> Upgrade Now</button>
     </div>
 
-    <div class="dashboard-grid" id="premiumContent">
-      <!-- Existing cards: Saved Searches, AI Negotiator, Notifications, Early Access -->
-      <div class="card">
-        <h2><i class="fas fa-bookmark"></i> Saved Searches</h2>
-        <div id="savedSearchesList">Loading...</div>
-        <button id="newSearchBtn" class="small" style="margin-top: 1rem;"><i class="fas fa-plus-circle"></i> New Search</button>
-      </div>
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tools"><i class="fas fa-tools"></i> Premium Tools</button>
+      <button class="tab-btn" data-tab="alerts"><i class="fas fa-bell"></i> Price Alerts</button>
+      <button class="tab-btn" data-tab="notifications"><i class="fas fa-inbox"></i> Notifications</button>
+      <button class="tab-btn" data-tab="portfolio"><i class="fas fa-id-card"></i> Portfolio & Boost</button>
+    </div>
 
-      <div class="card">
-        <h2><i class="fas fa-robot"></i> AI Price Negotiator</h2>
-        <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:0.8rem;">Enter a property ID to get a market offer suggestion.</p>
-        <input type="text" id="negotiateHouseId" placeholder="House ID or URL">
-        <button id="negotiateBtn" class="small"><i class="fas fa-chart-line"></i> Get Suggestion</button>
-        <div id="negotiationResult"></div>
-      </div>
+    <!-- TAB 1: Premium Tools (existing + new tenant features) -->
+    <div id="tab-tools" class="tab-content active">
+      <div class="dashboard-grid">
+        <!-- Saved Searches (existing) -->
+        <div class="card">
+          <h2><i class="fas fa-bookmark"></i> Saved Searches</h2>
+          <div id="savedSearchesList">Loading...</div>
+          <button id="newSearchBtn" class="small" style="margin-top: 1rem;"><i class="fas fa-plus-circle"></i> New Search</button>
+        </div>
 
-      <div class="card">
-        <h2><i class="fas fa-bell"></i> Notifications</h2>
-        <div id="notificationsList">Loading...</div>
-      </div>
+        <!-- Rent Negotiation Assistant (tenant version) -->
+        <div class="card">
+          <h2><i class="fas fa-handshake"></i> Rent Negotiation Assistant</h2>
+          <p style="font-size:0.75rem; color:#94a3b8;">Enter a property ID and we'll suggest a counter‑offer based on market data.</p>
+          <input type="text" id="negotiateHouseId" placeholder="House ID or URL">
+          <button id="negotiateBtn" class="small"><i class="fas fa-chart-line"></i> Get Suggestion</button>
+          <div id="negotiationResult"></div>
+        </div>
 
-      <div class="card" style="grid-column: span 2;">
-        <h2><i class="fas fa-clock"></i> Early Access – New Listings (24h exclusive)</h2>
-        <div id="earlyAccessList" class="early-access-list">Loading...</div>
-      </div>
+        <!-- Priority Viewing -->
+        <div class="card">
+          <h2><i class="fas fa-calendar-star"></i> Priority Viewing</h2>
+          <p style="font-size:0.75rem; color:#94a3b8;">Request priority viewing for any property – landlords see your premium badge first.</p>
+          <input type="text" id="priorityHouseId" placeholder="Property ID or URL">
+          <button id="requestPriorityBtn" class="small"><i class="fas fa-rocket"></i> Request Priority Viewing</button>
+          <div id="priorityStatus" style="margin-top: 0.5rem; font-size: 0.8rem;"></div>
+        </div>
 
-      <!-- === NEW PREMIUM FEATURES === -->
-      <!-- 1. Premium Badge & Portfolio -->
-      <div class="card">
-        <h2><i class="fas fa-id-card"></i> Premium Badge & Portfolio</h2>
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
-          <div style="background: linear-gradient(135deg, #FFD966, #FF8C42); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <i class="fas fa-crown" style="font-size: 2rem; color: white;"></i>
-          </div>
-          <div>
-            <p style="font-weight: 700;">You are a <span style="color:#FFB347;">Premium User</span></p>
-            <p style="font-size: 0.75rem; color:#94a3b8;">Your listings show a shiny premium badge</p>
+        <!-- AI Rent Predictor (existing) -->
+        <div class="card">
+          <h2><i class="fas fa-chart-line"></i> AI Rent Predictor</h2>
+          <p style="font-size:0.75rem; color:#94a3b8;">Select a property to see predicted rent trends for the next 3 months.</p>
+          <select id="predictorHouseSelect">
+            <option value="">Loading your properties...</option>
+          </select>
+          <canvas id="rentPredictorChart" width="400" height="200"></canvas>
+          <div id="predictionResult" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: center;"></div>
+        </div>
+
+        <!-- Early Access Listings (existing) -->
+        <div class="card" style="grid-column: span 2;">
+          <h2><i class="fas fa-clock"></i> Early Access – New Listings (24h exclusive)</h2>
+          <div id="earlyAccessList" class="early-access-list">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Price Drop Alerts -->
+    <div id="tab-alerts" class="tab-content">
+      <div class="dashboard-grid">
+        <div class="card" style="grid-column: span 2;">
+          <h2><i class="fas fa-bell"></i> Price Drop Alerts</h2>
+          <p style="font-size:0.75rem; margin-bottom: 1rem;">Get notified instantly when a property you’re watching drops in price.</p>
+          <div id="priceAlertsList">Loading saved searches with alert toggles...</div>
+          <div class="view-all-btn">
+            <button id="simulatePriceDropBtn" class="small"><i class="fas fa-flask"></i> Simulate Price Drop (Test)</button>
           </div>
         </div>
-        <div class="portfolio-link">
-          <i class="fas fa-globe"></i>
-          <span>Your public portfolio:</span>
-          <a href="#" id="portfolioLink" target="_blank">khomolathu.com/portfolio/yourname</a>
+      </div>
+    </div>
+
+    <!-- TAB 3: Notifications (compact, scrollable) -->
+    <div id="tab-notifications" class="tab-content">
+      <div class="dashboard-grid">
+        <div class="card" style="grid-column: span 2;">
+          <h2><i class="fas fa-inbox"></i> Notifications</h2>
+          <div class="notification-scroll" id="notificationsScroll">
+            <div id="notificationsList">Loading...</div>
+          </div>
+          <div class="view-all-btn">
+            <button id="markAllReadBtn" class="small"><i class="fas fa-check-double"></i> Mark All as Read</button>
+          </div>
         </div>
-        <button id="copyPortfolioBtn" class="small" style="margin-top: 0.5rem;"><i class="fas fa-copy"></i> Copy Link</button>
-        <p style="font-size: 0.7rem; color:#64748b; margin-top: 0.8rem;">Share your portfolio on social media to attract more tenants.</p>
       </div>
+    </div>
 
-      <!-- 2. AI Rent Predictor -->
-      <div class="card">
-        <h2><i class="fas fa-chart-line"></i> AI Rent Predictor</h2>
-        <p style="font-size:0.75rem; color:#94a3b8;">Select a property to see predicted rent trends for the next 3 months.</p>
-        <select id="predictorHouseSelect">
-          <option value="">Loading your properties...</option>
-        </select>
-        <canvas id="rentPredictorChart" width="400" height="200"></canvas>
-        <div id="predictionResult" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: center;"></div>
-      </div>
-
-      <!-- 3. Instant Boost – Push to Hero Carousel -->
-      <div class="card">
-        <h2><i class="fas fa-rocket"></i> Instant Boost</h2>
-        <p style="font-size:0.75rem; color:#94a3b8;">Boost any property to the homepage hero carousel for 24 hours.</p>
-        <div id="boostList">Loading your properties...</div>
+    <!-- TAB 4: Portfolio & Boost (existing) -->
+    <div id="tab-portfolio" class="tab-content">
+      <div class="dashboard-grid">
+        <div class="card">
+          <h2><i class="fas fa-id-card"></i> Premium Badge & Portfolio</h2>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
+            <div style="background: linear-gradient(135deg, #FFD966, #FF8C42); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-crown" style="font-size: 2rem; color: white;"></i>
+            </div>
+            <div>
+              <p style="font-weight: 700;">You are a <span style="color:#FFB347;">Premium User</span></p>
+              <p style="font-size: 0.75rem; color:#94a3b8;">Your listings show a shiny premium badge</p>
+            </div>
+          </div>
+          <div class="portfolio-link">
+            <i class="fas fa-globe"></i>
+            <span>Your public portfolio:</span>
+            <a href="#" id="portfolioLink" target="_blank">khomolathu.com/portfolio/yourname</a>
+          </div>
+          <button id="copyPortfolioBtn" class="small" style="margin-top: 0.5rem;"><i class="fas fa-copy"></i> Copy Link</button>
+          <p style="font-size: 0.7rem; color:#64748b; margin-top: 0.8rem;">Share your portfolio to attract more tenants.</p>
+        </div>
+        <div class="card">
+          <h2><i class="fas fa-rocket"></i> Instant Boost</h2>
+          <p style="font-size:0.75rem; color:#94a3b8;">Boost any property to the homepage hero carousel for 24 hours.</p>
+          <div id="boostList">Loading your properties...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -488,12 +494,23 @@
     if (!token) window.location.href = "login.html";
 
     let isActivePremium = false;
-    let userHouses = [];      // store user's houses for boost & predictor
+    let userHouses = [];
     let predictorChart = null;
 
     function logout() { localStorage.clear(); window.location.href = "login.html"; }
 
-    // ========== LOAD PREMIUM STATUS (existing) ==========
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tabId = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+      });
+    });
+
+    // ========== LOAD PREMIUM STATUS ==========
     async function loadPremiumStatus() {
       try {
         const res = await fetch("/api/premium/status", { headers: { Authorization: "Bearer " + token } });
@@ -508,7 +525,6 @@
           statusArea.innerHTML = `<i class="fas fa-check-circle"></i> Active until ${expiry}`;
           activateBtn.style.display = "none";
           upgradeBanner.style.display = "none";
-          // Load premium features
           loadUserHouses();
           loadPortfolioLink();
         } else {
@@ -516,16 +532,15 @@
           statusArea.innerHTML = `<i class="fas fa-lock"></i> Inactive – activate to unlock`;
           activateBtn.style.display = "inline-flex";
           upgradeBanner.style.display = "block";
-          document.querySelectorAll("#premiumContent .card").forEach(card => card.style.opacity = "0.7");
         }
         renderSavedSearches(data.savedSearches || []);
         renderNotifications(data.notifications || []);
+        renderPriceAlerts(data.savedSearches || []);
         if (isActivePremium) loadEarlyAccess();
         else document.getElementById("earlyAccessList").innerHTML = "<p><i class='fas fa-lock'></i> Activate premium to see early‑access listings.</p>";
       } catch (err) { console.error(err); }
     }
 
-    // Load user's properties (for boost & predictor)
     async function loadUserHouses() {
       try {
         const res = await fetch("/api/houses?owner=me", { headers: { Authorization: "Bearer " + token } });
@@ -533,15 +548,15 @@
         userHouses = data.houses || [];
         renderBoostList();
         renderPredictorSelect();
-      } catch (err) { console.error("Error loading houses", err); }
+      } catch (err) { console.error(err); }
     }
 
-    // ========== 1. PORTFOLIO LINK ==========
+    // ========== 1. PORTFOLIO ==========
     async function loadPortfolioLink() {
       try {
         const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
         const user = await res.json();
-        const username = user.name.toLowerCase().replace(/\s/g, '');
+        const username = (user.name || "user").toLowerCase().replace(/\s/g, '');
         const portfolioUrl = `${window.location.origin}/portfolio/${username}`;
         const linkEl = document.getElementById("portfolioLink");
         linkEl.href = portfolioUrl;
@@ -551,123 +566,162 @@
     document.getElementById("copyPortfolioBtn")?.addEventListener("click", () => {
       const link = document.getElementById("portfolioLink").href;
       navigator.clipboard.writeText(link);
-      alert("Portfolio link copied to clipboard!");
+      alert("Portfolio link copied!");
     });
 
     // ========== 2. AI RENT PREDICTOR ==========
     function renderPredictorSelect() {
       const select = document.getElementById("predictorHouseSelect");
-      if (!userHouses.length) {
-        select.innerHTML = '<option>No properties found</option>';
-        return;
-      }
-      select.innerHTML = '<option value="">Select a property</option>' + 
-        userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+      if (!userHouses.length) { select.innerHTML = '<option>No properties</option>'; return; }
+      select.innerHTML = '<option value="">Select a property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
       select.addEventListener("change", async (e) => {
         const houseId = e.target.value;
         if (!houseId) return;
         await fetchPrediction(houseId);
       });
     }
-
     async function fetchPrediction(houseId) {
       const resultDiv = document.getElementById("predictionResult");
-      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing market trends...';
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing...';
       try {
-        // Simulate AI prediction (replace with real backend call)
-        // For demo, generate dummy data based on current price
         const house = userHouses.find(h => h._id === houseId);
         if (!house) return;
-        const currentPrice = house.price;
-        // Dummy prediction: +2%, +5%, +3% over next 3 months
-        const predictions = [
-          currentPrice * 1.02,
-          currentPrice * 1.05,
-          currentPrice * 1.03
-        ];
+        const predictions = [house.price * 1.02, house.price * 1.05, house.price * 1.03];
         const months = ["Next Month", "2 Months", "3 Months"];
         if (predictorChart) predictorChart.destroy();
         const ctx = document.getElementById("rentPredictorChart").getContext("2d");
         predictorChart = new Chart(ctx, {
           type: 'line',
-          data: {
-            labels: months,
-            datasets: [{
-              label: 'Predicted Rent (MWK)',
-              data: predictions,
-              borderColor: '#FF8C42',
-              backgroundColor: 'rgba(255,140,66,0.1)',
-              borderWidth: 3,
-              pointBackgroundColor: '#FFD966',
-              pointBorderColor: '#fff',
-              tension: 0.3,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-              legend: { labels: { color: '#fff' } },
-              tooltip: { callbacks: { label: (ctx) => `MWK ${ctx.raw.toLocaleString()}` } }
-            },
-            scales: {
-              y: { ticks: { color: '#cbd5e1', callback: (val) => 'MWK ' + val.toLocaleString() } },
-              x: { ticks: { color: '#cbd5e1' } }
-            }
-          }
+          data: { labels: months, datasets: [{ label: 'Predicted Rent (MWK)', data: predictions, borderColor: '#FF8C42', backgroundColor: 'rgba(255,140,66,0.1)', borderWidth: 3, pointBackgroundColor: '#FFD966', tension: 0.3, fill: true }] },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } }, tooltip: { callbacks: { label: (ctx) => `MWK ${ctx.raw.toLocaleString()}` } } }, scales: { y: { ticks: { color: '#cbd5e1', callback: (val) => 'MWK ' + val.toLocaleString() } }, x: { ticks: { color: '#cbd5e1' } } } }
         });
-        const avgPrediction = predictions.reduce((a,b)=>a+b,0)/predictions.length;
-        resultDiv.innerHTML = `<i class="fas fa-chart-line"></i> AI suggests rent may increase to <strong>MWK ${Math.round(avgPrediction).toLocaleString()}</strong> in the next 3 months.`;
-      } catch (err) {
-        resultDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Prediction unavailable.';
-      }
+        const avg = predictions.reduce((a,b)=>a+b,0)/3;
+        resultDiv.innerHTML = `<i class="fas fa-chart-line"></i> AI suggests rent may increase to <strong>MWK ${Math.round(avg).toLocaleString()}</strong> in the next 3 months.`;
+      } catch (err) { resultDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Prediction unavailable.'; }
     }
 
     // ========== 3. INSTANT BOOST ==========
     function renderBoostList() {
       const container = document.getElementById("boostList");
-      if (!userHouses.length) {
-        container.innerHTML = "<p>You have no properties to boost.</p>";
-        return;
-      }
+      if (!userHouses.length) { container.innerHTML = "<p>No properties to boost.</p>"; return; }
       container.innerHTML = userHouses.map(house => `
-        <div class="boost-item" data-house-id="${house._id}">
-          <div>
-            <div class="house-name">${escapeHtml(house.name)}</div>
-            <div style="font-size:0.7rem; color:#94a3b8;">Current price: MWK ${house.price.toLocaleString()}</div>
-          </div>
-          <button class="boost-btn" onclick="boostProperty('${house._id}')">🚀 Boost (24h)</button>
+        <div class="boost-item" style="display:flex; justify-content:space-between; align-items:center; background:rgba(10,15,25,0.6); border-radius:28px; padding:0.6rem 1rem; margin-bottom:0.6rem;">
+          <div><div class="house-name" style="font-weight:600;">${escapeHtml(house.name)}</div><div style="font-size:0.7rem;">MWK ${house.price.toLocaleString()}</div></div>
+          <button class="boost-btn" onclick="boostProperty('${house._id}')" style="background:linear-gradient(135deg,#FF8C42,#E67E22); border:none; border-radius:40px; padding:0.3rem 1rem; color:white; cursor:pointer;">🚀 Boost (24h)</button>
         </div>
       `).join('');
-      // Load existing boost statuses from localStorage (simulate)
       userHouses.forEach(house => {
         const boostedUntil = localStorage.getItem(`boost_${house._id}`);
         if (boostedUntil && new Date(boostedUntil) > new Date()) {
           const btn = document.querySelector(`.boost-item[data-house-id="${house._id}"] .boost-btn`);
-          if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '⏳ Boosted';
-            const timerSpan = document.createElement('span');
-            timerSpan.className = 'timer';
-            timerSpan.innerText = 'Active';
-            btn.parentElement.appendChild(timerSpan);
-          }
+          if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Boosted'; }
         }
       });
     }
-
     window.boostProperty = async function(houseId) {
-      if (!isActivePremium) { alert("Activate premium to boost properties."); return; }
-      // Simulate boost: store in localStorage for 24h, then update UI
-      const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      localStorage.setItem(`boost_${houseId}`, expiry.toISOString());
-      alert("✅ Your property is now boosted! It will appear on the homepage carousel for 24 hours.");
-      renderBoostList(); // refresh
-      // In real implementation, call backend: POST /api/premium/boost/${houseId}
+      if (!isActivePremium) { alert("Activate premium to boost."); return; }
+      localStorage.setItem(`boost_${houseId}`, new Date(Date.now() + 24*60*60*1000).toISOString());
+      alert("✅ Property boosted for 24h!");
+      renderBoostList();
     };
 
-    // ========== EXISTING FUNCTIONS (unchanged but kept) ==========
+    // ========== 4. RENT NEGOTIATION ASSISTANT (tenant) ==========
+    document.getElementById("negotiateBtn").addEventListener("click", async () => {
+      if (!isActivePremium) { alert("Activate premium to use AI negotiator."); return; }
+      let input = document.getElementById("negotiateHouseId").value.trim();
+      let houseId = input.match(/\/house\/([a-f0-9]{24})/)?.[1] || input;
+      if (houseId.length !== 24) { alert("Invalid house ID"); return; }
+      const resultDiv = document.getElementById("negotiationResult");
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing market...';
+      try {
+        const res = await fetch(`/api/premium/negotiate/${houseId}`, { headers: { Authorization:"Bearer "+token } });
+        const data = await res.json();
+        resultDiv.innerHTML = `<div style="background:rgba(0,0,0,0.4); padding:0.8rem; border-radius:24px;">
+          <p><i class="fas fa-chart-line"></i> Market average: <strong>MWK ${data.avgPrice}</strong></p>
+          <p><i class="fas fa-percent"></i> Difference: ${data.diffPercent}%</p>
+          <p><i class="fas fa-lightbulb"></i> Suggested counter‑offer: <strong>MWK ${Math.floor(Number(data.avgPrice) * 0.95).toLocaleString()}</strong></p>
+          <p>${data.suggestion}</p>
+        </div>`;
+      } catch (err) { resultDiv.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Error."; }
+    });
+
+    // ========== 5. PRIORITY VIEWING ==========
+    document.getElementById("requestPriorityBtn").addEventListener("click", async () => {
+      if (!isActivePremium) { alert("Activate premium to request priority viewing."); return; }
+      let input = document.getElementById("priorityHouseId").value.trim();
+      let houseId = input.match(/\/house\/([a-f0-9]{24})/)?.[1] || input;
+      if (houseId.length !== 24) { alert("Invalid house ID"); return; }
+      const statusDiv = document.getElementById("priorityStatus");
+      statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending request...';
+      // Simulate backend call – in real implementation, POST to /api/premium/priority-viewing
+      setTimeout(() => {
+        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Priority viewing requested! The landlord has been notified and will see your premium badge.';
+        // Add a notification (for demo)
+        addDemoNotification("Priority Viewing Requested", `You requested priority viewing for property ID ${houseId}. The landlord will contact you soon.`);
+      }, 1000);
+    });
+
+    // ========== 6. PRICE DROP ALERTS ==========
+    function renderPriceAlerts(searches) {
+      const container = document.getElementById("priceAlertsList");
+      if (!searches.length) { container.innerHTML = "<p>No saved searches – create one to enable price drop alerts.</p>"; return; }
+      container.innerHTML = searches.map((s, idx) => `
+        <div class="price-alert-item">
+          <div class="name"><i class="fas fa-search"></i> ${escapeHtml(s.name)}</div>
+          <div class="filters" style="font-size:0.7rem;">${JSON.stringify(s.filters)}</div>
+          <div class="alert-actions">
+            <label style="display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" id="alertToggle_${idx}" ${s.alertEnabled ? 'checked' : ''} onchange="togglePriceAlert(${idx}, this.checked)">
+              <span class="alert-toggle"><i class="fas fa-bell"></i> Alert me when price drops</span>
+            </label>
+          </div>
+        </div>
+      `).join('');
+    }
+    window.togglePriceAlert = async (idx, enabled) => {
+      if (!isActivePremium) { alert("Activate premium to manage alerts."); return; }
+      await fetch(`/api/premium/saved-searches/${idx}/alert`, {
+        method: "PUT",
+        headers: { "Content-Type":"application/json", Authorization:"Bearer "+token },
+        body: JSON.stringify({ enabled })
+      });
+      loadPremiumStatus(); // refresh
+    };
+    // Simulate price drop (for testing)
+    document.getElementById("simulatePriceDropBtn")?.addEventListener("click", () => {
+      if (!isActivePremium) { alert("Activate premium to test alerts."); return; }
+      addDemoNotification("💰 Price Drop Alert", "One of your saved searches has a new listing with a 15% lower price!");
+      alert("Test notification sent! Check the Notifications tab.");
+    });
+
+    // ========== NOTIFICATIONS (compact, scrollable) ==========
+    function renderNotifications(notifications) {
+      const container = document.getElementById("notificationsList");
+      if (!notifications.length) { container.innerHTML = "<p><i class='fas fa-bell-slash'></i> No notifications yet.</p>"; return; }
+      container.innerHTML = notifications.map(n => `
+        <div class="notification-item ${!n.read ? 'unread' : ''}" style="background:rgba(10,15,25,0.7); border-radius:24px; padding:0.8rem; margin-bottom:0.6rem;">
+          <div><strong><i class="fas fa-envelope"></i> ${escapeHtml(n.title)}</strong></div>
+          <div style="font-size:0.75rem;">${escapeHtml(n.message)}</div>
+          <div style="font-size:0.65rem; color:#64748b;">${new Date(n.createdAt).toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+    function addDemoNotification(title, message) {
+      // In real app, this would come from backend; here we simulate adding to local array
+      const newNotif = { title, message, createdAt: new Date().toISOString(), read: false };
+      let current = JSON.parse(localStorage.getItem("demo_notifications") || "[]");
+      current.unshift(newNotif);
+      localStorage.setItem("demo_notifications", JSON.stringify(current));
+      // Re-fetch from "backend" – in real code, would call /api/premium/status again
+      loadPremiumStatus(); // refresh
+    }
+    document.getElementById("markAllReadBtn")?.addEventListener("click", async () => {
+      if (!isActivePremium) return;
+      // In real backend, call PUT /api/premium/notifications/mark-read
+      alert("Mark all as read (simulated).");
+    });
+
+    // ========== EXISTING FUNCTIONS ==========
     function renderSavedSearches(searches) {
       const container = document.getElementById("savedSearchesList");
       if (!searches.length) { container.innerHTML = "<p><i class='fas fa-info-circle'></i> No saved searches yet.</p>"; return; }
@@ -684,25 +738,12 @@
         </div>
       `).join('');
     }
-
-    function renderNotifications(notifications) {
-      const container = document.getElementById("notificationsList");
-      if (!notifications.length) { container.innerHTML = "<p><i class='fas fa-bell-slash'></i> No notifications yet.</p>"; return; }
-      container.innerHTML = notifications.map(n => `
-        <div class="notification-item ${!n.read ? 'unread' : ''}">
-          <div><strong><i class="fas fa-envelope"></i> ${escapeHtml(n.title)}</strong></div>
-          <div style="font-size:0.75rem;">${escapeHtml(n.message)}</div>
-          <div style="font-size:0.65rem; color:#64748b;">${new Date(n.createdAt).toLocaleString()}</div>
-        </div>
-      `).join('');
-    }
-
-    window.toggleAlert = async function(idx, enable) {
+    window.toggleAlert = async (idx, enable) => {
       if (!isActivePremium) return alert("Activate premium.");
       await fetch(`/api/premium/saved-searches/${idx}/alert`, { method: "PUT", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ enabled: enable }) });
       loadPremiumStatus();
     };
-    window.deleteSearch = async function(idx) {
+    window.deleteSearch = async (idx) => {
       if (!isActivePremium) return alert("Activate premium.");
       if (!confirm("Delete?")) return;
       await fetch(`/api/premium/saved-searches/${idx}`, { method: "DELETE", headers: { Authorization:"Bearer "+token } });
@@ -715,23 +756,6 @@
       await fetch("/api/premium/saved-searches", { method: "POST", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ name, filters: {}, alertEnabled: true }) });
       loadPremiumStatus();
     });
-    document.getElementById("negotiateBtn").addEventListener("click", async () => {
-      if (!isActivePremium) return alert("Activate premium.");
-      let input = document.getElementById("negotiateHouseId").value.trim();
-      let houseId = input.match(/\/house\/([a-f0-9]{24})/)?.[1] || input;
-      if (houseId.length !== 24) { alert("Invalid house ID"); return; }
-      const resultDiv = document.getElementById("negotiationResult");
-      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing...';
-      try {
-        const res = await fetch(`/api/premium/negotiate/${houseId}`, { headers: { Authorization:"Bearer "+token } });
-        const data = await res.json();
-        resultDiv.innerHTML = `<div style="background:rgba(0,0,0,0.4); padding:0.8rem; border-radius:24px;">
-          <p><i class="fas fa-chart-line"></i> Market average: <strong>MWK ${data.avgPrice}</strong></p>
-          <p><i class="fas fa-percent"></i> Diff: ${data.diffPercent}%</p>
-          <p><i class="fas fa-lightbulb"></i> ${data.suggestion}</p>
-        </div>`;
-      } catch (err) { resultDiv.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Error."; }
-    });
     async function loadEarlyAccess() {
       if (!isActivePremium) return;
       try {
@@ -740,19 +764,18 @@
         const container = document.getElementById("earlyAccessList");
         if (!houses.length) { container.innerHTML = "<p>No new listings.</p>"; return; }
         container.innerHTML = houses.map(h => `
-          <div class="house-card">
-            <img src="${h.images?.[0] || 'placeholder.jpg'}">
-            <div class="info">
-              <h3>${escapeHtml(h.name)}</h3>
+          <div class="house-card" style="background:rgba(10,15,25,0.8); border-radius:24px; overflow:hidden;">
+            <img src="${h.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:140px; object-fit:cover;">
+            <div class="info" style="padding:0.8rem;">
+              <h3 style="font-size:0.95rem;">${escapeHtml(h.name)}</h3>
               <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(h.location)}</p>
               <p><i class="fas fa-money-bill-wave"></i> MWK ${h.price.toLocaleString()}</p>
-              <a href="/house/${h._id}" target="_blank">View <i class="fas fa-arrow-right"></i></a>
+              <a href="/house/${h._id}" target="_blank" style="color:#FFB347;">View <i class="fas fa-arrow-right"></i></a>
             </div>
           </div>
         `).join('');
       } catch (err) { document.getElementById("earlyAccessList").innerHTML = "<p>Failed to load.</p>"; }
     }
-
     async function activatePremium() {
       const testMode = document.getElementById("testModeCheckbox").checked;
       const url = testMode ? "/api/payment/premium-user?test=true" : "/api/payment/premium-user";
@@ -767,7 +790,6 @@
     }
     document.getElementById("activateBtn").addEventListener("click", activatePremium);
     document.getElementById("activateFromBannerBtn").addEventListener("click", activatePremium);
-
     function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     loadPremiumStatus();
   </script>
