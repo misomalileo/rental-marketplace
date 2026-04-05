@@ -157,19 +157,19 @@ async function submitDreamMatch(e) {
   }));
 
   wrapper.innerHTML = top.map(house => `
-    <div class="swiper-slide">
-      <div class="dream-card">
-        <img src="${house.image}" alt="${escapeHtml(house.name)}">
-        <div class="dream-card-content">
-          <div class="dream-match-badge"><i class="fas fa-chart-line"></i> ${Math.round(house.score)}% Match</div>
-          <h3>${escapeHtml(house.name)}</h3>
-          <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
-          <div class="dream-price">MWK ${Number(house.price).toLocaleString()}</div>
-          <button class="carousel-btn" onclick="showDetails('${house.id}'); closeDreamMatchModal();">View Details</button>
-        </div>
+  <div class="swiper-slide">
+    <div class="dream-card">
+      <img src="${house.image}" alt="${escapeHtml(house.name)}" style="width:100%; height:160px; object-fit:cover;">
+      <div class="dream-card-content">
+        <div class="dream-match-badge"><i class="fas fa-chart-line"></i> ${Math.round(house.score)}% Match</div>
+        <h3>${escapeHtml(house.name)}</h3>
+        <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
+        <div class="dream-price">MWK ${Number(house.price).toLocaleString()}</div>
+        <button class="carousel-btn" onclick="showDetails('${house.id}'); closeDreamMatchModal();">View Details</button>
       </div>
     </div>
-  `).join('');
+  </div>
+`).join('');
 
   if (dreamSwiper) dreamSwiper.destroy(true, true);
   dreamSwiper = new Swiper('.dream-swiper', {

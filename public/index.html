@@ -139,7 +139,7 @@
     }
     button i, .save-search-btn i, .carousel-btn i, .tab-btn i { color: white !important; }
 
-    /* Hero Carousel (compact) */
+    /* ========== HERO CAROUSEL (fixed uniform cards) ========== */
     .carousel-section { margin: 1rem 1.5rem 2rem; }
     .carousel-container {
       background: var(--card-bg);
@@ -178,23 +178,67 @@
       perspective: 1000px;
     }
     .swiper-slide:hover { transform: translateY(-6px) rotateX(2deg); box-shadow: 0 20px 30px -8px rgba(0,0,0,0.2); }
-    .carousel-card { display: flex; flex-direction: column; height: 100%; }
-    .carousel-card img { width: 100%; height: 140px; object-fit: cover; }
-    .carousel-card-content { padding: 0.8rem; }
-    .carousel-card-content h3 { font-size: 0.9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .carousel-card-content p { font-size: 0.7rem; opacity: 0.8; margin: 0.2rem 0; display: flex; align-items: center; gap: 0.3rem; }
-    .carousel-price { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin: 0.4rem 0; }
+    .carousel-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .carousel-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+    .carousel-card-content {
+      padding: 0.8rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .carousel-card-content h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .carousel-card-content p {
+      font-size: 0.7rem;
+      opacity: 0.8;
+      margin: 0.2rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .carousel-price {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0.4rem 0;
+    }
     .carousel-btn {
-      background: var(--button-bg); color: white; border: none; border-radius: 40px;
-      padding: 0.35rem 0.7rem; font-size: 0.65rem; font-weight: 500; cursor: pointer;
-      width: 100%; margin-top: 0.4rem; transition: all 0.2s;
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.65rem;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.4rem;
+      transition: all 0.2s;
     }
     .carousel-btn:hover { background: var(--button-hover); transform: translateY(-2px); }
     .swiper-pagination-bullet { background: var(--text-color); opacity: 0.5; }
     .swiper-pagination-bullet-active { background: var(--primary); opacity: 1; }
     .swiper-button-next, .swiper-button-prev {
-      color: var(--primary); background: rgba(255,255,255,0.8); width: 34px; height: 34px;
-      border-radius: 50%; backdrop-filter: blur(4px);
+      color: var(--primary);
+      background: rgba(255,255,255,0.8);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      backdrop-filter: blur(4px);
     }
     .swiper-button-next:after, .swiper-button-prev:after { font-size: 1rem; font-weight: bold; }
     @media (max-width: 768px) {
@@ -203,7 +247,56 @@
       .carousel-title i { font-size: 1.6rem; }
     }
 
-    /* Category Tabs (insane visuals) */
+    /* ========== DREAM MATCH RESULTS CARDS (uniform) ========== */
+    .dream-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--card-bg);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .dream-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+    .dream-card-content {
+      padding: 0.8rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .dream-match-badge {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      color: white;
+      border-radius: 20px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 0.5rem;
+      align-self: flex-start;
+    }
+    .dream-price {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0.4rem 0;
+    }
+
+    /* Dream Match modal icons – colourful */
+    #dreamMatchModal .form-group i,
+    #dreamMatchModal h2 i {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      font-size: 1.1rem;
+    }
+
+    /* Category Tabs */
     .category-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -386,6 +479,8 @@
       border-radius: 30px; font-size: 0.6rem; cursor: pointer;
     }
     .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
+    .fav-btn i { color: var(--icon-color) !important; }
+    .fav-btn .fas.fa-heart { color: #e74c3c !important; }
 
     /* Pagination */
     .pagination { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 2rem 0; }
@@ -470,71 +565,6 @@
       .footer-container { grid-template-columns: 1fr; text-align: center; }
       .footer-newsletter form { flex-direction: column; align-items: center; }
       .footer-newsletter input { width: 100%; }
-    }
-
-    /* ========== IMAGE SLIDER WITH DOTS (Airbnb style) ========== */
-    .slider {
-      position: relative;
-      width: 100%;
-      height: 160px;
-      overflow: hidden;
-      touch-action: pan-y pinch-zoom;
-    }
-    .slider .slides-container {
-      width: 100%;
-      height: 100%;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      display: flex;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .slider .slides-container::-webkit-scrollbar {
-      display: none;
-    }
-    .slider .slide {
-      flex: 0 0 100%;
-      scroll-snap-align: start;
-      width: 100%;
-      height: 100%;
-    }
-    .slider .slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-    }
-    .slider .dots {
-      position: absolute;
-      bottom: 8px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      z-index: 5;
-    }
-    .slider .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.6);
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-    .slider .dot.active {
-      width: 20px;
-      border-radius: 4px;
-      background: white;
-    }
-    
-    /* Favorite button icon visibility */
-    .fav-btn i {
-      color: var(--icon-color) !important;
-    }
-    .fav-btn .fas.fa-heart {
-      color: #e74c3c !important;
     }
   </style>
 </head>
@@ -712,7 +742,6 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    // Only carousel loader – all other JS (user menu, etc.) is in script.js
     let heroSwiper = null;
     async function loadHeroCarousel() {
       try {
