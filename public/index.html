@@ -117,7 +117,6 @@
     }
     h1, h2, h3, .logo { font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
 
-    /* Icons – blooming for special, solid for regular */
     i, .fas, .far, .fab { color: var(--icon-color); transition: all 0.2s; }
     .carousel-title i, .hero h1 i, .logo i {
       background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
@@ -139,7 +138,71 @@
     }
     button i, .save-search-btn i, .carousel-btn i, .tab-btn i { color: white !important; }
 
-    /* ========== HERO CAROUSEL (fixed uniform cards) ========== */
+    /* ========== MODERN IMAGE SLIDER WITH DOTS (Airbnb style) ========== */
+    .slider {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      overflow: hidden;
+      touch-action: pan-y pinch-zoom;
+    }
+    .slider .slides-container {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      height: 100%;
+    }
+    .slider .slides-container::-webkit-scrollbar {
+      display: none;
+    }
+    .slider .slide {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      width: 100%;
+      height: 100%;
+    }
+    .slider .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    .slider .dots {
+      position: absolute;
+      bottom: 8px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      z-index: 5;
+    }
+    .slider .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.6);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .slider .dot.active {
+      width: 20px;
+      border-radius: 4px;
+      background: white;
+    }
+
+    /* Favorite button icon visibility */
+    .fav-btn i {
+      color: var(--icon-color) !important;
+    }
+    .fav-btn .fas.fa-heart {
+      color: #e74c3c !important;
+    }
+
+    /* Hero Carousel */
     .carousel-section { margin: 1rem 1.5rem 2rem; }
     .carousel-container {
       background: var(--card-bg);
@@ -174,80 +237,29 @@
       overflow: hidden;
       transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      transform-style: preserve-3d;
-      perspective: 1000px;
     }
-    .swiper-slide:hover { transform: translateY(-6px) rotateX(2deg); box-shadow: 0 20px 30px -8px rgba(0,0,0,0.2); }
-    .carousel-card {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .carousel-card img {
-      width: 100%;
-      height: 160px;
-      object-fit: cover;
-      display: block;
-    }
-    .carousel-card-content {
-      padding: 0.8rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .carousel-card-content h3 {
-      font-size: 0.9rem;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .carousel-card-content p {
-      font-size: 0.7rem;
-      opacity: 0.8;
-      margin: 0.2rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-    .carousel-price {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin: 0.4rem 0;
-    }
+    .swiper-slide:hover { transform: translateY(-6px); box-shadow: 0 20px 30px -8px rgba(0,0,0,0.2); }
+    .carousel-card { display: flex; flex-direction: column; height: 100%; }
+    .carousel-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .carousel-card-content { padding: 0.8rem; flex: 1; display: flex; flex-direction: column; }
+    .carousel-card-content h3 { font-size: 0.9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .carousel-card-content p { font-size: 0.7rem; opacity: 0.8; margin: 0.2rem 0; display: flex; align-items: center; gap: 0.3rem; }
+    .carousel-price { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin: 0.4rem 0; }
     .carousel-btn {
-      background: var(--button-bg);
-      color: white;
-      border: none;
-      border-radius: 40px;
-      padding: 0.35rem 0.7rem;
-      font-size: 0.65rem;
-      font-weight: 500;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 0.4rem;
-      transition: all 0.2s;
+      background: var(--button-bg); color: white; border: none; border-radius: 40px;
+      padding: 0.35rem 0.7rem; font-size: 0.65rem; font-weight: 500; cursor: pointer;
+      width: 100%; margin-top: 0.4rem; transition: all 0.2s;
     }
     .carousel-btn:hover { background: var(--button-hover); transform: translateY(-2px); }
     .swiper-pagination-bullet { background: var(--text-color); opacity: 0.5; }
     .swiper-pagination-bullet-active { background: var(--primary); opacity: 1; }
     .swiper-button-next, .swiper-button-prev {
-      color: var(--primary);
-      background: rgba(255,255,255,0.8);
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      backdrop-filter: blur(4px);
+      color: var(--primary); background: rgba(255,255,255,0.8); width: 34px; height: 34px;
+      border-radius: 50%; backdrop-filter: blur(4px);
     }
     .swiper-button-next:after, .swiper-button-prev:after { font-size: 1rem; font-weight: bold; }
-    @media (max-width: 768px) {
-      .carousel-section { margin: 0.5rem 1rem; }
-      .carousel-title { font-size: 1.3rem; }
-      .carousel-title i { font-size: 1.6rem; }
-    }
 
-    /* ========== DREAM MATCH RESULTS CARDS (uniform) ========== */
+    /* Dream Match Cards */
     .dream-card {
       display: flex;
       flex-direction: column;
@@ -256,18 +268,8 @@
       border-radius: 24px;
       overflow: hidden;
     }
-    .dream-card img {
-      width: 100%;
-      height: 160px;
-      object-fit: cover;
-      display: block;
-    }
-    .dream-card-content {
-      padding: 0.8rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+    .dream-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .dream-card-content { padding: 0.8rem; flex: 1; display: flex; flex-direction: column; }
     .dream-match-badge {
       background: linear-gradient(135deg, #8B5CF6, #EC4899);
       color: white;
@@ -279,21 +281,13 @@
       margin-bottom: 0.5rem;
       align-self: flex-start;
     }
-    .dream-price {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin: 0.4rem 0;
-    }
-
-    /* Dream Match modal icons – colourful */
+    .dream-price { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin: 0.4rem 0; }
     #dreamMatchModal .form-group i,
     #dreamMatchModal h2 i {
       background: linear-gradient(135deg, #8B5CF6, #EC4899);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent !important;
-      font-size: 1.1rem;
     }
 
     /* Category Tabs */
@@ -362,7 +356,6 @@
       transition: transform 0.2s;
     }
     .user-avatar:hover { transform: scale(1.05); }
-    .user-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
     .user-avatar i { color: white !important; font-size: 24px; }
     .user-dropdown {
       position: absolute; top: 50px; right: 0; background: var(--card-bg);
@@ -400,7 +393,6 @@
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
     .hero p { font-size: 1.2rem; font-weight: 400; color: var(--gray-500); margin-top: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
 
-    /* Main container */
     .main-container { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
 
     /* Filters */
@@ -445,13 +437,6 @@
       border: 1px solid var(--input-border);
     }
     .house-card:hover { transform: translateY(-6px); box-shadow: 0 20px 30px -8px rgba(0,0,0,0.15); }
-    .slider { position: relative; width: 100%; height: 160px; overflow: hidden; }
-    .slider img { width: 100%; height: 100%; object-fit: cover; }
-    .slider button {
-      position: absolute; top: 50%; transform: translateY(-50%);
-      background: rgba(255,255,255,0.8); border: none; width: 26px; height: 26px;
-      border-radius: 50%; font-size: 0.8rem; cursor: pointer;
-    }
     .house-card-content { padding: 0.8rem; }
     .house-card-content h3 { font-size: 0.9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .house-card-content p { margin: 0.2rem 0; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem; }
@@ -479,8 +464,6 @@
       border-radius: 30px; font-size: 0.6rem; cursor: pointer;
     }
     .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
-    .fav-btn i { color: var(--icon-color) !important; }
-    .fav-btn .fas.fa-heart { color: #e74c3c !important; }
 
     /* Pagination */
     .pagination { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 2rem 0; }
@@ -591,7 +574,6 @@
     </div>
   </header>
 
-  <!-- Hero Carousel -->
   <div class="carousel-section">
     <div class="carousel-container">
       <div class="carousel-title">
@@ -692,7 +674,6 @@
     <div class="footer-bottom"><div class="footer-bottom-left"><select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select></div><div class="footer-bottom-right">Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</div></div>
   </footer>
 
-  <!-- DREAM MATCH MODAL -->
   <div id="dreamMatchModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeDreamMatchModal()">&times;</span>
@@ -719,7 +700,6 @@
     </div>
   </div>
 
-  <!-- OTHER MODALS (simplified) -->
   <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePropertyModal()">&times;</span><div id="propertyModalContent"></div><div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;"><button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button><button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button><button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button><button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button><button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button></div><div id="modalDetails" style="display:block;"></div><div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div><div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div><div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div><div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div></div></div>
   <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
   <div id="lightboxModal" class="lightbox-modal" style="display:none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
