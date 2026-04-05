@@ -328,14 +328,112 @@
       margin-top: 0.5rem;
       text-align: center;
     }
-    .priority-badge {
-      background: #FF8C42;
-      color: #0a0f1e;
-      font-size: 0.6rem;
+    /* Early Access – square card with image slider */
+    .early-access-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .early-house-card {
+      background: rgba(10, 15, 25, 0.8);
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+    .early-house-card:hover {
+      transform: translateY(-6px);
+      border-color: #FF8C42;
+      box-shadow: 0 20px 25px -12px rgba(0,0,0,0.4);
+    }
+    /* Image slider (simple swipe) */
+    .slider {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      overflow: hidden;
+      touch-action: pan-y pinch-zoom;
+    }
+    .slider .slides-container {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      height: 100%;
+    }
+    .slider .slides-container::-webkit-scrollbar { display: none; }
+    .slider .slide {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      width: 100%;
+      height: 100%;
+    }
+    .slider .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    .slider .dots {
+      position: absolute;
+      bottom: 8px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      z-index: 5;
+    }
+    .slider .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.6);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .slider .dot.active {
+      width: 20px;
+      border-radius: 4px;
+      background: white;
+    }
+    .early-house-card .info {
+      padding: 0.8rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .early-house-card h3 {
+      font-size: 0.95rem;
       font-weight: 700;
-      padding: 0.2rem 0.5rem;
-      border-radius: 30px;
-      margin-left: 0.5rem;
+      margin-bottom: 0.2rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .early-house-card p {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0.2rem 0;
+    }
+    .early-house-card a {
+      color: #FFB347;
+      text-decoration: none;
+      font-size: 0.7rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 0.3rem;
+      align-self: flex-start;
     }
     @media (max-width: 768px) {
       .dashboard-grid { grid-template-columns: 1fr; }
@@ -382,10 +480,10 @@
       <button class="tab-btn" data-tab="portfolio"><i class="fas fa-id-card"></i> Portfolio & Boost</button>
     </div>
 
-    <!-- TAB 1: Premium Tools (existing + new tenant features) -->
+    <!-- TAB 1: Premium Tools -->
     <div id="tab-tools" class="tab-content active">
       <div class="dashboard-grid">
-        <!-- Saved Searches (existing) -->
+        <!-- Saved Searches -->
         <div class="card">
           <h2><i class="fas fa-bookmark"></i> Saved Searches</h2>
           <div id="savedSearchesList">Loading...</div>
@@ -396,7 +494,7 @@
         <div class="card">
           <h2><i class="fas fa-handshake"></i> Rent Negotiation Assistant</h2>
           <p style="font-size:0.75rem; color:#94a3b8;">Enter a property ID and we'll suggest a counter‑offer based on market data.</p>
-          <input type="text" id="negotiateHouseId" placeholder="House ID or URL">
+          <input type="text" id="negotiateHouseId" placeholder="e.g., 67b2c8f9a1b2c3d4e5f6a7b8 or /house/67b2c8f9a1b2c3d4e5f6a7b8">
           <button id="negotiateBtn" class="small"><i class="fas fa-chart-line"></i> Get Suggestion</button>
           <div id="negotiationResult"></div>
         </div>
@@ -405,12 +503,12 @@
         <div class="card">
           <h2><i class="fas fa-calendar-star"></i> Priority Viewing</h2>
           <p style="font-size:0.75rem; color:#94a3b8;">Request priority viewing for any property – landlords see your premium badge first.</p>
-          <input type="text" id="priorityHouseId" placeholder="Property ID or URL">
+          <input type="text" id="priorityHouseId" placeholder="e.g., 67b2c8f9a1b2c3d4e5f6a7b8 or /house/67b2c8f9a1b2c3d4e5f6a7b8">
           <button id="requestPriorityBtn" class="small"><i class="fas fa-rocket"></i> Request Priority Viewing</button>
           <div id="priorityStatus" style="margin-top: 0.5rem; font-size: 0.8rem;"></div>
         </div>
 
-        <!-- AI Rent Predictor (existing) -->
+        <!-- AI Rent Predictor -->
         <div class="card">
           <h2><i class="fas fa-chart-line"></i> AI Rent Predictor</h2>
           <p style="font-size:0.75rem; color:#94a3b8;">Select a property to see predicted rent trends for the next 3 months.</p>
@@ -421,7 +519,7 @@
           <div id="predictionResult" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: center;"></div>
         </div>
 
-        <!-- Early Access Listings (existing) -->
+        <!-- Early Access Listings (with image slider) -->
         <div class="card" style="grid-column: span 2;">
           <h2><i class="fas fa-clock"></i> Early Access – New Listings (24h exclusive)</h2>
           <div id="earlyAccessList" class="early-access-list">Loading...</div>
@@ -458,7 +556,7 @@
       </div>
     </div>
 
-    <!-- TAB 4: Portfolio & Boost (existing) -->
+    <!-- TAB 4: Portfolio & Boost -->
     <div id="tab-portfolio" class="tab-content">
       <div class="dashboard-grid">
         <div class="card">
@@ -630,7 +728,7 @@
       if (!isActivePremium) { alert("Activate premium to use AI negotiator."); return; }
       let input = document.getElementById("negotiateHouseId").value.trim();
       let houseId = input.match(/\/house\/([a-f0-9]{24})/)?.[1] || input;
-      if (houseId.length !== 24) { alert("Invalid house ID"); return; }
+      if (houseId.length !== 24) { alert("Invalid house ID (must be 24 hex characters or full URL)."); return; }
       const resultDiv = document.getElementById("negotiationResult");
       resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing market...';
       try {
@@ -642,7 +740,7 @@
           <p><i class="fas fa-lightbulb"></i> Suggested counter‑offer: <strong>MWK ${Math.floor(Number(data.avgPrice) * 0.95).toLocaleString()}</strong></p>
           <p>${data.suggestion}</p>
         </div>`;
-      } catch (err) { resultDiv.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Error."; }
+      } catch (err) { resultDiv.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Error. Make sure the house ID exists."; }
     });
 
     // ========== 5. PRIORITY VIEWING ==========
@@ -650,13 +748,11 @@
       if (!isActivePremium) { alert("Activate premium to request priority viewing."); return; }
       let input = document.getElementById("priorityHouseId").value.trim();
       let houseId = input.match(/\/house\/([a-f0-9]{24})/)?.[1] || input;
-      if (houseId.length !== 24) { alert("Invalid house ID"); return; }
+      if (houseId.length !== 24) { alert("Invalid house ID (must be 24 hex characters or full URL)."); return; }
       const statusDiv = document.getElementById("priorityStatus");
       statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending request...';
-      // Simulate backend call – in real implementation, POST to /api/premium/priority-viewing
       setTimeout(() => {
         statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Priority viewing requested! The landlord has been notified and will see your premium badge.';
-        // Add a notification (for demo)
         addDemoNotification("Priority Viewing Requested", `You requested priority viewing for property ID ${houseId}. The landlord will contact you soon.`);
       }, 1000);
     });
@@ -685,16 +781,15 @@
         headers: { "Content-Type":"application/json", Authorization:"Bearer "+token },
         body: JSON.stringify({ enabled })
       });
-      loadPremiumStatus(); // refresh
+      loadPremiumStatus();
     };
-    // Simulate price drop (for testing)
     document.getElementById("simulatePriceDropBtn")?.addEventListener("click", () => {
       if (!isActivePremium) { alert("Activate premium to test alerts."); return; }
       addDemoNotification("💰 Price Drop Alert", "One of your saved searches has a new listing with a 15% lower price!");
       alert("Test notification sent! Check the Notifications tab.");
     });
 
-    // ========== NOTIFICATIONS (compact, scrollable) ==========
+    // ========== NOTIFICATIONS ==========
     function renderNotifications(notifications) {
       const container = document.getElementById("notificationsList");
       if (!notifications.length) { container.innerHTML = "<p><i class='fas fa-bell-slash'></i> No notifications yet.</p>"; return; }
@@ -707,19 +802,81 @@
       `).join('');
     }
     function addDemoNotification(title, message) {
-      // In real app, this would come from backend; here we simulate adding to local array
       const newNotif = { title, message, createdAt: new Date().toISOString(), read: false };
       let current = JSON.parse(localStorage.getItem("demo_notifications") || "[]");
       current.unshift(newNotif);
       localStorage.setItem("demo_notifications", JSON.stringify(current));
-      // Re-fetch from "backend" – in real code, would call /api/premium/status again
-      loadPremiumStatus(); // refresh
+      loadPremiumStatus();
     }
     document.getElementById("markAllReadBtn")?.addEventListener("click", async () => {
       if (!isActivePremium) return;
-      // In real backend, call PUT /api/premium/notifications/mark-read
       alert("Mark all as read (simulated).");
     });
+
+    // ========== EARLY ACCESS WITH IMAGE SLIDER ==========
+    async function loadEarlyAccess() {
+      if (!isActivePremium) return;
+      try {
+        const res = await fetch("/api/premium/early-access", { headers: { Authorization:"Bearer "+token } });
+        const houses = await res.json();
+        const container = document.getElementById("earlyAccessList");
+        if (!houses.length) { container.innerHTML = "<p>No new listings.</p>"; return; }
+        container.innerHTML = houses.map(house => {
+          const images = (house.images && house.images.length) ? house.images : ["placeholder.jpg"];
+          let slidesHtml = '';
+          let dotsHtml = '';
+          images.forEach((img, idx) => {
+            slidesHtml += `<div class="slide"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
+            dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
+          });
+          return `
+            <div class="early-house-card" data-house-id="${house._id}">
+              <div class="slider">
+                <div class="slides-container">${slidesHtml}</div>
+                <div class="dots">${dotsHtml}</div>
+              </div>
+              <div class="info">
+                <h3>${escapeHtml(house.name)}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
+                <p><i class="fas fa-money-bill-wave"></i> MWK ${house.price.toLocaleString()}</p>
+                <a href="/house/${house._id}" target="_blank">View Details <i class="fas fa-arrow-right"></i></a>
+              </div>
+            </div>
+          `;
+        }).join('');
+        // Initialize sliders for each early access card
+        document.querySelectorAll('.early-house-card .slider').forEach(slider => {
+          const slidesContainer = slider.querySelector('.slides-container');
+          const dots = slider.querySelectorAll('.dot');
+          if (slidesContainer && dots.length) {
+            let activeIndex = 0;
+            const updateActiveDot = () => {
+              const scrollLeft = slidesContainer.scrollLeft;
+              const slideWidth = slidesContainer.clientWidth;
+              if (slideWidth === 0) return;
+              const newIndex = Math.round(scrollLeft / slideWidth);
+              if (newIndex !== activeIndex && newIndex >= 0 && newIndex < dots.length) {
+                activeIndex = newIndex;
+                dots.forEach((dot, idx) => {
+                  dot.classList.toggle('active', idx === activeIndex);
+                });
+              }
+            };
+            slidesContainer.addEventListener('scroll', updateActiveDot);
+            slidesContainer.addEventListener('touchmove', updateActiveDot);
+            setTimeout(updateActiveDot, 100);
+            dots.forEach((dot, idx) => {
+              dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                slidesContainer.scrollTo({ left: idx * slidesContainer.clientWidth, behavior: 'smooth' });
+              });
+            });
+          }
+        });
+      } catch (err) {
+        document.getElementById("earlyAccessList").innerHTML = "<p>Failed to load early access listings.</p>";
+      }
+    }
 
     // ========== EXISTING FUNCTIONS ==========
     function renderSavedSearches(searches) {
@@ -756,26 +913,6 @@
       await fetch("/api/premium/saved-searches", { method: "POST", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ name, filters: {}, alertEnabled: true }) });
       loadPremiumStatus();
     });
-    async function loadEarlyAccess() {
-      if (!isActivePremium) return;
-      try {
-        const res = await fetch("/api/premium/early-access", { headers: { Authorization:"Bearer "+token } });
-        const houses = await res.json();
-        const container = document.getElementById("earlyAccessList");
-        if (!houses.length) { container.innerHTML = "<p>No new listings.</p>"; return; }
-        container.innerHTML = houses.map(h => `
-          <div class="house-card" style="background:rgba(10,15,25,0.8); border-radius:24px; overflow:hidden;">
-            <img src="${h.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:140px; object-fit:cover;">
-            <div class="info" style="padding:0.8rem;">
-              <h3 style="font-size:0.95rem;">${escapeHtml(h.name)}</h3>
-              <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(h.location)}</p>
-              <p><i class="fas fa-money-bill-wave"></i> MWK ${h.price.toLocaleString()}</p>
-              <a href="/house/${h._id}" target="_blank" style="color:#FFB347;">View <i class="fas fa-arrow-right"></i></a>
-            </div>
-          </div>
-        `).join('');
-      } catch (err) { document.getElementById("earlyAccessList").innerHTML = "<p>Failed to load.</p>"; }
-    }
     async function activatePremium() {
       const testMode = document.getElementById("testModeCheckbox").checked;
       const url = testMode ? "/api/payment/premium-user?test=true" : "/api/payment/premium-user";
