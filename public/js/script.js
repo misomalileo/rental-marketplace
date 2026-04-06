@@ -655,7 +655,7 @@ function renderHouses(houses) {
     // ========== UPDATED: Blue verified badge for both official and premium ==========
     let landlordBadge = '';
     if (house.owner && (house.owner.verificationType === 'official' || house.owner.verificationType === 'premium')) {
-      landlordBadge = '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>';
+      landlordBadge = '<span class="badge verified-icon"><i class="fas fa-check-circle"></i></span>';
     }
     let landlordInfoHtml = '';
     if (house.owner) {
