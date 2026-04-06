@@ -102,14 +102,23 @@ async function loadRealTimeStats() {
   }
 }
 
-// ========== LOAD LANDLORDS ==========
+// ========== LOAD LANDLORDS (FIXED: handles array or object) ==========
 async function loadLandlords() {
   try {
     const res = await fetch("/api/admin/landlords", {
       headers: { Authorization: "Bearer " + token }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const users = await res.json();
+    let users = await res.json();
+    // If response is an object with a 'users' property, extract it
+    if (users && typeof users === 'object' && !Array.isArray(users) && users.users) {
+      users = users.users;
+    }
+    // Ensure it's an array
+    if (!Array.isArray(users)) {
+      console.error("Landlords response is not an array:", users);
+      throw new Error("Invalid response format");
+    }
     const tbody = document.getElementById("landlordsTable");
     tbody.innerHTML = "";
     users.forEach(user => {
@@ -123,7 +132,7 @@ async function loadLandlords() {
           <button class="action-btn verify" onclick="verifyUser('${user._id}', 'official')">✔ Official</button>
           <button class="action-btn premium" onclick="verifyUser('${user._id}', 'premium')">⭐ Premium</button>
           <button class="action-btn ban" onclick="banUser('${user._id}')">🚫 Ban</button>
-         </td>
+          </td>
       `;
       tbody.appendChild(row);
     });
@@ -181,14 +190,22 @@ async function banUser(id) {
   }
 }
 
-// ========== LOAD HOUSES ==========
+// ========== LOAD HOUSES (FIXED: handles array or object) ==========
 async function loadHouses() {
   try {
     const res = await fetch("/api/admin/houses", {
       headers: { Authorization: "Bearer " + token }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const houses = await res.json();
+    let houses = await res.json();
+    // If response is an object with a 'houses' property, extract it
+    if (houses && typeof houses === 'object' && !Array.isArray(houses) && houses.houses) {
+      houses = houses.houses;
+    }
+    if (!Array.isArray(houses)) {
+      console.error("Houses response is not an array:", houses);
+      throw new Error("Invalid response format");
+    }
     const tbody = document.getElementById("housesTable");
     tbody.innerHTML = "";
     houses.forEach(house => {
@@ -204,7 +221,7 @@ async function loadHouses() {
             ${house.featured ? '❌ Remove' : '⭐ Make Featured'}
           </button>
           <button class="action-btn delete" onclick="deleteHouse('${house._id}')">🗑 Delete</button>
-         </td>
+          </td>
       `;
       tbody.appendChild(row);
     });
@@ -322,7 +339,7 @@ async function loadActivityLogs(page = 1) {
     renderLogsPagination(data);
   } catch (err) {
     console.error("Failed to load activity logs:", err);
-    document.querySelector("#activityLogsTable tbody").innerHTML = '}<td colspan="5">Error loading logs</td>';
+    document.querySelector("#activityLogsTable tbody").innerHTML = '<tr><td colspan="5">Error loading logs</td></tr>';
   }
 }
 
@@ -344,7 +361,7 @@ document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
   window.location.href = '/api/admin/export/csv?token=' + token;
 });
 
-// ========== PREMIUM USERS SECTION (client-side filter from landlords) ==========
+// ========== PREMIUM USERS (FIXED: handles array or object) ==========
 async function loadPremiumUsers() {
   const tbody = document.querySelector("#premiumUsersTable tbody");
   if (!tbody) return;
@@ -354,9 +371,17 @@ async function loadPremiumUsers() {
       headers: { Authorization: "Bearer " + token }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const users = await res.json();
-    // Filter only users with role premium_user (if your User model has role field)
-    const premiumUsers = users.filter(user => user.role === 'premium_user');
+    let users = await res.json();
+    // If response is an object with a 'users' property, extract it
+    if (users && typeof users === 'object' && !Array.isArray(users) && users.users) {
+      users = users.users;
+    }
+    if (!Array.isArray(users)) {
+      console.error("Premium users response is not an array:", users);
+      throw new Error("Invalid response format");
+    }
+    // Filter only users with role premium_user (or premium_landlord, etc.)
+    const premiumUsers = users.filter(user => user.role === 'premium_user' || user.verificationType === 'premium');
     tbody.innerHTML = "";
     if (premiumUsers.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No premium users found.</td></tr>';
