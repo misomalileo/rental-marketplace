@@ -371,7 +371,7 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Sign contract (with signature embedding and PDF regeneration)
+// ========== UPDATED Sign contract (auto‑mark house as rented) ==========
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const { signature } = req.body;
@@ -399,11 +399,19 @@ router.put('/sign/:contractId', auth, async (req, res) => {
       await contract.save();
       await LeaseNegotiation.findByIdAndUpdate(contract.negotiationId, { status: 'signed' });
 
-      const negotiation = await LeaseNegotiation.findById(contract.negotiationId);
+      // ========== NEW: Mark the house as rented ==========
       const house = await House.findById(contract.houseId);
+      if (house && house.rentalStatus === 'available') {
+        house.rentalStatus = 'rented';
+        await house.save();
+        console.log(`✅ House ${house._id} automatically marked as rented after lease signing`);
+      }
+
+      const negotiation = await LeaseNegotiation.findById(contract.negotiationId);
+      const houseForPDF = await House.findById(contract.houseId);
       const landlord = await User.findById(contract.landlordId);
       const tenant = await User.findById(contract.tenantId);
-      await generatePDFWithSignatures(negotiation, house, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
+      await generatePDFWithSignatures(negotiation, houseForPDF, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
       
       // Return the new signed PDF URL so frontend can refresh
       const signedPdfUrl = `/api/lease/download-temp/${negotiation._id}`;

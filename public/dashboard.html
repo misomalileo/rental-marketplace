@@ -334,6 +334,35 @@
     .delete { background: #e74c3c; color: white; }
     .feature-btn { background: #f1c40f; color: #2c3e50; }
     .booking-btn { background: #8b5cf6; color: white; }
+
+    /* ========== ADDED: RENTAL STATUS BADGES & BUTTONS ========== */
+    .rental-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .rental-badge.available { background: #2ecc71; color: white; }
+    .rental-badge.rented { background: #e74c3c; color: white; }
+    .rental-badge.pending { background: #f39c12; color: white; }
+
+    .mark-rented-btn, .mark-available-btn {
+      background: #e67e22;
+      color: white;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mark-available-btn { background: #3498db; }
+    .mark-rented-btn:hover, .mark-available-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+    /* ========== END ADDED ========== */
+
     /* Offer/Booking/Lease Cards */
     .offer-card, .booking-card, .lease-card {
       background: var(--card-bg-solid);
@@ -368,6 +397,32 @@
       color: white;
       font-size: 1rem;
       display: none;
+    }
+    /* ========== PREMIUM CROWN BADGE (ADDED) ========== */
+    .avatar-container {
+      position: relative;
+      display: inline-block;
+    }
+    .premium-crown {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: white;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+      z-index: 5;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .premium-crown i {
+      font-size: 10px;
+      color: white !important;
     }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
@@ -639,6 +694,44 @@
     document.querySelector('.theme-select').value = localStorage.getItem('theme') || 'light';
     function logout() { localStorage.removeItem('token'); localStorage.removeItem('role'); window.location = 'login.html'; }
     window.closeBookingModal = function() { document.getElementById('bookingModal').style.display = 'none'; };
+
+    // ========== ADD PREMIUM CROWN BADGE (ENHANCEMENT, no changes to dashboard.js) ==========
+    function addPremiumCrownToAvatar() {
+      // Wait for dashboard.js to set currentUser
+      setTimeout(() => {
+        if (typeof currentUser !== 'undefined' && currentUser && (currentUser.verificationType === 'premium' || currentUser.role === 'premium_landlord')) {
+          // Navbar avatar
+          const userAvatar = document.getElementById('userAvatar');
+          if (userAvatar && !userAvatar.querySelector('.premium-crown')) {
+            const avatarContent = userAvatar.innerHTML;
+            userAvatar.innerHTML = `<div class="avatar-container">${avatarContent}<div class="premium-crown"><i class="fas fa-crown"></i></div></div>`;
+          }
+          // Profile card avatar
+          const profileAvatarContainer = document.getElementById('profileAvatar').parentElement;
+          if (profileAvatarContainer && !profileAvatarContainer.querySelector('.premium-crown')) {
+            const imgClone = profileAvatarContainer.innerHTML;
+            profileAvatarContainer.innerHTML = `<div class="avatar-container">${imgClone}<div class="premium-crown"><i class="fas fa-crown"></i></div></div>`;
+          }
+        }
+      }, 500);
+    }
+    // Override the existing setLoggedInDropdown and updateProfileCard in dashboard.js? No, just add observer
+    const originalFetchUser = window.fetchUser;
+    if (typeof window.fetchUser === 'function') {
+      const original = window.fetchUser;
+      window.fetchUser = async function() {
+        await original();
+        addPremiumCrownToAvatar();
+      };
+    } else {
+      // Fallback: periodically check for currentUser
+      const interval = setInterval(() => {
+        if (typeof currentUser !== 'undefined' && currentUser) {
+          addPremiumCrownToAvatar();
+          clearInterval(interval);
+        }
+      }, 200);
+    }
   </script>
 </body>
 </html>

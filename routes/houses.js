@@ -288,7 +288,7 @@ router.delete("/:id", auth, async (req, res) => {
 });
 
 // ======================================
-// GET ALL HOUSES (public) with filters, sorting
+// GET ALL HOUSES (public) with filters, sorting, and rentalStatus filter
 // ======================================
 router.get("/", async (req, res) => {
   try {
@@ -297,7 +297,35 @@ router.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
     const sortBy = req.query.sort || "default";
 
-    let houseFilter = {};
+    // Build filter – default: only available for rent
+    let houseFilter = { rentalStatus: 'available' }; // <-- NEW: hide rented/pending from public
+
+    // Check if user is logged in (for landlord to see their own properties)
+    const token = req.headers.authorization?.split(' ')[1];
+    let userId = null;
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.id;
+      } catch(e) {}
+    }
+
+    if (userId) {
+      const User = require('../models/User');
+      const user = await User.findById(userId);
+      if (user && (user.role === 'landlord' || user.role === 'premium_landlord' || user.role === 'admin')) {
+        // Landlords see all their own houses (any rentalStatus) + other people's available houses
+        houseFilter = {
+          $or: [
+            { rentalStatus: 'available' },
+            { owner: userId }
+          ]
+        };
+      }
+    }
+
+    // Add other filters from query params
     if (req.query.minPrice) houseFilter.price = { $gte: Number(req.query.minPrice) };
     if (req.query.maxPrice) {
       if (houseFilter.price) houseFilter.price.$lte = Number(req.query.maxPrice);
@@ -373,6 +401,45 @@ router.get("/", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching houses:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// UPDATE RENTAL STATUS (available/rented/pending) – NEW ROUTE
+// ======================================
+router.put("/:id/rental-status", auth, async (req, res) => {
+  try {
+    const { rentalStatus } = req.body;
+    if (!['available', 'rented', 'pending'].includes(rentalStatus)) {
+      return res.status(400).json({ message: 'Invalid rental status' });
+    }
+
+    const house = await House.findById(req.params.id);
+    if (!house) return res.status(404).json({ message: 'House not found' });
+
+    // Only owner or admin can change status
+    if (house.owner.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    house.rentalStatus = rentalStatus;
+    await house.save();
+
+    // Log activity
+    await ActivityLog.create({
+      user: req.user.id,
+      action: "update_rental_status",
+      target: house._id,
+      targetModel: "House",
+      details: { rentalStatus, houseName: house.name },
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    res.json({ message: `Rental status updated to ${rentalStatus}`, house });
+  } catch (err) {
+    console.error("❌ Error updating rental status:", err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

@@ -47,7 +47,13 @@ const HouseSchema = new mongoose.Schema(
     virtualTourUrl: { type: String, default: null },
     // === NEW BIDDING FIELDS ===
     allowBidding: { type: Boolean, default: true },
-    showHighestBidToPremium: { type: Boolean, default: true }
+    showHighestBidToPremium: { type: Boolean, default: true },
+    // ========== NEW RENTAL STATUS FIELD ==========
+    rentalStatus: {
+      type: String,
+      enum: ['available', 'rented', 'pending'],
+      default: 'available'
+    }
   },
   { timestamps: true }
 );

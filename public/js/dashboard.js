@@ -35,6 +35,7 @@ async function fetchUser() {
       currentUser = await res.json();
       updateVerificationUI();
       updateProfileCard();
+      addPremiumCrownToAvatar();
       if (!currentUser.profileCompleted) showProfileModal();
     }
   } catch (err) { console.error(err); }
@@ -44,6 +45,7 @@ function updateProfileCard() {
   document.getElementById('profileAvatar').src = currentUser.profilePicture || 'default-avatar.png';
   document.getElementById('profileDisplayName').innerText = currentUser.name;
   document.getElementById('profileDisplayBusiness').innerHTML = currentUser.businessName ? `<strong>${currentUser.businessName}</strong>` : '';
+  addPremiumCrownToAvatar();
 }
 function showProfileModal() {
   document.getElementById('profileName').value = currentUser.name || '';
@@ -265,17 +267,103 @@ async function loadHouseStats() {
     document.getElementById('insightText').innerHTML = `<i class="fas fa-chart-line"></i> ${avgViews > 20 ? '30% more views than similar houses. Great!' : '20% fewer views. Improve your photos.'}`;
   } catch (err) { console.error(err); }
 }
+
+// ========== UPDATED renderHouses – includes rental status badge + buttons ==========
 function renderHouses(houses) {
   const container = document.getElementById("my-houses");
   container.innerHTML = "";
   houses.forEach(house => {
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     const card = document.createElement("div"); card.className = "house-card";
+
+    // Rental status badge
+    let rentalStatusBadge = '';
+    if (house.rentalStatus === 'rented') {
+      rentalStatusBadge = '<span class="rental-badge rented"><i class="fas fa-check-circle"></i> Rented</span>';
+    } else if (house.rentalStatus === 'pending') {
+      rentalStatusBadge = '<span class="rental-badge pending"><i class="fas fa-clock"></i> Pending</span>';
+    } else {
+      rentalStatusBadge = '<span class="rental-badge available"><i class="fas fa-home"></i> Available</span>';
+    }
+
+    // Button to change rental status
+    let rentalActionButton = '';
+    if (house.rentalStatus === 'available') {
+      rentalActionButton = `<button class="mark-rented-btn" data-id="${house._id}"><i class="fas fa-hand-peace"></i> Mark as Rented</button>`;
+    } else if (house.rentalStatus === 'rented') {
+      rentalActionButton = `<button class="mark-available-btn" data-id="${house._id}"><i class="fas fa-undo-alt"></i> Mark Available</button>`;
+    } else if (house.rentalStatus === 'pending') {
+      rentalActionButton = `<button class="mark-available-btn" data-id="${house._id}"><i class="fas fa-undo-alt"></i> Make Available</button>`;
+    }
+
     const featureButton = house.featured ? '<span class="featured-badge"><i class="fas fa-star"></i> Featured</span>' : `<button class="feature-btn" onclick="featureHouse('${house._id}')"><i class="fas fa-crown"></i> Feature (K5000)</button>`;
-    card.innerHTML = `<img src="${img}"><div class="house-content"><h3>${house.name}</h3><p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p><p><i class="fas fa-money-bill-wave"></i> MWK ${house.price?.toLocaleString()}</p><p><i class="fas fa-eye"></i> ${house.views||0}</p><p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'No ratings'}</p><div class="house-actions"><button class="edit" onclick="openEditModal('${house._id}')"><i class="fas fa-edit"></i> Edit</button><button class="delete" onclick="deleteHouse('${house._id}')"><i class="fas fa-trash-alt"></i> Delete</button>${featureButton}<button class="booking-btn" onclick="openBookingModalFromDashboard('${house._id}', '${house.name}')"><i class="fas fa-calendar-check"></i> Request Booking</button></div></div>`;
+    
+    card.innerHTML = `
+      <img src="${img}">
+      <div class="house-content">
+        <h3>${house.name}</h3>
+        <div class="rental-status">${rentalStatusBadge}</div>
+        <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
+        <p><i class="fas fa-money-bill-wave"></i> MWK ${house.price?.toLocaleString()}</p>
+        <p><i class="fas fa-eye"></i> ${house.views||0}</p>
+        <p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'No ratings'}</p>
+        <div class="house-actions">
+          <button class="edit" onclick="openEditModal('${house._id}')"><i class="fas fa-edit"></i> Edit</button>
+          <button class="delete" onclick="deleteHouse('${house._id}')"><i class="fas fa-trash-alt"></i> Delete</button>
+          ${rentalActionButton}
+          ${featureButton}
+          <button class="booking-btn" onclick="openBookingModalFromDashboard('${house._id}', '${house.name}')"><i class="fas fa-calendar-check"></i> Request Booking</button>
+        </div>
+      </div>
+    `;
     container.appendChild(card);
   });
+
+  // Attach event listeners for rental status buttons
+  document.querySelectorAll('.mark-rented-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const houseId = btn.getAttribute('data-id');
+      if (confirm('Mark this property as rented? It will disappear from public listings.')) {
+        await updateRentalStatus(houseId, 'rented');
+        loadMyHouses(); // refresh list
+      }
+    });
+  });
+  document.querySelectorAll('.mark-available-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const houseId = btn.getAttribute('data-id');
+      if (confirm('Mark this property as available again? It will reappear on the front page.')) {
+        await updateRentalStatus(houseId, 'available');
+        loadMyHouses();
+      }
+    });
+  });
 }
+
+// ========== NEW: Update rental status via API ==========
+async function updateRentalStatus(houseId, status) {
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch(`/api/houses/${houseId}/rental-status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({ rentalStatus: status })
+    });
+    if (res.ok) {
+      alert(`Property marked as ${status}`);
+    } else {
+      const err = await res.json();
+      alert(err.message || 'Failed to update rental status');
+    }
+  } catch (err) {
+    alert('Network error');
+  }
+}
+
+// ========== Other existing functions (unchanged) ==========
 window.openBookingModalFromDashboard = function(houseId, houseName) {
   window.currentBookingHouseId = houseId;
   document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
@@ -525,6 +613,40 @@ window.downloadLeaseContract = async function(negotiationId) {
     alert('Network error');
   }
 };
+
+// ========== PREMIUM CROWN BADGE (unchanged) ==========
+function addPremiumCrownToAvatar() {
+  if (!currentUser) return;
+  const isPremiumLandlord = currentUser.verificationType === 'premium' || currentUser.role === 'premium_landlord';
+  if (!isPremiumLandlord) return;
+
+  function addCrownToAvatarElement(avatarElement) {
+    if (!avatarElement) return;
+    if (avatarElement.parentElement && avatarElement.parentElement.classList.contains('avatar-container')) {
+      if (!avatarElement.parentElement.querySelector('.premium-crown')) {
+        const crown = document.createElement('div');
+        crown.className = 'premium-crown';
+        crown.innerHTML = '<i class="fas fa-crown"></i>';
+        avatarElement.parentElement.appendChild(crown);
+      }
+      return;
+    }
+    const parent = avatarElement.parentNode;
+    const container = document.createElement('div');
+    container.className = 'avatar-container';
+    parent.insertBefore(container, avatarElement);
+    container.appendChild(avatarElement);
+    const crown = document.createElement('div');
+    crown.className = 'premium-crown';
+    crown.innerHTML = '<i class="fas fa-crown"></i>';
+    container.appendChild(crown);
+  }
+
+  const navbarAvatar = document.getElementById('userAvatar');
+  if (navbarAvatar) addCrownToAvatarElement(navbarAvatar);
+  const profileAvatar = document.getElementById('profileAvatar');
+  if (profileAvatar) addCrownToAvatarElement(profileAvatar);
+}
 
 // Initialize everything
 initMap();
