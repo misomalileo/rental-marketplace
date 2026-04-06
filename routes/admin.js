@@ -11,16 +11,20 @@ const { logAdminAction } = require("../middleware/audit");
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+// Helper to filter valid ObjectIds from an array
+function filterValidObjectIds(arr) {
+  return arr.filter(id => id && isValidObjectId(id));
+}
+
 // ========== DASHBOARD STATS ==========
 router.get("/stats", auth, admin, async (req, res) => {
   try {
-    // Landlords: users with role 'landlord' OR users who own houses (any role)
-    const landlordRoleCount = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] } });
-    const houseOwners = await House.distinct("owner");
-    const uniqueLandlordIds = new Set([...houseOwners.map(id => id.toString())]);
-    // Also include role-based landlords (they might not have houses yet)
-    const roleBasedLandlords = await User.find({ role: { $in: ["landlord", "premium_landlord"] } }).distinct("_id");
-    roleBasedLandlords.forEach(id => uniqueLandlordIds.add(id.toString()));
+    // Get all user IDs that own houses (valid only)
+    const houseOwnersRaw = await House.distinct("owner");
+    const houseOwners = filterValidObjectIds(houseOwnersRaw);
+    const roleBasedLandlordsRaw = await User.find({ role: { $in: ["landlord", "premium_landlord"] } }).distinct("_id");
+    const roleBasedLandlords = filterValidObjectIds(roleBasedLandlordsRaw);
+    const uniqueLandlordIds = new Set([...houseOwners, ...roleBasedLandlords]);
     const totalLandlords = uniqueLandlordIds.size;
 
     const totalPremiumUsers = await User.countDocuments({ role: "premium_user" });
@@ -63,9 +67,11 @@ router.get("/landlords", auth, admin, async (req, res) => {
     const skip = (page - 1) * limit;
 
     // Get all user IDs that are either role 'landlord'/'premium_landlord' OR own at least one house
-    const houseOwners = await House.distinct("owner");
-    const roleBasedLandlords = await User.find({ role: { $in: ["landlord", "premium_landlord"] } }).distinct("_id");
-    const allLandlordIds = [...new Set([...houseOwners.map(id => id.toString()), ...roleBasedLandlords.map(id => id.toString())])];
+    const houseOwnersRaw = await House.distinct("owner");
+    const houseOwners = filterValidObjectIds(houseOwnersRaw);
+    const roleBasedLandlordsRaw = await User.find({ role: { $in: ["landlord", "premium_landlord"] } }).distinct("_id");
+    const roleBasedLandlords = filterValidObjectIds(roleBasedLandlordsRaw);
+    const allLandlordIds = [...new Set([...houseOwners, ...roleBasedLandlords])];
 
     const total = allLandlordIds.length;
     const paginatedIds = allLandlordIds.slice(skip, skip + limit);
