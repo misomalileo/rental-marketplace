@@ -525,29 +525,34 @@
       display: inline-block; padding: 0.15rem 0.4rem; font-size: 0.55rem; font-weight: 600;
       border-radius: 30px; margin-right: 0.2rem; text-transform: uppercase;
     }
-    /* Verified badge – flat blue circle with white checkmark (Facebook style) */
+    /* ========== VERIFIED BADGE – FLAT BLUE CIRCLE WITH WHITE CHECKMARK ========== */
     .verified-badge {
-      background: #1877F2;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: 6px;
-      flex-shrink: 0;
-      /* Subtle outer edge - thin semi-transparent border */
-      border: 0.5px solid rgba(0, 0, 0, 0.12);
-      /* Soft anti-aliasing for the circle */
-      box-shadow: 0 0 0 0.2px rgba(255, 255, 255, 0.1);
-      -webkit-font-smoothing: antialiased;
+      background: #1877F2 !important;
+      border-radius: 50% !important;
+      width: 18px !important;
+      height: 18px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin-left: 6px !important;
+      flex-shrink: 0 !important;
+      border: 0.5px solid rgba(0, 0, 0, 0.12) !important;
+      box-shadow: 0 0 0 0.2px rgba(255, 255, 255, 0.1) !important;
+      -webkit-font-smoothing: antialiased !important;
+      /* Override any inherited .badge styles */
+      padding: 0 !important;
+      text-transform: none !important;
+      font-size: 0 !important;
+      line-height: 1 !important;
     }
     .verified-badge i {
-      color: white;
-      font-size: 10px;
-      font-weight: 900;
-      line-height: 1;
-      transform: translateY(0.5px); /* optical centering */
+      color: white !important;
+      font-size: 10px !important;
+      font-weight: 900 !important;
+      line-height: 1 !important;
+      transform: translateY(0.5px) !important;
+      /* Ensure icon is not affected by parent text styles */
+      display: inline-block !important;
     }
     .badge.premium { background: #f1c40f; color: #2c3e50; }
     .badge.featured { background: #f1c40f; color: #2c3e50; }
