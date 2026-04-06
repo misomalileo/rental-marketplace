@@ -589,7 +589,7 @@ function openComparisonModal() {
       }
       tableHtml += `<td style="padding: 8px;">${value}</td>`;
     });
-    tableHtml += `</tr>`;
+    tableHtml += `<tr>`;
   });
   tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
   housesToCompare.forEach(house => {
@@ -652,10 +652,16 @@ function renderHouses(houses) {
     // Check if landlord is premium
     const isPremiumLandlord = house.owner && (house.owner.verificationType === 'premium' || house.owner.role === 'premium_landlord');
     
+    // ========== UPDATED: Blue verified badge for both official and premium ==========
+    let landlordBadge = '';
+    if (house.owner && (house.owner.verificationType === 'official' || house.owner.verificationType === 'premium')) {
+      landlordBadge = '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>';
+    }
     let landlordInfoHtml = '';
     if (house.owner) {
-      landlordInfoHtml = `<div class="landlord-info-row" style="position: relative;">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${house.owner.verificationType === "premium" ? '<span class="badge premium"><i class="fas fa-star"></i> Premium</span>' : ''}${house.owner.verificationType === "official" ? '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>' : ''}</div>`;
+      landlordInfoHtml = `<div class="landlord-info-row" style="position: relative;">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${landlordBadge}</div>`;
     }
+    
     const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
     const selfContainedBadge = house.selfContained ? '<span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
     let genderBadgeHtml = '';
