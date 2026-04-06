@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const House = require("../models/House");
 const Report = require("../models/Report");
@@ -8,17 +9,20 @@ const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 const { logAdminAction } = require("../middleware/audit");
 
+// Helper to check if a string is a valid ObjectId
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
 // ========== DASHBOARD STATS ==========
 router.get("/stats", auth, admin, async (req, res) => {
   try {
-    const totalLandlords = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] } });
+    const totalLandlords = await User.countDocuments({ role: "landlord" });
     const totalPremiumUsers = await User.countDocuments({ role: "premium_user" });
     const totalHouses = await House.countDocuments();
     const totalViewsAgg = await House.aggregate([{ $group: { _id: null, total: { $sum: "$views" } } }]);
     const totalViews = totalViewsAgg[0]?.total || 0;
-    const pendingVerifications = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] }, verified: false });
-    const premiumLandlords = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] }, verificationType: "premium" });
-    const officialLandlords = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] }, verificationType: "official" });
+    const pendingVerifications = await User.countDocuments({ role: "landlord", verified: false });
+    const premiumLandlords = await User.countDocuments({ role: "landlord", verificationType: "premium" });
+    const officialLandlords = await User.countDocuments({ role: "landlord", verificationType: "official" });
 
     const housesPerMonth = await House.aggregate([
       { $group: { _id: { $month: "$createdAt" }, count: { $sum: 1 } } },
@@ -41,29 +45,20 @@ router.get("/stats", auth, admin, async (req, res) => {
   }
 });
 
-// ========== PAGINATED LANDLORDS (includes any user who owns a house) ==========
+// ========== PAGINATED LANDLORDS ==========
 router.get("/landlords", auth, admin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Find all users who either have landlord role OR own at least one house
-    const houseOwners = await House.distinct('owner');
-    const query = {
-      $or: [
-        { role: { $in: ["landlord", "premium_landlord"] } },
-        { _id: { $in: houseOwners } }
-      ]
-    };
-
     const [users, total] = await Promise.all([
-      User.find(query)
+      User.find({ role: "landlord" })
         .select("-password")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      User.countDocuments(query)
+      User.countDocuments({ role: "landlord" })
     ]);
 
     res.json({
@@ -93,10 +88,6 @@ router.put("/verify/:id", auth, admin, async (req, res) => {
 
     user.verified = true;
     user.verificationType = type;
-    // Ensure role is landlord or premium_landlord
-    if (!user.role.includes('landlord')) {
-      user.role = type === 'premium' ? 'premium_landlord' : 'landlord';
-    }
     await user.save();
 
     await logAdminAction(req.user.id, "verify_landlord", user._id, "User", { type });
@@ -274,6 +265,8 @@ router.get("/real-time", auth, admin, async (req, res) => {
     const activeUsers = await ActivityLog.distinct('user', {
       createdAt: { $gt: new Date(Date.now() - 15 * 60 * 1000) }
     });
+    // Filter out invalid ObjectIds
+    const validActiveUsers = activeUsers.filter(id => isValidObjectId(id)).length;
     const newListingsToday = await House.countDocuments({
       createdAt: { $gt: new Date().setHours(0,0,0,0) }
     });
@@ -281,7 +274,7 @@ router.get("/real-time", auth, admin, async (req, res) => {
     const totalViewsAgg = await House.aggregate([{ $group: { _id: null, total: { $sum: "$views" } } }]);
 
     res.json({
-      activeUsers: activeUsers.length,
+      activeUsers: validActiveUsers,
       newListingsToday,
       revenue: 0,
       totalHouses,
@@ -292,22 +285,34 @@ router.get("/real-time", auth, admin, async (req, res) => {
   }
 });
 
-// ========== ACTIVITY LOGS (PAGINATED) ==========
+// ========== ACTIVITY LOGS (PAGINATED – FIXED FOR INVALID OBJECTIDS) ==========
 router.get("/activity-logs", auth, admin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
-    const [logs, total] = await Promise.all([
-      ActivityLog.find()
-        .populate("user", "name email")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      ActivityLog.countDocuments()
-    ]);
+    
+    // First get logs without populating (to avoid ObjectId cast errors)
+    let logs = await ActivityLog.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+    
+    // Manually populate user data for valid ObjectIds
+    const userIds = logs.map(log => log.user).filter(id => id && isValidObjectId(id));
+    const users = await User.find({ _id: { $in: userIds } }).select("name email").lean();
+    const userMap = new Map(users.map(u => [u._id.toString(), u]));
+    
+    logs = logs.map(log => ({
+      ...log,
+      user: log.user && isValidObjectId(log.user) ? userMap.get(log.user.toString()) : null
+    }));
+    
+    const total = await ActivityLog.countDocuments();
     res.json({ logs, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
+    console.error("Activity logs error:", err);
     res.status(500).json({ error: err.message });
   }
 });
