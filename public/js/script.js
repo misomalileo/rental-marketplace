@@ -34,6 +34,37 @@ function escapeHtml(str) {
   });
 }
 
+// ========== HANDLE LANDLORD CLICK (MOVED TO TOP) ==========
+function handleLandlordClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const landlordId = this.getAttribute('data-landlord-id');
+  if (landlordId) showLandlordProfile(landlordId);
+}
+
+// ========== ADD CROWN TO LANDLORD AVATAR (FOR PROPERTY CARDS) ==========
+function addCrownToLandlordAvatar(avatarElement, isPremiumLandlord) {
+  if (!isPremiumLandlord) return;
+  if (avatarElement.parentElement && avatarElement.parentElement.classList.contains('avatar-container')) {
+    if (!avatarElement.parentElement.querySelector('.premium-crown')) {
+      const crown = document.createElement('div');
+      crown.className = 'premium-crown';
+      crown.innerHTML = '<i class="fas fa-crown"></i>';
+      avatarElement.parentElement.appendChild(crown);
+    }
+    return;
+  }
+  const parent = avatarElement.parentNode;
+  const container = document.createElement('div');
+  container.className = 'avatar-container';
+  parent.insertBefore(container, avatarElement);
+  container.appendChild(avatarElement);
+  const crown = document.createElement('div');
+  crown.className = 'premium-crown';
+  crown.innerHTML = '<i class="fas fa-crown"></i>';
+  container.appendChild(crown);
+}
+
 // ========== LOAD HERO CAROUSEL SLIDES ==========
 async function loadHeroCarousel() {
   try {
@@ -565,7 +596,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</table></tbody></table>`;
+  tableHtml += `</table></tbody></td>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -611,22 +642,19 @@ function renderHouses(houses) {
       dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
     });
     
-    // ========== BUILD AVATAR WITH PREMIUM CROWN ==========
     let avatarHtml = '';
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
-      const avatarContent = house.owner.profilePicture ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:1rem;">${initial}</span>`;
-      const isPremiumLandlord = house.owner.verificationType === 'premium' || house.owner.role === 'premium_landlord';
-      if (isPremiumLandlord) {
-        avatarHtml = `<div class="avatar-container"><div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarContent}</div><div class="premium-crown"><i class="fas fa-crown"></i></div></div>`;
-      } else {
-        avatarHtml = `<div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarContent}</div>`;
-      }
+      const avatarStyle = house.owner.profilePicture ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:1rem;">${initial}</span>`;
+      avatarHtml = `<div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarStyle}</div>`;
     }
+    
+    // Check if landlord is premium
+    const isPremiumLandlord = house.owner && (house.owner.verificationType === 'premium' || house.owner.role === 'premium_landlord');
     
     let landlordInfoHtml = '';
     if (house.owner) {
-      landlordInfoHtml = `<div class="landlord-info-row">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${house.owner.verificationType === "premium" ? '<span class="badge premium"><i class="fas fa-star"></i> Premium</span>' : ''}${house.owner.verificationType === "official" ? '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>' : ''}</div>`;
+      landlordInfoHtml = `<div class="landlord-info-row" style="position: relative;">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${house.owner.verificationType === "premium" ? '<span class="badge premium"><i class="fas fa-star"></i> Premium</span>' : ''}${house.owner.verificationType === "official" ? '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>' : ''}</div>`;
     }
     const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
     const selfContainedBadge = house.selfContained ? '<span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
@@ -693,6 +721,12 @@ function renderHouses(houses) {
       </div>
     `;
     container.appendChild(card);
+    
+    // Apply crown to landlord avatar (if premium)
+    const landlordAvatarDiv = card.querySelector('.landlord-avatar');
+    if (landlordAvatarDiv && isPremiumLandlord) {
+      addCrownToLandlordAvatar(landlordAvatarDiv, true);
+    }
     
     // Initialize slider touch & dots for this card
     const sliderContainer = card.querySelector('.slides-container');

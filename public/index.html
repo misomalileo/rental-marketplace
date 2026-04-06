@@ -216,7 +216,7 @@
     .dropdown-header .avatar { width: 44px; height: 44px; }
     .landlord-avatar { width: 36px; height: 36px; }
 
-    /* ========== PREMIUM CROWN BADGE (ADDED) ========== */
+    /* ========== PREMIUM CROWN BADGE ========== */
     .avatar-container {
       position: relative;
       display: inline-block;
@@ -765,7 +765,7 @@
     </div>
   </div>
 
-  <!-- Other modals (property, booking, lightbox, etc.) – same as before -->
+  <!-- Other modals -->
   <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePropertyModal()">&times;</span><div id="propertyModalContent"></div><div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;"><button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button><button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button><button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button><button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button><button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button></div><div id="modalDetails" style="display:block;"></div><div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div><div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div><div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div><div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div></div></div>
   <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
   <div id="lightboxModal" class="lightbox-modal" style="display:none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
@@ -787,87 +787,5 @@
   <script src="js/chatbot.js"></script>
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script>
-    let heroSwiper = null;
-    async function loadHeroCarousel() {
-      try {
-        const res = await fetch('/api/houses?page=1&limit=6');
-        const data = await res.json();
-        const houses = data.houses || [];
-        const wrapper = document.getElementById('carousel-wrapper');
-        if (!wrapper) return;
-        if (houses.length === 0) { wrapper.innerHTML = '<div class="swiper-slide">No properties</div>'; return; }
-        wrapper.innerHTML = houses.map(house => `
-          <div class="swiper-slide">
-            <div class="carousel-card">
-              <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}">
-              <div class="carousel-card-content">
-                <h3>${escapeHtml(house.name)}</h3>
-                <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
-                <div class="carousel-price">MWK ${Number(house.price).toLocaleString()}</div>
-                <button class="carousel-btn" onclick="showDetails('${house._id}')">View Details</button>
-              </div>
-            </div>
-          </div>
-        `).join('');
-        if (heroSwiper) heroSwiper.destroy(true, true);
-        heroSwiper = new Swiper('.hero-swiper', {
-          loop: true, autoplay: { delay: 5000, disableOnInteraction: false },
-          slidesPerView: 1, spaceBetween: 16,
-          breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
-          pagination: { el: '.swiper-pagination', clickable: true },
-          navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
-        });
-      } catch (err) { console.error('Carousel error', err); }
-    }
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
-    document.addEventListener('DOMContentLoaded', () => { loadHeroCarousel(); });
-
-    // ========== PREMIUM CROWN ON FRONT PAGE AVATAR ==========
-    function addPremiumCrownToFrontAvatar() {
-      // This function will be called after user is loaded (in loadCurrentUser or updateUserMenuLoggedIn)
-      const userAvatar = document.getElementById('userAvatar');
-      if (!userAvatar) return;
-      // Check if currentUser is premium landlord
-      if (typeof currentUser !== 'undefined' && currentUser && (currentUser.verificationType === 'premium' || currentUser.role === 'premium_landlord')) {
-        // Avoid double wrapping
-        if (userAvatar.parentElement && userAvatar.parentElement.classList.contains('avatar-container')) {
-          if (!userAvatar.parentElement.querySelector('.premium-crown')) {
-            const crown = document.createElement('div');
-            crown.className = 'premium-crown';
-            crown.innerHTML = '<i class="fas fa-crown"></i>';
-            userAvatar.parentElement.appendChild(crown);
-          }
-          return;
-        }
-        const parent = userAvatar.parentNode;
-        const container = document.createElement('div');
-        container.className = 'avatar-container';
-        parent.insertBefore(container, userAvatar);
-        container.appendChild(userAvatar);
-        const crown = document.createElement('div');
-        crown.className = 'premium-crown';
-        crown.innerHTML = '<i class="fas fa-crown"></i>';
-        container.appendChild(crown);
-      }
-    }
-
-    // Override the existing updateUserMenuLoggedIn function to add crown after avatar is set
-    const originalUpdateUserMenuLoggedIn = window.updateUserMenuLoggedIn;
-    if (originalUpdateUserMenuLoggedIn) {
-      window.updateUserMenuLoggedIn = function() {
-        originalUpdateUserMenuLoggedIn();
-        addPremiumCrownToFrontAvatar();
-      };
-    } else {
-      // Fallback: observe for when currentUser is set
-      const checkInterval = setInterval(() => {
-        if (typeof currentUser !== 'undefined' && currentUser) {
-          addPremiumCrownToFrontAvatar();
-          clearInterval(checkInterval);
-        }
-      }, 200);
-    }
-  </script>
 </body>
 </html>
