@@ -525,7 +525,7 @@
       display: inline-block; padding: 0.15rem 0.4rem; font-size: 0.55rem; font-weight: 600;
       border-radius: 30px; margin-right: 0.2rem; text-transform: uppercase;
     }
-    /* ========== UPDATED: Verified badge now blue (Facebook/Telegram style) ========== */
+    /* Verified badge – flat blue circle with white checkmark (Facebook style) */
     .verified-badge {
       background: #1877F2;
       border-radius: 50%;
@@ -536,7 +536,8 @@
       justify-content: center;
       margin-left: 6px;
       flex-shrink: 0;
-      box-shadow: none;
+      /* Subtle outer edge – micro-shadow (anti-aliased stroke effect) */
+      box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12);
       -webkit-font-smoothing: antialiased;
     }
     .verified-badge i {
