@@ -589,7 +589,7 @@ function openComparisonModal() {
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
 // ======================================
-// RENDER HOUSE CARDS (with modern image slider & dots)
+// RENDER HOUSE CARDS (with premium crown on landlord avatar)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -611,12 +611,19 @@ function renderHouses(houses) {
       dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
     });
     
+    // ========== BUILD AVATAR WITH PREMIUM CROWN ==========
     let avatarHtml = '';
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
-      const avatarStyle = house.owner.profilePicture ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:1rem;">${initial}</span>`;
-      avatarHtml = `<div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarStyle}</div>`;
+      const avatarContent = house.owner.profilePicture ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:1rem;">${initial}</span>`;
+      const isPremiumLandlord = house.owner.verificationType === 'premium' || house.owner.role === 'premium_landlord';
+      if (isPremiumLandlord) {
+        avatarHtml = `<div class="avatar-container"><div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarContent}</div><div class="premium-crown"><i class="fas fa-crown"></i></div></div>`;
+      } else {
+        avatarHtml = `<div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarContent}</div>`;
+      }
     }
+    
     let landlordInfoHtml = '';
     if (house.owner) {
       landlordInfoHtml = `<div class="landlord-info-row">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${house.owner.verificationType === "premium" ? '<span class="badge premium"><i class="fas fa-star"></i> Premium</span>' : ''}${house.owner.verificationType === "official" ? '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>' : ''}</div>`;
@@ -809,8 +816,6 @@ function renderHouses(houses) {
     link.addEventListener('click', handleLandlordClick);
   });
 }
-
-function handleLandlordClick(e) { e.preventDefault(); e.stopPropagation(); const landlordId = this.getAttribute('data-landlord-id'); if (landlordId) showLandlordProfile(landlordId); }
 
 // ======================================
 // REMAINING FUNCTIONS (report, chat, profile, insights, price, share, tour, details, etc.)
