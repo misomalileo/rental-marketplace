@@ -536,7 +536,10 @@
       justify-content: center;
       margin-left: 6px;
       flex-shrink: 0;
-      box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12), inset 0 0 0 0.5px rgba(255, 255, 255, 0.2);
+      /* Subtle outer edge - thin semi-transparent border */
+      border: 0.5px solid rgba(0, 0, 0, 0.12);
+      /* Soft anti-aliasing for the circle */
+      box-shadow: 0 0 0 0.2px rgba(255, 255, 255, 0.1);
       -webkit-font-smoothing: antialiased;
     }
     .verified-badge i {
