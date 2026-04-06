@@ -11,14 +11,14 @@ const { logAdminAction } = require("../middleware/audit");
 // ========== DASHBOARD STATS ==========
 router.get("/stats", auth, admin, async (req, res) => {
   try {
-    const totalLandlords = await User.countDocuments({ role: "landlord" });
+    const totalLandlords = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] } });
     const totalPremiumUsers = await User.countDocuments({ role: "premium_user" });
     const totalHouses = await House.countDocuments();
     const totalViewsAgg = await House.aggregate([{ $group: { _id: null, total: { $sum: "$views" } } }]);
     const totalViews = totalViewsAgg[0]?.total || 0;
-    const pendingVerifications = await User.countDocuments({ role: "landlord", verified: false });
-    const premiumLandlords = await User.countDocuments({ role: "landlord", verificationType: "premium" });
-    const officialLandlords = await User.countDocuments({ role: "landlord", verificationType: "official" });
+    const pendingVerifications = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] }, verified: false });
+    const premiumLandlords = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] }, verificationType: "premium" });
+    const officialLandlords = await User.countDocuments({ role: { $in: ["landlord", "premium_landlord"] }, verificationType: "official" });
 
     const housesPerMonth = await House.aggregate([
       { $group: { _id: { $month: "$createdAt" }, count: { $sum: 1 } } },
@@ -41,20 +41,29 @@ router.get("/stats", auth, admin, async (req, res) => {
   }
 });
 
-// ========== PAGINATED LANDLORDS ==========
+// ========== PAGINATED LANDLORDS (includes any user who owns a house) ==========
 router.get("/landlords", auth, admin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    // Find all users who either have landlord role OR own at least one house
+    const houseOwners = await House.distinct('owner');
+    const query = {
+      $or: [
+        { role: { $in: ["landlord", "premium_landlord"] } },
+        { _id: { $in: houseOwners } }
+      ]
+    };
+
     const [users, total] = await Promise.all([
-      User.find({ role: "landlord" })
+      User.find(query)
         .select("-password")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      User.countDocuments({ role: "landlord" })
+      User.countDocuments(query)
     ]);
 
     res.json({
@@ -84,6 +93,10 @@ router.put("/verify/:id", auth, admin, async (req, res) => {
 
     user.verified = true;
     user.verificationType = type;
+    // Ensure role is landlord or premium_landlord
+    if (!user.role.includes('landlord')) {
+      user.role = type === 'premium' ? 'premium_landlord' : 'landlord';
+    }
     await user.save();
 
     await logAdminAction(req.user.id, "verify_landlord", user._id, "User", { type });
