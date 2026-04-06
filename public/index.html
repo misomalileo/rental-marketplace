@@ -216,6 +216,33 @@
     .dropdown-header .avatar { width: 44px; height: 44px; }
     .landlord-avatar { width: 36px; height: 36px; }
 
+    /* ========== PREMIUM CROWN BADGE (ADDED) ========== */
+    .avatar-container {
+      position: relative;
+      display: inline-block;
+    }
+    .premium-crown {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: white;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+      z-index: 5;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .premium-crown i {
+      font-size: 10px;
+      color: white !important;
+    }
+
     /* Favorite button icon visibility */
     .fav-btn i { color: var(--icon-color) !important; }
     .fav-btn .fas.fa-heart { color: #e74c3c !important; }
@@ -345,7 +372,7 @@
     }
     .tab-btn.active i { color: white !important; }
 
-    /* Navbar – login icon at far right */
+    /* Navbar – login icon at far right (fixed) */
     .navbar {
       background: var(--navbar-bg);
       backdrop-filter: blur(12px);
@@ -357,6 +384,7 @@
       position: sticky;
       top: 0;
       z-index: 1000;
+      flex-wrap: wrap;
     }
     .logo { font-size: 1.6rem; font-weight: 800; }
     .logo i { margin-right: 6px; font-size: 1.4rem; }
@@ -364,13 +392,13 @@
       display: flex;
       align-items: center;
       gap: 1.5rem;
-      flex: 1;
-      margin-left: 2rem;
+      flex-wrap: wrap;
     }
     .nav-right {
       display: flex;
       align-items: center;
       gap: 1rem;
+      margin-left: auto; /* push to far right */
     }
     .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: color 0.2s; display: flex; align-items: center; gap: 6px; }
     .nav-links a:hover { color: var(--primary); }
@@ -572,8 +600,8 @@
     }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; gap: 0.8rem; }
-      .nav-links { margin-left: 0; justify-content: center; }
-      .nav-right { justify-content: center; }
+      .nav-links { justify-content: center; margin-left: 0; }
+      .nav-right { margin-left: 0; justify-content: center; margin-top: 0.5rem; }
       .hero { margin: 1rem; padding: 1.5rem 1rem; }
       .hero h1 { font-size: 1.8rem; }
       .hero h1 i { font-size: 2.5rem; }
@@ -794,6 +822,52 @@
     }
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     document.addEventListener('DOMContentLoaded', () => { loadHeroCarousel(); });
+
+    // ========== PREMIUM CROWN ON FRONT PAGE AVATAR ==========
+    function addPremiumCrownToFrontAvatar() {
+      // This function will be called after user is loaded (in loadCurrentUser or updateUserMenuLoggedIn)
+      const userAvatar = document.getElementById('userAvatar');
+      if (!userAvatar) return;
+      // Check if currentUser is premium landlord
+      if (typeof currentUser !== 'undefined' && currentUser && (currentUser.verificationType === 'premium' || currentUser.role === 'premium_landlord')) {
+        // Avoid double wrapping
+        if (userAvatar.parentElement && userAvatar.parentElement.classList.contains('avatar-container')) {
+          if (!userAvatar.parentElement.querySelector('.premium-crown')) {
+            const crown = document.createElement('div');
+            crown.className = 'premium-crown';
+            crown.innerHTML = '<i class="fas fa-crown"></i>';
+            userAvatar.parentElement.appendChild(crown);
+          }
+          return;
+        }
+        const parent = userAvatar.parentNode;
+        const container = document.createElement('div');
+        container.className = 'avatar-container';
+        parent.insertBefore(container, userAvatar);
+        container.appendChild(userAvatar);
+        const crown = document.createElement('div');
+        crown.className = 'premium-crown';
+        crown.innerHTML = '<i class="fas fa-crown"></i>';
+        container.appendChild(crown);
+      }
+    }
+
+    // Override the existing updateUserMenuLoggedIn function to add crown after avatar is set
+    const originalUpdateUserMenuLoggedIn = window.updateUserMenuLoggedIn;
+    if (originalUpdateUserMenuLoggedIn) {
+      window.updateUserMenuLoggedIn = function() {
+        originalUpdateUserMenuLoggedIn();
+        addPremiumCrownToFrontAvatar();
+      };
+    } else {
+      // Fallback: observe for when currentUser is set
+      const checkInterval = setInterval(() => {
+        if (typeof currentUser !== 'undefined' && currentUser) {
+          addPremiumCrownToFrontAvatar();
+          clearInterval(checkInterval);
+        }
+      }, 200);
+    }
   </script>
 </body>
 </html>

@@ -547,7 +547,7 @@ function openComparisonModal() {
     { label: '<i class="fas fa-star"></i> Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
   ];
   features.forEach(feature => {
-    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}</tr>`;
+    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
     housesToCompare.forEach(house => {
       let value = house[feature.key];
       if (feature.format) {
@@ -1399,6 +1399,21 @@ async function loadAndUpdateUserMenu() {
       setLoggedInDropdown(user);
       if (user.profilePicture) userAvatar.innerHTML = `<img src="${user.profilePicture}">`;
       else userAvatar.innerHTML = `<span>${user.name?.charAt(0).toUpperCase() || 'U'}</span>`;
+      
+      // ========== ADD PREMIUM CROWN BADGE (ONLY FOR PREMIUM LANDLORDS) ==========
+      const isPremiumLandlord = user.verificationType === 'premium' || user.role === 'premium_landlord';
+      if (isPremiumLandlord && userAvatar && !userAvatar.parentElement?.classList.contains('avatar-container')) {
+        // Wrap avatar in container and add crown
+        const parent = userAvatar.parentNode;
+        const container = document.createElement('div');
+        container.className = 'avatar-container';
+        parent.insertBefore(container, userAvatar);
+        container.appendChild(userAvatar);
+        const crown = document.createElement('div');
+        crown.className = 'premium-crown';
+        crown.innerHTML = '<i class="fas fa-crown"></i>';
+        container.appendChild(crown);
+      }
     } else {
       localStorage.removeItem('token');
       setGuestDropdown();
