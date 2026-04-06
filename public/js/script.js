@@ -596,7 +596,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</table></tbody></td>`;
+  tableHtml += `</tr></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -620,7 +620,7 @@ function openComparisonModal() {
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
 // ======================================
-// RENDER HOUSE CARDS (with premium crown on landlord avatar)
+// RENDER HOUSE CARDS (with rental status badge + premium crown)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -667,6 +667,17 @@ function renderHouses(houses) {
       else if (house.gender === 'mixed') { genderClass = 'gender-mixed'; genderText = '<i class="fas fa-venus-mars"></i> Mixed'; }
       genderBadgeHtml = `<span class="badge ${genderClass}">${genderText}</span>`;
     }
+
+    // ========== ADD RENTAL STATUS BADGE ==========
+    let rentalStatusBadge = '';
+    if (house.rentalStatus === 'available') {
+      rentalStatusBadge = '<span class="badge available"><i class="fas fa-check-circle"></i> Available</span>';
+    } else if (house.rentalStatus === 'rented') {
+      rentalStatusBadge = '<span class="badge rented"><i class="fas fa-ban"></i> Rented</span>';
+    } else if (house.rentalStatus === 'pending') {
+      rentalStatusBadge = '<span class="badge pending"><i class="fas fa-clock"></i> Pending</span>';
+    }
+
     let priceHtml = '';
     if (house.type === 'Hostel') {
       priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / room</p>`;
@@ -704,6 +715,7 @@ function renderHouses(houses) {
         ${featuredBadge}
         ${selfContainedBadge}
         ${genderBadgeHtml}
+        ${rentalStatusBadge}
         <h3>${house.name}</h3>
         <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
         ${priceHtml}
