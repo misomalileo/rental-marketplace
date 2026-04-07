@@ -12,6 +12,72 @@ let viewsChart, earningsChart, conversionChart;
 let housesPage = 0;
 const housesPerPage = 6;
 
+// ========== NEW: Property type details mapping (for 3D slots) ==========
+const propertyTypeFields = {
+  House: ['bedrooms','bathrooms','selfContained','hasGarden','parkingSpaces','furnished','petFriendly','ac','wifi','pool'],
+  Apartment: ['bedrooms','bathrooms','floorLevel','hasElevator','selfContained','furnished','parking','securityGuard'],
+  Room: ['roomType','sharedWith','bathroomType','kitchenAccess','selfContained','furnished','waterHeater'],
+  Hostel: ['totalRooms','vacancies','bedsPerRoom','sharedBathroom','commonKitchen','curfew','laundryService','security'],
+  Office: ['officeSize','hasReception','parking','ac','furnished'],
+  FurnishedApartment: ['bedrooms','bathrooms','furnitureIncluded','utilitiesIncluded','internetSpeed','weeklyCleaning','parking','ac'],
+  ShortStay: ['dailyPrice','weeklyPrice','minimumStay','maximumStay','instantBooking','selfCheckin','towelsLinen','cleaningFee','securityDeposit'],
+  SharedLiving: ['totalBeds','availableBeds','genderPreference','sharedRoomSize','lockerProvided','commonArea','curfew'],
+  StudentAccommodation: ['nearbyUniversity','studentOnly','studyRoom','mealPlan','counselingService','securityGuard','laundry','wifiInRooms','bicycleParking']
+};
+
+// Helper to generate dynamic HTML for property details (called when type changes)
+function generatePropertyDetailsFields(selectedType) {
+  const container = document.getElementById('propertyDetailsContainer');
+  if (!container) return;
+  const fields = propertyTypeFields[selectedType] || [];
+  if (fields.length === 0) {
+    container.innerHTML = '<p class="info">No additional details needed for this type.</p>';
+    return;
+  }
+  let html = '<div class="details-grid">';
+  fields.forEach(field => {
+    const label = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+    let inputHtml = '';
+    if (field === 'roomType') {
+      inputHtml = `<select id="detail_${field}"><option value="single">Single</option><option value="double">Double</option><option value="shared">Shared</option></select>`;
+    } else if (field === 'bathroomType') {
+      inputHtml = `<select id="detail_${field}"><option value="private">Private</option><option value="shared">Shared</option><option value="outside">Outside</option></select>`;
+    } else if (field === 'genderPreference') {
+      inputHtml = `<select id="detail_${field}"><option value="boys">Boys only</option><option value="girls">Girls only</option><option value="mixed">Mixed</option></select>`;
+    } else if (field === 'furnitureIncluded' || field === 'utilitiesIncluded') {
+      inputHtml = `<input type="text" id="detail_${field}" placeholder="e.g., bed,sofa / water,electricity">`;
+    } else if (['selfContained','hasGarden','hasElevator','kitchenAccess','sharedBathroom','commonKitchen','laundryService','studentOnly','studyRoom','mealPlan','counselingService','wifiInRooms','bicycleParking','lockerProvided','commonArea','instantBooking','selfCheckin','towelsLinen','weeklyCleaning'].includes(field)) {
+      inputHtml = `<select id="detail_${field}"><option value="true">Yes</option><option value="false">No</option></select>`;
+    } else if (field === 'dailyPrice' || field === 'weeklyPrice' || field === 'cleaningFee' || field === 'securityDeposit') {
+      inputHtml = `<input type="number" id="detail_${field}" placeholder="MWK">`;
+    } else {
+      inputHtml = `<input type="text" id="detail_${field}" placeholder="Enter ${label.toLowerCase()}">`;
+    }
+    html += `<div class="form-group"><label>${label}</label>${inputHtml}</div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// Collect property details from generated fields into an object
+function collectPropertyDetails() {
+  const details = {};
+  const container = document.getElementById('propertyDetailsContainer');
+  if (!container) return details;
+  const inputs = container.querySelectorAll('input, select');
+  inputs.forEach(inp => {
+    let val = inp.value;
+    if (inp.type === 'checkbox') val = inp.checked;
+    else if (inp.tagName === 'SELECT' && (inp.options[0]?.value === 'true' || inp.options[0]?.value === 'false')) {
+      val = inp.value === 'true';
+    }
+    const key = inp.id.replace('detail_', '');
+    details[key] = val;
+  });
+  return details;
+}
+
+// ========== Existing helper functions (unchanged) ==========
 function animateValue(element, start, end, duration = 1000) {
   if (!element) return;
   const range = end - start;
@@ -152,7 +218,6 @@ async function processPayment(method) {
 }
 function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; currentPaymentAction = null; currentHouseId = null; }
 
-// ========== loadUnreadCount – handles 404 gracefully ==========
 async function loadUnreadCount() {
   try {
     const res = await fetch("/api/chat/my", { headers: { Authorization: "Bearer " + token } });
@@ -176,7 +241,6 @@ async function loadUnreadCount() {
 }
 setInterval(loadUnreadCount, 30000);
 
-// ========== UPDATED initMap – no invalidateSize (matches working index.html) ==========
 function initMap() {
   const mapContainer = document.getElementById('map');
   if (!mapContainer) return;
@@ -186,7 +250,6 @@ function initMap() {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
-    // Removed map.invalidateSize() – causes issues on some setups
     map.on("click", function (e) {
       document.getElementById("latitude").value = e.latlng.lat;
       document.getElementById("longitude").value = e.latlng.lng;
@@ -268,7 +331,6 @@ async function loadHouseStats() {
   } catch (err) { console.error(err); }
 }
 
-// ========== UPDATED renderHouses – includes rental status badge + buttons ==========
 function renderHouses(houses) {
   const container = document.getElementById("my-houses");
   container.innerHTML = "";
@@ -276,7 +338,6 @@ function renderHouses(houses) {
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     const card = document.createElement("div"); card.className = "house-card";
 
-    // Rental status badge
     let rentalStatusBadge = '';
     if (house.rentalStatus === 'rented') {
       rentalStatusBadge = '<span class="rental-badge rented"><i class="fas fa-check-circle"></i> Rented</span>';
@@ -286,7 +347,6 @@ function renderHouses(houses) {
       rentalStatusBadge = '<span class="rental-badge available"><i class="fas fa-home"></i> Available</span>';
     }
 
-    // Button to change rental status
     let rentalActionButton = '';
     if (house.rentalStatus === 'available') {
       rentalActionButton = `<button class="mark-rented-btn" data-id="${house._id}"><i class="fas fa-hand-peace"></i> Mark as Rented</button>`;
@@ -319,13 +379,12 @@ function renderHouses(houses) {
     container.appendChild(card);
   });
 
-  // Attach event listeners for rental status buttons
   document.querySelectorAll('.mark-rented-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const houseId = btn.getAttribute('data-id');
       if (confirm('Mark this property as rented? It will disappear from public listings.')) {
         await updateRentalStatus(houseId, 'rented');
-        loadMyHouses(); // refresh list
+        loadMyHouses();
       }
     });
   });
@@ -340,30 +399,19 @@ function renderHouses(houses) {
   });
 }
 
-// ========== NEW: Update rental status via API ==========
 async function updateRentalStatus(houseId, status) {
   const token = localStorage.getItem('token');
   try {
     const res = await fetch(`/api/houses/${houseId}/rental-status`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + token
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
       body: JSON.stringify({ rentalStatus: status })
     });
-    if (res.ok) {
-      alert(`Property marked as ${status}`);
-    } else {
-      const err = await res.json();
-      alert(err.message || 'Failed to update rental status');
-    }
-  } catch (err) {
-    alert('Network error');
-  }
+    if (res.ok) alert(`Property marked as ${status}`);
+    else { const err = await res.json(); alert(err.message || 'Failed'); }
+  } catch (err) { alert('Network error'); }
 }
 
-// ========== Other existing functions (unchanged) ==========
 window.openBookingModalFromDashboard = function(houseId, houseName) {
   window.currentBookingHouseId = houseId;
   document.getElementById("bookingHouseInfo").innerHTML = `<p><strong>${houseName}</strong></p>`;
@@ -439,6 +487,8 @@ document.querySelector('input[name="images"]').addEventListener('change', functi
     reader.readAsDataURL(file);
   });
 });
+
+// ========== UPDATED HOUSE FORM SUBMISSION (with propertyDetails) ==========
 document.getElementById("houseForm").addEventListener("submit", async e => {
   e.preventDefault();
   const name = document.querySelector('input[name="name"]').value.trim();
@@ -449,6 +499,14 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
   if (!name || !location || !price || price<=0 || !phone.match(/^265[0-9]{9}$/) || images.length===0) { alert('Please fill all fields correctly'); return; }
   showLoading();
   const formData = new FormData(e.target);
+  
+  // NEW: Add propertyDetails as JSON string
+  const selectedType = document.querySelector('select[name="type"]').value;
+  const propertyDetails = collectPropertyDetails();
+  if (Object.keys(propertyDetails).length > 0) {
+    formData.append('propertyDetails', JSON.stringify(propertyDetails));
+  }
+  
   try {
     const res = await fetch("/api/houses", { method: "POST", headers: { Authorization: "Bearer " + token }, body: formData });
     const data = await res.json();
@@ -456,6 +514,17 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
     else alert("❌ Upload failed: " + (data.message || "Unknown error"));
   } catch (err) { alert("❌ Network error"); } finally { hideLoading(); }
 });
+
+// ========== ADD EVENT LISTENER FOR TYPE DROPDOWN CHANGE (dynamic fields) ==========
+const typeSelect = document.querySelector('select[name="type"]');
+if (typeSelect) {
+  typeSelect.addEventListener('change', () => {
+    generatePropertyDetailsFields(typeSelect.value);
+  });
+  // Generate initial fields for default type
+  generatePropertyDetailsFields(typeSelect.value);
+}
+
 async function loadBookingRequests() {
   try {
     let allBookings = [];
@@ -538,7 +607,6 @@ function showCounterModal(offerId) {
   const comment = prompt('Optional message to tenant:');
   fetch(`/api/offers/${offerId}/counter`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ counterOfferPrice: parseInt(price), moveInDate, landlordComment: comment || '' }) }).then(res => res.json()).then(data => { if (data.message) alert(data.message); loadOffers(); }).catch(err => console.error(err));
 }
-// ========== LEASE NEGOTIATIONS ==========
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch("/api/lease/my", { headers: { Authorization: "Bearer " + token } });
@@ -614,7 +682,6 @@ window.downloadLeaseContract = async function(negotiationId) {
   }
 };
 
-// ========== PREMIUM CROWN BADGE (unchanged) ==========
 function addPremiumCrownToAvatar() {
   if (!currentUser) return;
   const isPremiumLandlord = currentUser.verificationType === 'premium' || currentUser.role === 'premium_landlord';
@@ -648,7 +715,6 @@ function addPremiumCrownToAvatar() {
   if (profileAvatar) addCrownToAvatarElement(profileAvatar);
 }
 
-// Initialize everything
 initMap();
 fetchUser();
 loadMyHouses();
@@ -658,7 +724,6 @@ setTimeout(() => {
   if (document.getElementById("leaseList")) loadLeaseNegotiations();
 }, 500);
 
-// Expose functions globally
 window.payForVerification = payForVerification;
 window.featureHouse = featureHouse;
 window.processPayment = processPayment;

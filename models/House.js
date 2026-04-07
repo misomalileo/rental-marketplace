@@ -7,9 +7,20 @@ const HouseSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     bedrooms: { type: Number, default: 0 },
     bathrooms: { type: Number, default: 0 },
+    // ========== EXTENDED TYPES ==========
     type: {
       type: String,
-      enum: ["Apartment", "House", "Room", "Hostel", "Office"],
+      enum: [
+        "House",
+        "Apartment",
+        "Room",
+        "Hostel",
+        "Office",
+        "FurnishedApartment",
+        "ShortStay",
+        "SharedLiving",
+        "StudentAccommodation"
+      ],
       default: "House"
     },
     description: { type: String, default: "" },
@@ -53,6 +64,11 @@ const HouseSchema = new mongoose.Schema(
       type: String,
       enum: ['available', 'rented', 'pending'],
       default: 'available'
+    },
+    // ========== NEW: STORE TYPE‑SPECIFIC DETAILS ==========
+    propertyDetails: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     }
   },
   { timestamps: true }

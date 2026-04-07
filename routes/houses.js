@@ -91,6 +91,18 @@ router.post(
         return file.path;
       });
 
+      // ========== NEW: capture propertyDetails from request ==========
+      let propertyDetails = {};
+      if (req.body.propertyDetails) {
+        try {
+          propertyDetails = typeof req.body.propertyDetails === 'string'
+            ? JSON.parse(req.body.propertyDetails)
+            : req.body.propertyDetails;
+        } catch(e) {
+          console.warn("Failed to parse propertyDetails:", e);
+        }
+      }
+
       const house = new House({
         name: req.body.name,
         location: req.body.location,
@@ -117,6 +129,7 @@ router.post(
           ? JSON.parse(req.body.unavailableDates).map((d) => new Date(d))
           : [],
         selfContained: req.body.selfContained === "on" || req.body.selfContained === "true",
+        propertyDetails: propertyDetails   // <-- NEW
       });
 
       await house.save();
@@ -190,6 +203,17 @@ router.put(
       house.selfContained = req.body.selfContained === "on" || req.body.selfContained === "true";
       if (req.body.unavailableDates) {
         house.unavailableDates = JSON.parse(req.body.unavailableDates).map((d) => new Date(d));
+      }
+
+      // ========== NEW: update propertyDetails ==========
+      if (req.body.propertyDetails) {
+        try {
+          house.propertyDetails = typeof req.body.propertyDetails === 'string'
+            ? JSON.parse(req.body.propertyDetails)
+            : req.body.propertyDetails;
+        } catch(e) {
+          console.warn("Failed to parse propertyDetails on update:", e);
+        }
       }
 
       if (req.files && req.files.length > 0) {
