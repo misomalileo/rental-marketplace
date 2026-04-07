@@ -94,7 +94,23 @@ function collectPropertyDetails() {
   return details;
 }
 
-// ========== NEW: Generate 3D property type cards ==========
+// ========== NEW: Toggle price fields based on property type ==========
+function togglePriceFields(type) {
+  const monthlyGroup = document.getElementById('monthlyPriceGroup');
+  const dailyGroup = document.getElementById('dailyPriceGroup');
+  if (!monthlyGroup || !dailyGroup) return;
+  if (type === 'ShortStay') {
+    monthlyGroup.style.display = 'none';
+    dailyGroup.style.display = 'block';
+    document.getElementById('propPrice').removeAttribute('required');
+  } else {
+    monthlyGroup.style.display = 'block';
+    dailyGroup.style.display = 'none';
+    document.getElementById('propPrice').setAttribute('required', 'required');
+  }
+}
+
+// ========== Generate 3D property type cards ==========
 function generateTypeCards() {
   const container = document.getElementById('typeSelector');
   if (!container) return;
@@ -119,6 +135,7 @@ function generateTypeCards() {
       card.classList.add('selected');
       selectedType = type.id;
       generatePropertyDetailsFields(type.id);
+      togglePriceFields(type.id);
     });
     container.appendChild(card);
   });
@@ -540,10 +557,21 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
   e.preventDefault();
   const name = document.getElementById('propName').value.trim();
   const location = document.getElementById('propLocation').value.trim();
-  const price = document.getElementById('propPrice').value;
+  let price = document.getElementById('propPrice').value;
   const phone = document.getElementById('propPhone').value.trim();
   const description = document.getElementById('propDesc').value;
   const images = document.querySelector('input[name="images"]').files;
+  
+  // For ShortStay, override price with dailyPrice from propertyDetails
+  if (selectedType === 'ShortStay') {
+    const dailyPrice = document.getElementById('detail_dailyPrice')?.value;
+    if (!dailyPrice) {
+      alert('Please enter daily price for Short-Stay property');
+      hideLoading();
+      return;
+    }
+    price = dailyPrice;
+  }
   
   if (!name || !location || !price || price<=0 || !phone.match(/^265[0-9]{9}$/) || images.length===0) {
     alert('Please fill all fields correctly');
@@ -610,6 +638,8 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
       typeSpecificData = {};
       document.querySelectorAll('.type-card').forEach(card => card.classList.remove('selected'));
       document.getElementById('propertyDetailsContainer').innerHTML = '';
+      // Reset price fields visibility
+      togglePriceFields('none');
       loadMyHouses();
     } else {
       alert("❌ Upload failed: " + (data.message || "Unknown error"));

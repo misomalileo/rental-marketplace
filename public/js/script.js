@@ -305,6 +305,66 @@ function getDistance(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
+// ========== NEW HELPER: GET STRONG FIELDS FOR PROPERTY CARD ==========
+function getStrongFieldsHTML(house) {
+  const details = house.propertyDetails || {};
+  switch (house.type) {
+    case 'House':
+      let houseFields = [];
+      if (house.bedrooms) houseFields.push(`<i class="fas fa-bed"></i> ${house.bedrooms} bed`);
+      if (house.bathrooms) houseFields.push(`<i class="fas fa-bath"></i> ${house.bathrooms} bath`);
+      if (house.selfContained) houseFields.push(`<i class="fas fa-home"></i> Self Contained`);
+      return houseFields.length ? `<div class="strong-fields">${houseFields.join(' • ')}</div>` : '';
+
+    case 'Apartment':
+      let aptFields = [];
+      if (house.bedrooms) aptFields.push(`<i class="fas fa-bed"></i> ${house.bedrooms} bed`);
+      if (details.floorLevel) aptFields.push(`<i class="fas fa-layer-group"></i> Floor ${details.floorLevel}`);
+      if (details.hasElevator === 'true' || details.hasElevator === true) aptFields.push(`<i class="fas fa-arrow-up"></i> Elevator`);
+      return aptFields.length ? `<div class="strong-fields">${aptFields.join(' • ')}</div>` : '';
+
+    case 'Room':
+      let roomFields = [];
+      const roomType = details.roomType || 'Single';
+      roomFields.push(`<i class="fas fa-door-open"></i> ${roomType}`);
+      if (details.bathroomType) roomFields.push(`<i class="fas fa-toilet"></i> ${details.bathroomType} bath`);
+      return `<div class="strong-fields">${roomFields.join(' • ')}</div>`;
+
+    case 'Hostel':
+      let hostelFields = [];
+      if (details.vacancies) hostelFields.push(`<i class="fas fa-bed"></i> ${details.vacancies} vacancies`);
+      if (details.bedsPerRoom) hostelFields.push(`<i class="fas fa-users"></i> ${details.bedsPerRoom} beds/room`);
+      return hostelFields.length ? `<div class="strong-fields">${hostelFields.join(' • ')}</div>` : '';
+
+    case 'FurnishedApartment':
+      let furnishedFields = [];
+      if (house.furnished || details.furnished === 'true' || details.furnished === true) furnishedFields.push(`<i class="fas fa-couch"></i> Furnished`);
+      if (details.utilitiesIncluded) furnishedFields.push(`<i class="fas fa-water"></i> Utilities incl.`);
+      return furnishedFields.length ? `<div class="strong-fields">${furnishedFields.join(' • ')}</div>` : '';
+
+    case 'ShortStay':
+      let shortFields = [];
+      if (details.dailyPrice) shortFields.push(`<i class="fas fa-sun"></i> MWK ${Number(details.dailyPrice).toLocaleString()}/day`);
+      if (details.minimumStay) shortFields.push(`<i class="fas fa-clock"></i> Min ${details.minimumStay} days`);
+      return shortFields.length ? `<div class="strong-fields">${shortFields.join(' • ')}</div>` : '';
+
+    case 'SharedLiving':
+      let sharedFields = [];
+      if (details.availableBeds) sharedFields.push(`<i class="fas fa-bed"></i> ${details.availableBeds} beds left`);
+      if (details.genderPreference) sharedFields.push(`<i class="fas fa-venus-mars"></i> ${details.genderPreference}`);
+      return sharedFields.length ? `<div class="strong-fields">${sharedFields.join(' • ')}</div>` : '';
+
+    case 'StudentAccommodation':
+      let studentFields = [];
+      if (details.nearbyUniversity) studentFields.push(`<i class="fas fa-university"></i> ${details.nearbyUniversity}`);
+      if (details.studentOnly === 'true' || details.studentOnly === true) studentFields.push(`<i class="fas fa-graduation-cap"></i> Students only`);
+      return studentFields.length ? `<div class="strong-fields">${studentFields.join(' • ')}</div>` : '';
+
+    default:
+      return '';
+  }
+}
+
 // ======================================
 // CUSTOM MARKER ICON (UPDATED WITH NEW TYPES)
 // ======================================
@@ -676,7 +736,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</tr></tbody><table>`;
+  tableHtml += `<tr></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -700,7 +760,7 @@ function openComparisonModal() {
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
 // ======================================
-// RENDER HOUSE CARDS (UPDATED WITH NEW TYPES)
+// RENDER HOUSE CARDS (UPDATED WITH NEW TYPES AND STRONG FIELDS)
 // ======================================
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
@@ -792,6 +852,9 @@ function renderHouses(houses) {
     const displayType = getDisplayType(house.type);
     const typeIcon = getTypeIcon(house.type);
     
+    // ========== INSERT STRONG FIELDS HERE ==========
+    const strongFieldsHtml = getStrongFieldsHTML(house);
+    
     card.innerHTML = `
       <div class="slider">
         <div class="slides-container" data-house-id="${house._id}">
@@ -808,6 +871,7 @@ function renderHouses(houses) {
         <h3>${house.name}</h3>
         <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
         ${priceHtml}
+        ${strongFieldsHtml}
         <p><i class="fas ${typeIcon}"></i> ${displayType}</p>
         <p><i class="fas fa-star"></i> Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
         ${ratingWidgetHtml}

@@ -526,7 +526,7 @@
     <!-- Profile Card -->
     <div class="profile-card" id="profileCard">
       <div style="display: flex; align-items: center; gap: 0.8rem;">
-        <img id="profileAvatar" src="default-avatar.png" style="border-radius: 50%; width: 50px; height: 50px; object-fit: cover;">
+        <img id="profileAvatar" src="images/default-avatar.png" style="border-radius: 50%; width: 50px; height: 50px; object-fit: cover;">
         <div><h3 id="profileDisplayName"></h3><p id="profileDisplayBusiness"></p></div>
       </div>
       <button onclick="openEditProfile()" class="edit"><i class="fas fa-edit"></i> Edit Profile</button>
@@ -592,7 +592,20 @@
             <div id="propertyDetailsContainer" class="property-details-grid"></div>
             <div class="form-group"><label>Property Name</label><input type="text" name="name" id="propName" required placeholder="e.g., Sunny Villa, Cozy Hostel"></div>
             <div class="form-group"><label>Location</label><input type="text" name="location" id="propLocation" required></div>
-            <div class="form-group"><label>Price (MWK)</label><input type="number" name="price" id="propPrice" required></div>
+            
+            <!-- Monthly price (visible for all except ShortStay) -->
+            <div class="form-group" id="monthlyPriceGroup">
+              <label>Price (MWK)</label>
+              <input type="number" name="price" id="propPrice" required>
+            </div>
+            
+            <!-- ShortStay daily/weekly prices (hidden by default) -->
+            <div id="dailyPriceGroup" style="display:none;">
+              <div class="form-group"><label>Daily Price (MWK)</label><input type="number" id="detail_dailyPrice" placeholder="e.g., 25000"></div>
+              <div class="form-group"><label>Weekly Price (MWK)</label><input type="number" id="detail_weeklyPrice" placeholder="e.g., 150000"></div>
+              <div class="form-group"><label>Minimum Stay (days)</label><input type="number" id="detail_minimumStay" value="1"></div>
+            </div>
+            
             <div class="form-group"><label>WhatsApp Number</label><input type="text" name="phone" id="propPhone" required pattern="265[0-9]{9}"></div>
             <div class="form-group"><label>Description</label><textarea name="description" id="propDesc" rows="2"></textarea></div>
           </div>
@@ -665,17 +678,17 @@
       </div>
       <div class="payment-options">
         <div class="payment-option" data-method="airtel" onclick="processPayment('Airtel Money')">
-          <div class="payment-option-icon"><img src="/images/image.png" alt="Airtel Money"></div>
+          <div class="payment-option-icon"><img src="images/image.png" alt="Airtel Money"></div>
           <h4>Airtel Money</h4>
           <p>Instant & secure</p>
         </div>
         <div class="payment-option" data-method="tnm" onclick="processPayment('TNM Mpamba')">
-          <div class="payment-option-icon"><img src="/images/tnm.png" alt="TNM Mpamba"></div>
+          <div class="payment-option-icon"><img src="images/tnm.png" alt="TNM Mpamba"></div>
           <h4>TNM Mpamba</h4>
           <p>Fast & reliable</p>
         </div>
         <div class="payment-option" data-method="bank" onclick="processPayment('Standard Bank')">
-          <div class="payment-option-icon"><img src="/images/bank.png" alt="Bank Transfer"></div>
+          <div class="payment-option-icon"><img src="images/bank.png" alt="Bank Transfer"></div>
           <h4>Bank Transfer</h4>
           <p>All banks accepted</p>
         </div>
