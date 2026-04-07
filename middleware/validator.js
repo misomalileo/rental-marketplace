@@ -16,13 +16,23 @@ const validateLogin = [
   body("password").notEmpty().withMessage("Password required"),
 ];
 
-// House creation/update validation
+// House creation/update validation (UPDATED with all 9 property types)
 const validateHouse = [
   body("name").notEmpty().withMessage("House name required").trim(),
   body("location").notEmpty().withMessage("Location required").trim(),
   body("price").isNumeric().withMessage("Price must be a number"),
   body("phone").optional().isString().withMessage("Valid phone number required"),
-  body("type").optional().isIn(["Apartment", "House", "Room", "Hostel", "Office"]),
+  body("type").optional().isIn([
+    "House",
+    "Apartment",
+    "Room",
+    "Hostel",
+    "Office",
+    "FurnishedApartment",
+    "ShortStay",
+    "SharedLiving",
+    "StudentAccommodation"
+  ]).withMessage("Invalid property type"),
   body("condition").optional().isIn(["Good", "Fair", "Needs renovation"]),
   body("bedrooms").optional().isInt({ min: 0 }),
   body("bathrooms").optional().isInt({ min: 0 }),
