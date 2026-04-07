@@ -25,6 +25,9 @@ const propertyTypeFields = {
   StudentAccommodation: ['nearbyUniversity','studentOnly','studyRoom','mealPlan','counselingService','securityGuard','laundry','wifiInRooms','bicycleParking']
 };
 
+let selectedType = null;
+let typeSpecificData = {};
+
 // Helper to generate dynamic HTML for property details (called when type changes)
 function generatePropertyDetailsFields(selectedType) {
   const container = document.getElementById('propertyDetailsContainer');
@@ -57,6 +60,20 @@ function generatePropertyDetailsFields(selectedType) {
   });
   html += '</div>';
   container.innerHTML = html;
+  
+  // Attach change listeners to update typeSpecificData
+  const inputs = container.querySelectorAll('input, select');
+  inputs.forEach(inp => {
+    inp.addEventListener('change', () => {
+      let val = inp.value;
+      if (inp.type === 'checkbox') val = inp.checked;
+      else if (inp.tagName === 'SELECT' && (inp.options[0]?.value === 'true' || inp.options[0]?.value === 'false')) {
+        val = inp.value === 'true';
+      }
+      const key = inp.id.replace('detail_', '');
+      typeSpecificData[key] = val;
+    });
+  });
 }
 
 // Collect property details from generated fields into an object
@@ -75,6 +92,36 @@ function collectPropertyDetails() {
     details[key] = val;
   });
   return details;
+}
+
+// ========== NEW: Generate 3D property type cards ==========
+function generateTypeCards() {
+  const container = document.getElementById('typeSelector');
+  if (!container) return;
+  const propertyTypes = [
+    { id: 'House', name: 'House', icon: 'fas fa-home' },
+    { id: 'Apartment', name: 'Apartment', icon: 'fas fa-building' },
+    { id: 'Room', name: 'Room', icon: 'fas fa-bed' },
+    { id: 'Hostel', name: 'Hostel', icon: 'fas fa-hotel' },
+    { id: 'Office', name: 'Office', icon: 'fas fa-briefcase' },
+    { id: 'FurnishedApartment', name: 'Furnished Apt', icon: 'fas fa-couch' },
+    { id: 'ShortStay', name: 'Short-Stay', icon: 'fas fa-calendar-week' },
+    { id: 'SharedLiving', name: 'Shared Living', icon: 'fas fa-users' },
+    { id: 'StudentAccommodation', name: 'Student Acc', icon: 'fas fa-graduation-cap' }
+  ];
+  container.innerHTML = '';
+  propertyTypes.forEach(type => {
+    const card = document.createElement('div');
+    card.className = 'type-card';
+    card.innerHTML = `<i class="${type.icon}"></i><span>${type.name}</span>`;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedType = type.id;
+      generatePropertyDetailsFields(type.id);
+    });
+    container.appendChild(card);
+  });
 }
 
 // ========== Existing helper functions (unchanged) ==========
@@ -488,43 +535,93 @@ document.querySelector('input[name="images"]').addEventListener('change', functi
   });
 });
 
-// ========== UPDATED HOUSE FORM SUBMISSION (with propertyDetails) ==========
+// ========== UPDATED HOUSE FORM SUBMISSION (with propertyDetails and selectedType) ==========
 document.getElementById("houseForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const name = document.querySelector('input[name="name"]').value.trim();
-  const location = document.querySelector('input[name="location"]').value.trim();
-  const price = document.querySelector('input[name="price"]').value;
-  const phone = document.querySelector('input[name="phone"]').value.trim();
+  const name = document.getElementById('propName').value.trim();
+  const location = document.getElementById('propLocation').value.trim();
+  const price = document.getElementById('propPrice').value;
+  const phone = document.getElementById('propPhone').value.trim();
+  const description = document.getElementById('propDesc').value;
   const images = document.querySelector('input[name="images"]').files;
-  if (!name || !location || !price || price<=0 || !phone.match(/^265[0-9]{9}$/) || images.length===0) { alert('Please fill all fields correctly'); return; }
-  showLoading();
-  const formData = new FormData(e.target);
   
-  // NEW: Add propertyDetails as JSON string
-  const selectedType = document.querySelector('select[name="type"]').value;
+  if (!name || !location || !price || price<=0 || !phone.match(/^265[0-9]{9}$/) || images.length===0) {
+    alert('Please fill all fields correctly');
+    return;
+  }
+  if (!selectedType) {
+    alert('Please select a property type from the 3D cards');
+    return;
+  }
+  
+  showLoading();
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('location', location);
+  formData.append('price', price);
+  formData.append('phone', phone);
+  formData.append('description', description);
+  formData.append('type', selectedType);
+  
+  // Add amenities (checkboxes from step 3)
+  const amenities = ['wifi', 'parking', 'furnished', 'petFriendly', 'pool', 'ac'];
+  amenities.forEach(amenity => {
+    const checkbox = document.querySelector(`input[name="${amenity}"]`);
+    formData.append(amenity, checkbox && checkbox.checked ? 'on' : 'off');
+  });
+  
+  // Add other common fields
+  const condition = document.querySelector('select[name="condition"]')?.value || 'Good';
+  const gender = document.querySelector('select[name="gender"]')?.value || 'none';
+  const selfContained = document.querySelector('input[name="selfContained"]')?.checked ? 'on' : 'off';
+  const lat = document.getElementById('latitude').value;
+  const lng = document.getElementById('longitude').value;
+  const virtualTourUrl = document.querySelector('input[name="virtualTourUrl"]')?.value || '';
+  
+  formData.append('condition', condition);
+  formData.append('gender', gender);
+  formData.append('selfContained', selfContained);
+  if (lat) formData.append('lat', lat);
+  if (lng) formData.append('lng', lng);
+  if (virtualTourUrl) formData.append('virtualTourUrl', virtualTourUrl);
+  
+  // Add propertyDetails
   const propertyDetails = collectPropertyDetails();
   if (Object.keys(propertyDetails).length > 0) {
     formData.append('propertyDetails', JSON.stringify(propertyDetails));
   }
   
+  // Append images
+  for (let i = 0; i < images.length; i++) {
+    formData.append('images', images[i]);
+  }
+  
   try {
     const res = await fetch("/api/houses", { method: "POST", headers: { Authorization: "Bearer " + token }, body: formData });
     const data = await res.json();
-    if (res.ok) { alert("✅ House uploaded!"); e.target.reset(); document.getElementById('imagePreview').innerHTML = ''; if (marker) map.removeLayer(marker); loadMyHouses(); }
-    else alert("❌ Upload failed: " + (data.message || "Unknown error"));
-  } catch (err) { alert("❌ Network error"); } finally { hideLoading(); }
+    if (res.ok) {
+      alert("✅ Property uploaded!");
+      // Reset form
+      document.getElementById('houseForm').reset();
+      document.getElementById('imagePreview').innerHTML = '';
+      if (marker) map.removeLayer(marker);
+      // Reset type selection and details container
+      selectedType = null;
+      typeSpecificData = {};
+      document.querySelectorAll('.type-card').forEach(card => card.classList.remove('selected'));
+      document.getElementById('propertyDetailsContainer').innerHTML = '';
+      loadMyHouses();
+    } else {
+      alert("❌ Upload failed: " + (data.message || "Unknown error"));
+    }
+  } catch (err) {
+    alert("❌ Network error");
+  } finally {
+    hideLoading();
+  }
 });
 
-// ========== ADD EVENT LISTENER FOR TYPE DROPDOWN CHANGE (dynamic fields) ==========
-const typeSelect = document.querySelector('select[name="type"]');
-if (typeSelect) {
-  typeSelect.addEventListener('change', () => {
-    generatePropertyDetailsFields(typeSelect.value);
-  });
-  // Generate initial fields for default type
-  generatePropertyDetailsFields(typeSelect.value);
-}
-
+// ========== Load booking requests, offers, lease negotiations (unchanged) ==========
 async function loadBookingRequests() {
   try {
     let allBookings = [];
@@ -715,10 +812,13 @@ function addPremiumCrownToAvatar() {
   if (profileAvatar) addCrownToAvatarElement(profileAvatar);
 }
 
+// ========== INITIALIZATION (with 3D cards) ==========
 initMap();
 fetchUser();
 loadMyHouses();
 loadUnreadCount();
+generateTypeCards();  // <-- NEW: create the 3D property type cards
+
 setTimeout(() => {
   if (document.getElementById("offersList")) loadOffers();
   if (document.getElementById("leaseList")) loadLeaseNegotiations();
