@@ -220,6 +220,17 @@ app.get("/api/houses-test", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ========== NEW DEBUG ENDPOINT: CHECK AVAILABLE PROPERTY TYPES ==========
+app.get("/api/debug/types", (req, res) => {
+  try {
+    const House = require("./models/House");
+    const enumValues = House.schema.path('type').enumValues;
+    res.json({ availableTypes: enumValues });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 require('./utils/cron');
 
 app.get("/", (req, res) => res.send("🏠 House Marketplace API Running"));
