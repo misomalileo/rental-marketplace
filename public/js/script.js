@@ -17,6 +17,43 @@ let currentShareHouseId = null;
 let comparisonList = [];
 let currentRegion = '';
 
+// ========== CUSTOM VERIFIED BADGE (SVG) ==========
+function fbSaturatedSky(size = 18, scallops = 12, depth = 3.5) {
+  const cx = size/2, cy = size/2, r = size/2 - 2;
+  const angleStep = (2 * Math.PI) / scallops;
+  let path = '';
+
+  for (let i = 0; i < scallops; i++) {
+    const startAngle = i * angleStep;
+    const midAngle = startAngle + angleStep / 2;
+    const endAngle = startAngle + angleStep;
+
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + (r + depth) * Math.cos(midAngle);
+    const y2 = cy + (r + depth) * Math.sin(midAngle);
+    const x3 = cx + r * Math.cos(endAngle);
+    const y3 = cy + r * Math.sin(endAngle);
+
+    path += `M${x1},${y1} A${r + depth},${r + depth} 0 0,1 ${x2},${y2} A${r},${r} 0 0,1 ${x3},${y3} `;
+  }
+
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display: inline-block; vertical-align: middle;">
+      <path d="${path}" fill="#009CFF"/>
+      <circle cx="${cx}" cy="${cy}" r="${r - 0.5}" fill="#009CFF"/>
+      <path 
+        d="M${cx*0.65} ${cy*1.05} L${cx*0.85} ${cy*1.25} L${cx*1.35} ${cy*0.8}"
+        stroke="#FFFFFF"
+        stroke-width="2.2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+      />
+    </svg>
+  `;
+}
+
 // ========== HERO CAROUSEL ==========
 let heroSwiper = null;
 
@@ -652,10 +689,10 @@ function renderHouses(houses) {
     // Check if landlord is premium
     const isPremiumLandlord = house.owner && (house.owner.verificationType === 'premium' || house.owner.role === 'premium_landlord');
     
-    // ========== UPDATED: Blue verified badge for both official and premium ==========
+    // ========== UPDATED: Custom SVG verified badge (Facebook style) ==========
     let landlordBadge = '';
     if (house.owner && (house.owner.verificationType === 'official' || house.owner.verificationType === 'premium')) {
-      landlordBadge = '<span class="verified-badge"><i class="fas fa-check"></i></span>';
+      landlordBadge = `<span class="verified-badge-custom" style="display: inline-flex; align-items: center; margin-left: 6px;">${fbSaturatedSky(18)}</span>`;
     }
     let landlordInfoHtml = '';
     if (house.owner) {
