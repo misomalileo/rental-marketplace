@@ -94,7 +94,7 @@
     .voice-result p { margin: 0.3rem 0; font-size: 0.8rem; }
     .whatsapp-share-btn { background: #25D366; color: white; border: none; border-radius: 40px; padding: 0.4rem 1rem; font-size: 0.7rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-top: 0.5rem; }
     .whatsapp-share-btn:hover { background: #128C7E; }
-    /* ========== NEW AI IMAGE SEARCH STYLES ========== */
+    /* ========== AI IMAGE SEARCH STYLES ========== */
     .image-upload-area { border: 2px dashed rgba(255,140,66,0.5); border-radius: 28px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem; }
     .image-upload-area:hover { border-color: #FF8C42; background: rgba(255,140,66,0.05); }
     .image-upload-area i { font-size: 2rem; margin-bottom: 0.5rem; color: #FFB347; }
@@ -107,6 +107,7 @@
     .similar-house-info { flex: 1; }
     .similar-house-info h4 { font-size: 0.85rem; margin-bottom: 0.2rem; }
     .similar-house-info p { font-size: 0.7rem; margin: 0; color: #94a3b8; }
+    .model-loading { display: inline-block; margin-left: 0.5rem; font-size: 0.7rem; color: #FFB347; }
   </style>
 </head>
 <body>
@@ -158,7 +159,10 @@
             <input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/webp">
             <img id="uploadedImagePreview" alt="Preview">
           </div>
-          <button id="searchSimilarBtn" class="small" style="width:100%;"><i class="fas fa-search"></i> Find Similar Properties</button>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button id="searchSimilarBtn" class="small" style="width:auto;" disabled><i class="fas fa-search"></i> Find Similar Properties</button>
+            <span id="modelStatus" class="model-loading"><i class="fas fa-spinner fa-pulse"></i> Loading AI model...</span>
+          </div>
           <div id="similarResults" class="similar-houses-list" style="margin-top:1rem;"></div>
         </div>
 
@@ -486,14 +490,22 @@
     });
     // ========== END VOICE ASSISTANT ==========
 
-    // ========== NEW AI IMAGE SEARCH IMPLEMENTATION ==========
+    // ========== NEW AI IMAGE SEARCH IMPLEMENTATION (with model loading state) ==========
     let mobilenetModel = null;
+    const modelStatusSpan = document.getElementById('modelStatus');
+    const searchBtn = document.getElementById('searchSimilarBtn');
+
     async function loadMobileNet() {
       try {
+        modelStatusSpan.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Loading AI model...';
         mobilenetModel = await mobilenet.load();
+        modelStatusSpan.innerHTML = '<i class="fas fa-check-circle"></i> AI model ready';
+        searchBtn.disabled = false;
         console.log("MobileNet loaded");
       } catch (err) {
         console.error("Failed to load MobileNet", err);
+        modelStatusSpan.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Model failed to load. Retrying...';
+        setTimeout(loadMobileNet, 3000); // retry after 3 seconds
       }
     }
     loadMobileNet();
@@ -528,6 +540,10 @@
     document.getElementById('searchSimilarBtn').addEventListener('click', async () => {
       if (!isActivePremium) {
         alert("Image search is a premium feature. Please activate your premium subscription.");
+        return;
+      }
+      if (!mobilenetModel) {
+        alert("AI model is still loading. Please wait a moment and try again.");
         return;
       }
       const imgElement = document.getElementById('uploadedImagePreview');
