@@ -171,6 +171,7 @@ const bookingRoutes = require("./routes/booking");
 const chatbotRoutes = require("./routes/chatbot");
 const premiumRoutes = require("./routes/premium");
 const savedSearchRoutes = require("./routes/savedSearches"); // <-- ADDED
+const imageSearchRoutes = require("./routes/imageSearch"); // <-- ADDED for AI image search
 
 app.use("/api/auth", authRoutes);
 app.use("/api/houses", houseRoutes);
@@ -184,6 +185,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/premium", premiumRoutes);
 app.use("/api/saved-searches", savedSearchRoutes); // <-- ADDED
+app.use("/api/image-search", imageSearchRoutes); // <-- ADDED for AI image search
 
 // Offers route
 try {

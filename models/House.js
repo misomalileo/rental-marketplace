@@ -69,7 +69,9 @@ const HouseSchema = new mongoose.Schema(
     propertyDetails: {
       type: mongoose.Schema.Types.Mixed,
       default: {}
-    }
+    },
+    // ========== NEW: FEATURE VECTOR FOR IMAGE SIMILARITY SEARCH ==========
+    featureVector: { type: [Number], default: null }
   },
   { timestamps: true }
 );
