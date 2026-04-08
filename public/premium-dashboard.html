@@ -44,7 +44,44 @@
     .card:hover { transform: translateY(-10px) rotateX(2deg); border-color: rgba(255,140,66,0.6); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.5); }
     .card h2 { font-size: 1.5rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; font-weight: 700; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .card h2 i { font-size: 1.6rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    /* Voice search specific styles */
+    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover { border-color: #FF8C42; transform: translateX(6px); }
+    .saved-search-actions, .alert-actions, .whatsapp-actions { display: flex; gap: 1rem; margin-top: 0.7rem; }
+    button.small { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 0.3rem 1rem; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #cbd5e1; display: inline-flex; align-items: center; gap: 6px; }
+    button.small:hover { background: rgba(255,140,66,0.2); border-color: #FF8C42; color: white; }
+    .alert-toggle { color: #60a5fa; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.75rem; }
+    input, select, textarea { background: rgba(10, 15, 25, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 60px; padding: 0.7rem 1.2rem; color: white; width: 100%; font-size: 0.9rem; margin-bottom: 0.8rem; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #FF8C42; box-shadow: 0 0 0 2px rgba(255,140,66,0.2); }
+    canvas { max-height: 200px; margin: 0.5rem 0; }
+    .notification-scroll { max-height: 300px; overflow-y: auto; padding-right: 0.5rem; }
+    .notification-scroll::-webkit-scrollbar { width: 4px; }
+    .notification-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+    .notification-scroll::-webkit-scrollbar-thumb { background: #FF8C42; border-radius: 4px; }
+    .view-all-btn { margin-top: 0.5rem; text-align: center; }
+    .early-access-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+    .early-house-card { background: rgba(10, 15, 25, 0.8); border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; display: flex; flex-direction: column; }
+    .early-house-card:hover { transform: translateY(-6px); border-color: #FF8C42; box-shadow: 0 20px 25px -12px rgba(0,0,0,0.4); }
+    .slider { position: relative; width: 100%; height: 160px; overflow: hidden; touch-action: pan-y pinch-zoom; }
+    .slider .slides-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; height: 100%; }
+    .slider .slides-container::-webkit-scrollbar { display: none; }
+    .slider .slide { flex: 0 0 100%; scroll-snap-align: start; width: 100%; height: 100%; }
+    .slider .slide img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .slider .dots { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 5; }
+    .slider .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.6); transition: all 0.2s; cursor: pointer; }
+    .slider .dot.active { width: 20px; border-radius: 4px; background: white; }
+    .early-house-card .info { padding: 0.8rem; flex: 1; display: flex; flex-direction: column; }
+    .early-house-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .early-house-card p { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin: 0.2rem 0; }
+    .early-house-card a { color: #FFB347; text-decoration: none; font-size: 0.7rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; margin-top: 0.3rem; align-self: flex-start; }
+    @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } .premium-header { flex-direction: column; text-align: center; } .nav-links { gap: 1rem; } .tab-btn { padding: 0.5rem 1rem; font-size: 0.85rem; } }
+    /* WhatsApp specific styles */
+    .whatsapp-number-setup { background: rgba(0,0,0,0.3); border-radius: 28px; padding: 1rem; margin-bottom: 1.2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+    .whatsapp-number-setup .form-group { flex: 1; margin-bottom: 0; }
+    .whatsapp-number-setup label { font-size: 0.7rem; display: block; margin-bottom: 0.2rem; color: #94a3b8; }
+    .whatsapp-number-setup input { margin-bottom: 0; }
+    .whatsapp-number-setup button { margin-bottom: 0; }
+
+    /* Voice assistant styles */
     .voice-search-container { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin: 1rem 0; }
     .mic-btn { background: linear-gradient(135deg, #FF8C42, #E67E22); border: none; border-radius: 50%; width: 70px; height: 70px; font-size: 2rem; color: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(255,140,66,0.5); display: flex; align-items: center; justify-content: center; }
     .mic-btn.listening { background: #e74c3c; animation: pulse 1.5s infinite; }
@@ -55,7 +92,6 @@
     .voice-result p { margin: 0.3rem 0; font-size: 0.8rem; }
     .whatsapp-share-btn { background: #25D366; color: white; border: none; border-radius: 40px; padding: 0.4rem 1rem; font-size: 0.7rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-top: 0.5rem; }
     .whatsapp-share-btn:hover { background: #128C7E; }
-    @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } .premium-header { flex-direction: column; text-align: center; } .nav-links { gap: 1rem; } .tab-btn { padding: 0.5rem 1rem; font-size: 0.85rem; } }
   </style>
 </head>
 <body>
@@ -95,10 +131,9 @@
       <button class="tab-btn" data-tab="portfolio"><i class="fas fa-id-card"></i> Portfolio & Boost</button>
     </div>
 
-    <!-- Premium Tools Tab (includes voice assistant) -->
     <div id="tab-tools" class="tab-content active">
       <div class="dashboard-grid">
-        <!-- Voice Assistant Card -->
+        <!-- Voice Assistant Card (NEW) -->
         <div class="card">
           <h2><i class="fas fa-microphone-alt"></i> Voice Assistant</h2>
           <p style="font-size:0.75rem; margin-bottom:0.5rem;">Speak naturally – e.g., “Find a 3-bedroom house in Lilongwe under 250,000 MWK with a garden”</p>
@@ -166,12 +201,13 @@
       </div>
     </div>
 
-    <!-- WhatsApp Alerts Tab (unchanged) -->
+    <!-- NEW WhatsApp Alerts Tab -->
     <div id="tab-whatsapp" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
           <h2><i class="fab fa-whatsapp"></i> WhatsApp Property Alerts</h2>
-          <p style="font-size:0.75rem; margin-bottom: 1rem;">Get instant WhatsApp notifications when new properties match your saved criteria.</p>
+          <p style="font-size:0.75rem; margin-bottom: 1rem;">Get instant WhatsApp notifications when new properties match your saved criteria. Ensure your number is correct.</p>
+          
           <div class="whatsapp-number-setup">
             <div class="form-group" style="flex:2;">
               <label><i class="fas fa-phone-alt"></i> Your WhatsApp Number (with country code)</label>
@@ -180,6 +216,7 @@
             </div>
             <button id="saveWhatsappNumberBtn" class="small"><i class="fas fa-save"></i> Save Number</button>
           </div>
+
           <div style="margin-top: 1rem;">
             <h3><i class="fas fa-search"></i> Your Saved WhatsApp Searches</h3>
             <div id="whatsappSearchesList">Loading...</div>
@@ -189,7 +226,6 @@
       </div>
     </div>
 
-    <!-- Price Alerts Tab -->
     <div id="tab-alerts" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
@@ -203,7 +239,6 @@
       </div>
     </div>
 
-    <!-- Notifications Tab -->
     <div id="tab-notifications" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
@@ -218,7 +253,6 @@
       </div>
     </div>
 
-    <!-- Portfolio & Boost Tab -->
     <div id="tab-portfolio" class="tab-content">
       <div class="dashboard-grid">
         <div class="card">
@@ -421,7 +455,6 @@
         }
       };
     });
-
     // ========== END VOICE ASSISTANT ==========
 
     function logout() { localStorage.clear(); window.location.href = "login.html"; }
@@ -452,7 +485,8 @@
           upgradeBanner.style.display = "none";
           loadUserHouses();
           loadPortfolioLink();
-          loadWhatsappSearches();
+          loadWhatsappSearches();   // <-- load WhatsApp saved searches
+          // Also load user's saved WhatsApp number from profile (if stored)
           loadUserWhatsappNumber();
         } else {
           isActivePremium = false;
@@ -518,6 +552,7 @@
             </div>
           </div>
         `).join('');
+        // attach delete handlers
         document.querySelectorAll('.delete-whatsapp-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             const id = btn.getAttribute('data-id');
