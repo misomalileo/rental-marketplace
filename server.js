@@ -24,7 +24,7 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
-// CSP (mobile‑friendly)
+// CSP (mobile‑friendly) – ADDED https://tfhub.dev to connect-src
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -39,7 +39,7 @@ app.use(
           "'self'", "https://maps.google.com", "http://localhost:5000", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com",
           "wss://*.ngrok-free.dev", "https://*.ngrok-free.dev", "https://*.tile.openstreetmap.org", "https://fonts.googleapis.com", "https://fonts.gstatic.com",
           "https://rental-marketplace-irmj.onrender.com", "wss://rental-marketplace-irmj.onrender.com", "https://overpass-api.de", "https://maps.googleapis.com",
-          "wss://*.render.com", "blob:"
+          "wss://*.render.com", "blob:", "https://tfhub.dev"   // <-- ADDED for TensorFlow.js model loading
         ],
         upgradeInsecureRequests: [],
       },
