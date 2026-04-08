@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const SavedSearch = require('../models/SavedSearch');
+const User = require('../models/User'); // <-- added to fetch user details
 
 // GET all saved searches for the logged-in user
 router.get('/my-searches', auth, async (req, res) => {
@@ -26,9 +27,16 @@ router.post('/save-search', auth, async (req, res) => {
         if (!/^265\d{9}$/.test(whatsappNumber)) {
             return res.status(400).json({ message: 'WhatsApp number must be in format 265XXXXXXXXX (12 digits total)' });
         }
+        
+        // Fetch the user to get their email address
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         const savedSearch = new SavedSearch({
             userId: req.user.id,
-            userEmail: req.user.email, // assuming user object has email
+            userEmail: user.email,   // ✅ now guaranteed to exist
             whatsappNumber,
             filters,
             name: name || 'Saved Search'
