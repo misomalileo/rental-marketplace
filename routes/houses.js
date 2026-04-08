@@ -201,11 +201,15 @@ router.post(
 
       await house.save();
 
-      // ========== WHATSAPP ALERT TRIGGER (ADDED) ==========
+      // ========== WHATSAPP ALERT TRIGGER (ADDED WITH LOGGING) ==========
+      console.log("🔍 Starting WhatsApp alert check...");
       try {
         const savedSearches = await SavedSearch.find();
+        console.log(`📋 Found ${savedSearches.length} saved searches`);
         for (const search of savedSearches) {
+          console.log(`🔎 Checking search ${search._id} for number ${search.whatsappNumber}`);
           if (matchesFilters(house, search.filters)) {
+            console.log(`✅ Match found for ${search.whatsappNumber}, sending alert...`);
             await sendWhatsAppAlert(
               search.whatsappNumber,
               house.name,
@@ -213,10 +217,14 @@ router.post(
               house.price,
               `https://rental-marketplace-irmj.onrender.com/house/${house._id}`
             );
+            console.log(`✅ Alert sent to ${search.whatsappNumber}`);
+          } else {
+            console.log(`❌ No match for ${search.whatsappNumber}`);
           }
         }
       } catch (whatsappErr) {
         console.error("❌ WhatsApp alert error (non-critical):", whatsappErr.message);
+        console.error(whatsappErr.stack);
       }
       // ========================================================
 
