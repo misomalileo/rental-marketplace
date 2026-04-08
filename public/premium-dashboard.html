@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- TensorFlow.js and MobileNet -->
+  <!-- TensorFlow.js and MobileNet for AI Image Search -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
   <style>
@@ -47,8 +47,8 @@
     .card:hover { transform: translateY(-10px) rotateX(2deg); border-color: rgba(255,140,66,0.6); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.5); }
     .card h2 { font-size: 1.5rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; font-weight: 700; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .card h2 i { font-size: 1.6rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .similar-house-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
-    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .similar-house-item:hover { border-color: #FF8C42; transform: translateX(6px); }
+    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover { border-color: #FF8C42; transform: translateX(6px); }
     .saved-search-actions, .alert-actions, .whatsapp-actions { display: flex; gap: 1rem; margin-top: 0.7rem; }
     button.small { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 0.3rem 1rem; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #cbd5e1; display: inline-flex; align-items: center; gap: 6px; }
     button.small:hover { background: rgba(255,140,66,0.2); border-color: #FF8C42; color: white; }
@@ -94,14 +94,15 @@
     .voice-result p { margin: 0.3rem 0; font-size: 0.8rem; }
     .whatsapp-share-btn { background: #25D366; color: white; border: none; border-radius: 40px; padding: 0.4rem 1rem; font-size: 0.7rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-top: 0.5rem; }
     .whatsapp-share-btn:hover { background: #128C7E; }
-    /* Image search styles */
+    /* ========== NEW AI IMAGE SEARCH STYLES ========== */
     .image-upload-area { border: 2px dashed rgba(255,140,66,0.5); border-radius: 28px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem; }
     .image-upload-area:hover { border-color: #FF8C42; background: rgba(255,140,66,0.05); }
     .image-upload-area i { font-size: 2rem; margin-bottom: 0.5rem; color: #FFB347; }
     .image-upload-area input { display: none; }
     #uploadedImagePreview { max-width: 100%; max-height: 200px; border-radius: 20px; margin-top: 0.5rem; display: none; }
     .similar-houses-list { margin-top: 1rem; max-height: 400px; overflow-y: auto; }
-    .similar-house-item { display: flex; gap: 1rem; align-items: center; }
+    .similar-house-item { display: flex; gap: 1rem; align-items: center; background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.8rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+    .similar-house-item:hover { border-color: #FF8C42; transform: translateX(6px); }
     .similar-house-img { width: 60px; height: 60px; object-fit: cover; border-radius: 16px; }
     .similar-house-info { flex: 1; }
     .similar-house-info h4 { font-size: 0.85rem; margin-bottom: 0.2rem; }
@@ -229,12 +230,13 @@
       </div>
     </div>
 
-    <!-- WhatsApp Alerts Tab (unchanged) -->
+    <!-- NEW WhatsApp Alerts Tab -->
     <div id="tab-whatsapp" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
           <h2><i class="fab fa-whatsapp"></i> WhatsApp Property Alerts</h2>
-          <p style="font-size:0.75rem; margin-bottom: 1rem;">Get instant WhatsApp notifications when new properties match your saved criteria.</p>
+          <p style="font-size:0.75rem; margin-bottom: 1rem;">Get instant WhatsApp notifications when new properties match your saved criteria. Ensure your number is correct.</p>
+          
           <div class="whatsapp-number-setup">
             <div class="form-group" style="flex:2;">
               <label><i class="fas fa-phone-alt"></i> Your WhatsApp Number (with country code)</label>
@@ -243,6 +245,7 @@
             </div>
             <button id="saveWhatsappNumberBtn" class="small"><i class="fas fa-save"></i> Save Number</button>
           </div>
+
           <div style="margin-top: 1rem;">
             <h3><i class="fas fa-search"></i> Your Saved WhatsApp Searches</h3>
             <div id="whatsappSearchesList">Loading...</div>
@@ -317,9 +320,174 @@
     let userHouses = [];
     let predictorChart = null;
     let currentWhatsappNumber = "";
-    let mobilenetModel = null;
 
-    // Load MobileNet model
+    // ========== VOICE ASSISTANT IMPLEMENTATION ==========
+    let recognition = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+    }
+
+    function parseVoiceQuery(text) {
+      text = text.toLowerCase();
+      let filters = {};
+
+      // Extract bedrooms
+      let bedroomMatch = text.match(/(\d+)\s*bedroom/);
+      if (bedroomMatch) filters.bedrooms = parseInt(bedroomMatch[1]);
+
+      // Extract max price
+      let priceMatch = text.match(/(\d+)\s*(?:thousand|k|,?)/i);
+      if (priceMatch) {
+        let price = parseInt(priceMatch[1]);
+        if (text.includes('thousand') || text.includes('k')) price *= 1000;
+        filters.maxPrice = price;
+      }
+
+      // Extract location (simple city names)
+      const cities = ['lilongwe', 'blantyre', 'mzuzu', 'zomba', 'mulanje', 'thyolo', 'mangochi', 'balaka', 'chikwawa', 'nsanje', 'phalombe', 'machinga', 'dedza', 'salima', 'mchinji', 'ntcheu', 'kasungu', 'dowa', 'nkhotakota'];
+      for (let city of cities) {
+        if (text.includes(city)) {
+          filters.location = city.charAt(0).toUpperCase() + city.slice(1);
+          break;
+        }
+      }
+
+      // Property type
+      if (text.includes('house')) filters.type = 'House';
+      else if (text.includes('apartment')) filters.type = 'Apartment';
+      else if (text.includes('room')) filters.type = 'Room';
+      else if (text.includes('hostel')) filters.type = 'Hostel';
+      else if (text.includes('office')) filters.type = 'Office';
+
+      // Amenities (garden, pool, parking, wifi, furnished)
+      if (text.includes('garden')) filters.hasGarden = true;
+      if (text.includes('pool')) filters.pool = true;
+      if (text.includes('parking')) filters.parking = true;
+      if (text.includes('wifi')) filters.wifi = true;
+      if (text.includes('furnished')) filters.furnished = true;
+
+      return filters;
+    }
+
+    async function performVoiceSearch(filters) {
+      try {
+        const params = new URLSearchParams();
+        if (filters.bedrooms) params.append('bedrooms', filters.bedrooms);
+        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+        if (filters.type) params.append('type', filters.type);
+        if (filters.location) params.append('location', filters.location);
+        if (filters.pool) params.append('pool', 'true');
+        if (filters.parking) params.append('parking', 'true');
+        if (filters.wifi) params.append('wifi', 'true');
+        if (filters.furnished) params.append('furnished', 'true');
+        params.append('limit', 5);
+
+        const res = await fetch(`/api/houses?${params.toString()}`);
+        const data = await res.json();
+        return data.houses || [];
+      } catch (err) {
+        console.error('Voice search error:', err);
+        return [];
+      }
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function displayAndSpeakTopMatch(properties, recognizedText) {
+      const resultDiv = document.getElementById('voiceResult');
+      const recognisedTextP = document.getElementById('recognisedText');
+      const topMatchDiv = document.getElementById('topMatchResult');
+
+      recognisedTextP.innerText = recognizedText;
+
+      if (!properties || properties.length === 0) {
+        topMatchDiv.innerHTML = '<p>❌ No properties found matching your request. Try different words.</p>';
+        speakText('Sorry, no properties found. Please try again.');
+        resultDiv.style.display = 'block';
+        return;
+      }
+
+      const top = properties[0];
+      const shareUrl = `https://rental-marketplace-irmj.onrender.com/house/${top._id}`;
+      topMatchDiv.innerHTML = `
+        <p><strong>${escapeHtml(top.name)}</strong><br>
+        📍 ${escapeHtml(top.location)}<br>
+        🏠 ${top.type} | 🛏️ ${top.bedrooms || 'N/A'} bed<br>
+        💰 MWK ${Number(top.price).toLocaleString()}<br>
+        ⭐ Rating: ${top.averageRating ? top.averageRating.toFixed(1) : 'N/A'}</p>
+        <button class="whatsapp-share-btn" onclick="shareOnWhatsApp('${shareUrl}', '${escapeHtml(top.name)}')"><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
+      `;
+      resultDiv.style.display = 'block';
+
+      const speakMsg = `Found ${properties.length} properties. The top match is ${top.name} in ${top.location} for ${top.price} Malawian Kwacha per month.`;
+      speakText(speakMsg);
+    }
+
+    window.shareOnWhatsApp = function(url, name) {
+      const text = `Check out this property: ${name} - ${url}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    };
+
+    document.getElementById('startVoiceBtn').addEventListener('click', () => {
+      if (!recognition) {
+        alert('Voice recognition is not supported in your browser. Please use Chrome or Edge.');
+        return;
+      }
+      if (!isActivePremium) {
+        alert('Voice search is a premium feature. Please activate your premium subscription.');
+        return;
+      }
+      const btn = document.getElementById('startVoiceBtn');
+      const statusDiv = document.getElementById('voiceStatus');
+      btn.classList.add('listening');
+      statusDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Listening... Speak now.';
+
+      recognition.start();
+
+      recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
+        statusDiv.innerHTML = `✅ Recognised: "${transcript}"`;
+        btn.classList.remove('listening');
+
+        const filters = parseVoiceQuery(transcript);
+        if (Object.keys(filters).length === 0) {
+          statusDiv.innerHTML = '⚠️ Could not understand filters. Try saying "3 bedroom house under 200 thousand"';
+          return;
+        }
+        statusDiv.innerHTML = '🔍 Searching properties...';
+        const properties = await performVoiceSearch(filters);
+        displayAndSpeakTopMatch(properties, transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error(event.error);
+        statusDiv.innerHTML = `❌ Error: ${event.error}. Please try again.`;
+        btn.classList.remove('listening');
+      };
+
+      recognition.onend = () => {
+        if (btn.classList.contains('listening')) {
+          btn.classList.remove('listening');
+          statusDiv.innerHTML = 'Click the microphone and speak';
+        }
+      };
+    });
+    // ========== END VOICE ASSISTANT ==========
+
+    // ========== NEW AI IMAGE SEARCH IMPLEMENTATION ==========
+    let mobilenetModel = null;
     async function loadMobileNet() {
       try {
         mobilenetModel = await mobilenet.load();
@@ -330,21 +498,18 @@
     }
     loadMobileNet();
 
-    // Extract feature vector from image
     async function getFeatureVector(imageElement) {
       if (!mobilenetModel) throw new Error("Model not loaded");
-      // Get activations from a specific layer (we use the global average pooling layer)
       const img = tf.browser.fromPixels(imageElement);
       const resized = tf.image.resizeBilinear(img, [224, 224]);
       const expanded = resized.expandDims(0);
       const normalized = expanded.toFloat().div(255);
-      const predictions = await mobilenetModel.infer(normalized, true); // true = return logits/feature vector
+      const predictions = await mobilenetModel.infer(normalized, true);
       const features = predictions.dataSync();
       tf.dispose([img, resized, expanded, normalized, predictions]);
       return Array.from(features);
     }
 
-    // Image search logic
     document.getElementById('imageUploadArea').addEventListener('click', () => {
       document.getElementById('imageUploadInput').click();
     });
@@ -424,57 +589,471 @@
         reader.readAsDataURL(file);
       }
     });
+    // ========== END AI IMAGE SEARCH ==========
 
-    // Voice assistant (existing, no changes)
-    let recognition = null;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-    }
-    function parseVoiceQuery(text) { /* unchanged */ return {}; }
-    async function performVoiceSearch(filters) { /* unchanged */ return []; }
-    function speakText(text) { /* unchanged */ }
-    function displayAndSpeakTopMatch(properties, recognizedText) { /* unchanged */ }
-    window.shareOnWhatsApp = function(url, name) { /* unchanged */ };
-    document.getElementById('startVoiceBtn').addEventListener('click', () => { /* unchanged */ });
-
-    // (All other existing functions remain exactly as they were – no changes)
     function logout() { localStorage.clear(); window.location.href = "login.html"; }
-    document.querySelectorAll('.tab-btn').forEach(btn => { /* unchanged */ });
-    async function loadPremiumStatus() { /* unchanged */ }
-    async function loadUserWhatsappNumber() { /* unchanged */ }
-    async function saveWhatsappNumber(number) { /* unchanged */ }
-    async function loadWhatsappSearches() { /* unchanged */ }
-    async function deleteWhatsappSearch(id) { /* unchanged */ }
-    async function createWhatsappSearch(filters, name, whatsappNumber) { /* unchanged */ }
-    document.getElementById("saveWhatsappNumberBtn")?.addEventListener("click", async () => { /* unchanged */ });
-    document.getElementById("newWhatsappSearchBtn")?.addEventListener("click", async () => { /* unchanged */ });
-    async function loadUserHouses() { /* unchanged */ }
-    function renderNegotiateSelect() { /* unchanged */ }
-    function renderPrioritySelect() { /* unchanged */ }
-    function renderPredictorSelect() { /* unchanged */ }
-    async function fetchPrediction(houseId) { /* unchanged */ }
-    function renderBoostList() { /* unchanged */ }
-    window.boostProperty = async function(houseId) { /* unchanged */ };
-    document.getElementById("negotiateBtn").addEventListener("click", async () => { /* unchanged */ });
-    document.getElementById("requestPriorityBtn").addEventListener("click", async () => { /* unchanged */ });
-    function renderPriceAlerts(searches) { /* unchanged */ }
-    window.togglePriceAlert = async (idx, enabled) => { /* unchanged */ };
-    document.getElementById("simulatePriceDropBtn")?.addEventListener("click", () => { /* unchanged */ });
-    function renderNotifications(notifications) { /* unchanged */ }
-    function addDemoNotification(title, message) { /* unchanged */ }
-    document.getElementById("markAllReadBtn")?.addEventListener("click", async () => { /* unchanged */ });
-    async function loadEarlyAccess() { /* unchanged */ }
-    async function loadPortfolioLink() { /* unchanged */ }
-    document.getElementById("copyPortfolioBtn")?.addEventListener("click", () => { /* unchanged */ });
-    function renderSavedSearches(searches) { /* unchanged */ }
-    window.toggleAlert = async (idx, enable) => { /* unchanged */ };
-    window.deleteSearch = async (idx) => { /* unchanged */ };
-    document.getElementById("newSearchBtn").addEventListener("click", async () => { /* unchanged */ });
-    async function activatePremium() { /* unchanged */ }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tabId = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+      });
+    });
+
+    async function loadPremiumStatus() {
+      try {
+        const res = await fetch("/api/premium/status", { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        const statusArea = document.getElementById("premiumStatusArea");
+        const activateBtn = document.getElementById("activateBtn");
+        const upgradeBanner = document.getElementById("upgradeBanner");
+
+        if (data.isPremium) {
+          isActivePremium = true;
+          const expiry = new Date(data.expiresAt).toLocaleDateString();
+          statusArea.innerHTML = `<i class="fas fa-check-circle"></i> Active until ${expiry}`;
+          activateBtn.style.display = "none";
+          upgradeBanner.style.display = "none";
+          loadUserHouses();
+          loadPortfolioLink();
+          loadWhatsappSearches();
+          loadUserWhatsappNumber();
+        } else {
+          isActivePremium = false;
+          statusArea.innerHTML = `<i class="fas fa-lock"></i> Inactive – activate to unlock`;
+          activateBtn.style.display = "inline-flex";
+          upgradeBanner.style.display = "block";
+        }
+        renderSavedSearches(data.savedSearches || []);
+        renderNotifications(data.notifications || []);
+        renderPriceAlerts(data.savedSearches || []);
+        if (isActivePremium) loadEarlyAccess();
+        else document.getElementById("earlyAccessList").innerHTML = "<p><i class='fas fa-lock'></i> Activate premium to see early‑access listings.</p>";
+      } catch (err) { console.error(err); }
+    }
+
+    async function loadUserWhatsappNumber() {
+      try {
+        const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
+        const user = await res.json();
+        if (user.whatsappNumber) {
+          currentWhatsappNumber = user.whatsappNumber;
+          document.getElementById("whatsappNumberInput").value = currentWhatsappNumber;
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    async function saveWhatsappNumber(number) {
+      try {
+        const res = await fetch("/api/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ whatsappNumber: number })
+        });
+        if (res.ok) {
+          alert("WhatsApp number saved!");
+          currentWhatsappNumber = number;
+          return true;
+        } else {
+          alert("Failed to save number");
+          return false;
+        }
+      } catch (err) { alert("Network error"); return false; }
+    }
+
+    async function loadWhatsappSearches() {
+      if (!isActivePremium) return;
+      try {
+        const res = await fetch("/api/saved-searches/my-searches", { headers: { Authorization: "Bearer " + token } });
+        const searches = await res.json();
+        const container = document.getElementById("whatsappSearchesList");
+        if (!container) return;
+        if (searches.length === 0) {
+          container.innerHTML = "<p><i class='fas fa-info-circle'></i> No WhatsApp searches yet. Create one to receive alerts.</p>";
+          return;
+        }
+        container.innerHTML = searches.map(search => `
+          <div class="whatsapp-search-item" data-id="${search._id}">
+            <div><strong><i class="fab fa-whatsapp"></i> ${escapeHtml(search.name)}</strong></div>
+            <div style="font-size:0.7rem;">Filters: ${JSON.stringify(search.filters)}</div>
+            <div style="font-size:0.65rem; color:#94a3b8;">WhatsApp: ${search.whatsappNumber}</div>
+            <div class="whatsapp-actions">
+              <button class="small delete-whatsapp-btn" data-id="${search._id}"><i class="fas fa-trash-alt"></i> Delete</button>
+            </div>
+          </div>
+        `).join('');
+        document.querySelectorAll('.delete-whatsapp-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = btn.getAttribute('data-id');
+            if (confirm("Delete this WhatsApp search?")) {
+              await deleteWhatsappSearch(id);
+              loadWhatsappSearches();
+            }
+          });
+        });
+      } catch (err) { console.error(err); document.getElementById("whatsappSearchesList").innerHTML = "<p>Error loading searches.</p>"; }
+    }
+
+    async function deleteWhatsappSearch(id) {
+      try {
+        const res = await fetch(`/api/saved-searches/delete-search/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) throw new Error("Delete failed");
+      } catch (err) { alert("Failed to delete"); }
+    }
+
+    async function createWhatsappSearch(filters, name, whatsappNumber) {
+      try {
+        const res = await fetch("/api/saved-searches/save-search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ name, filters, whatsappNumber })
+        });
+        if (res.ok) {
+          alert("WhatsApp search saved!");
+          loadWhatsappSearches();
+          return true;
+        } else {
+          const err = await res.json();
+          alert("Error: " + err.message);
+          return false;
+        }
+      } catch (err) { alert("Network error"); return false; }
+    }
+
+    document.getElementById("saveWhatsappNumberBtn")?.addEventListener("click", async () => {
+      const number = document.getElementById("whatsappNumberInput").value.trim();
+      if (!number) { alert("Please enter your WhatsApp number"); return; }
+      if (!/^265\d{9}$/.test(number)) { alert("Number must be in format 265XXXXXXXXX (12 digits)"); return; }
+      await saveWhatsappNumber(number);
+    });
+
+    document.getElementById("newWhatsappSearchBtn")?.addEventListener("click", async () => {
+      if (!isActivePremium) { alert("Activate premium to use WhatsApp alerts."); return; }
+      const whatsappNumber = document.getElementById("whatsappNumberInput").value.trim();
+      if (!whatsappNumber) { alert("Please save your WhatsApp number first."); return; }
+      const name = prompt("Give this search a name (e.g., 'Houses in Lilongwe'):");
+      if (!name) return;
+      let minPrice = prompt("Minimum price (MWK):", "0");
+      let maxPrice = prompt("Maximum price (MWK):", "2000000");
+      let type = prompt("Property type (House, Apartment, Room, Hostel, Office) or leave empty for all:", "");
+      let region = prompt("Region (Northern, Central, Southern) or leave empty for all:", "");
+      let bedrooms = prompt("Minimum bedrooms:", "0");
+      const filters = {};
+      if (minPrice && !isNaN(minPrice)) filters.minPrice = parseInt(minPrice);
+      if (maxPrice && !isNaN(maxPrice)) filters.maxPrice = parseInt(maxPrice);
+      if (type && type.trim()) filters.type = type;
+      if (region && region.trim()) filters.region = region;
+      if (bedrooms && !isNaN(bedrooms) && bedrooms > 0) filters.bedrooms = parseInt(bedrooms);
+      await createWhatsappSearch(filters, name, whatsappNumber);
+    });
+
+    async function loadUserHouses() {
+      try {
+        const res = await fetch("/api/houses?owner=me", { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        userHouses = data.houses || [];
+        renderBoostList();
+        renderPredictorSelect();
+        renderNegotiateSelect();
+        renderPrioritySelect();
+      } catch (err) { console.error(err); }
+    }
+
+    function renderNegotiateSelect() {
+      const select = document.getElementById("negotiateHouseSelect");
+      if (!userHouses.length) { select.innerHTML = '<option value="">No properties – use manual ID below</option>'; return; }
+      select.innerHTML = '<option value="">Select your property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+    }
+    function renderPrioritySelect() {
+      const select = document.getElementById("priorityHouseSelect");
+      if (!userHouses.length) { select.innerHTML = '<option value="">No properties available</option>'; return; }
+      select.innerHTML = '<option value="">Select a property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+    }
+    function renderPredictorSelect() {
+      const select = document.getElementById("predictorHouseSelect");
+      if (!userHouses.length) { select.innerHTML = '<option>No properties</option>'; return; }
+      select.innerHTML = '<option value="">Select a property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+      select.addEventListener("change", async (e) => {
+        const houseId = e.target.value;
+        if (!houseId) return;
+        await fetchPrediction(houseId);
+      });
+    }
+
+    async function fetchPrediction(houseId) {
+      const resultDiv = document.getElementById("predictionResult");
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing...';
+      try {
+        const house = userHouses.find(h => h._id === houseId);
+        if (!house) return;
+        const predictions = [house.price * 1.02, house.price * 1.05, house.price * 1.03];
+        const months = ["Next Month", "2 Months", "3 Months"];
+        if (predictorChart) predictorChart.destroy();
+        const ctx = document.getElementById("rentPredictorChart").getContext("2d");
+        predictorChart = new Chart(ctx, {
+          type: 'line',
+          data: { labels: months, datasets: [{ label: 'Predicted Rent (MWK)', data: predictions, borderColor: '#FF8C42', backgroundColor: 'rgba(255,140,66,0.1)', borderWidth: 3, pointBackgroundColor: '#FFD966', tension: 0.3, fill: true }] },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } }, tooltip: { callbacks: { label: (ctx) => `MWK ${ctx.raw.toLocaleString()}` } } }, scales: { y: { ticks: { color: '#cbd5e1', callback: (val) => 'MWK ' + val.toLocaleString() } }, x: { ticks: { color: '#cbd5e1' } } } }
+        });
+        const avg = predictions.reduce((a,b)=>a+b,0)/3;
+        resultDiv.innerHTML = `<i class="fas fa-chart-line"></i> AI suggests rent may increase to <strong>MWK ${Math.round(avg).toLocaleString()}</strong> in the next 3 months.`;
+      } catch (err) { resultDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Prediction unavailable.'; }
+    }
+
+    function renderBoostList() {
+      const container = document.getElementById("boostList");
+      if (!userHouses.length) { container.innerHTML = "<p>No properties to boost.</p>"; return; }
+      container.innerHTML = userHouses.map(house => `
+        <div class="boost-item" style="display:flex; justify-content:space-between; align-items:center; background:rgba(10,15,25,0.6); border-radius:28px; padding:0.6rem 1rem; margin-bottom:0.6rem;">
+          <div><div class="house-name" style="font-weight:600;">${escapeHtml(house.name)}</div><div style="font-size:0.7rem;">MWK ${house.price.toLocaleString()}</div></div>
+          <button class="boost-btn" onclick="boostProperty('${house._id}')" style="background:linear-gradient(135deg,#FF8C42,#E67E22); border:none; border-radius:40px; padding:0.3rem 1rem; color:white; cursor:pointer;">🚀 Boost (24h)</button>
+        </div>
+      `).join('');
+    }
+    window.boostProperty = async function(houseId) {
+      if (!isActivePremium) { alert("Activate premium to boost."); return; }
+      localStorage.setItem(`boost_${houseId}`, new Date(Date.now() + 24*60*60*1000).toISOString());
+      alert("✅ Property boosted for 24h!");
+      renderBoostList();
+    };
+
+    document.getElementById("negotiateBtn").addEventListener("click", async () => {
+      if (!isActivePremium) { alert("Activate premium to use AI negotiator."); return; }
+      let houseId = document.getElementById("negotiateHouseSelect").value;
+      const manualId = document.getElementById("manualHouseId").value.trim();
+      if (manualId) houseId = manualId;
+      if (!houseId) { alert("Please select a property or enter a custom house ID."); return; }
+      const resultDiv = document.getElementById("negotiationResult");
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing market...';
+      try {
+        const res = await fetch(`/api/premium/negotiate/${houseId}`, { headers: { Authorization:"Bearer "+token } });
+        if (!res.ok) throw new Error("API failed");
+        const data = await res.json();
+        resultDiv.innerHTML = `<div style="background:rgba(0,0,0,0.4); padding:0.8rem; border-radius:24px;">
+          <p><i class="fas fa-chart-line"></i> Market average: <strong>MWK ${data.avgPrice}</strong></p>
+          <p><i class="fas fa-percent"></i> Difference: ${data.diffPercent}%</p>
+          <p><i class="fas fa-lightbulb"></i> Suggested counter‑offer: <strong>MWK ${Math.floor(Number(data.avgPrice) * 0.95).toLocaleString()}</strong></p>
+          <p>${data.suggestion}</p>
+        </div>`;
+      } catch (err) {
+        const simulatedAvg = 450000 + Math.floor(Math.random() * 100000);
+        const diff = Math.floor(Math.random() * 20) - 10;
+        resultDiv.innerHTML = `<div style="background:rgba(0,0,0,0.4); padding:0.8rem; border-radius:24px;">
+          <p><i class="fas fa-chart-line"></i> Market average: <strong>MWK ${simulatedAvg.toLocaleString()}</strong> (simulated)</p>
+          <p><i class="fas fa-percent"></i> Difference: ${diff}%</p>
+          <p><i class="fas fa-lightbulb"></i> Suggested counter‑offer: <strong>MWK ${Math.floor(simulatedAvg * 0.95).toLocaleString()}</strong></p>
+          <p>Based on similar properties, you could offer 5% below market average.</p>
+        </div>`;
+      }
+    });
+
+    document.getElementById("requestPriorityBtn").addEventListener("click", async () => {
+      if (!isActivePremium) { alert("Activate premium to request priority viewing."); return; }
+      const houseId = document.getElementById("priorityHouseSelect").value;
+      if (!houseId) { alert("Please select a property."); return; }
+      const statusDiv = document.getElementById("priorityStatus");
+      statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending request...';
+      try {
+        const res = await fetch("/api/premium/priority-viewing", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ houseId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Priority viewing requested! The landlord has been notified and will see your premium badge.';
+          addDemoNotification("Priority Viewing Requested", `You requested priority viewing for property ID ${houseId}. The landlord will contact you soon.`);
+        } else {
+          statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error: ' + (data.message || "Failed to notify landlord");
+        }
+      } catch (err) {
+        console.error(err);
+        statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Network error. Please try again.';
+      }
+    });
+
+    function renderPriceAlerts(searches) {
+      const container = document.getElementById("priceAlertsList");
+      if (!searches.length) { container.innerHTML = "<p>No saved searches – create one to enable price drop alerts.</p>"; return; }
+      container.innerHTML = searches.map((s, idx) => `
+        <div class="price-alert-item">
+          <div class="name"><i class="fas fa-search"></i> ${escapeHtml(s.name)}</div>
+          <div class="filters" style="font-size:0.7rem;">${JSON.stringify(s.filters)}</div>
+          <div class="alert-actions">
+            <label style="display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" id="alertToggle_${idx}" ${s.alertEnabled ? 'checked' : ''} onchange="togglePriceAlert(${idx}, this.checked)">
+              <span class="alert-toggle"><i class="fas fa-bell"></i> Alert me when price drops</span>
+            </label>
+          </div>
+        </div>
+      `).join('');
+    }
+    window.togglePriceAlert = async (idx, enabled) => {
+      if (!isActivePremium) { alert("Activate premium to manage alerts."); return; }
+      await fetch(`/api/premium/saved-searches/${idx}/alert`, {
+        method: "PUT",
+        headers: { "Content-Type":"application/json", Authorization:"Bearer "+token },
+        body: JSON.stringify({ enabled })
+      });
+      loadPremiumStatus();
+    };
+    document.getElementById("simulatePriceDropBtn")?.addEventListener("click", () => {
+      if (!isActivePremium) { alert("Activate premium to test alerts."); return; }
+      addDemoNotification("💰 Price Drop Alert", "One of your saved searches has a new listing with a 15% lower price!");
+      alert("Test notification sent! Check the Notifications tab.");
+    });
+
+    function renderNotifications(notifications) {
+      const container = document.getElementById("notificationsList");
+      if (!notifications.length) { container.innerHTML = "<p><i class='fas fa-bell-slash'></i> No notifications yet.</p>"; return; }
+      container.innerHTML = notifications.map(n => `
+        <div class="notification-item ${!n.read ? 'unread' : ''}" style="background:rgba(10,15,25,0.7); border-radius:24px; padding:0.8rem; margin-bottom:0.6rem;">
+          <div><strong><i class="fas fa-envelope"></i> ${escapeHtml(n.title)}</strong></div>
+          <div style="font-size:0.75rem;">${escapeHtml(n.message)}</div>
+          <div style="font-size:0.65rem; color:#64748b;">${new Date(n.createdAt).toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+    function addDemoNotification(title, message) {
+      const newNotif = { title, message, createdAt: new Date().toISOString(), read: false };
+      let current = JSON.parse(localStorage.getItem("demo_notifications") || "[]");
+      current.unshift(newNotif);
+      localStorage.setItem("demo_notifications", JSON.stringify(current));
+      loadPremiumStatus();
+    }
+    document.getElementById("markAllReadBtn")?.addEventListener("click", async () => {
+      if (!isActivePremium) return;
+      alert("Mark all as read (simulated).");
+    });
+
+    async function loadEarlyAccess() {
+      if (!isActivePremium) return;
+      try {
+        const res = await fetch("/api/premium/early-access", { headers: { Authorization:"Bearer "+token } });
+        const houses = await res.json();
+        const container = document.getElementById("earlyAccessList");
+        if (!houses.length) { container.innerHTML = "<p>No new listings.</p>"; return; }
+        container.innerHTML = houses.map(house => {
+          const images = (house.images && house.images.length) ? house.images : ["placeholder.jpg"];
+          let slidesHtml = '', dotsHtml = '';
+          images.forEach((img, idx) => {
+            slidesHtml += `<div class="slide"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
+            dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
+          });
+          return `
+            <div class="early-house-card">
+              <div class="slider">
+                <div class="slides-container">${slidesHtml}</div>
+                <div class="dots">${dotsHtml}</div>
+              </div>
+              <div class="info">
+                <h3>${escapeHtml(house.name)}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
+                <p><i class="fas fa-money-bill-wave"></i> MWK ${house.price.toLocaleString()}</p>
+                <a href="/house/${house._id}" target="_blank">View Details <i class="fas fa-arrow-right"></i></a>
+              </div>
+            </div>
+          `;
+        }).join('');
+        document.querySelectorAll('.early-house-card .slider').forEach(slider => {
+          const slidesContainer = slider.querySelector('.slides-container');
+          const dots = slider.querySelectorAll('.dot');
+          if (slidesContainer && dots.length) {
+            let activeIndex = 0;
+            const updateActiveDot = () => {
+              const scrollLeft = slidesContainer.scrollLeft;
+              const slideWidth = slidesContainer.clientWidth;
+              if (slideWidth === 0) return;
+              const newIndex = Math.round(scrollLeft / slideWidth);
+              if (newIndex !== activeIndex && newIndex >= 0 && newIndex < dots.length) {
+                activeIndex = newIndex;
+                dots.forEach((dot, idx) => { dot.classList.toggle('active', idx === activeIndex); });
+              }
+            };
+            slidesContainer.addEventListener('scroll', updateActiveDot);
+            slidesContainer.addEventListener('touchmove', updateActiveDot);
+            setTimeout(updateActiveDot, 100);
+            dots.forEach((dot, idx) => {
+              dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                slidesContainer.scrollTo({ left: idx * slidesContainer.clientWidth, behavior: 'smooth' });
+              });
+            });
+          }
+        });
+      } catch (err) { document.getElementById("earlyAccessList").innerHTML = "<p>Failed to load early access listings.</p>"; }
+    }
+
+    async function loadPortfolioLink() {
+      try {
+        const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
+        const user = await res.json();
+        const username = (user.name || "user").toLowerCase().replace(/\s/g, '');
+        const portfolioUrl = `${window.location.origin}/portfolio/${username}`;
+        const linkEl = document.getElementById("portfolioLink");
+        linkEl.href = portfolioUrl;
+        linkEl.textContent = portfolioUrl;
+      } catch (err) { console.error(err); }
+    }
+    document.getElementById("copyPortfolioBtn")?.addEventListener("click", () => {
+      const link = document.getElementById("portfolioLink").href;
+      navigator.clipboard.writeText(link);
+      alert("Portfolio link copied!");
+    });
+
+    function renderSavedSearches(searches) {
+      const container = document.getElementById("savedSearchesList");
+      if (!searches.length) { container.innerHTML = "<p><i class='fas fa-info-circle'></i> No saved searches yet.</p>"; return; }
+      container.innerHTML = searches.map((s, idx) => `
+        <div class="saved-search-item">
+          <div class="name"><i class="fas fa-search"></i> ${escapeHtml(s.name)}</div>
+          <div class="filters">${JSON.stringify(s.filters)}</div>
+          <div class="saved-search-actions">
+            <span class="alert-toggle" onclick="toggleAlert(${idx}, ${!s.alertEnabled})">
+              <i class="fas fa-bell ${s.alertEnabled ? 'fa-solid' : 'fa-regular'}"></i> Alerts ${s.alertEnabled ? 'On' : 'Off'}
+            </span>
+            <button class="small" onclick="deleteSearch(${idx})"><i class="fas fa-trash-alt"></i> Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    window.toggleAlert = async (idx, enable) => {
+      if (!isActivePremium) return alert("Activate premium.");
+      await fetch(`/api/premium/saved-searches/${idx}/alert`, { method: "PUT", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ enabled: enable }) });
+      loadPremiumStatus();
+    };
+    window.deleteSearch = async (idx) => {
+      if (!isActivePremium) return alert("Activate premium.");
+      if (!confirm("Delete?")) return;
+      await fetch(`/api/premium/saved-searches/${idx}`, { method: "DELETE", headers: { Authorization:"Bearer "+token } });
+      loadPremiumStatus();
+    };
+    document.getElementById("newSearchBtn").addEventListener("click", async () => {
+      if (!isActivePremium) return alert("Activate premium.");
+      const name = prompt("Search name:");
+      if (!name) return;
+      await fetch("/api/premium/saved-searches", { method: "POST", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ name, filters: {}, alertEnabled: true }) });
+      loadPremiumStatus();
+    });
+
+    async function activatePremium() {
+      const testMode = document.getElementById("testModeCheckbox").checked;
+      const url = testMode ? "/api/payment/premium-user?test=true" : "/api/payment/premium-user";
+      try {
+        const res = await fetch(url, { method: "POST", headers: { Authorization:"Bearer "+token } });
+        const data = await res.json();
+        if (data.test || data.payment_url) {
+          if (data.test) { alert("✅ Test activation successful! Reloading..."); window.location.reload(); }
+          else window.location.href = data.payment_url;
+        } else alert("Activation failed.");
+      } catch (err) { alert("Error."); }
+    }
     document.getElementById("activateBtn").addEventListener("click", activatePremium);
     document.getElementById("activateFromBannerBtn").addEventListener("click", activatePremium);
     function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
