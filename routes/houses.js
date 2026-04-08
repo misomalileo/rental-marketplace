@@ -12,6 +12,21 @@ const {
   handleValidationErrors,
 } = require("../middleware/validator");
 
+// ========== WHATSAPP INTEGRATION (ADDED) ==========
+const { sendWhatsAppAlert } = require("../services/whatsappService");
+const SavedSearch = require("../models/SavedSearch");
+
+// Helper to check if a house matches saved filters
+function matchesFilters(house, filters) {
+    let matches = true;
+    if (filters.minPrice && house.price < filters.minPrice) matches = false;
+    if (filters.maxPrice && house.price > filters.maxPrice) matches = false;
+    if (filters.type && house.type !== filters.type) matches = false;
+    // add more filters as needed (bedrooms, region, etc.)
+    return matches;
+}
+// ====================================================
+
 // ======================================
 // HELPER: DISTANCE (Haversine) – used by price insights
 // ======================================
@@ -91,7 +106,7 @@ router.post(
         return file.path;
       });
 
-      // ========== NEW: capture propertyDetails from request ==========
+      // ========== capture propertyDetails from request ==========
       let propertyDetails = {};
       if (req.body.propertyDetails) {
         try {
@@ -129,10 +144,29 @@ router.post(
           ? JSON.parse(req.body.unavailableDates).map((d) => new Date(d))
           : [],
         selfContained: req.body.selfContained === "on" || req.body.selfContained === "true",
-        propertyDetails: propertyDetails   // <-- NEW
+        propertyDetails: propertyDetails
       });
 
       await house.save();
+
+      // ========== WHATSAPP ALERT TRIGGER (ADDED) ==========
+      try {
+        const savedSearches = await SavedSearch.find();
+        for (const search of savedSearches) {
+          if (matchesFilters(house, search.filters)) {
+            await sendWhatsAppAlert(
+              search.whatsappNumber,
+              house.name,
+              house.location,
+              house.price,
+              `https://rental-marketplace-irmj.onrender.com/house/${house._id}`
+            );
+          }
+        }
+      } catch (whatsappErr) {
+        console.error("❌ WhatsApp alert error (non-critical):", whatsappErr.message);
+      }
+      // ========================================================
 
       // Log activity
       await ActivityLog.create({
@@ -205,7 +239,6 @@ router.put(
         house.unavailableDates = JSON.parse(req.body.unavailableDates).map((d) => new Date(d));
       }
 
-      // ========== NEW: update propertyDetails ==========
       if (req.body.propertyDetails) {
         try {
           house.propertyDetails = typeof req.body.propertyDetails === 'string'
@@ -322,7 +355,7 @@ router.get("/", async (req, res) => {
     const sortBy = req.query.sort || "default";
 
     // Build filter – default: only available for rent
-    let houseFilter = { rentalStatus: 'available' }; // <-- NEW: hide rented/pending from public
+    let houseFilter = { rentalStatus: 'available' };
 
     // Check if user is logged in (for landlord to see their own properties)
     const token = req.headers.authorization?.split(' ')[1];
@@ -339,7 +372,6 @@ router.get("/", async (req, res) => {
       const User = require('../models/User');
       const user = await User.findById(userId);
       if (user && (user.role === 'landlord' || user.role === 'premium_landlord' || user.role === 'admin')) {
-        // Landlords see all their own houses (any rentalStatus) + other people's available houses
         houseFilter = {
           $or: [
             { rentalStatus: 'available' },
@@ -441,7 +473,6 @@ router.put("/:id/rental-status", auth, async (req, res) => {
     const house = await House.findById(req.params.id);
     if (!house) return res.status(404).json({ message: 'House not found' });
 
-    // Only owner or admin can change status
     if (house.owner.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
@@ -449,7 +480,6 @@ router.put("/:id/rental-status", auth, async (req, res) => {
     house.rentalStatus = rentalStatus;
     await house.save();
 
-    // Log activity
     await ActivityLog.create({
       user: req.user.id,
       action: "update_rental_status",
@@ -524,7 +554,6 @@ router.post("/:id/review", auth, async (req, res) => {
     });
     await review.save();
 
-    // Recalculate average rating
     const allReviews = await Review.find({ house: req.params.id });
     const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
     house.averageRating = avg;
@@ -559,7 +588,6 @@ router.get("/stats/:id", auth, async (req, res) => {
     const house = await House.findOne({ _id: req.params.id, owner: req.user.id });
     if (!house) return res.status(404).json({ message: "House not found" });
 
-    // Generate mock data for last 30 days (replace with real data from a View model)
     const viewsData = [];
     const today = new Date();
     for (let i = 29; i >= 0; i--) {
@@ -584,7 +612,6 @@ router.get("/price-insights/:id", async (req, res) => {
     const house = await House.findById(req.params.id);
     if (!house) return res.status(404).json({ message: "House not found" });
 
-    // If no coordinates, we cannot do radius search
     if (!house.lat || !house.lng) {
       return res.json({
         similarCount: 0,
@@ -595,7 +622,6 @@ router.get("/price-insights/:id", async (req, res) => {
       });
     }
 
-    // Find similar houses within 5 km radius, same type, ±1 bedroom, excluding itself
     const similarHouses = await House.find({
       _id: { $ne: house._id },
       type: house.type,
@@ -605,8 +631,7 @@ router.get("/price-insights/:id", async (req, res) => {
       lng: { $exists: true, $ne: null }
     }).lean();
 
-    // Filter by distance
-    const radius = 5; // km
+    const radius = 5;
     const nearby = similarHouses.filter(h => {
       const dist = getDistance(house.lat, house.lng, h.lat, h.lng);
       return dist <= radius;

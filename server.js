@@ -152,6 +152,10 @@ io.on("connection", async (socket) => {
 
 app.set('io', io);
 
+// ========== WHATSAPP WEBHOOK (ADDED) ==========
+const whatsappWebhook = require("./webhooks/whatsappWebhook");
+app.use("/", whatsappWebhook);  // mounts /webhook endpoint
+
 // Routes
 console.log("📦 Registering routes...");
 
