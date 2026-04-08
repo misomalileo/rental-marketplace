@@ -44,6 +44,9 @@ const UserSchema = new mongoose.Schema({
     bio: { type: String, default: '' },
     profileCompleted: { type: Boolean, default: false },
     
+    // ========== NEW FIELD: WhatsApp number for alerts ==========
+    whatsappNumber: { type: String, default: '' },
+    
     subscriptionExpiresAt: { type: Date, default: null },
     
     savedSearches: [{

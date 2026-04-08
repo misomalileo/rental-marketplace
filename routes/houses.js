@@ -16,14 +16,66 @@ const {
 const { sendWhatsAppAlert } = require("../services/whatsappService");
 const SavedSearch = require("../models/SavedSearch");
 
-// Helper to check if a house matches saved filters
+// ========== ENHANCED MATCH FILTERS FUNCTION ==========
 function matchesFilters(house, filters) {
-    let matches = true;
-    if (filters.minPrice && house.price < filters.minPrice) matches = false;
-    if (filters.maxPrice && house.price > filters.maxPrice) matches = false;
-    if (filters.type && house.type !== filters.type) matches = false;
-    // add more filters as needed (bedrooms, region, etc.)
-    return matches;
+  // If no filters, treat as match (should not happen, but safe)
+  if (!filters || Object.keys(filters).length === 0) return true;
+  
+  // Price range
+  if (filters.minPrice && house.price < filters.minPrice) return false;
+  if (filters.maxPrice && house.price > filters.maxPrice) return false;
+  
+  // Property type
+  if (filters.type && house.type !== filters.type) return false;
+  
+  // Region (map city to region)
+  if (filters.region) {
+    const regionMap = {
+      'Mzuzu': 'Northern', 'Rumphi': 'Northern', 'Karonga': 'Northern', 'Chitipa': 'Northern',
+      'Nkhata Bay': 'Northern', 'Mzimba': 'Northern',
+      'Lilongwe': 'Central', 'Dedza': 'Central', 'Salima': 'Central', 'Mchinji': 'Central',
+      'Ntcheu': 'Central', 'Kasungu': 'Central', 'Dowa': 'Central', 'Nkhotakota': 'Central',
+      'Blantyre': 'Southern', 'Zomba': 'Southern', 'Mulanje': 'Southern', 'Thyolo': 'Southern',
+      'Mangochi': 'Southern', 'Balaka': 'Southern', 'Chikwawa': 'Southern', 'Nsanje': 'Southern',
+      'Phalombe': 'Southern', 'Machinga': 'Southern'
+    };
+    const houseLocation = house.location || '';
+    let houseRegion = null;
+    for (const [city, region] of Object.entries(regionMap)) {
+      if (houseLocation.toLowerCase().includes(city.toLowerCase())) {
+        houseRegion = region;
+        break;
+      }
+    }
+    if (houseRegion !== filters.region) return false;
+  }
+  
+  // Bedrooms
+  if (filters.bedrooms && house.bedrooms < filters.bedrooms) return false;
+  
+  // Amenities (if any)
+  if (filters.wifi === true && !house.wifi) return false;
+  if (filters.parking === true && !house.parking) return false;
+  if (filters.furnished === true && !house.furnished) return false;
+  if (filters.petFriendly === true && !house.petFriendly) return false;
+  if (filters.pool === true && !house.pool) return false;
+  if (filters.ac === true && !house.ac) return false;
+  
+  // Self-contained
+  if (filters.selfContained === true && !house.selfContained) return false;
+  
+  // Gender restriction
+  if (filters.gender && house.gender !== filters.gender && filters.gender !== 'none') return false;
+  
+  // Property details (e.g., `propertyDetails.someField`)
+  if (filters.propertyDetails) {
+    for (const [key, value] of Object.entries(filters.propertyDetails)) {
+      if (house.propertyDetails && house.propertyDetails[key] !== value) return false;
+      if (!house.propertyDetails) return false;
+    }
+  }
+  
+  return true;
 }
 // ====================================================
 
