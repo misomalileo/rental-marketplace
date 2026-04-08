@@ -50,8 +50,12 @@ function matchesFilters(house, filters) {
     if (houseRegion !== filters.region) return false;
   }
   
-  // Bedrooms
-  if (filters.bedrooms && house.bedrooms < filters.bedrooms) return false;
+  // Bedrooms – use propertyDetails if main field is 0
+  let actualBedrooms = house.bedrooms;
+  if (actualBedrooms === 0 && house.propertyDetails && house.propertyDetails.bedrooms) {
+    actualBedrooms = parseInt(house.propertyDetails.bedrooms);
+  }
+  if (filters.bedrooms && actualBedrooms < filters.bedrooms) return false;
   
   // Amenities (if any)
   if (filters.wifi === true && !house.wifi) return false;
@@ -170,12 +174,23 @@ router.post(
         }
       }
 
+      // ========== FIX: use propertyDetails for bedrooms/bathrooms if main fields are missing ==========
+      let mainBedrooms = req.body.bedrooms || 0;
+      let mainBathrooms = req.body.bathrooms || 0;
+      if (mainBedrooms === 0 && propertyDetails.bedrooms) {
+        mainBedrooms = parseInt(propertyDetails.bedrooms);
+      }
+      if (mainBathrooms === 0 && propertyDetails.bathrooms) {
+        mainBathrooms = parseInt(propertyDetails.bathrooms);
+      }
+      // ==============================================================================================
+
       const house = new House({
         name: req.body.name,
         location: req.body.location,
         price: req.body.price,
-        bedrooms: req.body.bedrooms || 0,
-        bathrooms: req.body.bathrooms || 0,
+        bedrooms: mainBedrooms,
+        bathrooms: mainBathrooms,
         type: req.body.type || "House",
         description: req.body.description || "",
         phone: req.body.phone,
@@ -278,8 +293,21 @@ router.put(
       house.name = req.body.name || house.name;
       house.location = req.body.location || house.location;
       house.price = req.body.price || house.price;
-      house.bedrooms = req.body.bedrooms || house.bedrooms;
-      house.bathrooms = req.body.bathrooms || house.bathrooms;
+      // For bedrooms/bathrooms, also check propertyDetails if needed (optional)
+      let newBedrooms = req.body.bedrooms || house.bedrooms;
+      let newBathrooms = req.body.bathrooms || house.bathrooms;
+      if (req.body.propertyDetails) {
+        try {
+          const updatedDetails = typeof req.body.propertyDetails === 'string'
+            ? JSON.parse(req.body.propertyDetails)
+            : req.body.propertyDetails;
+          if (newBedrooms === 0 && updatedDetails.bedrooms) newBedrooms = parseInt(updatedDetails.bedrooms);
+          if (newBathrooms === 0 && updatedDetails.bathrooms) newBathrooms = parseInt(updatedDetails.bathrooms);
+          house.propertyDetails = updatedDetails;
+        } catch(e) { console.warn("Failed to parse propertyDetails on update:", e); }
+      }
+      house.bedrooms = newBedrooms;
+      house.bathrooms = newBathrooms;
       house.type = req.body.type || house.type;
       house.description = req.body.description || house.description;
       house.phone = req.body.phone || house.phone;
@@ -297,16 +325,6 @@ router.put(
       house.selfContained = req.body.selfContained === "on" || req.body.selfContained === "true";
       if (req.body.unavailableDates) {
         house.unavailableDates = JSON.parse(req.body.unavailableDates).map((d) => new Date(d));
-      }
-
-      if (req.body.propertyDetails) {
-        try {
-          house.propertyDetails = typeof req.body.propertyDetails === 'string'
-            ? JSON.parse(req.body.propertyDetails)
-            : req.body.propertyDetails;
-        } catch(e) {
-          console.warn("Failed to parse propertyDetails on update:", e);
-        }
       }
 
       if (req.files && req.files.length > 0) {
