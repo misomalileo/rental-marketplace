@@ -3,7 +3,7 @@ const axios = require('axios');
 
 const GRAPH_API_TOKEN = process.env.GRAPH_API_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const API_VERSION = 'v21.0';
+const API_VERSION = 'v25.0';
 
 async function sendWhatsAppAlert(toNumber, propertyName, location, price, propertyUrl) {
     try {
@@ -19,7 +19,7 @@ async function sendWhatsAppAlert(toNumber, propertyName, location, price, proper
                 to: toNumber,
                 type: 'template',
                 template: {
-                    name: 'new_property_alert',
+                    name: 'khomo_alert',
                     language: { code: 'en' },
                     components: [{
                         type: 'body',
