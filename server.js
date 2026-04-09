@@ -182,34 +182,6 @@ app.set('io', io);
 const whatsappWebhook = require("./webhooks/whatsappWebhook");
 app.use("/", whatsappWebhook);  // mounts /webhook endpoint
 
-// ========== TEMPORARY ENCRYPTION MIGRATION ENDPOINT (remove after migration) ==========
-app.post('/api/admin/migrate-encrypt', async (req, res) => {
-    const secret = req.headers['x-migration-secret'];
-    if (secret !== process.env.ENCRYPTION_SECRET) {
-        return res.status(403).json({ message: 'Unauthorized' });
-    }
-    try {
-        const User = require('./models/User');
-        const House = require('./models/House');
-        let userCount = 0, houseCount = 0;
-        const users = await User.find();
-        for (const user of users) {
-            await user.save();
-            userCount++;
-        }
-        const houses = await House.find();
-        for (const house of houses) {
-            await house.save();
-            houseCount++;
-        }
-        res.json({ message: `Migration complete. Users: ${userCount}, Houses: ${houseCount}` });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
-    }
-});
-// =================================================================================
-
 // Routes
 console.log("📦 Registering routes...");
 
