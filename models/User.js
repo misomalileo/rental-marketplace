@@ -60,7 +60,19 @@ const UserSchema = new mongoose.Schema({
     notifications: [NotificationSchema],  // ✅ Use the subdocument schema
     
     trustScore: { type: Number, default: 0 },
-    lastSeen: { type: Date, default: Date.now }
+    lastSeen: { type: Date, default: Date.now },
+
+    // ========== SECURITY FIELDS ==========
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
+    passwordChangedAt: { type: Date, default: Date.now }
 });
+
+// Helper method to check password strength
+UserSchema.methods.isPasswordStrong = function(password) {
+    // At least 8 chars, one uppercase, one lowercase, one number
+    const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    return strongRegex.test(password);
+};
 
 module.exports = mongoose.model("User", UserSchema);

@@ -14,6 +14,10 @@ const {
 } = require("../middleware/validator");
 const auth = require("../middleware/auth");
 
+// Brute‑force protection constants
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
+
 function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
@@ -33,8 +37,13 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    const hashed = await bcrypt.hash(password, 10);
-    // Optional: generate verification token, but we won't require verification
+    // Enforce strong password
+    const tempUser = new User();
+    if (!tempUser.isPasswordStrong(password)) {
+      return res.status(400).json({ message: "Password must be at least 8 characters, include uppercase, lowercase, and a number." });
+    }
+
+    const hashed = await bcrypt.hash(password, 12); // increased salt rounds for security
     const verificationToken = generateToken();
 
     const user = new User({
@@ -43,15 +52,11 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
       password: hashed,
       phone,
       authProvider: "local",
-      isEmailVerified: true, // ✅ Auto-verified
-      emailVerificationToken: verificationToken, // still store but not used
+      isEmailVerified: true,
+      emailVerificationToken: verificationToken,
       role: role,
     });
     await user.save();
-
-    // Optionally send a welcome email (without verification link)
-    // const { sendEmail } = require("../utils/emailService");
-    // await sendEmail({ ... });
 
     res.json({ message: "Registration successful! You can now log in." });
   } catch (err) {
@@ -79,15 +84,15 @@ router.get("/verify-email/:token", async (req, res) => {
 
 // FORGOT PASSWORD (unchanged)
 router.post("/forgot-password", authLimiter, async (req, res) => {
-  // ... (same as before)
+  // ... (keep your existing implementation)
 });
 
 // RESET PASSWORD (unchanged)
 router.post("/reset-password", validateResetPassword, handleValidationErrors, async (req, res) => {
-  // ... (same as before)
+  // ... (keep your existing implementation)
 });
 
-// LOGIN – no longer checks email verification
+// LOGIN – with brute‑force protection and lockout
 router.post("/login", authLimiter, validateLogin, handleValidationErrors, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -103,12 +108,31 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
       });
     }
 
+    // Check if account is locked
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / 60000);
+      return res.status(403).json({ message: `Account locked. Try again in ${minutesLeft} minutes.` });
+    }
+
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
+      // Increment failed attempts
+      user.failedLoginAttempts += 1;
+      if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
+        user.lockUntil = Date.now() + LOCK_TIME;
+        await user.save();
+        return res.status(403).json({ message: `Too many failed attempts. Account locked for 15 minutes.` });
+      }
+      await user.save();
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // No email verification check – all users can log in immediately
+    // Successful login – reset counters
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    user.passwordChangedAt = Date.now(); // optional: to invalidate old tokens later
+    await user.save();
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
