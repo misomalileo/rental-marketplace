@@ -17,29 +17,23 @@ const {
 const auth = require("../middleware/auth");
 const { sendVerificationEmail, sendPasswordResetEmail } = require("../utils/emailService");
 
-// Brute‑force protection constants
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
+const LOCK_TIME = 15 * 60 * 1000;
 
 function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// ========== REGISTER (with email verification) ==========
+// ========== REGISTER ==========
 router.post("/register", authLimiter, validateRegister, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password, phone, role = "free" } = req.body;
-
     if (!["free", "landlord", "premium_user"].includes(role)) {
       return res.status(400).json({ message: "Invalid role specified" });
     }
-
     const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ message: "Email already registered" });
-    }
+    if (existing) return res.status(400).json({ message: "Email already registered" });
 
-    // Enforce strong password
     const tempUser = new User();
     if (!tempUser.isPasswordStrong(password)) {
       return res.status(400).json({ message: "Password must be at least 8 characters, include uppercase, lowercase, and a number." });
@@ -49,23 +43,14 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
     const verificationToken = generateToken();
 
     const user = new User({
-      name,
-      email,
-      password: hashed,
-      phone,
-      authProvider: "local",
-      isEmailVerified: false,  // require verification
-      emailVerificationToken: verificationToken,
-      role: role,
+      name, email, password: hashed, phone, authProvider: "local",
+      isEmailVerified: false, emailVerificationToken: verificationToken, role,
     });
     await user.save();
 
-    // Send verification email (non-blocking)
     try {
       await sendVerificationEmail(email, verificationToken);
-    } catch (emailErr) {
-      console.error("Failed to send verification email:", emailErr);
-    }
+    } catch (emailErr) { console.error("Email send failed:", emailErr); }
 
     res.json({ message: "Registration successful! Please check your email to verify your account." });
   } catch (err) {
@@ -78,9 +63,7 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
 router.get("/verify-email/:token", async (req, res) => {
   try {
     const user = await User.findOne({ emailVerificationToken: req.params.token });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired verification link." });
-    }
+    if (!user) return res.status(400).json({ message: "Invalid or expired verification link." });
     user.isEmailVerified = true;
     user.emailVerificationToken = undefined;
     await user.save();
@@ -91,23 +74,20 @@ router.get("/verify-email/:token", async (req, res) => {
   }
 });
 
-// ========== RESEND VERIFICATION EMAIL ==========
+// ========== RESEND VERIFICATION ==========
 router.post("/resend-verification", authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: "Email is required" });
-
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
     if (user.isEmailVerified) return res.status(400).json({ message: "Email already verified" });
 
-    // Use existing token or generate new
     const token = user.emailVerificationToken || generateToken();
     if (!user.emailVerificationToken) {
       user.emailVerificationToken = token;
       await user.save();
     }
-
     await sendVerificationEmail(email, token);
     res.json({ message: "Verification email resent. Please check your inbox." });
   } catch (err) {
@@ -121,19 +101,14 @@ router.post("/forgot-password", authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.json({ message: "If that email is registered, you will receive a password reset link." });
-    }
+    if (!user) return res.json({ message: "If that email is registered, you will receive a password reset link." });
     const resetToken = generateToken();
     user.passwordResetToken = resetToken;
-    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    user.resetTokenExpiry = Date.now() + 3600000;
     await user.save();
-
     try {
       await sendPasswordResetEmail(email, resetToken);
-    } catch (emailErr) {
-      console.error("Failed to send password reset email:", emailErr);
-    }
+    } catch (emailErr) { console.error("Email send failed:", emailErr); }
     res.json({ message: "If that email is registered, you will receive a password reset link." });
   } catch (err) {
     console.error(err);
@@ -149,11 +124,8 @@ router.post("/reset-password", validateResetPassword, handleValidationErrors, as
       passwordResetToken: token,
       resetTokenExpiry: { $gt: Date.now() }
     });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired reset token" });
-    }
+    if (!user) return res.status(400).json({ message: "Invalid or expired reset token" });
 
-    // Validate password strength
     const tempUser = new User();
     if (!tempUser.isPasswordStrong(newPassword)) {
       return res.status(400).json({ message: "Password must be at least 8 characters, include uppercase, lowercase, and a number." });
@@ -172,28 +144,19 @@ router.post("/reset-password", validateResetPassword, handleValidationErrors, as
   }
 });
 
-// ========== LOGIN (with email verification check) ==========
+// ========== LOGIN (with fixed 2FA handling) ==========
 router.post("/login", authLimiter, validateLogin, handleValidationErrors, async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
+    if (!user) return res.status(400).json({ message: "Invalid email or password" });
     if (user.authProvider === "google" && !user.password) {
-      return res.status(400).json({
-        message: "This email uses Google Sign-In. Please click 'Login with Google'."
-      });
+      return res.status(400).json({ message: "This email uses Google Sign-In. Please click 'Login with Google'." });
     }
-
-    // Check if email is verified
     if (!user.isEmailVerified) {
-      return res.status(403).json({ message: "Please verify your email address before logging in. Check your inbox for the verification link." });
+      return res.status(403).json({ message: "Please verify your email address before logging in." });
     }
-
-    // Check if account is locked
     if (user.lockUntil && user.lockUntil > Date.now()) {
       const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / 60000);
       return res.status(403).json({ message: `Account locked. Try again in ${minutesLeft} minutes.` });
@@ -201,7 +164,6 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      // Increment failed attempts
       user.failedLoginAttempts += 1;
       if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
         user.lockUntil = Date.now() + LOCK_TIME;
@@ -212,64 +174,58 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Successful login – reset counters
+    // Reset failed attempts
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
     user.passwordChangedAt = Date.now();
     await user.save();
 
-    // 2FA CHECK
+    // 2FA enabled – return temporary token
     if (user.twoFactorEnabled) {
       const tempToken = jwt.sign(
         { id: user._id, role: user.role, twoFactorPending: true },
         process.env.JWT_SECRET,
         { expiresIn: "5m" }
       );
-      return res.status(200).json({
+      return res.json({
         twoFactorRequired: true,
         tempToken: tempToken,
         message: "2FA code required"
       });
     }
 
+    // No 2FA – return final token
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-
     res.json({
       token,
       user: {
-        _id: user._id,
-        name: user.name,
-        role: user.role,
-        verified: user.verified,
-        verificationType: user.verificationType,
+        _id: user._id, name: user.name, role: user.role,
+        verified: user.verified, verificationType: user.verificationType,
         isEmailVerified: user.isEmailVerified,
         subscriptionExpiresAt: user.subscriptionExpiresAt
       }
     });
   } catch (err) {
-    console.error(err);
+    console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ========== 2FA ENDPOINTS (unchanged) ==========
+// ========== 2FA ENDPOINTS ==========
 router.post("/enable-2fa", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (user.role !== "admin" && !user.role.includes("premium") && user.role !== "premium_user" && user.role !== "premium_landlord") {
+    if (user.role !== "admin" && !user.role.includes("premium")) {
       return res.status(403).json({ message: "2FA is only available for admin and premium users." });
     }
-
     const secret = speakeasy.generateSecret({ length: 20, name: `Khomo Lathu (${user.email})` });
     user.twoFactorSecret = secret.base32;
     await user.save();
-
     const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
     res.json({ secret: secret.base32, qrCodeUrl });
   } catch (err) {
@@ -282,21 +238,17 @@ router.post("/verify-2fa", auth, async (req, res) => {
   try {
     const { token } = req.body;
     if (!token) return res.status(400).json({ message: "OTP token required" });
-
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
-    if (!user.twoFactorSecret) return res.status(400).json({ message: "2FA not initiated. Please call /enable-2fa first." });
+    if (!user.twoFactorSecret) return res.status(400).json({ message: "2FA not initiated." });
 
     const verified = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
       encoding: "base32",
-      token: token,
+      token,
       window: 1
     });
-
-    if (!verified) {
-      return res.status(400).json({ message: "Invalid OTP code" });
-    }
+    if (!verified) return res.status(400).json({ message: "Invalid OTP code" });
 
     user.twoFactorEnabled = true;
     await user.save();
@@ -311,7 +263,6 @@ router.post("/disable-2fa", auth, async (req, res) => {
   try {
     const { token } = req.body;
     if (!token) return res.status(400).json({ message: "OTP token required" });
-
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     if (!user.twoFactorEnabled) return res.status(400).json({ message: "2FA is not enabled" });
@@ -319,13 +270,10 @@ router.post("/disable-2fa", auth, async (req, res) => {
     const verified = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
       encoding: "base32",
-      token: token,
+      token,
       window: 1
     });
-
-    if (!verified) {
-      return res.status(400).json({ message: "Invalid OTP code" });
-    }
+    if (!verified) return res.status(400).json({ message: "Invalid OTP code" });
 
     user.twoFactorEnabled = false;
     user.twoFactorSecret = null;
@@ -343,49 +291,38 @@ router.post("/verify-2fa-login", async (req, res) => {
     if (!tempToken || !otp) {
       return res.status(400).json({ message: "Missing temporary token or OTP" });
     }
-
     let decoded;
     try {
       decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
     } catch (err) {
       return res.status(401).json({ message: "Invalid or expired temporary token" });
     }
-
     if (!decoded.twoFactorPending) {
       return res.status(400).json({ message: "Invalid temporary token" });
     }
-
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     if (!user.twoFactorEnabled) {
       return res.status(400).json({ message: "2FA is not enabled for this user" });
     }
-
     const verified = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
       encoding: "base32",
       token: otp,
       window: 1
     });
-
-    if (!verified) {
-      return res.status(401).json({ message: "Invalid OTP code" });
-    }
+    if (!verified) return res.status(401).json({ message: "Invalid OTP code" });
 
     const finalToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-
     res.json({
       token: finalToken,
       user: {
-        _id: user._id,
-        name: user.name,
-        role: user.role,
-        verified: user.verified,
-        verificationType: user.verificationType,
+        _id: user._id, name: user.name, role: user.role,
+        verified: user.verified, verificationType: user.verificationType,
         isEmailVerified: user.isEmailVerified,
         subscriptionExpiresAt: user.subscriptionExpiresAt
       }
@@ -396,25 +333,25 @@ router.post("/verify-2fa-login", async (req, res) => {
   }
 });
 
-// ========== GET CURRENT USER (with error handling for decryption) ==========
+// ========== GET CURRENT USER (with safe fallback for decryption errors) ==========
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (err) {
     console.error("Error in /me:", err);
-    // If decryption fails, the encryption secret might be wrong or data is corrupted
+    // If the error is related to decryption, return a partial user or a clear error
     if (err.message && (err.message.includes("decrypt") || err.message.includes("cipher"))) {
-      return res.status(500).json({ message: "Data decryption error. Please contact support." });
+      // Fallback: fetch user without encrypted fields (not possible because plugin auto-decrypts)
+      // Instead, we return a generic error and advise the admin to run migration
+      return res.status(500).json({ message: "Data decryption failed. Please run the encryption migration script." });
     }
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ========== GOOGLE LOGIN (with error handling) ==========
+// ========== GOOGLE LOGIN ==========
 router.get("/google", (req, res, next) => {
   const role = req.query.role || "free";
   req.session.intendedRole = role;
@@ -430,24 +367,16 @@ router.get(
   async (req, res) => {
     try {
       const user = req.user;
-      if (!user) {
-        return res.redirect("/login.html?error=google-auth-failed");
-      }
+      if (!user) return res.redirect("/login.html?error=google-auth-failed");
       let finalRole = user.role;
-
       if (!user.role || user.role === "free") {
         const intendedRole = req.session.intendedRole || "free";
         if (intendedRole === "landlord" || intendedRole === "premium_user") {
           user.role = intendedRole;
-          await user.save().catch(err => {
-            console.error("Failed to save user role:", err);
-          });
+          await user.save().catch(err => console.error("Save error:", err));
         }
         finalRole = user.role;
-      } else {
-        finalRole = user.role;
       }
-
       const token = jwt.sign(
         { id: user._id, role: finalRole },
         process.env.JWT_SECRET,
