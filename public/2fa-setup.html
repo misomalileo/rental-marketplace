@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>2FA Setup | Khomo Lathu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b);
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: rgba(20, 30, 45, 0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 48px;
+      padding: 2rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5);
+      transition: all 0.3s ease;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: linear-gradient(135deg, #fff, #FFB347);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    h1 i {
+      background: linear-gradient(135deg, #FFD966, #FF8C42);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-size: 2rem;
+    }
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      border-left: 3px solid #FF8C42;
+      padding-left: 0.8rem;
+    }
+    .qr-card {
+      background: rgba(0,0,0,0.4);
+      border-radius: 28px;
+      padding: 1.5rem;
+      text-align: center;
+      margin: 1rem 0;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .qr-code {
+      background: white;
+      padding: 1rem;
+      display: inline-block;
+      border-radius: 24px;
+      margin-bottom: 1rem;
+    }
+    .secret-box {
+      background: #111827;
+      padding: 0.8rem;
+      border-radius: 20px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      word-break: break-all;
+      margin: 1rem 0;
+      border: 1px solid #334155;
+    }
+    .input-group {
+      margin: 1rem 0;
+    }
+    .input-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+      color: #cbd5e1;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 0.8rem;
+      background: #111827;
+      border: 1px solid #334155;
+      border-radius: 28px;
+      color: white;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .input-group input:focus {
+      outline: none;
+      border-color: #FF8C42;
+      box-shadow: 0 0 0 2px rgba(255,140,66,0.2);
+    }
+    button {
+      background: linear-gradient(135deg, #FF8C42, #E67E22);
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+    }
+    button.secondary {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .status {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border-radius: 28px;
+      font-size: 0.85rem;
+      text-align: center;
+      display: none;
+    }
+    .status.success {
+      background: rgba(46,204,113,0.2);
+      border: 1px solid #2ecc71;
+      color: #2ecc71;
+    }
+    .status.error {
+      background: rgba(231,76,60,0.2);
+      border: 1px solid #e74c3c;
+      color: #e74c3c;
+    }
+    .info-text {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+    @media (max-width: 640px) {
+      .container { padding: 1.5rem; }
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1><i class="fas fa-shield-alt"></i> Two‑Factor Authentication</h1>
+  <div class="subtitle">Add an extra layer of security to your account</div>
+
+  <div id="statusMessage" class="status"></div>
+
+  <!-- Section when 2FA is disabled (setup mode) -->
+  <div id="setupSection">
+    <div class="qr-card">
+      <p style="margin-bottom: 1rem;"><i class="fas fa-mobile-alt"></i> Scan with Google Authenticator or any TOTP app</p>
+      <div id="qrCodeContainer" class="qr-code" style="display: none;"></div>
+      <div id="secretContainer" class="secret-box" style="display: none;"></div>
+      <div class="input-group">
+        <label>Enter the 6‑digit code from the app</label>
+        <input type="text" id="otpCode" placeholder="000000" maxlength="6">
+      </div>
+      <button id="enableBtn">Enable 2FA</button>
+      <div class="info-text">After enabling, you will need to enter a code from your authenticator app every time you log in.</div>
+    </div>
+  </div>
+
+  <!-- Section when 2FA is already enabled (disable mode) -->
+  <div id="disableSection" style="display: none;">
+    <div class="qr-card">
+      <p><i class="fas fa-check-circle" style="color: #2ecc71;"></i> Two‑Factor Authentication is <strong>active</strong> on your account.</p>
+      <div class="input-group">
+        <label>Enter your current OTP to disable</label>
+        <input type="text" id="disableOtp" placeholder="000000" maxlength="6">
+      </div>
+      <button id="disableBtn" class="secondary">Disable 2FA</button>
+      <div class="info-text">Disabling 2FA will make your account less secure. We recommend keeping it on.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/login.html';
+
+  let currentSecret = null;
+
+  async function fetchWithAuth(url, options = {}) {
+    options.headers = options.headers || {};
+    options.headers['Authorization'] = 'Bearer ' + token;
+    options.headers['Content-Type'] = 'application/json';
+    const res = await fetch(url, options);
+    if (res.status === 401) window.location.href = '/login.html';
+    return res;
+  }
+
+  function showStatus(message, type) {
+    const div = document.getElementById('statusMessage');
+    div.textContent = message;
+    div.className = `status ${type}`;
+    div.style.display = 'block';
+    setTimeout(() => { div.style.display = 'none'; }, 5000);
+  }
+
+  async function loadCurrentStatus() {
+    try {
+      const res = await fetchWithAuth('/api/auth/me');
+      const user = await res.json();
+      if (user.twoFactorEnabled) {
+        document.getElementById('setupSection').style.display = 'none';
+        document.getElementById('disableSection').style.display = 'block';
+      } else {
+        document.getElementById('setupSection').style.display = 'block';
+        document.getElementById('disableSection').style.display = 'none';
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  document.getElementById('enableBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('enableBtn');
+    const otp = document.getElementById('otpCode').value.trim();
+    if (!otp) {
+      // First step: generate secret and QR code
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Generating...';
+      try {
+        const res = await fetchWithAuth('/api/auth/enable-2fa', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+          currentSecret = data.secret;
+          document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.qrCodeUrl}" alt="QR Code" style="width:180px; height:180px;">`;
+          document.getElementById('qrCodeContainer').style.display = 'block';
+          document.getElementById('secretContainer').innerHTML = `<strong>Manual entry key:</strong><br>${data.secret}`;
+          document.getElementById('secretContainer').style.display = 'block';
+          btn.innerHTML = 'Verify & Enable';
+          btn.disabled = false;
+        } else {
+          showStatus(data.message || 'Failed to generate 2FA secret', 'error');
+          btn.innerHTML = 'Enable 2FA';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        showStatus('Network error. Please try again.', 'error');
+        btn.innerHTML = 'Enable 2FA';
+        btn.disabled = false;
+      }
+      return;
+    }
+
+    // Second step: verify OTP and enable
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Verifying...';
+    try {
+      const res = await fetchWithAuth('/api/auth/verify-2fa', {
+        method: 'POST',
+        body: JSON.stringify({ token: otp })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showStatus('✅ 2FA enabled successfully! You will need to use your authenticator app for future logins.', 'success');
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        showStatus(data.message || 'Verification failed', 'error');
+        btn.innerHTML = 'Verify & Enable';
+        btn.disabled = false;
+      }
+    } catch (err) {
+      showStatus('Network error. Please try again.', 'error');
+      btn.innerHTML = 'Verify & Enable';
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('disableBtn').addEventListener('click', async () => {
+    const otp = document.getElementById('disableOtp').value.trim();
+    if (!otp) {
+      showStatus('Please enter your OTP code', 'error');
+      return;
+    }
+    const btn = document.getElementById('disableBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Disabling...';
+    try {
+      const res = await fetchWithAuth('/api/auth/disable-2fa', {
+        method: 'POST',
+        body: JSON.stringify({ token: otp })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showStatus('2FA disabled successfully', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        showStatus(data.message || 'Failed to disable 2FA', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Disable 2FA';
+      }
+    } catch (err) {
+      showStatus('Network error', 'error');
+      btn.disabled = false;
+      btn.innerHTML = 'Disable 2FA';
+    }
+  });
+
+  loadCurrentStatus();
+</script>
+</body>
+</html>

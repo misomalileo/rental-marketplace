@@ -65,7 +65,11 @@ const UserSchema = new mongoose.Schema({
     // ========== SECURITY FIELDS ==========
     failedLoginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
-    passwordChangedAt: { type: Date, default: Date.now }
+    passwordChangedAt: { type: Date, default: Date.now },
+
+    // ========== 2FA FIELDS (ADDED) ==========
+    twoFactorSecret: { type: String, default: null },
+    twoFactorEnabled: { type: Boolean, default: false }
 });
 
 // Helper method to check password strength

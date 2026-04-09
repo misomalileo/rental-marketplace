@@ -4,6 +4,8 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const speakeasy = require("speakeasy");
+const QRCode = require("qrcode");
 const User = require("../models/User");
 const { authLimiter } = require("../middleware/rateLimiter");
 const {
@@ -92,7 +94,7 @@ router.post("/reset-password", validateResetPassword, handleValidationErrors, as
   // ... (keep your existing implementation)
 });
 
-// LOGIN – with brute‑force protection and lockout
+// ========== LOGIN (modified to support 2FA) ==========
 router.post("/login", authLimiter, validateLogin, handleValidationErrors, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -130,8 +132,24 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
     // Successful login – reset counters
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
-    user.passwordChangedAt = Date.now(); // optional: to invalidate old tokens later
+    user.passwordChangedAt = Date.now();
     await user.save();
+
+    // ========== 2FA CHECK ==========
+    if (user.twoFactorEnabled) {
+      // Issue a temporary token (valid 5 minutes) that requires OTP verification
+      const tempToken = jwt.sign(
+        { id: user._id, role: user.role, twoFactorPending: true },
+        process.env.JWT_SECRET,
+        { expiresIn: "5m" }
+      );
+      return res.status(200).json({
+        twoFactorRequired: true,
+        tempToken: tempToken,
+        message: "2FA code required"
+      });
+    }
+    // ================================
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -156,6 +174,163 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// ========== 2FA ENDPOINTS (ADDED) ==========
+
+// Step 1: Generate 2FA secret and QR code (requires user to be logged in)
+router.post("/enable-2fa", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Only allow for admin or premium users
+    if (user.role !== "admin" && !user.role.includes("premium") && user.role !== "premium_user" && user.role !== "premium_landlord") {
+      return res.status(403).json({ message: "2FA is only available for admin and premium users." });
+    }
+
+    // Generate a new secret
+    const secret = speakeasy.generateSecret({ length: 20, name: `Khomo Lathu (${user.email})` });
+    
+    // Store the secret temporarily (not enabled yet)
+    user.twoFactorSecret = secret.base32;
+    await user.save();
+
+    // Generate QR code as data URL
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
+    
+    res.json({ secret: secret.base32, qrCodeUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Step 2: Verify OTP and enable 2FA
+router.post("/verify-2fa", auth, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ message: "OTP token required" });
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.twoFactorSecret) return res.status(400).json({ message: "2FA not initiated. Please call /enable-2fa first." });
+
+    // Verify the token
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: "base32",
+      token: token,
+      window: 1  // allow 1 step before/after for clock drift
+    });
+
+    if (!verified) {
+      return res.status(400).json({ message: "Invalid OTP code" });
+    }
+
+    user.twoFactorEnabled = true;
+    await user.save();
+
+    res.json({ message: "2FA enabled successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Disable 2FA (requires OTP)
+router.post("/disable-2fa", auth, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ message: "OTP token required" });
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.twoFactorEnabled) return res.status(400).json({ message: "2FA is not enabled" });
+
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: "base32",
+      token: token,
+      window: 1
+    });
+
+    if (!verified) {
+      return res.status(400).json({ message: "Invalid OTP code" });
+    }
+
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = null;
+    await user.save();
+
+    res.json({ message: "2FA disabled successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Verify OTP during login (after temporary token)
+router.post("/verify-2fa-login", async (req, res) => {
+  try {
+    const { tempToken, otp } = req.body;
+    if (!tempToken || !otp) {
+      return res.status(400).json({ message: "Missing temporary token or OTP" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid or expired temporary token" });
+    }
+
+    if (!decoded.twoFactorPending) {
+      return res.status(400).json({ message: "Invalid temporary token" });
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.twoFactorEnabled) {
+      return res.status(400).json({ message: "2FA is not enabled for this user" });
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: "base32",
+      token: otp,
+      window: 1
+    });
+
+    if (!verified) {
+      return res.status(401).json({ message: "Invalid OTP code" });
+    }
+
+    // Generate final JWT
+    const finalToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.json({
+      token: finalToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        role: user.role,
+        verified: user.verified,
+        verificationType: user.verificationType,
+        isEmailVerified: user.isEmailVerified,
+        subscriptionExpiresAt: user.subscriptionExpiresAt
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ========== END 2FA ENDPOINTS ==========
 
 // GET CURRENT USER (unchanged)
 router.get("/me", auth, async (req, res) => {

@@ -89,6 +89,7 @@
     }
     .input-group {
       margin-bottom: 1rem;
+      position: relative;
     }
     .input-group label {
       display: block;
@@ -99,7 +100,7 @@
     }
     .input-group input {
       width: 100%;
-      padding: 0.8rem 1rem;
+      padding: 0.8rem 2.5rem 0.8rem 1rem;
       border: 1px solid #e2e8f0;
       border-radius: 24px;
       font-size: 0.95rem;
@@ -110,6 +111,18 @@
     .input-group input:focus {
       border-color: #2563eb;
       box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .password-toggle {
+      position: absolute;
+      right: 15px;
+      bottom: 12px;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: color 0.2s;
+      font-size: 1rem;
+    }
+    .password-toggle:hover {
+      color: #2563eb;
     }
     .login-btn {
       width: 100%;
@@ -242,6 +255,9 @@
       <div class="input-group">
         <label><i class="fas fa-lock"></i> Password</label>
         <input type="password" id="password" placeholder="••••••••" required>
+        <span class="password-toggle" id="togglePassword">
+          <i class="far fa-eye"></i>
+        </span>
       </div>
       <button type="submit" class="login-btn" id="loginBtn">
         <i class="fas fa-sign-in-alt"></i> Log In
@@ -256,9 +272,6 @@
     <a href="/api/auth/google" class="social-btn google-btn">
       <i class="fab fa-google"></i> Continue with Google
     </a>
-    <!-- Apple and Facebook buttons can be added if backend supports them -->
-    <!-- <a href="/api/auth/apple" class="social-btn apple-btn"><i class="fab fa-apple"></i> Continue with Apple</a> -->
-    <!-- <a href="/api/auth/facebook" class="social-btn facebook-btn"><i class="fab fa-facebook-f"></i> Continue with Facebook</a> -->
 
     <div class="forgot-link">
       <a href="forgot-password.html"><i class="fas fa-key"></i> Forgot password?</a>
@@ -269,6 +282,15 @@
   </div>
 
   <script>
+    // Password visibility toggle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordField = document.getElementById('password');
+    togglePassword.addEventListener('click', function () {
+      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', type);
+      this.innerHTML = type === 'password' ? '<i class="far fa-eye"></i>' : '<i class="far fa-eye-slash"></i>';
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('verified') === 'true') {
       showMessage('Email verified! You can now log in.', 'success');
@@ -310,6 +332,15 @@
         });
         const data = await res.json();
         if (res.ok) {
+          // Check if 2FA is required
+          if (data.twoFactorRequired) {
+            sessionStorage.setItem('temp2faToken', data.tempToken);
+            // Store the intended redirect page (optional)
+            sessionStorage.setItem('redirectAfterLogin', window.location.href);
+            window.location.href = '/2fa-verify.html';
+            return;
+          }
+
           localStorage.setItem('token', data.token);
           localStorage.setItem('role', data.user.role);
           // Redirect based on role
