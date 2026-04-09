@@ -386,7 +386,7 @@
     }
     .tab-btn.active i { color: white !important; }
 
-    /* ========== NAVBAR – FIXED FOR MOBILE ========== */
+    /* ========== NAVBAR – FIXED FOR MOBILE (NO HIDING) ========== */
     .navbar {
       background: var(--navbar-bg);
       backdrop-filter: blur(12px);
@@ -609,17 +609,16 @@
     }
     #getLocationBtn { background: var(--button-bg); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 40px; font-size: 0.85rem; cursor: pointer; }
 
-    /* ========== MODERN 3D FOOTER – MASTERPIECE ========== */
+    /* ========== MODERN 3D FOOTER – SHORTENED VERSION ========== */
     .footer {
       background: var(--footer-bg);
       backdrop-filter: blur(12px);
       border-top: 1px solid rgba(255,255,255,0.2);
-      margin-top: 3rem;
-      padding: 2.5rem 2rem 1.5rem;
-      font-size: 0.85rem;
+      margin-top: 2rem;
+      padding: 1.5rem 1rem 1rem;
+      font-size: 0.8rem;
       transition: all 0.3s;
       position: relative;
-      overflow: hidden;
     }
     .footer::before {
       content: '';
@@ -635,187 +634,85 @@
       max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 2rem;
-      margin-bottom: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
       position: relative;
       z-index: 2;
     }
     .footer-col {
       background: rgba(255,255,255,0.05);
       backdrop-filter: blur(4px);
-      border-radius: 28px;
-      padding: 1.2rem 1rem;
+      border-radius: 20px;
+      padding: 0.8rem;
       transition: all 0.3s ease;
       border: 1px solid rgba(255,255,255,0.1);
-      transform-style: preserve-3d;
-      perspective: 800px;
     }
     .footer-col:hover {
-      transform: translateY(-6px) rotateX(2deg);
+      transform: translateY(-3px);
       background: rgba(255,255,255,0.1);
       border-color: rgba(255,255,255,0.3);
-      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.2);
     }
     .footer-logo {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       font-weight: 800;
       background: linear-gradient(135deg, #FFD966, #FF8C42);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      margin-bottom: 0.5rem;
     }
     .footer-tagline {
       opacity: 0.8;
-      font-size: 0.75rem;
-      margin-bottom: 0.5rem;
+      font-size: 0.7rem;
     }
     .footer-copyright {
       opacity: 0.6;
-      font-size: 0.65rem;
-      margin-top: 0.3rem;
+      font-size: 0.6rem;
     }
     .footer-col h3 {
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: linear-gradient(135deg, var(--primary), #a78bfa);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .footer-col ul {
-      list-style: none;
-    }
-    .footer-col ul li {
-      margin-bottom: 0.6rem;
-    }
-    .footer-col ul li a {
-      font-size: 0.8rem;
-      text-decoration: none;
-      color: var(--text-color);
-      opacity: 0.8;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .footer-col ul li a i {
-      font-size: 0.75rem;
-      transition: transform 0.2s;
-    }
-    .footer-col ul li a:hover {
-      opacity: 1;
-      color: var(--primary);
-      transform: translateX(5px);
-    }
-    .footer-col ul li a:hover i {
-      transform: translateX(3px);
-    }
-    .social-links {
-      display: flex;
-      gap: 1rem;
-      margin-top: 0.5rem;
-    }
-    .social-links a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      transition: all 0.3s;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    .social-links a:hover {
-      transform: translateY(-4px) scale(1.1);
-      background: var(--primary);
-      border-color: transparent;
-    }
-    .social-links a:hover i {
-      color: white !important;
-    }
-    .contact-info p {
       margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
+      gap: 0.4rem;
+    }
+    .footer-col ul li {
+      margin-bottom: 0.4rem;
+    }
+    .footer-col ul li a {
+      font-size: 0.7rem;
+    }
+    .social-links {
+      display: flex;
       gap: 0.6rem;
-      font-size: 0.75rem;
+      margin-top: 0.3rem;
     }
-    .contact-info a {
-      color: var(--text-color);
-      text-decoration: none;
-      transition: color 0.2s;
+    .social-links a {
+      width: 28px;
+      height: 28px;
     }
-    .contact-info a:hover {
-      color: var(--primary);
+    .contact-info p {
+      font-size: 0.7rem;
+      margin-bottom: 0.3rem;
     }
     .footer-newsletter {
-      background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(139,92,246,0.1));
-      border-radius: 32px;
-      padding: 1.2rem;
-      text-align: center;
-      max-width: 500px;
-      margin: 0 auto 1.5rem;
-      border: 1px solid rgba(255,255,255,0.2);
-      backdrop-filter: blur(8px);
-    }
-    .footer-newsletter h3 {
-      font-size: 1.1rem;
-      margin-bottom: 0.3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    .footer-newsletter form {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-top: 0.8rem;
+      padding: 0.8rem;
+      margin: 0 auto 0.8rem;
+      max-width: 400px;
     }
     .footer-newsletter input {
-      flex: 1;
-      min-width: 180px;
-      padding: 0.6rem 1rem;
-      border-radius: 60px;
-      border: 1px solid var(--input-border);
-      background: var(--input-bg);
-      color: var(--text-color);
-      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.7rem;
     }
     .footer-newsletter button {
-      background: linear-gradient(105deg, var(--primary), #8b5cf6);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.2rem;
-      border-radius: 60px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .footer-newsletter button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+      padding: 0.4rem 0.8rem;
+      font-size: 0.7rem;
     }
     .footer-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      font-size: 0.7rem;
-      opacity: 0.7;
+      font-size: 0.6rem;
+      padding-top: 0.5rem;
     }
-    /* ========== END FOOTER ========== */
 
     /* Modals */
     .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(6px); }
@@ -843,45 +740,75 @@
       border-radius: 60px; padding: 8px 16px; display: none; align-items: center; gap: 6px;
       cursor: pointer; z-index: 9998; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 0.75rem; font-weight: 600;
     }
-    /* ========== MOBILE RESPONSIVENESS (NAVBAR & FOOTER) ========== */
+    /* ========== MOBILE RESPONSIVENESS – FIXED NAVBAR + SHORTER FOOTER + BIGGER MAP ========== */
     @media (max-width: 768px) {
       .navbar {
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
+        padding: 0.6rem 1rem;
       }
       .logo {
         order: 1;
-        flex: 1;
+        font-size: 1.3rem;
       }
       .nav-right {
         order: 2;
         margin-left: auto;
+        gap: 0.6rem;
       }
       .nav-links {
         order: 3;
         width: 100%;
         justify-content: center;
-        margin-top: 0.8rem;
-        gap: 1rem;
+        margin-top: 0.6rem;
+        gap: 0.8rem;
+      }
+      .nav-links a {
+        font-size: 0.8rem;
+      }
+      .lang-select, .theme-select {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+      }
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+      }
+      .user-avatar i {
+        font-size: 18px;
       }
       .hero {
-        margin: 1rem;
-        padding: 1.5rem 1rem;
+        margin: 0.8rem;
+        padding: 1rem;
       }
-      .hero h1 { font-size: 1.8rem; }
-      .hero h1 i { font-size: 2.5rem; }
-      .filters-row { flex-direction: column; border-radius: 28px; }
-      #houses-container { grid-template-columns: 1fr; }
-      #map { height: 280px; }
-      .footer-container {
+      .hero h1 {
+        font-size: 1.5rem;
+      }
+      .hero h1 i {
+        font-size: 2rem;
+      }
+      .hero p {
+        font-size: 0.8rem;
+      }
+      .filters-row {
+        flex-direction: column;
+        border-radius: 28px;
+        padding: 0.8rem;
+      }
+      #houses-container {
         grid-template-columns: 1fr;
-        text-align: center;
-        gap: 1rem;
+      }
+      #map {
+        height: 340px; /* Increased from 280px */
+      }
+      .footer-container {
+        gap: 0.8rem;
       }
       .footer-col {
         text-align: center;
+        padding: 0.6rem;
       }
       .footer-col ul li a {
         justify-content: center;
@@ -899,6 +826,7 @@
       .footer-bottom {
         flex-direction: column;
         text-align: center;
+        gap: 0.5rem;
       }
     }
   </style>
@@ -1020,7 +948,7 @@
     </section>
   </main>
 
-  <!-- ========== REDESIGNED 3D FOOTER ========== -->
+  <!-- ========== SHORTENED 3D FOOTER ========== -->
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-col">
