@@ -39,18 +39,14 @@ router.post('/find-similar', auth, async (req, res) => {
 });
 
 // POST /api/image-search/update-vector/:houseId – store a pre‑computed vector (from frontend)
-// TEMPORARY: ownership check removed to allow backfill for all houses. Revert after backfill.
 router.post('/update-vector/:houseId', auth, async (req, res) => {
     try {
         const house = await House.findById(req.params.houseId);
         if (!house) return res.status(404).json({ message: 'House not found' });
-        // === TEMPORARY: allow any authenticated user to update feature vectors ===
-        // Original ownership check is commented out for backfill. Restore after backfill.
-        /*
+        // Only owner or admin can update
         if (house.owner.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Not authorized' });
         }
-        */
         const { vector } = req.body;
         if (!vector || !Array.isArray(vector)) {
             return res.status(400).json({ message: 'Invalid feature vector' });
