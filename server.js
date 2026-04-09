@@ -15,7 +15,6 @@ const LeaseNegotiation = require("./models/LeaseNegotiation");
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
-const MongoStore = require("connect-mongo");
 const rateLimit = require("express-rate-limit");
 
 const { limiter } = require("./middleware/rateLimiter");
@@ -26,54 +25,22 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
-// ========== NoSQL INJECTION PREVENTION (custom middleware) ==========
-function sanitizeNoSQL(obj) {
-    if (!obj || typeof obj !== 'object') return obj;
-    for (let key in obj) {
-        if (key.startsWith('$') || key.includes('.')) {
-            delete obj[key];
-        } else if (typeof obj[key] === 'object') {
-            sanitizeNoSQL(obj[key]);
-        }
-    }
-    return obj;
-}
-
-app.use((req, res, next) => {
-    if (req.body) sanitizeNoSQL(req.body);
-    if (req.query) sanitizeNoSQL(req.query);
-    if (req.params) sanitizeNoSQL(req.params);
-    next();
-});
-// ================================================================
-
-// ========== HTTP PARAMETER POLLUTION PROTECTION (simple) ==========
-app.use((req, res, next) => {
-    // If the same parameter appears multiple times, take only the first value
-    if (req.query) {
-        for (let key in req.query) {
-            if (Array.isArray(req.query[key])) {
-                req.query[key] = req.query[key][0];
-            }
-        }
-    }
-    next();
-});
-// ==================================================================
-
-// Stricter rate limiting for sensitive endpoints
+// ========== SECURITY: Stricter rate limiting for login ==========
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 10,
     message: "Too many login attempts. Please try again later."
 });
 app.use("/api/auth/login", loginLimiter);
+// ==============================================================
 
 // ========== CONDITIONAL CSP: SKIP FOR PREMIUM DASHBOARD ==========
 app.use((req, res, next) => {
   if (req.path === '/premium-dashboard.html') {
+    // No CSP for this route – TensorFlow.js can load freely
     return next();
   }
+  // Apply Helmet with strict CSP for all other routes
   helmet({
     contentSecurityPolicy: {
       directives: {
@@ -108,12 +75,11 @@ app.use("/uploads", express.static("uploads"));
 const contractsDir = path.join(__dirname, "contracts");
 if (!fs.existsSync(contractsDir)) fs.mkdirSync(contractsDir, { recursive: true });
 
-// ========== SECURE SESSION COOKIES WITH MONGO STORE ==========
+// ========== SECURE SESSION COOKIES (memory store – simple) ==========
 app.use(session({
   secret: process.env.SESSION_SECRET || "your-secret-key",
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
   cookie: {
     httpOnly: true,
     secure: true,        // only send over HTTPS (required on Render)
@@ -121,7 +87,7 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
 }));
-// =============================================================
+// ==========================================================
 
 app.use(passport.initialize());
 app.use(passport.session());
