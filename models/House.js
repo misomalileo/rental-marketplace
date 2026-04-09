@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const encrypt = require("mongoose-encryption");
 
 const HouseSchema = new mongoose.Schema(
   {
@@ -65,17 +64,6 @@ const HouseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ========== ENCRYPTION ==========
-// Encrypt the contact phone number
-const encKey = process.env.ENCRYPTION_SECRET;
-if (!encKey) {
-    console.error("❌ ENCRYPTION_SECRET is not set! House phone numbers will not be encrypted.");
-} else {
-    HouseSchema.plugin(encrypt, {
-        secret: encKey,
-        encryptedFields: ['phone']
-    });
-}
-// ================================
+// ENCRYPTION IS REMOVED – plain text storage
 
 module.exports = mongoose.model("House", HouseSchema);

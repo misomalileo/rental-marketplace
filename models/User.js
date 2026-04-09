@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const encrypt = require("mongoose-encryption");
 
 const NotificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -62,33 +61,19 @@ const UserSchema = new mongoose.Schema({
     trustScore: { type: Number, default: 0 },
     lastSeen: { type: Date, default: Date.now },
 
-    // Security fields
     failedLoginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
     passwordChangedAt: { type: Date, default: Date.now },
 
-    // 2FA fields
     twoFactorSecret: { type: String, default: null },
     twoFactorEnabled: { type: Boolean, default: false }
 });
 
-// Helper method to check password strength (unchanged)
 UserSchema.methods.isPasswordStrong = function(password) {
     const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return strongRegex.test(password);
 };
 
-// ========== ENCRYPTION ==========
-// Encrypt sensitive fields: phone, address, businessName
-const encKey = process.env.ENCRYPTION_SECRET;
-if (!encKey) {
-    console.error("❌ ENCRYPTION_SECRET is not set! Data will not be encrypted.");
-} else {
-    UserSchema.plugin(encrypt, {
-        secret: encKey,
-        encryptedFields: ['phone', 'address', 'businessName']
-    });
-}
-// ================================
+// ENCRYPTION IS REMOVED – plain text storage
 
 module.exports = mongoose.model("User", UserSchema);
