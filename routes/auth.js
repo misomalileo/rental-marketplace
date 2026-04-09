@@ -122,7 +122,6 @@ router.post("/forgot-password", authLimiter, async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      // For security, don't reveal that email doesn't exist
       return res.json({ message: "If that email is registered, you will receive a password reset link." });
     }
     const resetToken = generateToken();
@@ -397,18 +396,25 @@ router.post("/verify-2fa-login", async (req, res) => {
   }
 });
 
-// ========== GET CURRENT USER ==========
+// ========== GET CURRENT USER (with error handling for decryption) ==========
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
     res.json(user);
   } catch (err) {
-    console.error(err);
+    console.error("Error in /me:", err);
+    // If decryption fails, the encryption secret might be wrong or data is corrupted
+    if (err.message && (err.message.includes("decrypt") || err.message.includes("cipher"))) {
+      return res.status(500).json({ message: "Data decryption error. Please contact support." });
+    }
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ========== GOOGLE LOGIN ==========
+// ========== GOOGLE LOGIN (with error handling) ==========
 router.get("/google", (req, res, next) => {
   const role = req.query.role || "free";
   req.session.intendedRole = role;
@@ -424,13 +430,18 @@ router.get(
   async (req, res) => {
     try {
       const user = req.user;
+      if (!user) {
+        return res.redirect("/login.html?error=google-auth-failed");
+      }
       let finalRole = user.role;
 
       if (!user.role || user.role === "free") {
         const intendedRole = req.session.intendedRole || "free";
         if (intendedRole === "landlord" || intendedRole === "premium_user") {
           user.role = intendedRole;
-          await user.save();
+          await user.save().catch(err => {
+            console.error("Failed to save user role:", err);
+          });
         }
         finalRole = user.role;
       } else {
@@ -444,7 +455,7 @@ router.get(
       );
       res.redirect(`/oauth-redirect.html?token=${token}&role=${finalRole}`);
     } catch (err) {
-      console.error(err);
+      console.error("Google callback error:", err);
       res.redirect("/login.html?error=google-auth-failed");
     }
   }
