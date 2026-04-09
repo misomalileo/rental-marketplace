@@ -214,6 +214,19 @@ router.post(
         propertyDetails: propertyDetails
       });
 
+      // ========== NEW: Store feature vector if provided ==========
+      if (req.body.featureVector) {
+        try {
+          const vector = JSON.parse(req.body.featureVector);
+          if (Array.isArray(vector) && vector.length > 0) {
+            house.featureVector = vector;
+          }
+        } catch(e) {
+          console.warn("Invalid featureVector data:", e);
+        }
+      }
+      // ==========================================================
+
       await house.save();
 
       // ========== WHATSAPP ALERT TRIGGER (ADDED WITH LOGGING) ==========
@@ -331,6 +344,19 @@ router.put(
         console.log("🖼️ Updating images:", req.files.length);
         house.images = req.files.map((f) => f.path);
       }
+
+      // ========== NEW: Store feature vector if provided ==========
+      if (req.body.featureVector) {
+        try {
+          const vector = JSON.parse(req.body.featureVector);
+          if (Array.isArray(vector) && vector.length > 0) {
+            house.featureVector = vector;
+          }
+        } catch(e) {
+          console.warn("Invalid featureVector data:", e);
+        }
+      }
+      // ==========================================================
 
       await house.save();
 

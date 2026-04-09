@@ -21,6 +21,9 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- TensorFlow.js and MobileNet for feature vector extraction -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
   <style>
     /* ========== GLOBAL VARIABLES ========== */
     :root {
@@ -636,7 +639,7 @@
 
           <!-- Step 4: Photos & Virtual Tour -->
           <div id="step4" class="wizard-step">
-            <div class="form-group"><label>Photos (up to 5)</label><input type="file" name="images" multiple accept="image/*" required></div>
+            <div class="form-group"><label>Photos (up to 5)</label><input type="file" name="images" id="uploadImages" multiple accept="image/*" required></div>
             <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
             <div class="form-group"><label>Virtual Tour URL</label><input type="text" name="virtualTourUrl" placeholder="360° image or video link"></div>
           </div>
@@ -661,7 +664,7 @@
 
   <!-- Modals -->
   <div id="profileModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeProfileModal()">&times;</span><h2><i class="fas fa-user-edit"></i> Complete Your Profile</h2><form id="profileForm"><div class="form-group"><label>Full Name *</label><input type="text" id="profileName" required></div><div class="form-group"><label>Phone Number (265...)</label><input type="tel" id="profilePhone" pattern="265[0-9]{9}" required></div><div class="form-group"><label>Business Name</label><input type="text" id="profileBusinessName"></div><div class="form-group"><label>Address</label><input type="text" id="profileAddress"></div><div class="form-group"><label>Bio</label><textarea id="profileBio" rows="2"></textarea></div><div class="form-group"><label>Profile Picture</label><input type="file" id="profilePicture" accept="image/*"><div id="profilePreview"></div></div><button type="submit" class="upload-btn">Save Profile</button></form></div></div>
-  <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit Property</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId"><div class="form-group"><label>Property Name</label><input type="text" id="editName" name="name" required></div><div class="form-group"><label>Location</label><input type="text" id="editLocation" name="location" required></div><div class="form-group"><label>Price</label><input type="number" id="editPrice" name="price" required></div><div class="form-group"><label>WhatsApp</label><input type="text" id="editPhone" name="phone" required></div><div class="form-group"><label>Description</label><textarea id="editDescription" name="description"></textarea></div><div class="form-group"><label>Type</label><select id="editType" name="type"><option>House</option><option>Hostel</option><option>Apartment</option><option>Room</option><option>Office</option><option>FurnishedApartment</option><option>ShortStay</option><option>SharedLiving</option><option>StudentAccommodation</option></select></div><div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" name="bedrooms" value="0"></div><div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> Pool</label><label><input type="checkbox" id="editAC" name="ac"> AC</label></div><div class="form-group"><label>Unavailable Dates</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly></div><div class="form-group"><label>New Photos</label><input type="file" name="images" multiple accept="image/*"></div><div class="form-group"><label>Virtual Tour</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl"></div><div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div><div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div><button type="button" class="gps-btn" onclick="getEditLocation()">Use GPS</button><div id="editMap" style="height: 180px;"></div><button type="submit" class="upload-btn">Save Changes</button></form></div></div>
+  <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit Property</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId"><div class="form-group"><label>Property Name</label><input type="text" id="editName" name="name" required></div><div class="form-group"><label>Location</label><input type="text" id="editLocation" name="location" required></div><div class="form-group"><label>Price</label><input type="number" id="editPrice" name="price" required></div><div class="form-group"><label>WhatsApp</label><input type="text" id="editPhone" name="phone" required></div><div class="form-group"><label>Description</label><textarea id="editDescription" name="description"></textarea></div><div class="form-group"><label>Type</label><select id="editType" name="type"><option>House</option><option>Hostel</option><option>Apartment</option><option>Room</option><option>Office</option><option>FurnishedApartment</option><option>ShortStay</option><option>SharedLiving</option><option>StudentAccommodation</option></select></div><div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" name="bedrooms" value="0"></div><div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> Pool</label><label><input type="checkbox" id="editAC" name="ac"> AC</label></div><div class="form-group"><label>Unavailable Dates</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly></div><div class="form-group"><label>New Photos</label><input type="file" id="editImages" name="images" multiple accept="image/*"></div><div class="form-group"><label>Virtual Tour</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl"></div><div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div><div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div><button type="button" class="gps-btn" onclick="getEditLocation()">Use GPS</button><div id="editMap" style="height: 180px;"></div><button type="submit" class="upload-btn">Save Changes</button></form></div></div>
 
   <!-- ========== UPDATED PAYMENT MODAL (3D CARDS + TRUST MESSAGE) ========== -->
   <div id="paymentModal" class="modal" style="display:none;">
@@ -710,7 +713,155 @@
   <script src="js/dashboard.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
-    // Notification bell and wizard navigation (same as before)
+    // ========== FEATURE VECTOR EXTRACTION FOR NEW HOUSE UPLOAD ==========
+    let currentFeatureVector = null;
+    let mobilenetModel = null;
+
+    async function loadMobileNetModel() {
+      if (!mobilenetModel) {
+        console.log("Loading AI model for feature extraction...");
+        mobilenetModel = await mobilenet.load();
+        console.log("✅ Model ready");
+      }
+      return mobilenetModel;
+    }
+
+    async function computeFeatureVectorFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const img = new Image();
+          img.onload = async () => {
+            try {
+              const model = await loadMobileNetModel();
+              const tensor = tf.browser.fromPixels(img);
+              const resized = tf.image.resizeBilinear(tensor, [224, 224]);
+              const expanded = resized.expandDims(0);
+              const normalized = expanded.toFloat().div(255);
+              const features = await model.infer(normalized, true);
+              const vector = Array.from(features.dataSync());
+              tf.dispose([tensor, resized, expanded, normalized, features]);
+              resolve(vector);
+            } catch (err) {
+              reject(err);
+            }
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Listen for image selection in upload form
+    const uploadImagesInput = document.getElementById('uploadImages');
+    if (uploadImagesInput) {
+      uploadImagesInput.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+          try {
+            currentFeatureVector = await computeFeatureVectorFromFile(files[0]);
+            console.log("✅ Feature vector computed for the first image");
+          } catch (err) {
+            console.error("Failed to compute feature vector:", err);
+            currentFeatureVector = null;
+          }
+        } else {
+          currentFeatureVector = null;
+        }
+      });
+    }
+
+    // Intercept house form submission to attach vector
+    const houseForm = document.getElementById('houseForm');
+    if (houseForm) {
+      const originalSubmit = houseForm.onsubmit;
+      houseForm.addEventListener('submit', async (e) => {
+        if (currentFeatureVector) {
+          const formData = new FormData(houseForm);
+          formData.append("featureVector", JSON.stringify(currentFeatureVector));
+          // Replace the default submission with our custom one
+          e.preventDefault();
+          e.stopPropagation();
+          try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/houses', {
+              method: 'POST',
+              headers: { Authorization: 'Bearer ' + token },
+              body: formData
+            });
+            const data = await res.json();
+            if (res.ok) {
+              alert("✅ Property uploaded successfully!");
+              houseForm.reset();
+              document.getElementById('imagePreview').innerHTML = '';
+              currentFeatureVector = null;
+              if (window.loadMyHouses) window.loadMyHouses();
+            } else {
+              alert("❌ Upload failed: " + (data.message || "Unknown error"));
+            }
+          } catch (err) {
+            alert("❌ Network error");
+          }
+        }
+      });
+    }
+
+    // ========== EDIT MODAL: compute vector when new images are selected ==========
+    let editFeatureVector = null;
+    const editImagesInput = document.getElementById('editImages');
+    if (editImagesInput) {
+      editImagesInput.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+          try {
+            editFeatureVector = await computeFeatureVectorFromFile(files[0]);
+            console.log("✅ Edit: feature vector computed for new image");
+          } catch (err) {
+            console.error("Edit: failed to compute feature vector:", err);
+            editFeatureVector = null;
+          }
+        } else {
+          editFeatureVector = null;
+        }
+      });
+    }
+
+    // Intercept edit form submission to attach vector
+    const editForm = document.getElementById('editForm');
+    if (editForm) {
+      editForm.addEventListener('submit', async (e) => {
+        if (editFeatureVector) {
+          const formData = new FormData(editForm);
+          formData.append("featureVector", JSON.stringify(editFeatureVector));
+          e.preventDefault();
+          e.stopPropagation();
+          const houseId = document.getElementById('editHouseId').value;
+          try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/houses/${houseId}`, {
+              method: 'PUT',
+              headers: { Authorization: 'Bearer ' + token },
+              body: formData
+            });
+            const data = await res.json();
+            if (res.ok) {
+              alert("✅ Property updated successfully!");
+              closeEditModal();
+              if (window.loadMyHouses) window.loadMyHouses();
+              editFeatureVector = null;
+            } else {
+              alert("❌ Update failed: " + (data.message || "Unknown error"));
+            }
+          } catch (err) {
+            alert("❌ Network error");
+          }
+        }
+      });
+    }
+
+    // Notification bell and wizard navigation (unchanged)
     async function loadNotifications() { /* unchanged */ }
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     async function markNotificationRead(notifId) { loadNotifications(); }
