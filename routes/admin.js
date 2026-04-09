@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
+const rateLimit = require("express-rate-limit");
+const { body, param, validationResult } = require("express-validator");
 const User = require("../models/User");
 const House = require("../models/House");
 const Report = require("../models/Report");
@@ -9,12 +11,32 @@ const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 const { logAdminAction } = require("../middleware/audit");
 
+// ========== SECURITY: Rate limiting for admin endpoints ==========
+const adminLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per window
+    message: "Too many admin requests, please try again later.",
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+router.use(adminLimiter);
+
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // Helper to filter valid ObjectIds from an array
 function filterValidObjectIds(arr) {
   return arr.filter(id => id && isValidObjectId(id));
 }
+
+// Helper to validate ObjectId in request parameters
+const validateObjectId = (paramName) => {
+    return param(paramName).custom(value => {
+        if (!isValidObjectId(value)) {
+            throw new Error(`Invalid ${paramName} ID`);
+        }
+        return true;
+    });
+};
 
 // ========== DASHBOARD STATS ==========
 router.get("/stats", auth, admin, async (req, res) => {
@@ -92,39 +114,55 @@ router.get("/landlords", auth, admin, async (req, res) => {
   }
 });
 
-// ========== VERIFY LANDLORD ==========
-router.put("/verify/:id", auth, admin, async (req, res) => {
-  try {
-    const { type } = req.body;
-    if (!["official", "premium"].includes(type)) {
-      return res.status(400).json({ message: "Invalid verification type" });
+// ========== VERIFY LANDLORD (with validation) ==========
+router.put("/verify/:id",
+    auth,
+    admin,
+    validateObjectId("id"),
+    body("type").isIn(["official", "premium"]).withMessage("Invalid verification type"),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        try {
+            const { type } = req.body;
+            const user = await User.findById(req.params.id);
+            if (!user) return res.status(404).json({ message: "User not found" });
+            user.verified = true;
+            user.verificationType = type;
+            await user.save();
+            await logAdminAction(req.user.id, "verify_landlord", user._id, "User", { type });
+            res.json({ message: `User verified as ${type}`, user });
+        } catch (err) {
+            console.error("Verify error:", err);
+            res.status(500).json({ error: err.message });
+        }
     }
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    user.verified = true;
-    user.verificationType = type;
-    await user.save();
-    await logAdminAction(req.user.id, "verify_landlord", user._id, "User", { type });
-    res.json({ message: `User verified as ${type}`, user });
-  } catch (err) {
-    console.error("Verify error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
+);
 
-// ========== BAN LANDLORD ==========
-router.delete("/ban/:id", auth, admin, async (req, res) => {
-  try {
-    await House.deleteMany({ owner: req.params.id });
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
-    if (!deletedUser) return res.status(404).json({ message: "User not found" });
-    await logAdminAction(req.user.id, "ban_landlord", deletedUser._id, "User", { email: deletedUser.email });
-    res.json({ message: "User banned and all houses removed" });
-  } catch (err) {
-    console.error("Ban error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
+// ========== BAN LANDLORD (with validation) ==========
+router.delete("/ban/:id",
+    auth,
+    admin,
+    validateObjectId("id"),
+    async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+            if (!user) return res.status(404).json({ message: "User not found" });
+            if (user.role === "admin") {
+                return res.status(403).json({ message: "Cannot ban another admin." });
+            }
+            await House.deleteMany({ owner: req.params.id });
+            const deletedUser = await User.findByIdAndDelete(req.params.id);
+            await logAdminAction(req.user.id, "ban_landlord", deletedUser._id, "User", { email: deletedUser.email });
+            res.json({ message: "User banned and all houses removed" });
+        } catch (err) {
+            console.error("Ban error:", err);
+            res.status(500).json({ error: err.message });
+        }
+    }
+);
 
 // ========== HOUSES ==========
 router.get("/houses", auth, admin, async (req, res) => {
@@ -143,31 +181,41 @@ router.get("/houses", auth, admin, async (req, res) => {
   }
 });
 
-router.delete("/house/:id", auth, admin, async (req, res) => {
-  try {
-    const deletedHouse = await House.findByIdAndDelete(req.params.id);
-    if (!deletedHouse) return res.status(404).json({ message: "House not found" });
-    await logAdminAction(req.user.id, "delete_house", deletedHouse._id, "House", { name: deletedHouse.name });
-    res.json({ message: "House deleted" });
-  } catch (err) {
-    console.error("Delete house error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
+router.delete("/house/:id",
+    auth,
+    admin,
+    validateObjectId("id"),
+    async (req, res) => {
+        try {
+            const deletedHouse = await House.findByIdAndDelete(req.params.id);
+            if (!deletedHouse) return res.status(404).json({ message: "House not found" });
+            await logAdminAction(req.user.id, "delete_house", deletedHouse._id, "House", { name: deletedHouse.name });
+            res.json({ message: "House deleted" });
+        } catch (err) {
+            console.error("Delete house error:", err);
+            res.status(500).json({ error: err.message });
+        }
+    }
+);
 
-router.put("/house/:id/toggle-featured", auth, admin, async (req, res) => {
-  try {
-    const house = await House.findById(req.params.id);
-    if (!house) return res.status(404).json({ message: "House not found" });
-    house.featured = !house.featured;
-    await house.save();
-    await logAdminAction(req.user.id, "toggle_featured", house._id, "House", { featured: house.featured });
-    res.json({ message: `Featured ${house.featured ? "enabled" : "disabled"}`, featured: house.featured });
-  } catch (err) {
-    console.error("Toggle featured error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
+router.put("/house/:id/toggle-featured",
+    auth,
+    admin,
+    validateObjectId("id"),
+    async (req, res) => {
+        try {
+            const house = await House.findById(req.params.id);
+            if (!house) return res.status(404).json({ message: "House not found" });
+            house.featured = !house.featured;
+            await house.save();
+            await logAdminAction(req.user.id, "toggle_featured", house._id, "House", { featured: house.featured });
+            res.json({ message: `Featured ${house.featured ? "enabled" : "disabled"}`, featured: house.featured });
+        } catch (err) {
+            console.error("Toggle featured error:", err);
+            res.status(500).json({ error: err.message });
+        }
+    }
+);
 
 // ========== PREMIUM USERS ==========
 router.get("/premium-users", auth, admin, async (req, res) => {
@@ -186,21 +234,26 @@ router.get("/premium-users", auth, admin, async (req, res) => {
   }
 });
 
-router.put("/revoke-premium/:userId", auth, admin, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.role !== "premium_user") return res.status(400).json({ message: "User is not a premium user" });
-    user.role = "free";
-    user.subscriptionExpiresAt = null;
-    await user.save();
-    await logAdminAction(req.user.id, "revoke_premium", user._id, "User", { email: user.email });
-    res.json({ message: "Premium status revoked" });
-  } catch (err) {
-    console.error("Revoke premium error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
+router.put("/revoke-premium/:userId",
+    auth,
+    admin,
+    validateObjectId("userId"),
+    async (req, res) => {
+        try {
+            const user = await User.findById(req.params.userId);
+            if (!user) return res.status(404).json({ message: "User not found" });
+            if (user.role !== "premium_user") return res.status(400).json({ message: "User is not a premium user" });
+            user.role = "free";
+            user.subscriptionExpiresAt = null;
+            await user.save();
+            await logAdminAction(req.user.id, "revoke_premium", user._id, "User", { email: user.email });
+            res.json({ message: "Premium status revoked" });
+        } catch (err) {
+            console.error("Revoke premium error:", err);
+            res.status(500).json({ error: err.message });
+        }
+    }
+);
 
 // ========== REPORTS ==========
 router.get("/reports", auth, admin, async (req, res) => {
@@ -218,21 +271,26 @@ router.get("/reports", auth, admin, async (req, res) => {
   }
 });
 
-router.put("/report/:id/resolve", auth, admin, async (req, res) => {
-  try {
-    const report = await Report.findByIdAndUpdate(
-      req.params.id,
-      { status: "resolved", resolvedBy: req.user.id },
-      { new: true }
-    );
-    if (!report) return res.status(404).json({ message: "Report not found" });
-    await logAdminAction(req.user.id, "resolve_report", report._id, "Report", { reportId: report._id });
-    res.json({ message: "Report resolved", report });
-  } catch (err) {
-    console.error("Resolve report error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
+router.put("/report/:id/resolve",
+    auth,
+    admin,
+    validateObjectId("id"),
+    async (req, res) => {
+        try {
+            const report = await Report.findByIdAndUpdate(
+                req.params.id,
+                { status: "resolved", resolvedBy: req.user.id },
+                { new: true }
+            );
+            if (!report) return res.status(404).json({ message: "Report not found" });
+            await logAdminAction(req.user.id, "resolve_report", report._id, "Report", { reportId: report._id });
+            res.json({ message: "Report resolved", report });
+        } catch (err) {
+            console.error("Resolve report error:", err);
+            res.status(500).json({ error: err.message });
+        }
+    }
+);
 
 // ========== REAL-TIME MONITORING ==========
 router.get("/real-time", auth, admin, async (req, res) => {
