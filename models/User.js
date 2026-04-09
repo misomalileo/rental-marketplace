@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const encrypt = require("mongoose-encryption");
 
 const NotificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -6,7 +7,7 @@ const NotificationSchema = new mongoose.Schema({
   type: { type: String, default: 'general' },
   read: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
-  metadata: { type: Object, default: {} }  // ✅ Added for priority viewing data
+  metadata: { type: Object, default: {} }
 });
 
 const UserSchema = new mongoose.Schema({
@@ -44,7 +45,6 @@ const UserSchema = new mongoose.Schema({
     bio: { type: String, default: '' },
     profileCompleted: { type: Boolean, default: false },
     
-    // ========== NEW FIELD: WhatsApp number for alerts ==========
     whatsappNumber: { type: String, default: '' },
     
     subscriptionExpiresAt: { type: Date, default: null },
@@ -57,26 +57,38 @@ const UserSchema = new mongoose.Schema({
         lastNotified: Date
     }],
     
-    notifications: [NotificationSchema],  // ✅ Use the subdocument schema
+    notifications: [NotificationSchema],
     
     trustScore: { type: Number, default: 0 },
     lastSeen: { type: Date, default: Date.now },
 
-    // ========== SECURITY FIELDS ==========
+    // Security fields
     failedLoginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
     passwordChangedAt: { type: Date, default: Date.now },
 
-    // ========== 2FA FIELDS (ADDED) ==========
+    // 2FA fields
     twoFactorSecret: { type: String, default: null },
     twoFactorEnabled: { type: Boolean, default: false }
 });
 
-// Helper method to check password strength
+// Helper method to check password strength (unchanged)
 UserSchema.methods.isPasswordStrong = function(password) {
-    // At least 8 chars, one uppercase, one lowercase, one number
     const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return strongRegex.test(password);
 };
+
+// ========== ENCRYPTION ==========
+// Encrypt sensitive fields: phone, address, businessName
+const encKey = process.env.ENCRYPTION_SECRET;
+if (!encKey) {
+    console.error("❌ ENCRYPTION_SECRET is not set! Data will not be encrypted.");
+} else {
+    UserSchema.plugin(encrypt, {
+        secret: encKey,
+        encryptedFields: ['phone', 'address', 'businessName']
+    });
+}
+// ================================
 
 module.exports = mongoose.model("User", UserSchema);

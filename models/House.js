@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const encrypt = require("mongoose-encryption");
 
 const HouseSchema = new mongoose.Schema(
   {
@@ -7,19 +8,11 @@ const HouseSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     bedrooms: { type: Number, default: 0 },
     bathrooms: { type: Number, default: 0 },
-    // ========== EXTENDED TYPES ==========
     type: {
       type: String,
       enum: [
-        "House",
-        "Apartment",
-        "Room",
-        "Hostel",
-        "Office",
-        "FurnishedApartment",
-        "ShortStay",
-        "SharedLiving",
-        "StudentAccommodation"
+        "House", "Apartment", "Room", "Hostel", "Office",
+        "FurnishedApartment", "ShortStay", "SharedLiving", "StudentAccommodation"
       ],
       default: "House"
     },
@@ -56,24 +49,33 @@ const HouseSchema = new mongoose.Schema(
     unavailableDates: { type: [Date], default: [] },
     selfContained: { type: Boolean, default: false },
     virtualTourUrl: { type: String, default: null },
-    // === NEW BIDDING FIELDS ===
     allowBidding: { type: Boolean, default: true },
     showHighestBidToPremium: { type: Boolean, default: true },
-    // ========== NEW RENTAL STATUS FIELD ==========
     rentalStatus: {
       type: String,
       enum: ['available', 'rented', 'pending'],
       default: 'available'
     },
-    // ========== NEW: STORE TYPE‑SPECIFIC DETAILS ==========
     propertyDetails: {
       type: mongoose.Schema.Types.Mixed,
       default: {}
     },
-    // ========== NEW: FEATURE VECTOR FOR IMAGE SIMILARITY SEARCH ==========
     featureVector: { type: [Number], default: null }
   },
   { timestamps: true }
 );
+
+// ========== ENCRYPTION ==========
+// Encrypt the contact phone number
+const encKey = process.env.ENCRYPTION_SECRET;
+if (!encKey) {
+    console.error("❌ ENCRYPTION_SECRET is not set! House phone numbers will not be encrypted.");
+} else {
+    HouseSchema.plugin(encrypt, {
+        secret: encKey,
+        encryptedFields: ['phone']
+    });
+}
+// ================================
 
 module.exports = mongoose.model("House", HouseSchema);
