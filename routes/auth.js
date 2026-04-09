@@ -338,7 +338,7 @@ router.post("/verify-2fa-login", async (req, res) => {
   }
 });
 
-// ========== GET CURRENT USER (with safe fallback for decryption errors) ==========
+// ========== GET CURRENT USER ==========
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -346,10 +346,7 @@ router.get("/me", auth, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error("Error in /me:", err);
-    // If the error is related to decryption, return a partial user or a clear error
     if (err.message && (err.message.includes("decrypt") || err.message.includes("cipher"))) {
-      // Fallback: fetch user without encrypted fields (not possible because plugin auto-decrypts)
-      // Instead, we return a generic error and advise the admin to run migration
       return res.status(500).json({ message: "Data decryption failed. Please run the encryption migration script." });
     }
     res.status(500).json({ message: "Server error" });

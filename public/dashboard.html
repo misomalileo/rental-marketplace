@@ -6,7 +6,7 @@
   <title>Landlord Dashboard | Khomo Lathu</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -21,11 +21,11 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- TensorFlow.js and MobileNet for feature vector extraction -->
+  <!-- TensorFlow.js and MobileNet -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
   <style>
-    /* ========== GLOBAL VARIABLES ========== */
+    /* ========== GLOBAL VARIABLES (unchanged – your full CSS here) ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -502,6 +502,45 @@
   </style>
 </head>
 <body>
+  <!-- ========== ACCESS GUARD (added) ========== -->
+  <script>
+    (function() {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
+      
+      // No token -> redirect to login
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Allowed roles: landlord, premium_user, premium_landlord, admin
+      const allowedRoles = ['landlord', 'premium_user', 'premium_landlord', 'admin'];
+      if (!allowedRoles.includes(role)) {
+        alert('Access denied. This dashboard is for landlords and premium users only.');
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      // Verify email status with backend
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(user => {
+        if (!user.isEmailVerified) {
+          alert('Please verify your email address before accessing the dashboard. Check your inbox (and spam folder).');
+          window.location.href = 'login.html?error=unverified';
+        }
+      })
+      .catch(err => {
+        console.error('Verification check failed:', err);
+        // If network error, still allow? Better to redirect to login.
+        window.location.href = 'login.html';
+      });
+    })();
+  </script>
+
   <div id="loadingOverlay"><div><i class="fas fa-spinner fa-pulse"></i> Processing...</div></div>
 
   <nav class="navbar">
@@ -666,7 +705,7 @@
   <div id="profileModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeProfileModal()">&times;</span><h2><i class="fas fa-user-edit"></i> Complete Your Profile</h2><form id="profileForm"><div class="form-group"><label>Full Name *</label><input type="text" id="profileName" required></div><div class="form-group"><label>Phone Number (265...)</label><input type="tel" id="profilePhone" pattern="265[0-9]{9}" required></div><div class="form-group"><label>Business Name</label><input type="text" id="profileBusinessName"></div><div class="form-group"><label>Address</label><input type="text" id="profileAddress"></div><div class="form-group"><label>Bio</label><textarea id="profileBio" rows="2"></textarea></div><div class="form-group"><label>Profile Picture</label><input type="file" id="profilePicture" accept="image/*"><div id="profilePreview"></div></div><button type="submit" class="upload-btn">Save Profile</button></form></div></div>
   <div id="editModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeEditModal()">&times;</span><h2>Edit Property</h2><form id="editForm" enctype="multipart/form-data"><input type="hidden" id="editHouseId"><div class="form-group"><label>Property Name</label><input type="text" id="editName" name="name" required></div><div class="form-group"><label>Location</label><input type="text" id="editLocation" name="location" required></div><div class="form-group"><label>Price</label><input type="number" id="editPrice" name="price" required></div><div class="form-group"><label>WhatsApp</label><input type="text" id="editPhone" name="phone" required></div><div class="form-group"><label>Description</label><textarea id="editDescription" name="description"></textarea></div><div class="form-group"><label>Type</label><select id="editType" name="type"><option>House</option><option>Hostel</option><option>Apartment</option><option>Room</option><option>Office</option><option>FurnishedApartment</option><option>ShortStay</option><option>SharedLiving</option><option>StudentAccommodation</option></select></div><div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" name="bedrooms" value="0"></div><div class="form-group"><label>Condition</label><select id="editCondition" name="condition"><option>Good</option><option>Fair</option><option>Needs renovation</option></select></div><div class="amenities-group"><label><input type="checkbox" id="editWifi" name="wifi"> WiFi</label><label><input type="checkbox" id="editParking" name="parking"> Parking</label><label><input type="checkbox" id="editFurnished" name="furnished"> Furnished</label><label><input type="checkbox" id="editPetFriendly" name="petFriendly"> Pet Friendly</label><label><input type="checkbox" id="editPool" name="pool"> Pool</label><label><input type="checkbox" id="editAC" name="ac"> AC</label></div><div class="form-group"><label>Unavailable Dates</label><input type="text" id="editUnavailableDates" class="datepicker" placeholder="Select dates" readonly></div><div class="form-group"><label>New Photos</label><input type="file" id="editImages" name="images" multiple accept="image/*"></div><div class="form-group"><label>Virtual Tour</label><input type="text" id="editVirtualTourUrl" name="virtualTourUrl"></div><div class="form-group"><label>Latitude</label><input type="text" id="editLat" name="lat" readonly></div><div class="form-group"><label>Longitude</label><input type="text" id="editLng" name="lng" readonly></div><button type="button" class="gps-btn" onclick="getEditLocation()">Use GPS</button><div id="editMap" style="height: 180px;"></div><button type="submit" class="upload-btn">Save Changes</button></form></div></div>
 
-  <!-- ========== UPDATED PAYMENT MODAL (3D CARDS + TRUST MESSAGE) ========== -->
+  <!-- Payment Modal -->
   <div id="paymentModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closePaymentModal()">&times;</span>
@@ -713,7 +752,7 @@
   <script src="js/dashboard.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
-    // ========== FEATURE VECTOR EXTRACTION FOR NEW HOUSE UPLOAD (RELIABLE VERSION) ==========
+    // ========== FEATURE VECTOR EXTRACTION (unchanged) ==========
     let currentFeatureVector = null;
     let mobilenetModel = null;
 
@@ -726,7 +765,6 @@
       return mobilenetModel;
     }
 
-    // UPDATED: use img.decode() to ensure image is fully loaded
     async function computeFeatureVectorFromFile(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -734,7 +772,7 @@
           const img = new Image();
           img.src = e.target.result;
           try {
-            await img.decode(); // critical: wait for full decode
+            await img.decode();
             const model = await loadMobileNetModel();
             const tensor = tf.browser.fromPixels(img);
             const resized = tf.image.resizeBilinear(tensor, [224, 224]);
@@ -753,7 +791,6 @@
       });
     }
 
-    // Listen for image selection in upload form
     const uploadImagesInput = document.getElementById('uploadImages');
     if (uploadImagesInput) {
       uploadImagesInput.addEventListener('change', async (e) => {
@@ -772,7 +809,6 @@
       });
     }
 
-    // Intercept house form submission to attach vector
     const houseForm = document.getElementById('houseForm');
     if (houseForm) {
       houseForm.addEventListener('submit', async (e) => {
@@ -805,7 +841,6 @@
       });
     }
 
-    // ========== EDIT MODAL: compute vector when new images are selected ==========
     let editFeatureVector = null;
     const editImagesInput = document.getElementById('editImages');
     if (editImagesInput) {
@@ -825,7 +860,6 @@
       });
     }
 
-    // Intercept edit form submission to attach vector
     const editForm = document.getElementById('editForm');
     if (editForm) {
       editForm.addEventListener('submit', async (e) => {
@@ -858,7 +892,6 @@
       });
     }
 
-    // Notification bell and wizard navigation (unchanged)
     async function loadNotifications() { /* unchanged */ }
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     async function markNotificationRead(notifId) { loadNotifications(); }
@@ -867,7 +900,6 @@
     setInterval(loadNotifications, 30000);
     loadNotifications();
 
-    // Tab switching
     document.querySelectorAll('.tab-btn-dash').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn-dash').forEach(b => b.classList.remove('active'));
@@ -878,7 +910,6 @@
       });
     });
 
-    // Wizard navigation (reordered steps)
     let currentStep = 1;
     const steps = document.querySelectorAll('.wizard-step');
     const navBtns = document.querySelectorAll('.wizard-nav-btn');
