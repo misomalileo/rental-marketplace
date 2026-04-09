@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backfill Feature Vectors</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+  <style>
+    body { font-family: monospace; padding: 2rem; background: #0a0f1e; color: #f1f5f9; }
+    .progress { background: #1e293b; border-radius: 20px; padding: 1rem; margin: 1rem 0; }
+    button { background: #FF8C42; border: none; padding: 0.5rem 1.5rem; border-radius: 30px; font-weight: bold; cursor: pointer; }
+    .log { background: #111827; padding: 1rem; border-radius: 16px; max-height: 400px; overflow-y: auto; font-size: 0.8rem; white-space: pre-wrap; }
+    .status { margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <h2>🧠 Backfill Feature Vectors for All Houses</h2>
+  <p>This will load all houses without a feature vector, compute vectors in your browser, and save them to the database.</p>
+  <p><strong>⚠️ Keep this tab open – do not close until finished.</strong></p>
+  <button id="startBtn">Start Backfill</button>
+  <div class="progress">
+    <div id="status" class="status">Ready</div>
+    <div id="log" class="log"></div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem('token');
+    if (!token) {
+      document.getElementById('log').innerHTML = '❌ You are not logged in. Please log in first.';
+      document.getElementById('startBtn').disabled = true;
+    }
+
+    let model = null;
+    async function loadModel() {
+      document.getElementById('status').innerHTML = '🔄 Loading MobileNet model...';
+      model = await mobilenet.load();
+      document.getElementById('status').innerHTML = '✅ Model loaded. Ready to start.';
+    }
+    loadModel();
+
+    async function getVectorFromImage(imgUrl) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = async () => {
+          try {
+            const tensor = tf.browser.fromPixels(img);
+            const resized = tf.image.resizeBilinear(tensor, [224, 224]);
+            const expanded = resized.expandDims(0);
+            const normalized = expanded.toFloat().div(255);
+            const features = await model.infer(normalized, true);
+            const vector = Array.from(features.dataSync());
+            tf.dispose([tensor, resized, expanded, normalized, features]);
+            resolve(vector);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        img.onerror = () => reject(new Error(`Failed to load image: ${imgUrl}`));
+        img.src = imgUrl;
+      });
+    }
+
+    async function updateVector(houseId, vector) {
+      const res = await fetch(`/api/image-search/update-vector/${houseId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ vector })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return true;
+    }
+
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('startBtn');
+      btn.disabled = true;
+      btn.innerText = 'Running...';
+      const logDiv = document.getElementById('log');
+      const statusDiv = document.getElementById('status');
+      logDiv.innerHTML = '';
+
+      function addLog(msg) {
+        logDiv.innerHTML += msg + '\n';
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      try {
+        statusDiv.innerHTML = '📡 Fetching houses without vectors...';
+        const res = await fetch('/api/houses?limit=1000', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const data = await res.json();
+        let houses = data.houses || [];
+        // Filter only houses without featureVector
+        houses = houses.filter(h => !h.featureVector || h.featureVector === null);
+        addLog(`✅ Found ${houses.length} houses to process.`);
+
+        for (let i = 0; i < houses.length; i++) {
+          const house = houses[i];
+          statusDiv.innerHTML = `Processing ${i+1}/${houses.length}: ${house.name}`;
+          addLog(`[${i+1}/${houses.length}] ${house.name}`);
+          if (!house.images || house.images.length === 0) {
+            addLog(`   ⚠️ No images, skipping.`);
+            continue;
+          }
+          const imgUrl = house.images[0];
+          addLog(`   🖼️ Loading image...`);
+          try {
+            const vector = await getVectorFromImage(imgUrl);
+            await updateVector(house._id, vector);
+            addLog(`   ✅ Vector stored.`);
+          } catch (err) {
+            addLog(`   ❌ Error: ${err.message}`);
+          }
+          // Small delay to avoid overwhelming the browser
+          await new Promise(r => setTimeout(r, 200));
+        }
+        statusDiv.innerHTML = '🎉 Backfill complete!';
+        addLog('🎉 All done.');
+        btn.innerText = 'Done';
+      } catch (err) {
+        console.error(err);
+        statusDiv.innerHTML = '❌ Error: ' + err.message;
+        addLog(`❌ ${err.message}`);
+        btn.disabled = false;
+        btn.innerText = 'Start Backfill (Retry)';
+      }
+    });
+  </script>
+</body>
+</html>
