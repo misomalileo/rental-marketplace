@@ -17,7 +17,7 @@ function cosineSimilarity(vecA, vecB) {
     return dot / (Math.sqrt(magA) * Math.sqrt(magB));
 }
 
-// POST /api/image-search – find similar houses based on feature vector
+// POST /api/image-search/find-similar – find similar houses based on feature vector
 router.post('/find-similar', auth, async (req, res) => {
     try {
         const { vector } = req.body;
@@ -38,15 +38,19 @@ router.post('/find-similar', auth, async (req, res) => {
     }
 });
 
-// POST /api/image-search/update-vector/:houseId – (re)compute and store vector for an existing house (admin/premium only)
+// POST /api/image-search/update-vector/:houseId – store a pre‑computed vector (from frontend)
+// TEMPORARY: ownership check removed to allow backfill for all houses. Revert after backfill.
 router.post('/update-vector/:houseId', auth, async (req, res) => {
     try {
         const house = await House.findById(req.params.houseId);
         if (!house) return res.status(404).json({ message: 'House not found' });
-        // Only owner or admin can update
+        // === TEMPORARY: allow any authenticated user to update feature vectors ===
+        // Original ownership check is commented out for backfill. Restore after backfill.
+        /*
         if (house.owner.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Not authorized' });
         }
+        */
         const { vector } = req.body;
         if (!vector || !Array.isArray(vector)) {
             return res.status(400).json({ message: 'Invalid feature vector' });
@@ -59,5 +63,67 @@ router.post('/update-vector/:houseId', auth, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// ========== NEW: Compute vector on the server for a given house (requires TensorFlow.js) ==========
+router.post('/compute-vector/:houseId', auth, async (req, res) => {
+    try {
+        const house = await House.findById(req.params.houseId);
+        if (!house) return res.status(404).json({ message: 'House not found' });
+        if (house.owner.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+        if (!house.images || house.images.length === 0) {
+            return res.status(400).json({ message: 'House has no images' });
+        }
+
+        // Try to load TensorFlow.js and MobileNet (optional dependencies)
+        let tf, mobilenet;
+        try {
+            tf = require('@tensorflow/tfjs-node');
+            mobilenet = require('@tensorflow-models/mobilenet');
+        } catch (err) {
+            console.error('TensorFlow.js not installed. Please run: npm install @tensorflow/tfjs-node @tensorflow-models/mobilenet axios');
+            return res.status(500).json({ message: 'Server missing AI libraries. Please run the backfill script instead.' });
+        }
+
+        const axios = require('axios');
+        const fs = require('fs');
+        const path = require('path');
+
+        const imageUrl = house.images[0];
+        // Download image to a temporary file
+        const response = await axios({ url: imageUrl, responseType: 'stream' });
+        const tempPath = path.join(__dirname, '../temp_compute.jpg');
+        const writer = fs.createWriteStream(tempPath);
+        response.data.pipe(writer);
+        await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+        });
+
+        // Load model and compute vector
+        const model = await mobilenet.load();
+        const imageBuffer = fs.readFileSync(tempPath);
+        const tensor = tf.node.decodeImage(imageBuffer);
+        const resized = tf.image.resizeBilinear(tensor, [224, 224]);
+        const expanded = resized.expandDims(0);
+        const normalized = expanded.toFloat().div(255);
+        const features = await model.infer(normalized, true);
+        const vector = Array.from(features.dataSync());
+
+        // Cleanup
+        tf.dispose([tensor, resized, expanded, normalized, features]);
+        fs.unlinkSync(tempPath);
+
+        house.featureVector = vector;
+        await house.save();
+
+        res.json({ message: 'Feature vector computed and stored successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+// ==========================================================================
 
 module.exports = router;
