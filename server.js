@@ -24,7 +24,16 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
-// CSP (mobile‑friendly) – updated to allow TensorFlow.js model loading
+// ========== BYPASS CSP FOR PREMIUM DASHBOARD (ALLOWS TENSORFLOW.JS) ==========
+app.use((req, res, next) => {
+  if (req.path === '/premium-dashboard.html') {
+    res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob:; style-src * 'unsafe-inline'; font-src * data:;");
+  }
+  next();
+});
+// ============================================================================
+
+// CSP for all other pages (mobile‑friendly)
 app.use(
   helmet({
     contentSecurityPolicy: {
