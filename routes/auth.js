@@ -24,7 +24,7 @@ function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// ========== REGISTER ==========
+// ========== REGISTER (FIXED: email sent BEFORE saving user) ==========
 router.post("/register", authLimiter, validateRegister, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password, phone, role = "free" } = req.body;
@@ -42,15 +42,20 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
     const hashed = await bcrypt.hash(password, 12);
     const verificationToken = generateToken();
 
+    // Try to send email first – only save user if email succeeds
+    try {
+      await sendVerificationEmail(email, verificationToken);
+    } catch (emailErr) {
+      console.error("Email send failed – user not created:", emailErr);
+      return res.status(500).json({ message: "Could not send verification email. Please check your email address or try again later." });
+    }
+
+    // Email sent successfully – now save the user
     const user = new User({
       name, email, password: hashed, phone, authProvider: "local",
       isEmailVerified: false, emailVerificationToken: verificationToken, role,
     });
     await user.save();
-
-    try {
-      await sendVerificationEmail(email, verificationToken);
-    } catch (emailErr) { console.error("Email send failed:", emailErr); }
 
     res.json({ message: "Registration successful! Please check your email to verify your account." });
   } catch (err) {

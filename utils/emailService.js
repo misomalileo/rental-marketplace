@@ -1,26 +1,33 @@
-const sgMail = require('@sendgrid/mail');
+const nodemailer = require("nodemailer");
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Create transporter for Gmail
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,   // your Gmail address
+    pass: process.env.EMAIL_PASS,   // your Gmail App Password (not normal password)
+  },
+});
 
 async function sendEmail({ to, subject, html }) {
-  const msg = {
+  const mailOptions = {
+    from: `"Khomo Lathu" <${process.env.EMAIL_USER}>`,
     to,
-    from: process.env.EMAIL_FROM,
     subject,
     html,
   };
   try {
-    await sgMail.send(msg);
+    await transporter.sendMail(mailOptions);
     console.log(`✅ Email sent to ${to}`);
   } catch (err) {
-    console.error('❌ Email error:', err);
-    throw err; // rethrow so caller can handle
+    console.error("❌ Email error:", err);
+    throw err; // Let the caller handle the failure
   }
 }
 
-// ========== NEW HELPER FUNCTIONS ==========
 async function sendVerificationEmail(to, verificationToken) {
-  const verificationLink = `${process.env.FRONTEND_URL || 'https://rental-marketplace-irmj.onrender.com'}/verify-email.html?token=${verificationToken}`;
+  const baseUrl = process.env.FRONTEND_URL || "https://rental-marketplace-irmj.onrender.com";
+  const verificationLink = `${baseUrl}/verify-email.html?token=${verificationToken}`;
   const subject = "Verify Your Email Address – Khomo Lathu";
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -38,7 +45,8 @@ async function sendVerificationEmail(to, verificationToken) {
 }
 
 async function sendPasswordResetEmail(to, resetToken) {
-  const resetLink = `${process.env.FRONTEND_URL || 'https://rental-marketplace-irmj.onrender.com'}/reset-password.html?token=${resetToken}`;
+  const baseUrl = process.env.FRONTEND_URL || "https://rental-marketplace-irmj.onrender.com";
+  const resetLink = `${baseUrl}/reset-password.html?token=${resetToken}`;
   const subject = "Reset Your Password – Khomo Lathu";
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -51,4 +59,4 @@ async function sendPasswordResetEmail(to, resetToken) {
   return sendEmail({ to, subject, html });
 }
 
-module.exports = { sendEmail, sendVerificationEmail, sendPasswordResetEmail };
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };
