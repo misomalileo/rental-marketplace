@@ -24,17 +24,13 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
-// ========== BYPASS CSP FOR PREMIUM DASHBOARD (ALLOWS TENSORFLOW.JS) ==========
+// ========== CONDITIONAL CSP: SKIP FOR PREMIUM DASHBOARD ==========
 app.use((req, res, next) => {
   if (req.path === '/premium-dashboard.html') {
-    res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob:; style-src * 'unsafe-inline'; font-src * data:;");
+    // No CSP for this route – TensorFlow.js can load freely
+    return next();
   }
-  next();
-});
-// ============================================================================
-
-// CSP for all other pages (mobile‑friendly)
-app.use(
+  // Apply Helmet with strict CSP for all other routes
   helmet({
     contentSecurityPolicy: {
       directives: {
@@ -53,8 +49,10 @@ app.use(
         upgradeInsecureRequests: [],
       },
     },
-  })
-);
+  })(req, res, next);
+});
+// ==========================================================
+
 app.use(cookieParser());
 app.use(cors());
 app.use(express.json());
