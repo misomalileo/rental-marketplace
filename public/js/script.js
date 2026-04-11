@@ -17,6 +17,10 @@ let currentShareHouseId = null;
 let comparisonList = [];
 let currentRegion = '';
 
+// ========== ADDED: District filter support ==========
+let currentDistrict = '';          // Stores the selected district (e.g., "Blantyre")
+let districtDropdown = null;       // Will be set after creation in index.html
+
 // ========== CUSTOM VERIFIED BADGE (SVG) ==========
 function fbSaturatedSky(size = 18, scallops = 12, depth = 3.5) {
   const cx = size/2, cy = size/2, r = size/2 - 2;
@@ -493,6 +497,11 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     if (filters.pool) params.append('pool', 'true');
     if (filters.ac) params.append('ac', 'true');
     if (sort !== 'default') params.append('sort', sort);
+    
+    // ========== ADD DISTRICT FILTER ==========
+    if (filters.district && filters.district !== '') {
+      params.append('district', filters.district);
+    }
 
     const res = await fetch(`/api/houses?${params.toString()}`);
     const data = await res.json();
@@ -525,6 +534,8 @@ function updateURL() {
   else url.searchParams.delete('type');
   if (currentSort !== 'default') url.searchParams.set('sort', currentSort);
   else url.searchParams.delete('sort');
+  if (currentDistrict) url.searchParams.set('district', currentDistrict);
+  else url.searchParams.delete('district');
   window.history.replaceState({}, '', url);
 }
 
@@ -592,6 +603,17 @@ function initPriceSlider() {
 }
 
 function getCurrentFilters() {
+  // ========== ADD DISTRICT FROM GLOBAL VARIABLE OR DROPDOWN ==========
+  const districtDropdownEl = document.getElementById('districtFilterSelect');
+  let districtValue = '';
+  if (districtDropdownEl && districtDropdownEl.value) {
+    districtValue = districtDropdownEl.value;
+  } else if (window.selectedDistrict) {
+    districtValue = window.selectedDistrict;
+  }
+  // Also sync the global currentDistrict
+  currentDistrict = districtValue;
+  
   return {
     minPrice: document.getElementById('priceMin')?.value || '',
     maxPrice: document.getElementById('priceMax')?.value || '',
@@ -602,12 +624,14 @@ function getCurrentFilters() {
     petFriendly: document.getElementById('filterPetFriendly')?.checked || false,
     pool: document.getElementById('filterPool')?.checked || false,
     ac: document.getElementById('filterAC')?.checked || false,
-    region: document.getElementById('regionFilter')?.value || ''
+    region: document.getElementById('regionFilter')?.value || '',
+    district: districtValue
   };
 }
 function applyFilters() {
   currentFilters = getCurrentFilters();
   currentRegion = currentFilters.region;
+  currentDistrict = currentFilters.district;
   currentPage = 1;
   loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
@@ -718,7 +742,7 @@ function openComparisonModal() {
     { label: '<i class="fas fa-star"></i> Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
   ];
   features.forEach(feature => {
-    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
+    tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}<td>`;
     housesToCompare.forEach(house => {
       let value = house[feature.key];
       if (feature.format) {
@@ -1607,7 +1631,6 @@ async function loadAndUpdateUserMenu() {
       // ========== ADD PREMIUM CROWN BADGE (ONLY FOR PREMIUM LANDLORDS) ==========
       const isPremiumLandlord = user.verificationType === 'premium' || user.role === 'premium_landlord';
       if (isPremiumLandlord && userAvatar && !userAvatar.parentElement?.classList.contains('avatar-container')) {
-        // Wrap avatar in container and add crown
         const parent = userAvatar.parentNode;
         const container = document.createElement('div');
         container.className = 'avatar-container';
@@ -1665,6 +1688,14 @@ const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
 if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
 window.closeDreamMatchModal = closeDreamMatchModal;
 
+// ========== ADDITION: Sync district dropdown with global variable ==========
+function syncDistrictFilter() {
+  const districtSelect = document.getElementById('districtFilterSelect');
+  if (districtSelect) {
+    districtSelect.value = currentDistrict || '';
+  }
+}
+
 // ======================================
 // INITIALIZATION
 // ======================================
@@ -1686,6 +1717,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (urlParams.has('sort')) currentSort = urlParams.get('sort');
   if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
+  if (urlParams.has('district')) {
+    currentDistrict = urlParams.get('district');
+    syncDistrictFilter();
+  }
   loadHouses(currentPage, currentType, currentFilters, currentSort);
   loadHeroCarousel();
   loadAndUpdateUserMenu();

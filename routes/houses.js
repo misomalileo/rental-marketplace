@@ -16,6 +16,14 @@ const {
 const { sendWhatsAppAlert } = require("../services/whatsappService");
 const SavedSearch = require("../models/SavedSearch");
 
+// ========== MALAWI DISTRICTS LIST (for district filter) ==========
+const malawiDistricts = [
+  "Blantyre", "Lilongwe", "Mzuzu", "Zomba", "Mulanje", "Thyolo", "Machinga", "Mangochi",
+  "Balaka", "Ntcheu", "Dedza", "Salima", "Nkhotakota", "Kasungu", "Mchinji", "Dowa",
+  "Ntchisi", "Lilongwe Rural", "Mzimba", "Rumphi", "Karonga", "Chitipa", "Nkhata Bay",
+  "Likoma", "Chikwawa", "Nsanje", "Phalombe", "Chiradzulu", "Mwanza", "Neno"
+];
+
 // ========== ENHANCED MATCH FILTERS FUNCTION ==========
 function matchesFilters(house, filters) {
   // If no filters, treat as match (should not happen, but safe)
@@ -48,6 +56,13 @@ function matchesFilters(house, filters) {
       }
     }
     if (houseRegion !== filters.region) return false;
+  }
+  
+  // ========== DISTRICT FILTER ==========
+  if (filters.district) {
+    const houseLocation = house.location || '';
+    const districtLower = filters.district.toLowerCase();
+    if (!houseLocation.toLowerCase().includes(districtLower)) return false;
   }
   
   // Bedrooms – use propertyDetails if main field is 0
@@ -499,6 +514,12 @@ router.get("/", async (req, res) => {
     if (req.query.petFriendly === "true") houseFilter.petFriendly = true;
     if (req.query.pool === "true") houseFilter.pool = true;
     if (req.query.ac === "true") houseFilter.ac = true;
+
+    // ========== ADD DISTRICT FILTER (by matching location) ==========
+    if (req.query.district) {
+      const districtRegex = new RegExp(req.query.district, 'i');
+      houseFilter.location = { $regex: districtRegex };
+    }
 
     let sortStage = { featured: -1, createdAt: -1 };
     if (sortBy === "price_asc") sortStage = { price: 1 };
