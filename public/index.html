@@ -710,6 +710,26 @@
       cursor: pointer; z-index: 9998; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 0.75rem; font-weight: 600;
     }
 
+    /* ========== DISTRICT BOUNDARY STYLES (added) ========== */
+    .district-boundary {
+      fill: #60a5fa;
+      fill-opacity: 0.2;
+      stroke: #3b82f6;
+      stroke-width: 1.5;
+      transition: all 0.2s;
+    }
+    .district-boundary:hover {
+      fill-opacity: 0.4;
+      stroke-width: 2.5;
+      cursor: pointer;
+    }
+    .district-highlight {
+      fill: #f59e0b;
+      fill-opacity: 0.4;
+      stroke: #d97706;
+      stroke-width: 2.5;
+    }
+
     /* ========== MOBILE RESPONSIVENESS – NEW LAYOUT ========== */
     @media (max-width: 768px) {
       .navbar {
@@ -1092,8 +1112,184 @@
   <script src="js/chatbot.js"></script>
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  <!-- ========== NEW: DISTRICT BOUNDARIES & FILTER ========== -->
   <script>
-    // Mobile three‑dots menu toggle
+    // Wait for the map to be ready (the map is created in js/script.js)
+    // We'll use a MutationObserver or simple timeout to detect when map is defined.
+    let mapCheckInterval = setInterval(function() {
+      if (typeof map !== 'undefined' && map) {
+        clearInterval(mapCheckInterval);
+        console.log("Map detected, loading district boundaries...");
+        initDistrictBoundaries();
+      }
+    }, 500);
+
+    let districtLayer = null;
+    let currentHighlight = null;
+
+    function initDistrictBoundaries() {
+      // Show loading indicator on map
+      const mapContainer = document.getElementById('map');
+      if (mapContainer) mapContainer.style.opacity = '0.7';
+
+      // Fetch district data from geoBoundaries API
+      fetch('https://www.geoboundaries.org/api/current/gbOpen/MWI/ADM2/')
+        .then(response => response.json())
+        .then(data => {
+          const geojsonUrl = data.gjDownloadURL;
+          return fetch(geojsonUrl);
+        })
+        .then(response => response.json())
+        .then(geojson => {
+          // Add district layer to map
+          districtLayer = L.geoJSON(geojson, {
+            style: function(feature) {
+              return {
+                color: '#3b82f6',
+                weight: 1.5,
+                fillColor: '#60a5fa',
+                fillOpacity: 0.2,
+                className: 'district-boundary'
+              };
+            },
+            onEachFeature: function(feature, layer) {
+              const districtName = feature.properties.shapeName;
+              // Add popup
+              layer.bindPopup(`<strong>${districtName}</strong><br>Click to view properties`);
+
+              // Click event: zoom and filter
+              layer.on('click', function() {
+                // Zoom to district bounds
+                map.fitBounds(layer.getBounds());
+                // Highlight selected district
+                if (currentHighlight) {
+                  districtLayer.resetStyle(currentHighlight);
+                }
+                currentHighlight = layer;
+                layer.setStyle({
+                  fillColor: '#f59e0b',
+                  fillOpacity: 0.5,
+                  weight: 3,
+                  color: '#d97706'
+                });
+                // Filter properties (trigger existing filter or store district)
+                filterPropertiesByDistrict(districtName);
+                // Update dropdown
+                const districtSelect = document.getElementById('districtFilterSelect');
+                if (districtSelect) districtSelect.value = districtName;
+              });
+
+              // Hover effect
+              layer.on('mouseover', function() {
+                layer.setStyle({
+                  fillOpacity: 0.4,
+                  weight: 2.5
+                });
+              });
+              layer.on('mouseout', function() {
+                if (currentHighlight !== layer) {
+                  districtLayer.resetStyle(layer);
+                } else {
+                  layer.setStyle({
+                    fillColor: '#f59e0b',
+                    fillOpacity: 0.5,
+                    weight: 3,
+                    color: '#d97706'
+                  });
+                }
+              });
+            }
+          }).addTo(map);
+
+          // Populate district dropdown
+          const districts = [];
+          L.geoJSON(geojson, {
+            onEachFeature: function(feature, layer) {
+              const name = feature.properties.shapeName;
+              if (name && !districts.includes(name)) districts.push(name);
+            }
+          });
+          districts.sort();
+
+          // Create dropdown and insert into filters row
+          const filterRow = document.querySelector('.filters-row');
+          if (filterRow && !document.getElementById('districtFilterSelect')) {
+            const districtDiv = document.createElement('div');
+            districtDiv.className = 'district-filter';
+            districtDiv.innerHTML = `
+              <select id="districtFilterSelect" class="sort-select" style="min-width: 150px;">
+                <option value="">All Districts</option>
+                ${districts.map(d => `<option value="${d}">${d}</option>`).join('')}
+              </select>
+            `;
+            filterRow.appendChild(districtDiv);
+
+            // Add event listener to dropdown
+            document.getElementById('districtFilterSelect').addEventListener('change', function(e) {
+              const selected = e.target.value;
+              if (selected) {
+                // Find the corresponding layer and simulate click
+                districtLayer.eachLayer(layer => {
+                  if (layer.feature && layer.feature.properties.shapeName === selected) {
+                    map.fitBounds(layer.getBounds());
+                    if (currentHighlight) districtLayer.resetStyle(currentHighlight);
+                    currentHighlight = layer;
+                    layer.setStyle({
+                      fillColor: '#f59e0b',
+                      fillOpacity: 0.5,
+                      weight: 3,
+                      color: '#d97706'
+                    });
+                    filterPropertiesByDistrict(selected);
+                  }
+                });
+              } else {
+                // Reset: remove highlight, reset properties, zoom out to Malawi
+                if (currentHighlight) districtLayer.resetStyle(currentHighlight);
+                currentHighlight = null;
+                filterPropertiesByDistrict(null);
+                map.fitBounds([[-17.2, 33.2], [-9.2, 36.2]]); // Approximate Malawi bounds
+              }
+            });
+          }
+
+          mapContainer.style.opacity = '1';
+          console.log("District boundaries loaded successfully!");
+
+          // Add attribution (required)
+          map.attributionControl.addAttribution('District boundaries: <a href="https://www.geoboundaries.org/" target="_blank">geoBoundaries (CC BY 3.0 IGO)</a>');
+        })
+        .catch(error => {
+          console.error("Failed to load district boundaries:", error);
+          if (mapContainer) mapContainer.style.opacity = '1';
+        });
+    }
+
+    // Function to filter properties by district
+    // This integrates with your existing filter system.
+    // Since we don't have a direct "district" field in the backend yet,
+    // we'll store the selected district in a global variable and trigger the "Apply Filters" button.
+    // The backend will need to support a "district" query parameter.
+    window.selectedDistrict = null;
+
+    function filterPropertiesByDistrict(district) {
+      window.selectedDistrict = district;
+      // Trigger the existing filter button if it exists
+      const applyBtn = document.getElementById('applyFiltersBtn');
+      if (applyBtn) {
+        applyBtn.click();
+      } else {
+        console.log("District filter selected:", district);
+      }
+    }
+
+    // Optional: modify the existing fetch to include district param if your backend supports it.
+    // This is a future enhancement – for now, the filter button click will handle it.
+  </script>
+
+  <script>
+    // Mobile three‑dots menu toggle (your existing code – unchanged)
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileDropdown = document.getElementById('mobileSettingsDropdown');
     if (mobileMenuBtn && mobileDropdown) {
@@ -1106,7 +1302,6 @@
           mobileDropdown.classList.remove('active');
         }
       });
-      // Sync mobile selects with desktop selects (initial values)
       const mobileLang = document.getElementById('mobileLangSelect');
       const mobileTheme = document.getElementById('mobileThemeSelect');
       const desktopLang = document.querySelector('.lang-select');
