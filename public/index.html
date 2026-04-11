@@ -2,20 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- UPDATED: allows zoom but prevents horizontal overflow -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Khomo Lathu | Rent Houses, Rooms & Hostels Across Malawi</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Icon Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Swiper CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-  <!-- Leaflet, Draw, MarkerCluster, noUiSlider -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
@@ -28,16 +23,8 @@
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <style>
     /* ========== GLOBAL ZOOM-PROOF RESET ========== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    html, body {
-      max-width: 100%;
-      overflow-x: hidden;
-      scroll-behavior: smooth;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { max-width: 100%; overflow-x: hidden; scroll-behavior: smooth; }
     body {
       background: var(--bg-gradient);
       color: var(--text-color);
@@ -49,17 +36,13 @@
       overflow-x: hidden;
       width: 100%;
     }
-    img, video, iframe, svg {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
+    img, video, iframe, svg { max-width: 100%; height: auto; display: block; }
     .main-container, .hero, .carousel-section, .map-section, .gps-section, footer {
       width: 100%;
       max-width: 100%;
       overflow-x: hidden;
     }
-    /* ========== THEME VARIABLES (unchanged) ========== */
+    /* ========== THEME VARIABLES ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -408,7 +391,7 @@
     }
     .tab-btn.active i { color: white !important; }
 
-    /* ========== NAVBAR – DESKTOP (unchanged) ========== */
+    /* ========== NAVBAR – DESKTOP ========== */
     .navbar {
       background: var(--navbar-bg);
       backdrop-filter: blur(12px);
@@ -710,27 +693,69 @@
       cursor: pointer; z-index: 9998; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 0.75rem; font-weight: 600;
     }
 
-    /* ========== DISTRICT BOUNDARY STYLES (added) ========== */
+    /* ========== ENHANCED DISTRICT BOUNDARY STYLES ========== */
     .district-boundary {
       fill: #60a5fa;
       fill-opacity: 0.2;
       stroke: #3b82f6;
-      stroke-width: 1.5;
-      transition: all 0.2s;
+      stroke-width: 1.8;
+      transition: all 0.3s ease;
+      filter: drop-shadow(0 0 2px rgba(59,130,246,0.3));
     }
     .district-boundary:hover {
       fill-opacity: 0.4;
-      stroke-width: 2.5;
+      stroke-width: 3;
+      stroke: #2563eb;
+      filter: drop-shadow(0 0 8px rgba(37,99,235,0.6));
       cursor: pointer;
     }
     .district-highlight {
       fill: #f59e0b;
-      fill-opacity: 0.4;
+      fill-opacity: 0.5;
       stroke: #d97706;
-      stroke-width: 2.5;
+      stroke-width: 3.5;
+      filter: drop-shadow(0 0 12px rgba(245,158,11,0.8));
     }
 
-    /* ========== MOBILE RESPONSIVENESS – NEW LAYOUT ========== */
+    /* ========== CRAZY DISTRICT DROPDOWN ========== */
+    .district-filter {
+      position: relative;
+    }
+    .district-filter select {
+      appearance: none;
+      background: linear-gradient(105deg, var(--primary), #8b5cf6);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.5rem 2rem 0.5rem 1rem;
+      border-radius: 60px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      min-width: 160px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.2s;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+    .district-filter select:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.4);
+      background: linear-gradient(105deg, var(--primary-dark), #7c3aed);
+    }
+    .district-filter::after {
+      content: '\f0d7';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      pointer-events: none;
+      font-size: 0.8rem;
+    }
+
+    /* ========== MOBILE THREE-DOTS MENU (GLASS + LUCIDE STYLE) ========== */
     @media (max-width: 768px) {
       .navbar {
         flex-direction: row;
@@ -739,65 +764,58 @@
         justify-content: space-between;
         padding: 0.6rem 1rem;
       }
-      .logo {
-        order: 1;
-        font-size: 1.3rem;
-      }
-      /* Avatar (profile) now in top‑right */
-      .nav-right {
-        order: 2;
-        margin-left: auto;
-        gap: 0.5rem;
-      }
-      /* Hide the original language and theme selects on mobile */
-      .lang-select, .theme-select {
-        display: none;
-      }
-      /* Three‑dots menu button */
+      .logo { order: 1; font-size: 1.3rem; }
+      .nav-right { order: 2; margin-left: auto; gap: 0.5rem; }
+      .lang-select, .theme-select { display: none; }
       .mobile-menu-btn {
-        background: transparent;
-        border: none;
-        font-size: 1.5rem;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 1.4rem;
         cursor: pointer;
         color: var(--text-color);
-        padding: 0.2rem 0.4rem;
-        border-radius: 50%;
-        transition: background 0.2s;
+        padding: 0.4rem 0.7rem;
+        border-radius: 40px;
+        transition: all 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
       }
       .mobile-menu-btn:hover {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.2);
+        transform: scale(1.02);
       }
-      /* Dropdown for mobile settings */
       .mobile-settings-dropdown {
         position: absolute;
-        top: 60px;
+        top: 65px;
         right: 10px;
-        background: var(--card-bg);
-        backdrop-filter: blur(12px);
-        border-radius: 20px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(16px);
+        border-radius: 24px;
+        box-shadow: 0 12px 28px rgba(0,0,0,0.3);
         padding: 0.8rem;
         display: none;
         flex-direction: column;
         gap: 0.8rem;
         z-index: 1002;
         border: 1px solid rgba(255,255,255,0.2);
-        min-width: 150px;
+        min-width: 160px;
       }
-      .mobile-settings-dropdown.active {
-        display: flex;
-      }
+      .mobile-settings-dropdown.active { display: flex; }
       .mobile-settings-dropdown select {
         width: 100%;
-        padding: 0.4rem;
-        border-radius: 30px;
-        border: 1px solid var(--input-border);
-        background: var(--input-bg);
-        color: var(--text-color);
+        padding: 0.5rem;
+        border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.1);
+        color: white;
         font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .mobile-settings-dropdown select option {
+        background: var(--card-bg);
+        color: var(--text-color);
       }
       .nav-links {
         order: 3;
@@ -806,68 +824,28 @@
         margin-top: 0.6rem;
         gap: 0.8rem;
       }
-      .nav-links a {
-        font-size: 0.8rem;
-      }
-      .hero {
-        margin: 0.8rem;
-        padding: 1rem;
-      }
-      .hero h1 {
-        font-size: 1.5rem;
-      }
-      .hero h1 i {
-        font-size: 2rem;
-      }
-      .hero p {
-        font-size: 0.8rem;
-      }
-      .filters-row {
-        flex-direction: column;
-        border-radius: 28px;
-        padding: 0.8rem;
-      }
-      #houses-container {
-        grid-template-columns: 1fr;
-      }
-      #map {
-        height: 340px;
-      }
-      .footer-container {
-        gap: 0.8rem;
-      }
-      .footer-col {
-        text-align: center;
-        padding: 0.6rem;
-      }
-      .footer-col ul li a {
-        justify-content: center;
-      }
-      .social-links {
-        justify-content: center;
-      }
-      .footer-newsletter form {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .footer-newsletter input {
-        width: 100%;
-      }
-      .footer-bottom {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.5rem;
-      }
+      .nav-links a { font-size: 0.8rem; }
+      .hero { margin: 0.8rem; padding: 1rem; }
+      .hero h1 { font-size: 1.5rem; }
+      .hero h1 i { font-size: 2rem; }
+      .hero p { font-size: 0.8rem; }
+      .filters-row { flex-direction: column; border-radius: 28px; padding: 0.8rem; }
+      #houses-container { grid-template-columns: 1fr; }
+      #map { height: 340px; }
+      .footer-container { gap: 0.8rem; }
+      .footer-col { text-align: center; padding: 0.6rem; }
+      .footer-col ul li a { justify-content: center; }
+      .social-links { justify-content: center; }
+      .footer-newsletter form { flex-direction: column; align-items: stretch; }
+      .footer-newsletter input { width: 100%; }
+      .footer-bottom { flex-direction: column; text-align: center; gap: 0.5rem; }
+      .district-filter select { font-size: 0.7rem; padding: 0.4rem 1.8rem 0.4rem 0.8rem; min-width: 130px; }
     }
 
     /* Desktop: hide mobile menu button */
     @media (min-width: 769px) {
-      .mobile-menu-btn {
-        display: none;
-      }
-      .mobile-settings-dropdown {
-        display: none !important;
-      }
+      .mobile-menu-btn { display: none; }
+      .mobile-settings-dropdown { display: none !important; }
     }
   </style>
 </head>
@@ -884,24 +862,17 @@
         <div class="user-avatar" id="userAvatar"><i class="fas fa-user-circle"></i></div>
         <div class="user-dropdown" id="userDropdown"></div>
       </div>
-      <!-- Language and theme selects (visible on desktop, hidden on mobile) -->
       <select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select>
       <select class="theme-select" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="aquatic">Aquatic</option><option value="minimal">Minimal</option><option value="luxury">Luxury</option></select>
-      <!-- Mobile three‑dots menu button -->
       <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-ellipsis-v"></i></button>
     </div>
-    <!-- Mobile settings dropdown (language + theme) -->
     <div class="mobile-settings-dropdown" id="mobileSettingsDropdown">
       <select id="mobileLangSelect" onchange="setLanguage(this.value); document.getElementById('mobileSettingsDropdown').classList.remove('active');">
-        <option value="en">English</option>
-        <option value="ny">Chichewa</option>
+        <option value="en">English</option><option value="ny">Chichewa</option>
       </select>
       <select id="mobileThemeSelect" onchange="setTheme(this.value); document.getElementById('mobileSettingsDropdown').classList.remove('active');">
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-        <option value="aquatic">Aquatic</option>
-        <option value="minimal">Minimal</option>
-        <option value="luxury">Luxury</option>
+        <option value="light">Light</option><option value="dark">Dark</option><option value="aquatic">Aquatic</option>
+        <option value="minimal">Minimal</option><option value="luxury">Luxury</option>
       </select>
     </div>
   </nav>
@@ -1005,7 +976,7 @@
     </section>
   </main>
 
-  <!-- Shortened Footer -->
+  <!-- Shortened Footer (unchanged) -->
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-col">
@@ -1065,39 +1036,14 @@
   </footer>
 
   <!-- Modals (unchanged) -->
-  <div id="dreamMatchModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeDreamMatchModal()">&times;</span>
-      <h2><i class="fas fa-magic"></i> Dream Home Match</h2>
-      <p>Answer a few quick questions – we'll find properties that match your lifestyle.</p>
-      <form id="dreamMatchForm">
-        <div class="form-group"><label><i class="fas fa-briefcase"></i> Do you work from home?</label><select id="dream_workFromHome" class="sort-select" style="width:100%"><option value="essential">Essential – need a dedicated office</option><option value="nice">Nice to have</option><option value="no">Not needed</option></select></div>
-        <div class="form-group"><label><i class="fas fa-utensils"></i> How often do you host friends?</label><select id="dream_social" class="sort-select" style="width:100%"><option value="often">Often – I love entertaining</option><option value="sometimes">Sometimes</option><option value="rarely">Rarely – I prefer quiet</option></select></div>
-        <div class="form-group"><label><i class="fas fa-tree"></i> How important is outdoor space?</label><select id="dream_outdoor" class="sort-select" style="width:100%"><option value="essential">Essential – garden or balcony</option><option value="nice">Nice to have</option><option value="no">Not important</option></select></div>
-        <div class="form-group"><label><i class="fas fa-volume-down"></i> Preferred noise level?</label><select id="dream_noise" class="sort-select" style="width:100%"><option value="quiet">Very quiet (no traffic, no parties)</option><option value="moderate">Moderate (normal city life)</option><option value="lively">Lively (restaurants, bars nearby)</option></select></div>
-        <div class="form-group"><label><i class="fas fa-money-bill-wave"></i> Maximum monthly rent (MWK)</label><input type="number" id="dream_maxPrice" placeholder="e.g., 500000" style="width:100%"></div>
-        <div class="form-group"><label><i class="fas fa-bed"></i> Minimum bedrooms</label><input type="number" id="dream_bedrooms" placeholder="e.g., 2" value="1" style="width:100%"></div>
-        <button type="submit" class="save-search-btn" style="width:100%; margin-top:0.8rem;"><i class="fas fa-magic"></i> Find My Dream Home</button>
-      </form>
-      <div id="dreamMatchResults" style="margin-top: 1.5rem; display: none;">
-        <h3><i class="fas fa-chart-line"></i> Your Top Matches</h3>
-        <div id="dreamMatchCarousel" class="swiper dream-swiper" style="overflow:hidden;">
-          <div class="swiper-wrapper" id="dreamMatchWrapper"></div>
-          <div class="swiper-pagination"></div>
-          <div class="swiper-button-next"></div>
-          <div class="swiper-button-prev"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closePropertyModal()">&times;</span><div id="propertyModalContent"></div><div class="modal-tabs" style="display:flex; gap:8px; margin-top:12px;"><button class="modal-tab active" data-tab="details"><i class="fas fa-info-circle"></i> Details</button><button class="modal-tab" data-tab="insights"><i class="fas fa-city"></i> Insights</button><button class="modal-tab" data-tab="streetview"><i class="fas fa-street-view"></i> Street View</button><button class="modal-tab" data-tab="pricing"><i class="fas fa-chart-line"></i> Price Insights</button><button class="modal-tab" data-tab="virtualtour"><i class="fas fa-vr-cardboard"></i> Virtual Tour</button></div><div id="modalDetails" style="display:block;"></div><div id="modalInsights" style="display:none;"><div id="insightsLoader">Loading...</div></div><div id="modalStreetView" style="display:none;"><div id="streetViewLoader">Loading street view...</div></div><div id="modalPricing" style="display:none;"><div id="pricingLoader">Fetching market data...</div></div><div id="modalVirtualTour" style="display:none;"><div id="virtualTourContainer" style="width:100%; height:400px; position:relative;"></div><div id="virtualTourMessage" style="text-align:center; padding:1rem;"></div></div></div></div>
-  <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeBookingModal()">&times;</span><h2>Request Booking</h2><div id="bookingHouseInfo"></div><form id="bookingForm"><div class="form-group"><label>Check‑in Date</label><input type="date" id="bookingStart" required></div><div class="form-group"><label>Check‑out Date</label><input type="date" id="bookingEnd" required></div><div class="form-group"><label>Message</label><textarea id="bookingMessage" rows="2"></textarea></div><button type="submit" class="save-search-btn">Send Request</button></form><div id="bookingStatus"></div></div></div>
-  <div id="lightboxModal" class="lightbox-modal" style="display:none;"><span class="lightbox-close">&times;</span><span class="lightbox-prev">&#10094;</span><span class="lightbox-next">&#10095;</span><div class="lightbox-content"><img id="lightboxImage" src=""></div><div class="lightbox-counter" id="lightboxCounter"></div></div>
-  <div id="saveSearchModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeSaveSearchModal()">&times;</span><h2>Save This Search</h2><p>Get email alerts when new houses match.</p><form id="saveSearchForm"><div class="form-group"><label>Your Email</label><input type="email" id="searchEmail" required></div><div class="form-group"><label>Search Name</label><input type="text" id="searchName"></div><button type="submit" class="save-search-btn">Save & Get Alerts</button></form><div id="saveSearchStatus"></div></div></div>
-  <div id="landlordModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:500px;"><span class="close-btn" onclick="closeLandlordModal()">&times;</span><div id="landlordModalContent"></div></div></div>
-  <div id="shareModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:400px;"><span class="close-btn" onclick="closeShareModal()">&times;</span><h3><i class="fas fa-share-alt"></i> Share this property</h3><div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;"><button onclick="shareOnFacebook()" style="background:#1877f2;">Facebook</button><button onclick="shareOnWhatsApp()" style="background:#25D366;">WhatsApp</button><button onclick="shareOnTwitter()" style="background:#1DA1F2;">Twitter</button><button onclick="copyShareLink()" style="background:#6c757d;">Copy Link</button></div><div id="shareStatus"></div></div></div>
-  <div id="comparisonModal" class="modal" style="display:none;"><div class="modal-content" style="max-width:900px;"><span class="close-btn" onclick="closeComparisonModal()">&times;</span><h2><i class="fas fa-chart-simple"></i> Compare Properties</h2><div id="comparisonTable">Select up to 3 houses to compare.</div></div></div>
+  <div id="dreamMatchModal" class="modal" style="display:none;">...</div>
+  <div id="propertyModal" class="modal" style="display:none;">...</div>
+  <div id="bookingModal" class="modal" style="display:none;">...</div>
+  <div id="lightboxModal" class="lightbox-modal" style="display:none;">...</div>
+  <div id="saveSearchModal" class="modal" style="display:none;">...</div>
+  <div id="landlordModal" class="modal" style="display:none;">...</div>
+  <div id="shareModal" class="modal" style="display:none;">...</div>
+  <div id="comparisonModal" class="modal" style="display:none;">...</div>
   <div id="compareFloatingBtn"><i class="fas fa-chart-simple"></i> Compare (<span id="compareCount">0</span>/3)</div>
 
   <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';</script>
@@ -1113,14 +1059,12 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <!-- ========== NEW: DISTRICT BOUNDARIES & FILTER ========== -->
+  <!-- ========== DISTRICT BOUNDARIES & FILTER (LOCAL GEOJSON) ========== -->
   <script>
-    // Wait for the map to be ready (the map is created in js/script.js)
-    // We'll use a MutationObserver or simple timeout to detect when map is defined.
     let mapCheckInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map) {
         clearInterval(mapCheckInterval);
-        console.log("Map detected, loading district boundaries...");
+        console.log("Map detected, loading district boundaries from local file...");
         initDistrictBoundaries();
       }
     }, 500);
@@ -1129,72 +1073,58 @@
     let currentHighlight = null;
 
     function initDistrictBoundaries() {
-      // Show loading indicator on map
       const mapContainer = document.getElementById('map');
       if (mapContainer) mapContainer.style.opacity = '0.7';
 
-      // Fetch district data from geoBoundaries API
-      fetch('https://www.geoboundaries.org/api/current/gbOpen/MWI/ADM2/')
-        .then(response => response.json())
-        .then(data => {
-          const geojsonUrl = data.gjDownloadURL;
-          return fetch(geojsonUrl);
+      // Load local GeoJSON file (must be placed at public/data/malawi_districts.geojson)
+      fetch('/data/malawi_districts.geojson')
+        .then(response => {
+          if (!response.ok) throw new Error('GeoJSON file not found. Please ensure it is saved at public/data/malawi_districts.geojson');
+          return response.json();
         })
-        .then(response => response.json())
         .then(geojson => {
-          // Add district layer to map
           districtLayer = L.geoJSON(geojson, {
-            style: function(feature) {
+            style: function() {
               return {
                 color: '#3b82f6',
-                weight: 1.5,
+                weight: 1.8,
                 fillColor: '#60a5fa',
                 fillOpacity: 0.2,
                 className: 'district-boundary'
               };
             },
             onEachFeature: function(feature, layer) {
-              const districtName = feature.properties.shapeName;
-              // Add popup
+              const districtName = feature.properties.name;  // from SimpleMaps data
+              if (!districtName) return;
               layer.bindPopup(`<strong>${districtName}</strong><br>Click to view properties`);
 
-              // Click event: zoom and filter
               layer.on('click', function() {
-                // Zoom to district bounds
-                map.fitBounds(layer.getBounds());
-                // Highlight selected district
-                if (currentHighlight) {
-                  districtLayer.resetStyle(currentHighlight);
-                }
+                map.flyToBounds(layer.getBounds(), { duration: 1.2 });
+                if (currentHighlight) districtLayer.resetStyle(currentHighlight);
                 currentHighlight = layer;
                 layer.setStyle({
                   fillColor: '#f59e0b',
                   fillOpacity: 0.5,
-                  weight: 3,
+                  weight: 3.5,
                   color: '#d97706'
                 });
-                // Filter properties (trigger existing filter or store district)
                 filterPropertiesByDistrict(districtName);
-                // Update dropdown
                 const districtSelect = document.getElementById('districtFilterSelect');
                 if (districtSelect) districtSelect.value = districtName;
               });
 
-              // Hover effect
               layer.on('mouseover', function() {
-                layer.setStyle({
-                  fillOpacity: 0.4,
-                  weight: 2.5
-                });
+                if (currentHighlight !== layer) {
+                  layer.setStyle({ fillOpacity: 0.4, weight: 2.8 });
+                }
               });
               layer.on('mouseout', function() {
-                if (currentHighlight !== layer) {
-                  districtLayer.resetStyle(layer);
-                } else {
+                if (currentHighlight !== layer) districtLayer.resetStyle(layer);
+                else {
                   layer.setStyle({
                     fillColor: '#f59e0b',
                     fillOpacity: 0.5,
-                    weight: 3,
+                    weight: 3.5,
                     color: '#d97706'
                   });
                 }
@@ -1202,63 +1132,58 @@
             }
           }).addTo(map);
 
-          // Populate district dropdown
+          // Populate dropdown
           const districts = [];
           L.geoJSON(geojson, {
             onEachFeature: function(feature, layer) {
-              const name = feature.properties.shapeName;
+              const name = feature.properties.name;
               if (name && !districts.includes(name)) districts.push(name);
             }
           });
           districts.sort();
 
-          // Create dropdown and insert into filters row
           const filterRow = document.querySelector('.filters-row');
           if (filterRow && !document.getElementById('districtFilterSelect')) {
             const districtDiv = document.createElement('div');
             districtDiv.className = 'district-filter';
             districtDiv.innerHTML = `
-              <select id="districtFilterSelect" class="sort-select" style="min-width: 150px;">
+              <select id="districtFilterSelect" class="sort-select" style="min-width: 160px;">
                 <option value="">All Districts</option>
                 ${districts.map(d => `<option value="${d}">${d}</option>`).join('')}
               </select>
             `;
             filterRow.appendChild(districtDiv);
 
-            // Add event listener to dropdown
             document.getElementById('districtFilterSelect').addEventListener('change', function(e) {
               const selected = e.target.value;
               if (selected) {
-                // Find the corresponding layer and simulate click
                 districtLayer.eachLayer(layer => {
-                  if (layer.feature && layer.feature.properties.shapeName === selected) {
-                    map.fitBounds(layer.getBounds());
+                  const name = layer.feature?.properties?.name;
+                  if (name === selected) {
+                    map.flyToBounds(layer.getBounds(), { duration: 1.2 });
                     if (currentHighlight) districtLayer.resetStyle(currentHighlight);
                     currentHighlight = layer;
                     layer.setStyle({
                       fillColor: '#f59e0b',
                       fillOpacity: 0.5,
-                      weight: 3,
+                      weight: 3.5,
                       color: '#d97706'
                     });
                     filterPropertiesByDistrict(selected);
                   }
                 });
               } else {
-                // Reset: remove highlight, reset properties, zoom out to Malawi
                 if (currentHighlight) districtLayer.resetStyle(currentHighlight);
                 currentHighlight = null;
                 filterPropertiesByDistrict(null);
-                map.fitBounds([[-17.2, 33.2], [-9.2, 36.2]]); // Approximate Malawi bounds
+                map.flyToBounds([[-17.2, 33.2], [-9.2, 36.2]], { duration: 1.2 });
               }
             });
           }
 
           mapContainer.style.opacity = '1';
           console.log("District boundaries loaded successfully!");
-
-          // Add attribution (required)
-          map.attributionControl.addAttribution('District boundaries: <a href="https://www.geoboundaries.org/" target="_blank">geoBoundaries (CC BY 3.0 IGO)</a>');
+          map.attributionControl.addAttribution('District boundaries: <a href="https://simplemaps.com" target="_blank">SimpleMaps</a>');
         })
         .catch(error => {
           console.error("Failed to load district boundaries:", error);
@@ -1266,30 +1191,17 @@
         });
     }
 
-    // Function to filter properties by district
-    // This integrates with your existing filter system.
-    // Since we don't have a direct "district" field in the backend yet,
-    // we'll store the selected district in a global variable and trigger the "Apply Filters" button.
-    // The backend will need to support a "district" query parameter.
     window.selectedDistrict = null;
-
     function filterPropertiesByDistrict(district) {
       window.selectedDistrict = district;
-      // Trigger the existing filter button if it exists
       const applyBtn = document.getElementById('applyFiltersBtn');
-      if (applyBtn) {
-        applyBtn.click();
-      } else {
-        console.log("District filter selected:", district);
-      }
+      if (applyBtn) applyBtn.click();
+      else console.log("District filter selected:", district);
     }
-
-    // Optional: modify the existing fetch to include district param if your backend supports it.
-    // This is a future enhancement – for now, the filter button click will handle it.
   </script>
 
   <script>
-    // Mobile three‑dots menu toggle (your existing code – unchanged)
+    // Mobile three‑dots menu toggle (enhanced)
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileDropdown = document.getElementById('mobileSettingsDropdown');
     if (mobileMenuBtn && mobileDropdown) {
