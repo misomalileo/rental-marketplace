@@ -25,6 +25,12 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 app.set("trust proxy", 1);
 
+// ========== FIX MONGOOSE DEPRECATION WARNINGS GLOBALLY ==========
+mongoose.set('strictQuery', false);
+// Set default options for findOneAndUpdate to use returnDocument instead of new
+mongoose.set('returnOriginal', false);
+// ================================================================
+
 // ========== SECURITY: Stricter rate limiting for login ==========
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -68,7 +74,41 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/", limiter);
+
+// ========== STATIC FILES ==========
 app.use(express.static("public"));
+
+// ========== EXPLICIT STATIC ROUTE FOR DATA FOLDER (FIX 404) ==========
+const dataPath = path.join(__dirname, "public", "data");
+// Ensure the data directory exists
+if (!fs.existsSync(dataPath)) {
+  fs.mkdirSync(dataPath, { recursive: true });
+  console.log("📁 Created public/data directory");
+}
+app.use("/data", express.static(dataPath, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".geojson")) {
+      res.setHeader("Content-Type", "application/geo+json");
+    }
+  }
+}));
+
+// ========== DEBUG ENDPOINT: CHECK IF DATA FILES EXIST ==========
+app.get("/api/debug/data-files", (req, res) => {
+  try {
+    const files = fs.readdirSync(dataPath).filter(f => f.endsWith('.geojson'));
+    res.json({ 
+      dataFolderExists: fs.existsSync(dataPath),
+      dataFolderPath: dataPath,
+      files,
+      count: files.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// ================================================================
+
 app.use("/uploads", express.static("uploads"));
 
 // Contracts folder (exists but not statically served)
