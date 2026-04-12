@@ -965,7 +965,7 @@
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);"><i class="fas fa-filter"></i> Apply Filters</button>
     </div>
 
-    <!-- NEW SPATIAL TOOLBAR -->
+    <!-- SPATIAL TOOLBAR -->
     <div class="spatial-toolbar">
       <button id="nearbyHospitalsBtn" class="spatial-btn"><i class="fas fa-hospital"></i> Near Hospitals</button>
       <button id="nearbySchoolsBtn" class="spatial-btn"><i class="fas fa-school"></i> Near Schools</button>
@@ -1108,7 +1108,7 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <!-- ========== DISTRICT BOUNDARIES & FILTER (unchanged) ========== -->
+  <!-- ========== DISTRICT BOUNDARIES & FILTER ========== -->
   <script>
     let mapCheckInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map) {
@@ -1247,18 +1247,23 @@
     }
   </script>
 
-  <!-- ========== ADD ALL AMENITY LAYERS WITH LAYER CONTROL & SPATIAL TOOLS ========== -->
+  <!-- ========== ALL AMENITY LAYERS + SUB‑DISTRICTS + SPATIAL TOOLS ========== -->
   <script>
-    // Wait for map to be fully ready (after district boundaries and script.js map)
+    // Wait for map and district layer to be ready
     let amenityLoadInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map && districtLayer) {
         clearInterval(amenityLoadInterval);
-        console.log("Loading amenity layers...");
+        console.log("Loading amenity layers and sub‑districts...");
         loadAllAmenityLayers();
+        loadSubDistricts();
       }
     }, 1000);
 
-    let amenityLayers = {}; // store layers for toggling
+    let amenityLayers = {};      // store amenity layers for toggling
+    let subDistrictLayer = null; // sub‑districts layer
+    let healthPoints = [];       // store hospital points for distance calculations
+    let schoolPoints = [];
+    let marketPoints = [];
     let heatmapLayer = null;
     let heatmapActive = false;
     let walkabilityLayer = null;
@@ -1284,8 +1289,8 @@
       });
     }
 
-    // Load each GeoJSON and add to map and layer control
-    async function loadLayer(url, layerName, iconClass, color) {
+    // Load amenity layer and optionally store its points for nearby searches
+    async function loadLayer(url, layerName, iconClass, color, storeArray = null) {
       try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -1299,6 +1304,17 @@
         });
         layer.addTo(map);
         amenityLayers[layerName] = layer;
+        if (storeArray && data.features) {
+          data.features.forEach(f => {
+            if (f.geometry && f.geometry.coordinates) {
+              storeArray.push({
+                lat: f.geometry.coordinates[1],
+                lng: f.geometry.coordinates[0],
+                name: getAmenityName(f)
+              });
+            }
+          });
+        }
         console.log(`Loaded ${layerName}: ${data.features?.length || 0} features`);
         return layer;
       } catch (err) {
@@ -1308,107 +1324,252 @@
     }
 
     async function loadAllAmenityLayers() {
-      // Define all amenity layers
       const layers = [
-        { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444' },
-        { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6' },
-        { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b' },
-        { url: '/data/malawi_banks.geojson', name: 'Banks & ATMs', icon: 'fas fa-university', color: '#8b5cf6' },
-        { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b' },
-        { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981' },
-        { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899' },
-        { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280' },
-        { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316' },
-        { url: '/data/malawi_worship.geojson', name: 'Places of Worship', icon: 'fas fa-church', color: '#a855f7' }
+        { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints },
+        { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6', store: schoolPoints },
+        { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b', store: marketPoints },
+        { url: '/data/malawi_banks.geojson', name: 'Banks & ATMs', icon: 'fas fa-university', color: '#8b5cf6', store: null },
+        { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b', store: null },
+        { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981', store: null },
+        { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899', store: null },
+        { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280', store: null },
+        { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316', store: null },
+        { url: '/data/malawi_worship.geojson', name: 'Places of Worship', icon: 'fas fa-church', color: '#a855f7', store: null }
       ];
+      await Promise.all(layers.map(l => loadLayer(l.url, l.name, l.icon, l.color, l.store)));
 
-      // Load all concurrently
-      await Promise.all(layers.map(l => loadLayer(l.url, l.name, l.icon, l.color)));
-
-      // Add layer control (toggle)
+      // Layer control
       const overlayControl = {};
-      for (const [name, layer] of Object.entries(amenityLayers)) {
-        overlayControl[name] = layer;
-      }
+      for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
       L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
+      if (districtLayer) L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
+    }
 
-      // Add district layer to control as well (optional)
-      if (districtLayer) {
-        L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
-      }
-
-      // Add property heatmap if property data is available (simulate with random points)
-      // We'll use the existing allHouses array from script.js if available
-      function initHeatmap() {
-        if (typeof allHouses !== 'undefined' && allHouses.length > 0) {
-          const heatPoints = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
-          if (heatmapLayer) map.removeLayer(heatmapLayer);
-          heatmapLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 12 });
-          if (heatmapActive) heatmapLayer.addTo(map);
-        } else {
-          // Fallback: sample points around Blantyre for demo
-          const demoPoints = [];
-          for (let i = 0; i < 200; i++) {
-            demoPoints.push([-15.786 + (Math.random() - 0.5) * 0.5, 35.005 + (Math.random() - 0.5) * 0.5, Math.random()]);
+    // Load sub‑districts (Traditional Authorities)
+    async function loadSubDistricts() {
+      try {
+        const response = await fetch('/data/malawi_subdistricts.geojson');
+        if (!response.ok) throw new Error('Sub‑districts GeoJSON not found');
+        const data = await response.json();
+        subDistrictLayer = L.geoJSON(data, {
+          style: {
+            color: '#a855f7',
+            weight: 1.5,
+            fillColor: '#c084fc',
+            fillOpacity: 0.15,
+            dashArray: '5,5',
+            className: 'subdistrict-boundary'
+          },
+          onEachFeature: function(feature, layer) {
+            const name = feature.properties.name || 'Sub‑district';
+            layer.bindPopup(`<strong>${name}</strong><br>Click to view properties`);
+            layer.on('click', function() {
+              map.flyToBounds(layer.getBounds(), { duration: 1.2 });
+              if (window.currentHighlightSub) subDistrictLayer.resetStyle(window.currentHighlightSub);
+              window.currentHighlightSub = layer;
+              layer.setStyle({
+                fillColor: '#f59e0b',
+                fillOpacity: 0.5,
+                weight: 2.5,
+                color: '#d97706'
+              });
+              filterPropertiesBySubDistrict(name);
+            });
+            layer.on('mouseover', function() {
+              if (window.currentHighlightSub !== layer) layer.setStyle({ fillOpacity: 0.3, weight: 2 });
+            });
+            layer.on('mouseout', function() {
+              if (window.currentHighlightSub !== layer) subDistrictLayer.resetStyle(layer);
+            });
           }
-          heatmapLayer = L.heatLayer(demoPoints, { radius: 25, blur: 15 });
+        }).addTo(map);
+        // Add to layer control
+        if (subDistrictLayer) {
+          const existingControl = document.querySelector('.leaflet-control-layers');
+          if (existingControl) existingControl.remove();
+          const overlayControl = {};
+          for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
+          overlayControl['Sub‑districts'] = subDistrictLayer;
+          if (districtLayer) overlayControl['Districts'] = districtLayer;
+          L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
         }
+        console.log("Sub‑districts loaded");
+      } catch (err) {
+        console.warn("Sub‑districts not loaded:", err);
       }
+    }
 
-      // Listen for property updates (script.js might reload houses)
-      if (typeof window.loadHouses === 'function') {
-        // Override to also update heatmap after load
-        const originalLoadHouses = window.loadHouses;
-        window.loadHouses = async function(...args) {
-          await originalLoadHouses(...args);
-          if (heatmapActive && typeof allHouses !== 'undefined') {
-            if (heatmapLayer) map.removeLayer(heatmapLayer);
-            const points = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
-            heatmapLayer = L.heatLayer(points, { radius: 25, blur: 15 });
-            heatmapLayer.addTo(map);
+    function filterPropertiesBySubDistrict(subDistrictName) {
+      window.selectedSubDistrict = subDistrictName;
+      const applyBtn = document.getElementById('applyFiltersBtn');
+      if (applyBtn) applyBtn.click();
+    }
+
+    // Nearby search using Turf.js
+    function filterPropertiesNearAmenity(pointsArray, typeName) {
+      if (!pointsArray.length) {
+        alert(`No ${typeName} data available.`);
+        return;
+      }
+      if (typeof allHouses === 'undefined' || !allHouses.length) {
+        alert('No properties loaded yet.');
+        return;
+      }
+      const radiusKm = 2;
+      const nearHouseIds = [];
+      for (const house of allHouses) {
+        if (!house.lat || !house.lng) continue;
+        const from = turf.point([house.lng, house.lat]);
+        let found = false;
+        for (const amenity of pointsArray) {
+          const to = turf.point([amenity.lng, amenity.lat]);
+          const distance = turf.distance(from, to, { units: 'kilometers' });
+          if (distance <= radiusKm) {
+            found = true;
+            break;
           }
-        };
+        }
+        if (found) nearHouseIds.push(house._id);
       }
-      initHeatmap();
+      if (nearHouseIds.length === 0) {
+        alert(`No properties within ${radiusKm} km of any ${typeName}.`);
+        return;
+      }
+      // Filter the property grid (simulate filter)
+      const filteredHouses = allHouses.filter(h => nearHouseIds.includes(h._id));
+      if (window.renderHouses) window.renderHouses(filteredHouses);
+      if (window.renderMarkers) window.renderMarkers(filteredHouses);
+      alert(`Found ${nearHouseIds.length} properties near ${typeName}.`);
+    }
 
-      // Toolbar buttons
-      document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => {
-        if (!amenityLayers['Health Facilities']) return;
-        // Trigger property filter to show properties near any hospital (simplified: alert)
-        alert("Nearby hospitals filter would show properties within 2km of any health facility. (Implement with Turf.js)");
-      });
-      document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => {
-        alert("Nearby schools filter – coming soon with Turf.js");
-      });
-      document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => {
-        alert("Nearby markets filter – coming soon");
-      });
-      const heatmapBtn = document.getElementById('toggleHeatmapBtn');
-      heatmapBtn?.addEventListener('click', () => {
-        heatmapActive = !heatmapActive;
-        if (heatmapActive) {
-          if (heatmapLayer) heatmapLayer.addTo(map);
-          heatmapBtn.classList.add('active');
-          heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Hide Heatmap';
-        } else {
-          if (heatmapLayer) map.removeLayer(heatmapLayer);
-          heatmapBtn.classList.remove('active');
-          heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
-        }
-      });
-      document.getElementById('walkabilityBtn')?.addEventListener('click', () => {
-        if (walkabilityLayer) {
-          map.removeLayer(walkabilityLayer);
-          walkabilityLayer = null;
-          document.getElementById('walkabilityBtn').style.background = 'var(--button-bg)';
-        } else {
-          // Simulate walkability zones (just a visual polygon overlay)
-          walkabilityLayer = L.polygon([[-15.8, 34.98], [-15.75, 34.98], [-15.75, 35.02], [-15.8, 35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
-          walkabilityLayer.bindPopup("Walkability zone: High (simulated)");
-          document.getElementById('walkabilityBtn').style.background = '#10b981';
-        }
+    // Double‑click on property card: zoom to property and show nearby amenities info
+    function attachDoubleClickToHouseCards() {
+      const cards = document.querySelectorAll('.house-card');
+      cards.forEach(card => {
+        if (card.dataset.dblclickAttached) return;
+        card.dataset.dblclickAttached = 'true';
+        card.addEventListener('dblclick', async (e) => {
+          e.stopPropagation();
+          // Try to get house ID from the card
+          const houseId = card.querySelector('[data-house-id]')?.dataset.houseId || 
+                          card.querySelector('.slider .slides-container')?.dataset.houseId;
+          if (!houseId) return;
+          const house = allHouses?.find(h => h._id === houseId);
+          if (!house || !house.lat || !house.lng) return;
+          map.flyTo([house.lat, house.lng], 15, { duration: 1.5 });
+          // Show a temporary panel with nearby distances
+          let nearestHospital = null, nearestSchool = null, nearestMarket = null;
+          const from = turf.point([house.lng, house.lat]);
+          if (healthPoints.length) {
+            let minDist = Infinity;
+            for (const h of healthPoints) {
+              const dist = turf.distance(from, turf.point([h.lng, h.lat]), { units: 'km' });
+              if (dist < minDist) { minDist = dist; nearestHospital = { name: h.name, dist: minDist }; }
+            }
+          }
+          if (schoolPoints.length) {
+            let minDist = Infinity;
+            for (const s of schoolPoints) {
+              const dist = turf.distance(from, turf.point([s.lng, s.lat]), { units: 'km' });
+              if (dist < minDist) { minDist = dist; nearestSchool = { name: s.name, dist: minDist }; }
+            }
+          }
+          if (marketPoints.length) {
+            let minDist = Infinity;
+            for (const m of marketPoints) {
+              const dist = turf.distance(from, turf.point([m.lng, m.lat]), { units: 'km' });
+              if (dist < minDist) { minDist = dist; nearestMarket = { name: m.name, dist: minDist }; }
+            }
+          }
+          const html = `
+            <div style="position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 20px; padding: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 10000; max-width: 300px; border: 1px solid var(--input-border);">
+              <strong>${house.name}</strong><br>
+              🏥 Nearest Hospital: ${nearestHospital ? `${nearestHospital.name} (${nearestHospital.dist.toFixed(2)} km)` : 'N/A'}<br>
+              🏫 Nearest School: ${nearestSchool ? `${nearestSchool.name} (${nearestSchool.dist.toFixed(2)} km)` : 'N/A'}<br>
+              🛒 Nearest Market: ${nearestMarket ? `${nearestMarket.name} (${nearestMarket.dist.toFixed(2)} km)` : 'N/A'}<br>
+              <button id="closeNearbyPanel" style="margin-top: 0.5rem; background: var(--primary); color: white; border: none; border-radius: 20px; padding: 0.2rem 0.8rem;">Close</button>
+            </div>
+          `;
+          let panel = document.getElementById('tempNearbyPanel');
+          if (panel) panel.remove();
+          panel = document.createElement('div');
+          panel.id = 'tempNearbyPanel';
+          panel.innerHTML = html;
+          document.body.appendChild(panel);
+          document.getElementById('closeNearbyPanel')?.addEventListener('click', () => panel.remove());
+          setTimeout(() => { if (panel) panel.remove(); }, 15000);
+        });
       });
     }
+
+    // Watch for dynamically added house cards (after each render)
+    const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
+    observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
+    setTimeout(attachDoubleClickToHouseCards, 2000);
+
+    // Toolbar event listeners
+    document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
+    document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
+    document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
+
+    // Heatmap
+    function initHeatmap() {
+      if (typeof allHouses !== 'undefined' && allHouses.length > 0) {
+        const heatPoints = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
+        if (heatmapLayer) map.removeLayer(heatmapLayer);
+        heatmapLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 12 });
+        if (heatmapActive) heatmapLayer.addTo(map);
+      } else {
+        const demoPoints = [];
+        for (let i = 0; i < 200; i++) {
+          demoPoints.push([-15.786 + (Math.random() - 0.5) * 0.5, 35.005 + (Math.random() - 0.5) * 0.5, Math.random()]);
+        }
+        heatmapLayer = L.heatLayer(demoPoints, { radius: 25, blur: 15 });
+      }
+    }
+
+    const heatmapBtn = document.getElementById('toggleHeatmapBtn');
+    heatmapBtn?.addEventListener('click', () => {
+      heatmapActive = !heatmapActive;
+      if (heatmapActive) {
+        if (heatmapLayer) heatmapLayer.addTo(map);
+        heatmapBtn.classList.add('active');
+        heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Hide Heatmap';
+      } else {
+        if (heatmapLayer) map.removeLayer(heatmapLayer);
+        heatmapBtn.classList.remove('active');
+        heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
+      }
+    });
+
+    document.getElementById('walkabilityBtn')?.addEventListener('click', () => {
+      if (walkabilityLayer) {
+        map.removeLayer(walkabilityLayer);
+        walkabilityLayer = null;
+        document.getElementById('walkabilityBtn').style.background = 'var(--button-bg)';
+      } else {
+        walkabilityLayer = L.polygon([[-15.8, 34.98], [-15.75, 34.98], [-15.75, 35.02], [-15.8, 35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
+        walkabilityLayer.bindPopup("Walkability zone: High (simulated)");
+        document.getElementById('walkabilityBtn').style.background = '#10b981';
+      }
+    });
+
+    // Override loadHouses to update heatmap when properties change
+    if (typeof window.loadHouses === 'function') {
+      const originalLoadHouses = window.loadHouses;
+      window.loadHouses = async function(...args) {
+        await originalLoadHouses(...args);
+        if (heatmapActive && typeof allHouses !== 'undefined') {
+          if (heatmapLayer) map.removeLayer(heatmapLayer);
+          const points = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
+          heatmapLayer = L.heatLayer(points, { radius: 25, blur: 15 });
+          heatmapLayer.addTo(map);
+        }
+        setTimeout(attachDoubleClickToHouseCards, 500);
+      };
+    }
+    initHeatmap();
+    setTimeout(attachDoubleClickToHouseCards, 2000);
   </script>
 
   <script>
