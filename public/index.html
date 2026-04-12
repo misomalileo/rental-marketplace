@@ -757,26 +757,29 @@
       font-size: 0.8rem;
     }
 
-    /* ========== ADDITIONAL TOOLBAR STYLES ========== */
-    .spatial-toolbar {
+    /* ========== FLOATING SPATIAL TOOLBAR (ON TOP OF MAP) ========== */
+    .floating-spatial-toolbar {
+      position: absolute;
+      top: 70px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(16px);
+      border-radius: 60px;
+      padding: 0.5rem 0.8rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.8rem;
-      justify-content: center;
-      margin: 1rem 0;
-      background: var(--card-bg);
-      padding: 0.8rem;
-      border-radius: 60px;
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--input-border);
+      gap: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
-    .spatial-btn {
-      background: var(--button-bg);
+    .floating-spatial-toolbar .spatial-btn {
+      background: rgba(255,255,255,0.15);
       color: white;
       border: none;
       border-radius: 40px;
-      padding: 0.4rem 1rem;
-      font-size: 0.75rem;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.7rem;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
@@ -784,15 +787,28 @@
       align-items: center;
       gap: 6px;
     }
-    .spatial-btn:hover {
+    .floating-spatial-toolbar .spatial-btn:hover {
+      background: var(--primary);
       transform: translateY(-2px);
-      background: var(--button-hover);
     }
-    .heatmap-toggle {
+    .floating-spatial-toolbar .heatmap-toggle {
       background: #8b5cf6;
     }
-    .heatmap-toggle.active {
+    .floating-spatial-toolbar .heatmap-toggle.active {
       background: #ef4444;
+    }
+    @media (max-width: 768px) {
+      .floating-spatial-toolbar {
+        top: 10px;
+        right: 10px;
+        left: auto;
+        padding: 0.3rem 0.5rem;
+        gap: 0.3rem;
+      }
+      .floating-spatial-toolbar .spatial-btn {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.6rem;
+      }
     }
     /* ========== MOBILE THREE-DOTS MENU (GLASS + LUCIDE STYLE) ========== */
     @media (max-width: 768px) {
@@ -869,7 +885,6 @@
       .hero h1 i { font-size: 2rem; }
       .hero p { font-size: 0.8rem; }
       .filters-row { flex-direction: column; border-radius: 28px; padding: 0.8rem; }
-      .spatial-toolbar { flex-direction: column; align-items: stretch; border-radius: 28px; }
       #houses-container { grid-template-columns: 1fr; }
       #map { height: 340px; }
       .footer-container { gap: 0.8rem; }
@@ -963,15 +978,6 @@
       </select>
       <button id="saveSearchBtn" class="save-search-btn"><i class="fas fa-save"></i> Save Search</button>
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);"><i class="fas fa-filter"></i> Apply Filters</button>
-    </div>
-
-    <!-- SPATIAL TOOLBAR -->
-    <div class="spatial-toolbar">
-      <button id="nearbyHospitalsBtn" class="spatial-btn"><i class="fas fa-hospital"></i> Near Hospitals</button>
-      <button id="nearbySchoolsBtn" class="spatial-btn"><i class="fas fa-school"></i> Near Schools</button>
-      <button id="nearbyMarketsBtn" class="spatial-btn"><i class="fas fa-store"></i> Near Markets</button>
-      <button id="toggleHeatmapBtn" class="spatial-btn heatmap-toggle"><i class="fas fa-fire"></i> Property Heatmap</button>
-      <button id="walkabilityBtn" class="spatial-btn"><i class="fas fa-walking"></i> Show Walkability</button>
     </div>
 
     <section class="amenities-filters">
@@ -1247,28 +1253,27 @@
     }
   </script>
 
-  <!-- ========== ALL AMENITY LAYERS + SUB‑DISTRICTS + SPATIAL TOOLS ========== -->
+  <!-- ========== ALL AMENITY LAYERS + SUB‑DISTRICTS + SPATIAL TOOLS (FIXED) ========== -->
   <script>
     // Wait for map and district layer to be ready
     let amenityLoadInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map && districtLayer) {
         clearInterval(amenityLoadInterval);
-        console.log("Loading amenity layers and sub‑districts...");
+        console.log("Loading amenity layers...");
         loadAllAmenityLayers();
         loadSubDistricts();
       }
     }, 1000);
 
-    let amenityLayers = {};      // store amenity layers for toggling
-    let subDistrictLayer = null; // sub‑districts layer
-    let healthPoints = [];       // store hospital points for distance calculations
+    let amenityLayers = {};
+    let subDistrictLayer = null;
+    let healthPoints = [];
     let schoolPoints = [];
     let marketPoints = [];
     let heatmapLayer = null;
     let heatmapActive = false;
     let walkabilityLayer = null;
 
-    // Helper: get name from properties
     function getAmenityName(feature) {
       if (feature.properties.name) return feature.properties.name;
       if (feature.properties.other_tags) {
@@ -1278,7 +1283,6 @@
       return "Amenity";
     }
 
-    // Helper: create marker with icon
     function createMarker(latlng, iconClass, color) {
       return L.marker(latlng, {
         icon: L.divIcon({
@@ -1289,11 +1293,13 @@
       });
     }
 
-    // Load amenity layer and optionally store its points for nearby searches
     async function loadLayer(url, layerName, iconClass, color, storeArray = null) {
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+          console.warn(`Skipping ${layerName} – file not found (404)`);
+          return null;
+        }
         const data = await response.json();
         const layer = L.geoJSON(data, {
           pointToLayer: (feature, latlng) => createMarker(latlng, iconClass, color),
@@ -1314,11 +1320,13 @@
               });
             }
           });
+          console.log(`Loaded ${layerName}: ${data.features.length} features, stored ${storeArray.length} points`);
+        } else {
+          console.log(`Loaded ${layerName}: ${data.features?.length || 0} features`);
         }
-        console.log(`Loaded ${layerName}: ${data.features?.length || 0} features`);
         return layer;
       } catch (err) {
-        console.warn(`Failed to load ${layerName}:`, err);
+        console.warn(`Failed to load ${layerName}:`, err.message);
         return null;
       }
     }
@@ -1336,20 +1344,27 @@
         { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316', store: null },
         { url: '/data/malawi_worship.geojson', name: 'Places of Worship', icon: 'fas fa-church', color: '#a855f7', store: null }
       ];
-      await Promise.all(layers.map(l => loadLayer(l.url, l.name, l.icon, l.color, l.store)));
+      for (const l of layers) {
+        await loadLayer(l.url, l.name, l.icon, l.color, l.store);
+      }
 
-      // Layer control
+      // Add layer control (only for layers that actually loaded)
       const overlayControl = {};
-      for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
-      L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
-      if (districtLayer) L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
+      for (const [name, layer] of Object.entries(amenityLayers)) {
+        overlayControl[name] = layer;
+      }
+      if (Object.keys(overlayControl).length > 0) {
+        L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
+      }
+      if (districtLayer) {
+        L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
+      }
     }
 
-    // Load sub‑districts (Traditional Authorities)
     async function loadSubDistricts() {
       try {
         const response = await fetch('/data/malawi_subdistricts.geojson');
-        if (!response.ok) throw new Error('Sub‑districts GeoJSON not found');
+        if (!response.ok) throw new Error('Not found');
         const data = await response.json();
         subDistrictLayer = L.geoJSON(data, {
           style: {
@@ -1383,19 +1398,17 @@
             });
           }
         }).addTo(map);
-        // Add to layer control
-        if (subDistrictLayer) {
-          const existingControl = document.querySelector('.leaflet-control-layers');
-          if (existingControl) existingControl.remove();
-          const overlayControl = {};
-          for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
-          overlayControl['Sub‑districts'] = subDistrictLayer;
-          if (districtLayer) overlayControl['Districts'] = districtLayer;
-          L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
-        }
+        // Add to layer control (rebuild)
+        const overlayControl = {};
+        for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
+        overlayControl['Sub‑districts'] = subDistrictLayer;
+        if (districtLayer) overlayControl['Districts'] = districtLayer;
+        const existingControl = document.querySelector('.leaflet-control-layers');
+        if (existingControl) existingControl.remove();
+        L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
         console.log("Sub‑districts loaded");
       } catch (err) {
-        console.warn("Sub‑districts not loaded:", err);
+        console.warn("Sub‑districts not loaded (file missing)");
       }
     }
 
@@ -1405,7 +1418,6 @@
       if (applyBtn) applyBtn.click();
     }
 
-    // Nearby search using Turf.js
     function filterPropertiesNearAmenity(pointsArray, typeName) {
       if (!pointsArray.length) {
         alert(`No ${typeName} data available.`);
@@ -1435,14 +1447,13 @@
         alert(`No properties within ${radiusKm} km of any ${typeName}.`);
         return;
       }
-      // Filter the property grid (simulate filter)
       const filteredHouses = allHouses.filter(h => nearHouseIds.includes(h._id));
       if (window.renderHouses) window.renderHouses(filteredHouses);
       if (window.renderMarkers) window.renderMarkers(filteredHouses);
       alert(`Found ${nearHouseIds.length} properties near ${typeName}.`);
     }
 
-    // Double‑click on property card: zoom to property and show nearby amenities info
+    // Double‑click panel with Font Awesome icons
     function attachDoubleClickToHouseCards() {
       const cards = document.querySelectorAll('.house-card');
       cards.forEach(card => {
@@ -1450,14 +1461,13 @@
         card.dataset.dblclickAttached = 'true';
         card.addEventListener('dblclick', async (e) => {
           e.stopPropagation();
-          // Try to get house ID from the card
-          const houseId = card.querySelector('[data-house-id]')?.dataset.houseId || 
+          const houseId = card.querySelector('[data-house-id]')?.dataset.houseId ||
                           card.querySelector('.slider .slides-container')?.dataset.houseId;
           if (!houseId) return;
           const house = allHouses?.find(h => h._id === houseId);
           if (!house || !house.lat || !house.lng) return;
           map.flyTo([house.lat, house.lng], 15, { duration: 1.5 });
-          // Show a temporary panel with nearby distances
+
           let nearestHospital = null, nearestSchool = null, nearestMarket = null;
           const from = turf.point([house.lng, house.lat]);
           if (healthPoints.length) {
@@ -1484,10 +1494,10 @@
           const html = `
             <div style="position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 20px; padding: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 10000; max-width: 300px; border: 1px solid var(--input-border);">
               <strong>${house.name}</strong><br>
-              🏥 Nearest Hospital: ${nearestHospital ? `${nearestHospital.name} (${nearestHospital.dist.toFixed(2)} km)` : 'N/A'}<br>
-              🏫 Nearest School: ${nearestSchool ? `${nearestSchool.name} (${nearestSchool.dist.toFixed(2)} km)` : 'N/A'}<br>
-              🛒 Nearest Market: ${nearestMarket ? `${nearestMarket.name} (${nearestMarket.dist.toFixed(2)} km)` : 'N/A'}<br>
-              <button id="closeNearbyPanel" style="margin-top: 0.5rem; background: var(--primary); color: white; border: none; border-radius: 20px; padding: 0.2rem 0.8rem;">Close</button>
+              <i class="fas fa-hospital" style="color:#ef4444;"></i> Nearest Hospital: ${nearestHospital ? `${nearestHospital.name} (${nearestHospital.dist.toFixed(2)} km)` : 'N/A'}<br>
+              <i class="fas fa-school" style="color:#3b82f6;"></i> Nearest School: ${nearestSchool ? `${nearestSchool.name} (${nearestSchool.dist.toFixed(2)} km)` : 'N/A'}<br>
+              <i class="fas fa-store" style="color:#f59e0b;"></i> Nearest Market: ${nearestMarket ? `${nearestMarket.name} (${nearestMarket.dist.toFixed(2)} km)` : 'N/A'}<br>
+              <button id="closeNearbyPanel" style="margin-top: 0.5rem; background: var(--primary); color: white; border: none; border-radius: 20px; padding: 0.2rem 0.8rem; cursor: pointer;">Close</button>
             </div>
           `;
           let panel = document.getElementById('tempNearbyPanel');
@@ -1502,18 +1512,16 @@
       });
     }
 
-    // Watch for dynamically added house cards (after each render)
     const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
     observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
     setTimeout(attachDoubleClickToHouseCards, 2000);
 
-    // Toolbar event listeners
-    document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
-    document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
-    document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
-
-    // Heatmap
+    // Heatmap with fallback if L.heatLayer is missing
     function initHeatmap() {
+      if (typeof L.heatLayer === 'undefined') {
+        console.warn("Leaflet.heat plugin not loaded – heatmap disabled");
+        return;
+      }
       if (typeof allHouses !== 'undefined' && allHouses.length > 0) {
         const heatPoints = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
         if (heatmapLayer) map.removeLayer(heatmapLayer);
@@ -1528,48 +1536,80 @@
       }
     }
 
-    const heatmapBtn = document.getElementById('toggleHeatmapBtn');
-    heatmapBtn?.addEventListener('click', () => {
-      heatmapActive = !heatmapActive;
-      if (heatmapActive) {
-        if (heatmapLayer) heatmapLayer.addTo(map);
-        heatmapBtn.classList.add('active');
-        heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Hide Heatmap';
-      } else {
-        if (heatmapLayer) map.removeLayer(heatmapLayer);
-        heatmapBtn.classList.remove('active');
-        heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
-      }
-    });
+    // Create floating toolbar and attach events
+    function createFloatingToolbar() {
+      const mapContainer = document.getElementById('map');
+      if (!mapContainer) return;
+      const toolbarDiv = document.createElement('div');
+      toolbarDiv.className = 'floating-spatial-toolbar';
+      toolbarDiv.innerHTML = `
+        <button id="nearbyHospitalsBtn" class="spatial-btn"><i class="fas fa-hospital"></i> Near Hospitals</button>
+        <button id="nearbySchoolsBtn" class="spatial-btn"><i class="fas fa-school"></i> Near Schools</button>
+        <button id="nearbyMarketsBtn" class="spatial-btn"><i class="fas fa-store"></i> Near Markets</button>
+        <button id="toggleHeatmapBtn" class="spatial-btn heatmap-toggle"><i class="fas fa-fire"></i> Property Heatmap</button>
+        <button id="walkabilityBtn" class="spatial-btn"><i class="fas fa-walking"></i> Show Walkability</button>
+      `;
+      mapContainer.parentElement.style.position = 'relative';
+      mapContainer.parentElement.appendChild(toolbarDiv);
 
-    document.getElementById('walkabilityBtn')?.addEventListener('click', () => {
-      if (walkabilityLayer) {
-        map.removeLayer(walkabilityLayer);
-        walkabilityLayer = null;
-        document.getElementById('walkabilityBtn').style.background = 'var(--button-bg)';
-      } else {
-        walkabilityLayer = L.polygon([[-15.8, 34.98], [-15.75, 34.98], [-15.75, 35.02], [-15.8, 35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
-        walkabilityLayer.bindPopup("Walkability zone: High (simulated)");
-        document.getElementById('walkabilityBtn').style.background = '#10b981';
-      }
-    });
+      document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
+      document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
+      document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
 
-    // Override loadHouses to update heatmap when properties change
+      const heatmapBtn = document.getElementById('toggleHeatmapBtn');
+      heatmapBtn?.addEventListener('click', () => {
+        if (typeof L.heatLayer === 'undefined') {
+          alert("Heatmap library not loaded. Please refresh.");
+          return;
+        }
+        heatmapActive = !heatmapActive;
+        if (heatmapActive) {
+          if (heatmapLayer) heatmapLayer.addTo(map);
+          heatmapBtn.classList.add('active');
+          heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Hide Heatmap';
+        } else {
+          if (heatmapLayer) map.removeLayer(heatmapLayer);
+          heatmapBtn.classList.remove('active');
+          heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
+        }
+      });
+
+      document.getElementById('walkabilityBtn')?.addEventListener('click', () => {
+        if (walkabilityLayer) {
+          map.removeLayer(walkabilityLayer);
+          walkabilityLayer = null;
+          document.getElementById('walkabilityBtn').style.background = '';
+        } else {
+          walkabilityLayer = L.polygon([[-15.8, 34.98], [-15.75, 34.98], [-15.75, 35.02], [-15.8, 35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
+          walkabilityLayer.bindPopup("Walkability zone: High (simulated)");
+          document.getElementById('walkabilityBtn').style.background = '#10b981';
+        }
+      });
+    }
+
+    // Override loadHouses to update heatmap
     if (typeof window.loadHouses === 'function') {
       const originalLoadHouses = window.loadHouses;
       window.loadHouses = async function(...args) {
         await originalLoadHouses(...args);
-        if (heatmapActive && typeof allHouses !== 'undefined') {
+        if (typeof L.heatLayer !== 'undefined' && heatmapActive && typeof allHouses !== 'undefined') {
           if (heatmapLayer) map.removeLayer(heatmapLayer);
           const points = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
           heatmapLayer = L.heatLayer(points, { radius: 25, blur: 15 });
-          heatmapLayer.addTo(map);
+          if (heatmapActive) heatmapLayer.addTo(map);
         }
         setTimeout(attachDoubleClickToHouseCards, 500);
       };
     }
-    initHeatmap();
-    setTimeout(attachDoubleClickToHouseCards, 2000);
+
+    // Wait for map to be fully ready before creating toolbar
+    let toolbarInterval = setInterval(function() {
+      if (typeof map !== 'undefined' && map) {
+        clearInterval(toolbarInterval);
+        createFloatingToolbar();
+        initHeatmap();
+      }
+    }, 1500);
   </script>
 
   <script>
