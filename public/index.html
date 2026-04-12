@@ -44,7 +44,7 @@
       max-width: 100%;
       overflow-x: hidden;
     }
-    /* ========== THEME VARIABLES ========== */
+    /* ========== THEME VARIABLES (unchanged) ========== */
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -757,10 +757,10 @@
       font-size: 0.8rem;
     }
 
-    /* ========== FLOATING SPATIAL TOOLBAR (ON TOP OF MAP) ========== */
+    /* ========== FLOATING SPATIAL TOOLBAR (RAISED HIGHER) ========== */
     .floating-spatial-toolbar {
       position: absolute;
-      top: 70px;
+      top: 85px;
       right: 10px;
       z-index: 1000;
       background: rgba(0,0,0,0.75);
@@ -1090,8 +1090,34 @@
     </div>
   </footer>
 
-  <!-- Modals (unchanged) -->
-  <div id="dreamMatchModal" class="modal" style="display:none;">...</div>
+  <!-- ========== DREAM MATCH MODAL (FULLY RESTORED) ========== -->
+  <div id="dreamMatchModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeDreamMatchModal()">&times;</span>
+      <h2><i class="fas fa-magic"></i> Dream Home Match</h2>
+      <p>Answer a few quick questions – we'll find properties that match your lifestyle.</p>
+      <form id="dreamMatchForm">
+        <div class="form-group"><label><i class="fas fa-briefcase"></i> Do you work from home?</label><select id="dream_workFromHome" class="sort-select" style="width:100%"><option value="essential">Essential – need a dedicated office</option><option value="nice">Nice to have</option><option value="no">Not needed</option></select></div>
+        <div class="form-group"><label><i class="fas fa-utensils"></i> How often do you host friends?</label><select id="dream_social" class="sort-select" style="width:100%"><option value="often">Often – I love entertaining</option><option value="sometimes">Sometimes</option><option value="rarely">Rarely – I prefer quiet</option></select></div>
+        <div class="form-group"><label><i class="fas fa-tree"></i> How important is outdoor space?</label><select id="dream_outdoor" class="sort-select" style="width:100%"><option value="essential">Essential – garden or balcony</option><option value="nice">Nice to have</option><option value="no">Not important</option></select></div>
+        <div class="form-group"><label><i class="fas fa-volume-down"></i> Preferred noise level?</label><select id="dream_noise" class="sort-select" style="width:100%"><option value="quiet">Very quiet (no traffic, no parties)</option><option value="moderate">Moderate (normal city life)</option><option value="lively">Lively (restaurants, bars nearby)</option></select></div>
+        <div class="form-group"><label><i class="fas fa-money-bill-wave"></i> Maximum monthly rent (MWK)</label><input type="number" id="dream_maxPrice" placeholder="e.g., 500000" style="width:100%"></div>
+        <div class="form-group"><label><i class="fas fa-bed"></i> Minimum bedrooms</label><input type="number" id="dream_bedrooms" placeholder="e.g., 2" value="1" style="width:100%"></div>
+        <button type="submit" class="save-search-btn" style="width:100%; margin-top:0.8rem;"><i class="fas fa-magic"></i> Find My Dream Home</button>
+      </form>
+      <div id="dreamMatchResults" style="margin-top: 1.5rem; display: none;">
+        <h3><i class="fas fa-chart-line"></i> Your Top Matches</h3>
+        <div id="dreamMatchCarousel" class="swiper dream-swiper" style="overflow:hidden;">
+          <div class="swiper-wrapper" id="dreamMatchWrapper"></div>
+          <div class="swiper-pagination"></div>
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other Modals (unchanged – keep as placeholders) -->
   <div id="propertyModal" class="modal" style="display:none;">...</div>
   <div id="bookingModal" class="modal" style="display:none;">...</div>
   <div id="lightboxModal" class="lightbox-modal" style="display:none;">...</div>
@@ -1253,7 +1279,7 @@
     }
   </script>
 
-  <!-- ========== ALL AMENITY LAYERS + SUB‑DISTRICTS + SPATIAL TOOLS (FIXED) ========== -->
+  <!-- ========== ALL AMENITY LAYERS + SUB‑DISTRICTS + ENHANCED SPATIAL TOOLS ========== -->
   <script>
     // Wait for map and district layer to be ready
     let amenityLoadInterval = setInterval(function() {
@@ -1273,6 +1299,9 @@
     let heatmapLayer = null;
     let heatmapActive = false;
     let walkabilityLayer = null;
+
+    // Store the currently selected house for nearby amenity search
+    let selectedHouseForAmenity = null;
 
     function getAmenityName(feature) {
       if (feature.properties.name) return feature.properties.name;
@@ -1316,7 +1345,8 @@
               storeArray.push({
                 lat: f.geometry.coordinates[1],
                 lng: f.geometry.coordinates[0],
-                name: getAmenityName(f)
+                name: getAmenityName(f),
+                type: layerName
               });
             }
           });
@@ -1348,7 +1378,6 @@
         await loadLayer(l.url, l.name, l.icon, l.color, l.store);
       }
 
-      // Add layer control (only for layers that actually loaded)
       const overlayControl = {};
       for (const [name, layer] of Object.entries(amenityLayers)) {
         overlayControl[name] = layer;
@@ -1398,7 +1427,6 @@
             });
           }
         }).addTo(map);
-        // Add to layer control (rebuild)
         const overlayControl = {};
         for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
         overlayControl['Sub‑districts'] = subDistrictLayer;
@@ -1418,42 +1446,59 @@
       if (applyBtn) applyBtn.click();
     }
 
-    function filterPropertiesNearAmenity(pointsArray, typeName) {
-      if (!pointsArray.length) {
-        alert(`No ${typeName} data available.`);
+    // ========== NEW: Show nearby amenities in a beautiful modal ==========
+    function showNearbyAmenitiesForHouse(house, amenityPoints, amenityType, iconClass, color) {
+      if (!house || !house.lat || !house.lng) {
+        alert("Please double‑click a property first to select a house.");
         return;
       }
-      if (typeof allHouses === 'undefined' || !allHouses.length) {
-        alert('No properties loaded yet.');
+      if (!amenityPoints.length) {
+        alert(`No ${amenityType} data available.`);
         return;
       }
       const radiusKm = 2;
-      const nearHouseIds = [];
-      for (const house of allHouses) {
-        if (!house.lat || !house.lng) continue;
-        const from = turf.point([house.lng, house.lat]);
-        let found = false;
-        for (const amenity of pointsArray) {
-          const to = turf.point([amenity.lng, amenity.lat]);
-          const distance = turf.distance(from, to, { units: 'kilometers' });
-          if (distance <= radiusKm) {
-            found = true;
-            break;
-          }
+      const from = turf.point([house.lng, house.lat]);
+      const nearby = [];
+      for (const a of amenityPoints) {
+        const to = turf.point([a.lng, a.lat]);
+        const dist = turf.distance(from, to, { units: 'kilometers' });
+        if (dist <= radiusKm) {
+          nearby.push({ ...a, distance: dist });
         }
-        if (found) nearHouseIds.push(house._id);
       }
-      if (nearHouseIds.length === 0) {
-        alert(`No properties within ${radiusKm} km of any ${typeName}.`);
+      nearby.sort((a,b) => a.distance - b.distance);
+      if (nearby.length === 0) {
+        alert(`No ${amenityType} within ${radiusKm} km of ${house.name}.`);
         return;
       }
-      const filteredHouses = allHouses.filter(h => nearHouseIds.includes(h._id));
-      if (window.renderHouses) window.renderHouses(filteredHouses);
-      if (window.renderMarkers) window.renderMarkers(filteredHouses);
-      alert(`Found ${nearHouseIds.length} properties near ${typeName}.`);
+      // Build modal HTML
+      const modalHtml = `
+        <div id="nearbyModal" class="modal" style="display:block; z-index:10001;">
+          <div class="modal-content" style="max-width: 500px; max-height: 80vh; overflow-y: auto;">
+            <span class="close-btn" onclick="document.getElementById('nearbyModal').remove()">&times;</span>
+            <h2><i class="${iconClass}" style="color:${color}"></i> ${amenityType} near ${house.name}</h2>
+            <p style="margin-bottom: 1rem;">Found ${nearby.length} within ${radiusKm} km</p>
+            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+              ${nearby.map(a => `
+                <div style="display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem; border-bottom: 1px solid var(--input-border);">
+                  <i class="${iconClass}" style="color:${color}; font-size: 1.2rem; width: 24px;"></i>
+                  <div style="flex:1;">
+                    <strong>${a.name}</strong><br>
+                    <span style="font-size: 0.7rem;">${a.distance.toFixed(2)} km away</span>
+                  </div>
+                  <button onclick="map.flyTo([${a.lat}, ${a.lng}], 16); document.getElementById('nearbyModal')?.remove();" class="spatial-btn" style="background: var(--primary); padding: 0.2rem 0.6rem;">View</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+      const oldModal = document.getElementById('nearbyModal');
+      if (oldModal) oldModal.remove();
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
-    // Double‑click panel with Font Awesome icons
+    // Double‑click panel (unchanged – already has Font Awesome icons)
     function attachDoubleClickToHouseCards() {
       const cards = document.querySelectorAll('.house-card');
       cards.forEach(card => {
@@ -1466,8 +1511,10 @@
           if (!houseId) return;
           const house = allHouses?.find(h => h._id === houseId);
           if (!house || !house.lat || !house.lng) return;
+          // Store selected house for toolbar buttons
+          selectedHouseForAmenity = house;
           map.flyTo([house.lat, house.lng], 15, { duration: 1.5 });
-
+          // Also show a temporary panel with nearest amenities (as before)
           let nearestHospital = null, nearestSchool = null, nearestMarket = null;
           const from = turf.point([house.lng, house.lat]);
           if (healthPoints.length) {
@@ -1512,11 +1559,41 @@
       });
     }
 
-    const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
-    observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
-    setTimeout(attachDoubleClickToHouseCards, 2000);
+    // Update toolbar buttons to use selected house
+    function attachToolbarEvents() {
+      const nearbyHospitalsBtn = document.getElementById('nearbyHospitalsBtn');
+      const nearbySchoolsBtn = document.getElementById('nearbySchoolsBtn');
+      const nearbyMarketsBtn = document.getElementById('nearbyMarketsBtn');
+      if (nearbyHospitalsBtn) {
+        nearbyHospitalsBtn.addEventListener('click', () => {
+          if (!selectedHouseForAmenity) {
+            alert("Please double‑click a property card first to select a house.");
+            return;
+          }
+          showNearbyAmenitiesForHouse(selectedHouseForAmenity, healthPoints, 'Hospitals & Clinics', 'fas fa-hospital', '#ef4444');
+        });
+      }
+      if (nearbySchoolsBtn) {
+        nearbySchoolsBtn.addEventListener('click', () => {
+          if (!selectedHouseForAmenity) {
+            alert("Please double‑click a property card first to select a house.");
+            return;
+          }
+          showNearbyAmenitiesForHouse(selectedHouseForAmenity, schoolPoints, 'Schools', 'fas fa-school', '#3b82f6');
+        });
+      }
+      if (nearbyMarketsBtn) {
+        nearbyMarketsBtn.addEventListener('click', () => {
+          if (!selectedHouseForAmenity) {
+            alert("Please double‑click a property card first to select a house.");
+            return;
+          }
+          showNearbyAmenitiesForHouse(selectedHouseForAmenity, marketPoints, 'Markets', 'fas fa-store', '#f59e0b');
+        });
+      }
+    }
 
-    // Heatmap with fallback if L.heatLayer is missing
+    // Heatmap (unchanged)
     function initHeatmap() {
       if (typeof L.heatLayer === 'undefined') {
         console.warn("Leaflet.heat plugin not loaded – heatmap disabled");
@@ -1551,10 +1628,7 @@
       `;
       mapContainer.parentElement.style.position = 'relative';
       mapContainer.parentElement.appendChild(toolbarDiv);
-
-      document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
-      document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
-      document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
+      attachToolbarEvents();
 
       const heatmapBtn = document.getElementById('toggleHeatmapBtn');
       heatmapBtn?.addEventListener('click', () => {
@@ -1587,7 +1661,7 @@
       });
     }
 
-    // Override loadHouses to update heatmap
+    // Override loadHouses to update heatmap and reattach card listeners
     if (typeof window.loadHouses === 'function') {
       const originalLoadHouses = window.loadHouses;
       window.loadHouses = async function(...args) {
@@ -1602,7 +1676,10 @@
       };
     }
 
-    // Wait for map to be fully ready before creating toolbar
+    const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
+    observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
+    setTimeout(attachDoubleClickToHouseCards, 2000);
+
     let toolbarInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map) {
         clearInterval(toolbarInterval);
@@ -1610,6 +1687,135 @@
         initHeatmap();
       }
     }, 1500);
+
+    // Dream Match functions (restored)
+    async function submitDreamMatch(e) {
+      e.preventDefault();
+      const workFromHome = document.getElementById("dream_workFromHome").value;
+      const social = document.getElementById("dream_social").value;
+      const outdoor = document.getElementById("dream_outdoor").value;
+      const noise = document.getElementById("dream_noise").value;
+      const maxPrice = parseInt(document.getElementById("dream_maxPrice").value) || Infinity;
+      const bedrooms = parseInt(document.getElementById("dream_bedrooms").value) || 0;
+
+      const resultsDiv = document.getElementById("dreamMatchResults");
+      const wrapper = document.getElementById("dreamMatchWrapper");
+      resultsDiv.style.display = "block";
+      wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div></div></div>';
+
+      let candidates = allHouses.filter(house => {
+        if (maxPrice && house.price > maxPrice) return false;
+        if (bedrooms && house.bedrooms < bedrooms) return false;
+        return true;
+      });
+
+      if (candidates.length === 0) {
+        wrapper.innerHTML = `<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content">No properties match your basic criteria. Try increasing budget or reducing bedrooms.</div></div></div>`;
+        return;
+      }
+
+      const answers = { workFromHome, social, outdoor, noise, maxPrice, bedrooms };
+      const scored = candidates.map(house => ({
+        house,
+        score: scoreHouseForDream(house, answers)
+      }));
+      scored.sort((a, b) => b.score - a.score);
+      const top = scored.slice(0, 12).map(s => ({
+        id: s.house._id,
+        name: s.house.name,
+        price: s.house.price,
+        location: s.house.location,
+        image: s.house.images?.[0] || "placeholder.jpg",
+        type: s.house.type,
+        score: s.score
+      }));
+
+      wrapper.innerHTML = top.map(house => `
+        <div class="swiper-slide">
+          <div class="dream-card">
+            <img src="${house.image}" alt="${escapeHtml(house.name)}" style="width:100%; height:160px; object-fit:cover;">
+            <div class="dream-card-content">
+              <div class="dream-match-badge"><i class="fas fa-chart-line"></i> ${Math.round(house.score)}% Match</div>
+              <h3>${escapeHtml(house.name)}</h3>
+              <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
+              <div class="dream-price">MWK ${Number(house.price).toLocaleString()}</div>
+              <button class="carousel-btn" onclick="showDetails('${house.id}'); closeDreamMatchModal();">View Details</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      if (window.dreamSwiper) window.dreamSwiper.destroy(true, true);
+      window.dreamSwiper = new Swiper('.dream-swiper', {
+        loop: true,
+        slidesPerView: 1,
+        spaceBetween: 20,
+        breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } },
+        pagination: { el: '.swiper-pagination', clickable: true },
+        navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
+      });
+    }
+
+    function scoreHouseForDream(house, answers) {
+      let score = 0;
+      if (answers.workFromHome === "essential") {
+        if (house.bedrooms >= 2 || house.selfContained) score += 30;
+        else if (house.bedrooms >= 1) score += 10;
+      } else if (answers.workFromHome === "nice") {
+        if (house.bedrooms >= 2 || house.selfContained) score += 15;
+      }
+      if (answers.social === "often") {
+        if (house.pool) score += 25;
+        if (house.furnished) score += 15;
+        if (house.parking) score += 10;
+      } else if (answers.social === "sometimes") {
+        if (house.furnished) score += 10;
+      }
+      if (answers.outdoor === "essential") {
+        if (house.petFriendly) score += 20;
+        if (house.selfContained) score += 10;
+      } else if (answers.outdoor === "nice") {
+        if (house.petFriendly) score += 10;
+      }
+      if (answers.noise === "quiet") {
+        if (house.pool) score -= 15;
+        if (house.selfContained) score += 10;
+      } else if (answers.noise === "lively") {
+        if (house.pool) score += 15;
+        if (house.furnished) score += 5;
+      }
+      if (answers.maxPrice && house.price > answers.maxPrice) score -= 100;
+      if (answers.bedrooms && house.bedrooms < answers.bedrooms) score -= 100;
+      if (house.averageRating) score += house.averageRating * 5;
+      return Math.max(0, score);
+    }
+
+    function openDreamMatchModal() {
+      const modal = document.getElementById("dreamMatchModal");
+      if (modal) modal.style.display = "block";
+      document.getElementById("dreamMatchForm").reset();
+      document.getElementById("dreamMatchResults").style.display = "none";
+    }
+
+    function closeDreamMatchModal() {
+      const modal = document.getElementById("dreamMatchModal");
+      if (modal) modal.style.display = "none";
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    }
+
+    // Attach Dream Match listeners
+    const dreamLink = document.getElementById('dreamMatchLink');
+    if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
+    const dreamForm = document.getElementById('dreamMatchForm');
+    if (dreamForm) dreamForm.addEventListener('submit', submitDreamMatch);
+    const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
+    if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
+    window.closeDreamMatchModal = closeDreamMatchModal;
+    window.showDetails = showDetails;
   </script>
 
   <script>
