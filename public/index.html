@@ -16,11 +16,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heatmap.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
   <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
   <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heatmap.js"></script>
   <style>
     /* ========== GLOBAL ZOOM-PROOF RESET ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -755,6 +757,43 @@
       font-size: 0.8rem;
     }
 
+    /* ========== ADDITIONAL TOOLBAR STYLES ========== */
+    .spatial-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      justify-content: center;
+      margin: 1rem 0;
+      background: var(--card-bg);
+      padding: 0.8rem;
+      border-radius: 60px;
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--input-border);
+    }
+    .spatial-btn {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .spatial-btn:hover {
+      transform: translateY(-2px);
+      background: var(--button-hover);
+    }
+    .heatmap-toggle {
+      background: #8b5cf6;
+    }
+    .heatmap-toggle.active {
+      background: #ef4444;
+    }
     /* ========== MOBILE THREE-DOTS MENU (GLASS + LUCIDE STYLE) ========== */
     @media (max-width: 768px) {
       .navbar {
@@ -830,6 +869,7 @@
       .hero h1 i { font-size: 2rem; }
       .hero p { font-size: 0.8rem; }
       .filters-row { flex-direction: column; border-radius: 28px; padding: 0.8rem; }
+      .spatial-toolbar { flex-direction: column; align-items: stretch; border-radius: 28px; }
       #houses-container { grid-template-columns: 1fr; }
       #map { height: 340px; }
       .footer-container { gap: 0.8rem; }
@@ -925,6 +965,15 @@
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);"><i class="fas fa-filter"></i> Apply Filters</button>
     </div>
 
+    <!-- NEW SPATIAL TOOLBAR -->
+    <div class="spatial-toolbar">
+      <button id="nearbyHospitalsBtn" class="spatial-btn"><i class="fas fa-hospital"></i> Near Hospitals</button>
+      <button id="nearbySchoolsBtn" class="spatial-btn"><i class="fas fa-school"></i> Near Schools</button>
+      <button id="nearbyMarketsBtn" class="spatial-btn"><i class="fas fa-store"></i> Near Markets</button>
+      <button id="toggleHeatmapBtn" class="spatial-btn heatmap-toggle"><i class="fas fa-fire"></i> Property Heatmap</button>
+      <button id="walkabilityBtn" class="spatial-btn"><i class="fas fa-walking"></i> Show Walkability</button>
+    </div>
+
     <section class="amenities-filters">
       <label><input type="checkbox" id="filterWifi"> <i class="fas fa-wifi"></i> WiFi</label>
       <label><input type="checkbox" id="filterParking"> <i class="fas fa-parking"></i> Parking</label>
@@ -976,7 +1025,7 @@
     </section>
   </main>
 
-  <!-- Shortened Footer (unchanged) -->
+  <!-- Shortened Footer -->
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-col">
@@ -1059,7 +1108,7 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <!-- ========== DISTRICT BOUNDARIES & FILTER (LOCAL GEOJSON) ========== -->
+  <!-- ========== DISTRICT BOUNDARIES & FILTER (unchanged) ========== -->
   <script>
     let mapCheckInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map) {
@@ -1076,7 +1125,6 @@
       const mapContainer = document.getElementById('map');
       if (mapContainer) mapContainer.style.opacity = '0.7';
 
-      // Load local GeoJSON file (must be placed at public/data/malawi_districts.geojson)
       fetch('/data/malawi_districts.geojson')
         .then(response => {
           if (!response.ok) throw new Error('GeoJSON file not found. Please ensure it is saved at public/data/malawi_districts.geojson');
@@ -1094,7 +1142,7 @@
               };
             },
             onEachFeature: function(feature, layer) {
-              const districtName = feature.properties.name;  // from SimpleMaps data
+              const districtName = feature.properties.name;
               if (!districtName) return;
               layer.bindPopup(`<strong>${districtName}</strong><br>Click to view properties`);
 
@@ -1132,7 +1180,6 @@
             }
           }).addTo(map);
 
-          // Populate dropdown
           const districts = [];
           L.geoJSON(geojson, {
             onEachFeature: function(feature, layer) {
@@ -1200,8 +1247,172 @@
     }
   </script>
 
+  <!-- ========== ADD ALL AMENITY LAYERS WITH LAYER CONTROL & SPATIAL TOOLS ========== -->
   <script>
-    // Mobile three‑dots menu toggle (enhanced)
+    // Wait for map to be fully ready (after district boundaries and script.js map)
+    let amenityLoadInterval = setInterval(function() {
+      if (typeof map !== 'undefined' && map && districtLayer) {
+        clearInterval(amenityLoadInterval);
+        console.log("Loading amenity layers...");
+        loadAllAmenityLayers();
+      }
+    }, 1000);
+
+    let amenityLayers = {}; // store layers for toggling
+    let heatmapLayer = null;
+    let heatmapActive = false;
+    let walkabilityLayer = null;
+
+    // Helper: get name from properties
+    function getAmenityName(feature) {
+      if (feature.properties.name) return feature.properties.name;
+      if (feature.properties.other_tags) {
+        const match = feature.properties.other_tags.match(/"name"=>"([^"]+)"/);
+        if (match) return match[1];
+      }
+      return "Amenity";
+    }
+
+    // Helper: create marker with icon
+    function createMarker(latlng, iconClass, color) {
+      return L.marker(latlng, {
+        icon: L.divIcon({
+          html: `<i class="${iconClass}" style="color:${color}; font-size:20px; text-shadow: 0 0 2px white;"></i>`,
+          iconSize: [24, 24],
+          className: 'custom-amenity-icon'
+        })
+      });
+    }
+
+    // Load each GeoJSON and add to map and layer control
+    async function loadLayer(url, layerName, iconClass, color) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const layer = L.geoJSON(data, {
+          pointToLayer: (feature, latlng) => createMarker(latlng, iconClass, color),
+          onEachFeature: (feature, layer) => {
+            const name = getAmenityName(feature);
+            layer.bindPopup(`<strong>${name}</strong><br>${layerName}`);
+          }
+        });
+        layer.addTo(map);
+        amenityLayers[layerName] = layer;
+        console.log(`Loaded ${layerName}: ${data.features?.length || 0} features`);
+        return layer;
+      } catch (err) {
+        console.warn(`Failed to load ${layerName}:`, err);
+        return null;
+      }
+    }
+
+    async function loadAllAmenityLayers() {
+      // Define all amenity layers
+      const layers = [
+        { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444' },
+        { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6' },
+        { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b' },
+        { url: '/data/malawi_banks.geojson', name: 'Banks & ATMs', icon: 'fas fa-university', color: '#8b5cf6' },
+        { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b' },
+        { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981' },
+        { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899' },
+        { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280' },
+        { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316' },
+        { url: '/data/malawi_worship.geojson', name: 'Places of Worship', icon: 'fas fa-church', color: '#a855f7' }
+      ];
+
+      // Load all concurrently
+      await Promise.all(layers.map(l => loadLayer(l.url, l.name, l.icon, l.color)));
+
+      // Add layer control (toggle)
+      const overlayControl = {};
+      for (const [name, layer] of Object.entries(amenityLayers)) {
+        overlayControl[name] = layer;
+      }
+      L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
+
+      // Add district layer to control as well (optional)
+      if (districtLayer) {
+        L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
+      }
+
+      // Add property heatmap if property data is available (simulate with random points)
+      // We'll use the existing allHouses array from script.js if available
+      function initHeatmap() {
+        if (typeof allHouses !== 'undefined' && allHouses.length > 0) {
+          const heatPoints = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
+          if (heatmapLayer) map.removeLayer(heatmapLayer);
+          heatmapLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 12 });
+          if (heatmapActive) heatmapLayer.addTo(map);
+        } else {
+          // Fallback: sample points around Blantyre for demo
+          const demoPoints = [];
+          for (let i = 0; i < 200; i++) {
+            demoPoints.push([-15.786 + (Math.random() - 0.5) * 0.5, 35.005 + (Math.random() - 0.5) * 0.5, Math.random()]);
+          }
+          heatmapLayer = L.heatLayer(demoPoints, { radius: 25, blur: 15 });
+        }
+      }
+
+      // Listen for property updates (script.js might reload houses)
+      if (typeof window.loadHouses === 'function') {
+        // Override to also update heatmap after load
+        const originalLoadHouses = window.loadHouses;
+        window.loadHouses = async function(...args) {
+          await originalLoadHouses(...args);
+          if (heatmapActive && typeof allHouses !== 'undefined') {
+            if (heatmapLayer) map.removeLayer(heatmapLayer);
+            const points = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
+            heatmapLayer = L.heatLayer(points, { radius: 25, blur: 15 });
+            heatmapLayer.addTo(map);
+          }
+        };
+      }
+      initHeatmap();
+
+      // Toolbar buttons
+      document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => {
+        if (!amenityLayers['Health Facilities']) return;
+        // Trigger property filter to show properties near any hospital (simplified: alert)
+        alert("Nearby hospitals filter would show properties within 2km of any health facility. (Implement with Turf.js)");
+      });
+      document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => {
+        alert("Nearby schools filter – coming soon with Turf.js");
+      });
+      document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => {
+        alert("Nearby markets filter – coming soon");
+      });
+      const heatmapBtn = document.getElementById('toggleHeatmapBtn');
+      heatmapBtn?.addEventListener('click', () => {
+        heatmapActive = !heatmapActive;
+        if (heatmapActive) {
+          if (heatmapLayer) heatmapLayer.addTo(map);
+          heatmapBtn.classList.add('active');
+          heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Hide Heatmap';
+        } else {
+          if (heatmapLayer) map.removeLayer(heatmapLayer);
+          heatmapBtn.classList.remove('active');
+          heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
+        }
+      });
+      document.getElementById('walkabilityBtn')?.addEventListener('click', () => {
+        if (walkabilityLayer) {
+          map.removeLayer(walkabilityLayer);
+          walkabilityLayer = null;
+          document.getElementById('walkabilityBtn').style.background = 'var(--button-bg)';
+        } else {
+          // Simulate walkability zones (just a visual polygon overlay)
+          walkabilityLayer = L.polygon([[-15.8, 34.98], [-15.75, 34.98], [-15.75, 35.02], [-15.8, 35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
+          walkabilityLayer.bindPopup("Walkability zone: High (simulated)");
+          document.getElementById('walkabilityBtn').style.background = '#10b981';
+        }
+      });
+    }
+  </script>
+
+  <script>
+    // Mobile three‑dots menu toggle (unchanged)
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileDropdown = document.getElementById('mobileSettingsDropdown');
     if (mobileMenuBtn && mobileDropdown) {
