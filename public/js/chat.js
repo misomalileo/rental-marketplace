@@ -13,6 +13,23 @@ function getToken() { return localStorage.getItem("token"); }
 const token = getToken();
 if (!token) window.location = "login.html";
 
+// ========== CUSTOM MODAL (replaces alert/confirm) ==========
+function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+  let icon = '<i class="fas fa-info-circle"></i>';
+  let title = 'Information';
+  if (type === 'success') { icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; title = 'Success'; }
+  else if (type === 'error') { icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>'; title = 'Error'; }
+  else if (type === 'confirm') { icon = '<i class="fas fa-question-circle" style="color: #f59e0b;"></i>'; title = 'Confirmation'; }
+  overlay.innerHTML = `<div class="custom-modal">${icon}<h3>${title}</h3><p>${message}</p><div class="custom-modal-buttons">${type === 'confirm' ? '<button class="custom-modal-btn confirm">Yes, Proceed</button><button class="custom-modal-btn cancel">Cancel</button>' : '<button class="custom-modal-btn confirm">OK</button>'}</div></div>`;
+  document.body.appendChild(overlay);
+  const confirmBtn = overlay.querySelector('.confirm');
+  const cancelBtn = overlay.querySelector('.cancel');
+  confirmBtn?.addEventListener('click', () => { overlay.remove(); if (onConfirm) onConfirm(); });
+  cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
+}
+
 function initSocket() {
   socket = io({
     auth: { token },
@@ -59,6 +76,7 @@ function initSocket() {
       currentChatId = null;
       currentOtherUser = null;
       document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-comment-dots"></i><p>Conversation deleted</p></div>`;
+      if (window.innerWidth <= 768) document.getElementById("sidebar").classList.remove("hide");
     }
     loadChats();
   });
@@ -110,7 +128,7 @@ function updateChatList() {
   if (!container) return;
   container.innerHTML = "";
   if (!chats.length) {
-    container.innerHTML = '<li style="padding:0.8rem; text-align:center; color:#888;">No conversations yet</li>';
+    container.innerHTML = '<li style="padding:0.8rem; text-align:center; color:#64748b;">No conversations yet</li>';
     return;
   }
   chats.forEach(chat => {
@@ -154,6 +172,10 @@ async function selectChat(chatId, otherUser) {
         updateLastSeen(userData.lastSeen, userData.online);
       }
     } catch (err) { console.error("Failed to fetch last seen", err); }
+  }
+  // On mobile, hide sidebar and show chat
+  if (window.innerWidth <= 768) {
+    document.getElementById("sidebar").classList.add("hide");
   }
 }
 
@@ -202,6 +224,7 @@ function renderChatHeader(chat) {
   if (!mainChatDiv) return;
   mainChatDiv.innerHTML = `
     <div class="chat-header">
+      <button class="mobile-back" id="mobileBackBtn"><i class="fas fa-arrow-left"></i></button>
       <div class="avatar">${other?.name?.charAt(0) || "?"}</div>
       <div class="chat-header-info">
         <h3>${other?.name || "User"}</h3>
@@ -223,6 +246,12 @@ function renderChatHeader(chat) {
     </div>
     <div class="scroll-to-bottom" id="scrollToBottomBtn"><i class="fas fa-arrow-down"></i></div>
   `;
+  document.getElementById("mobileBackBtn")?.addEventListener("click", () => {
+    document.getElementById("sidebar").classList.remove("hide");
+    currentChatId = null;
+    currentOtherUser = null;
+    mainChatDiv.innerHTML = `<div class="no-chat"><i class="fas fa-comment-dots"></i><p>Select a conversation</p></div>`;
+  });
   document.getElementById("deleteChatBtn").addEventListener("click", () => deleteChat());
   document.getElementById("attachBtn").addEventListener("click", () => attachFile());
   document.getElementById("emojiBtn").addEventListener("click", () => toggleEmojiPicker());
@@ -244,8 +273,7 @@ function renderChatHeader(chat) {
   quickContainer.innerHTML = replies.map(text => `<button class="quick-reply-btn" data-text="${text}">${text}</button>`).join("");
   document.querySelectorAll(".quick-reply-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const text = btn.getAttribute("data-text");
-      document.getElementById("messageInput").value = text;
+      document.getElementById("messageInput").value = btn.getAttribute("data-text");
       sendMessage();
     });
   });
@@ -287,9 +315,7 @@ async function startRecording() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(stream);
     audioChunks = [];
-    mediaRecorder.ondataavailable = (event) => {
-      audioChunks.push(event.data);
-    };
+    mediaRecorder.ondataavailable = (event) => { audioChunks.push(event.data); };
     mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
       const file = new File([audioBlob], "voice-message.webm", { type: 'audio/webm' });
@@ -301,24 +327,20 @@ async function startRecording() {
     mediaRecorder.start();
     isRecording = true;
     document.getElementById("voiceBtn").innerHTML = '<i class="fas fa-stop-circle"></i>';
-    setTimeout(() => {
-      if (isRecording) stopRecording();
-    }, 60000); // auto-stop after 60 sec
+    setTimeout(() => { if (isRecording) stopRecording(); }, 60000);
   } catch (err) {
     console.error("Microphone error:", err);
-    alert("Could not access microphone.");
+    showModal("Could not access microphone. Please check permissions.", "error");
   }
 }
 
 function stopRecording() {
-  if (mediaRecorder && isRecording) {
-    mediaRecorder.stop();
-  }
+  if (mediaRecorder && isRecording) mediaRecorder.stop();
 }
 
 async function sendAudioFile(file) {
   const formData = new FormData();
-  formData.append("image", file); // reuse image endpoint
+  formData.append("image", file);
   try {
     const uploadRes = await fetch("/api/chat/upload", {
       method: "POST",
@@ -347,14 +369,14 @@ async function sendAudioFile(file) {
         socket.emit("sendMessage", { chatId: currentChatId, text: uploadData.url, messageId: data._id, type: "audio" });
         scrollMessagesToBottom();
       } else {
-        alert("Failed to send voice message");
+        showModal("Failed to send voice message", "error");
       }
     } else {
-      alert("Upload failed");
+      showModal("Upload failed", "error");
     }
   } catch (err) {
     console.error("Voice upload error:", err);
-    alert("Network error");
+    showModal("Network error", "error");
   }
 }
 
@@ -450,10 +472,8 @@ async function sendReaction(messageId, emoji) {
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify({ chatId: currentChatId, text: reactionText, type: "text" })
     });
-    if (!res.ok) alert("Failed to send reaction");
-  } catch (err) {
-    console.error(err);
-  }
+    if (!res.ok) showModal("Failed to send reaction", "error");
+  } catch (err) { console.error(err); }
 }
 
 function getStatusIcon(msg) {
@@ -491,11 +511,11 @@ async function sendMessage() {
       socket.emit("sendMessage", { chatId: currentChatId, text, messageId: data._id });
       scrollMessagesToBottom();
     } else {
-      alert("Failed to send: " + (data.message || "Unknown error"));
+      showModal("Failed to send: " + (data.message || "Unknown error"), "error");
     }
   } catch (err) {
     console.error("Error sending message:", err);
-    alert("Network error. Please try again.");
+    showModal("Network error. Please try again.", "error");
   } finally {
     input.disabled = false;
     if (sendBtn) sendBtn.disabled = false;
@@ -540,14 +560,14 @@ async function attachFile() {
           socket.emit("sendMessage", { chatId: currentChatId, text: uploadData.url, messageId: data._id, type: "image" });
           scrollMessagesToBottom();
         } else {
-          alert("Failed to send image");
+          showModal("Failed to send image", "error");
         }
       } else {
-        alert("Upload failed");
+        showModal("Upload failed", "error");
       }
     } catch (err) {
       console.error("Upload error:", err);
-      alert("Network error");
+      showModal("Network error", "error");
     }
   };
   input.click();
@@ -570,41 +590,46 @@ function showContextMenu(x, y) {
 }
 
 async function deleteMessage(messageId) {
-  if (!confirm("Delete this message?")) return;
-  try {
-    const res = await fetch(`/api/chat/message/${messageId}`, {
-      method: "DELETE",
-      headers: { Authorization: "Bearer " + token }
-    });
-    if (res.ok) {
-      const msgEl = document.querySelector(`.message[data-id="${messageId}"]`);
-      if (msgEl) msgEl.remove();
-    } else {
-      alert("Failed to delete message");
+  showModal("Delete this message?", "confirm", async () => {
+    try {
+      const res = await fetch(`/api/chat/message/${messageId}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (res.ok) {
+        const msgEl = document.querySelector(`.message[data-id="${messageId}"]`);
+        if (msgEl) msgEl.remove();
+      } else {
+        showModal("Failed to delete message", "error");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      showModal("Network error", "error");
     }
-  } catch (err) {
-    console.error("Delete error:", err);
-  }
+  });
 }
 
 async function deleteChat() {
-  if (!confirm("Delete this entire conversation? This cannot be undone.")) return;
-  try {
-    const res = await fetch(`/api/chat/${currentChatId}`, {
-      method: "DELETE",
-      headers: { Authorization: "Bearer " + token }
-    });
-    if (res.ok) {
-      currentChatId = null;
-      currentOtherUser = null;
-      document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-comment-dots"></i><p>Conversation deleted</p></div>`;
-      loadChats();
-    } else {
-      alert("Failed to delete conversation");
+  showModal("Delete this entire conversation? This cannot be undone.", "confirm", async () => {
+    try {
+      const res = await fetch(`/api/chat/${currentChatId}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (res.ok) {
+        currentChatId = null;
+        currentOtherUser = null;
+        document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-comment-dots"></i><p>Conversation deleted</p></div>`;
+        if (window.innerWidth <= 768) document.getElementById("sidebar").classList.remove("hide");
+        loadChats();
+      } else {
+        showModal("Failed to delete conversation", "error");
+      }
+    } catch (err) {
+      console.error("Delete chat error:", err);
+      showModal("Network error", "error");
     }
-  } catch (err) {
-    console.error("Delete chat error:", err);
-  }
+  });
 }
 
 async function markMessagesAsRead(chatId) {
@@ -631,9 +656,7 @@ function updateOnlineStatus(userId, online) {
 
 function scrollMessagesToBottom() {
   const container = document.getElementById("messagesContainer");
-  if (container) {
-    container.scrollTop = container.scrollHeight;
-  }
+  if (container) container.scrollTop = container.scrollHeight;
   const btn = document.getElementById("scrollToBottomBtn");
   if (btn) btn.classList.remove("visible");
 }
@@ -644,25 +667,15 @@ function attachScrollToBottomButton() {
   if (!container || !btn) return;
   container.addEventListener("scroll", () => {
     const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
-    if (atBottom) {
-      btn.classList.remove("visible");
-    } else {
-      btn.classList.add("visible");
-    }
+    if (atBottom) btn.classList.remove("visible");
+    else btn.classList.add("visible");
   });
-  btn.addEventListener("click", () => {
-    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-  });
+  btn.addEventListener("click", () => container.scrollTo({ top: container.scrollHeight, behavior: "smooth" }));
 }
 
 function escapeHtml(str) {
   if (!str) return "";
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
+  return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
 
 async function loadCurrentUser() {
