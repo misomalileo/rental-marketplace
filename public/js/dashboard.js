@@ -12,7 +12,89 @@ let viewsChart, earningsChart, conversionChart;
 let housesPage = 0;
 const housesPerPage = 6;
 
-// ========== NEW: Property type details mapping (for 3D slots) ==========
+// ========== CUSTOM MODAL SYSTEM (replaces alert/confirm) ==========
+function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+  let icon = '<i class="fas fa-info-circle"></i>';
+  let title = 'Information';
+  if (type === 'success') { icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; title = 'Success'; }
+  else if (type === 'error') { icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>'; title = 'Error'; }
+  else if (type === 'confirm') { icon = '<i class="fas fa-question-circle" style="color: #f59e0b;"></i>'; title = 'Confirmation'; }
+  
+  overlay.innerHTML = `
+    <div class="custom-modal">
+      ${icon}
+      <h3>${title}</h3>
+      <p>${message}</p>
+      <div class="custom-modal-buttons">
+        ${type === 'confirm' ? `<button class="custom-modal-btn confirm">Yes, Proceed</button><button class="custom-modal-btn cancel">Cancel</button>` : `<button class="custom-modal-btn confirm">OK</button>`}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  
+  const confirmBtn = overlay.querySelector('.confirm');
+  const cancelBtn = overlay.querySelector('.cancel');
+  confirmBtn?.addEventListener('click', () => {
+    overlay.remove();
+    if (onConfirm) onConfirm();
+  });
+  cancelBtn?.addEventListener('click', () => {
+    overlay.remove();
+    if (onCancel) onCancel();
+  });
+}
+
+// Helper: show success/error toast-like modal
+function showToastModal(message, isError = false) {
+  showModal(message, isError ? 'error' : 'success');
+}
+
+// ========== MAP INITIALISATION (fixed: retry if container not ready) ==========
+function initMap() {
+  const mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  const tryInit = () => {
+    if (mapContainer.offsetWidth > 0) {
+      map = L.map('map').setView([-15.7861, 35.0058], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+      map.on("click", function (e) {
+        document.getElementById("latitude").value = e.latlng.lat;
+        document.getElementById("longitude").value = e.latlng.lng;
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+      });
+    } else {
+      setTimeout(tryInit, 300);
+    }
+  };
+  tryInit();
+}
+initMap();
+
+function getLocation() {
+  const statusDiv = document.getElementById('gpsStatus');
+  if (!statusDiv) return;
+  statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Getting location...';
+  navigator.geolocation.getCurrentPosition(position => {
+    const lat = position.coords.latitude, lng = position.coords.longitude;
+    document.getElementById("latitude").value = lat;
+    document.getElementById("longitude").value = lng;
+    map.setView([lat, lng], 16);
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Location captured!';
+    setTimeout(() => statusDiv.innerHTML = '', 3000);
+  }, () => {
+    statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Unable to get location. Please allow permissions.';
+  });
+}
+
+// ========== PROPERTY TYPE & DETAILS (unchanged) ==========
 const propertyTypeFields = {
   House: ['bedrooms','bathrooms','selfContained','hasGarden','parkingSpaces','furnished','petFriendly','ac','wifi','pool'],
   Apartment: ['bedrooms','bathrooms','floorLevel','hasElevator','selfContained','furnished','parking','securityGuard'],
@@ -28,7 +110,6 @@ const propertyTypeFields = {
 let selectedType = null;
 let typeSpecificData = {};
 
-// Helper to generate dynamic HTML for property details (called when type changes)
 function generatePropertyDetailsFields(selectedType) {
   const container = document.getElementById('propertyDetailsContainer');
   if (!container) return;
@@ -60,8 +141,6 @@ function generatePropertyDetailsFields(selectedType) {
   });
   html += '</div>';
   container.innerHTML = html;
-  
-  // Attach change listeners to update typeSpecificData
   const inputs = container.querySelectorAll('input, select');
   inputs.forEach(inp => {
     inp.addEventListener('change', () => {
@@ -76,7 +155,6 @@ function generatePropertyDetailsFields(selectedType) {
   });
 }
 
-// Collect property details from generated fields into an object
 function collectPropertyDetails() {
   const details = {};
   const container = document.getElementById('propertyDetailsContainer');
@@ -94,7 +172,6 @@ function collectPropertyDetails() {
   return details;
 }
 
-// ========== NEW: Toggle price fields based on property type ==========
 function togglePriceFields(type) {
   const monthlyGroup = document.getElementById('monthlyPriceGroup');
   const dailyGroup = document.getElementById('dailyPriceGroup');
@@ -110,7 +187,6 @@ function togglePriceFields(type) {
   }
 }
 
-// ========== Generate 3D property type cards ==========
 function generateTypeCards() {
   const container = document.getElementById('typeSelector');
   if (!container) return;
@@ -141,7 +217,7 @@ function generateTypeCards() {
   });
 }
 
-// ========== Existing helper functions (unchanged) ==========
+// ========== OTHER HELPER FUNCTIONS ==========
 function animateValue(element, start, end, duration = 1000) {
   if (!element) return;
   const range = end - start;
@@ -187,7 +263,7 @@ function showProfileModal() {
 }
 function closeProfileModal() {
   document.getElementById('profileModal').style.display = 'none';
-  if (!currentUser.profileCompleted) { alert('Complete your profile first'); window.location = 'login.html'; }
+  if (!currentUser.profileCompleted) { showModal('Complete your profile first', 'error', () => window.location = 'login.html'); }
 }
 function openEditProfile() {
   document.getElementById('profileName').value = currentUser.name || '';
@@ -204,7 +280,7 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
   const businessName = document.getElementById('profileBusinessName').value;
   const address = document.getElementById('profileAddress').value;
   const bio = document.getElementById('profileBio').value;
-  if (!phone.match(/^265[0-9]{9}$/)) { alert('Phone must be 265XXXXXXXXX'); hideLoading(); return; }
+  if (!phone.match(/^265[0-9]{9}$/)) { showModal('Phone must be 265XXXXXXXXX', 'error'); hideLoading(); return; }
   const profilePictureFile = document.getElementById('profilePicture').files[0];
   let profilePictureUrl = currentUser.profilePicture || '';
   if (profilePictureFile) {
@@ -213,14 +289,14 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
       const uploadRes = await fetch('/api/houses/test-upload', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: imgFormData });
       const uploadData = await uploadRes.json();
       if (uploadRes.ok) profilePictureUrl = uploadData.url;
-      else { alert('Failed to upload picture'); hideLoading(); return; }
-    } catch (err) { alert('Network error uploading'); hideLoading(); return; }
+      else { showModal('Failed to upload picture', 'error'); hideLoading(); return; }
+    } catch (err) { showModal('Network error uploading', 'error'); hideLoading(); return; }
   }
   try {
     const res = await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ name, phone, businessName, address, bio, profilePicture: profilePictureUrl }) });
-    if (res.ok) { currentUser = await res.json(); updateProfileCard(); alert('Profile saved!'); closeProfileModal(); }
-    else { const data = await res.json(); alert('Error: ' + data.message); }
-  } catch (err) { alert('Network error'); } finally { hideLoading(); }
+    if (res.ok) { currentUser = await res.json(); updateProfileCard(); showModal('Profile saved!', 'success'); closeProfileModal(); }
+    else { const data = await res.json(); showModal('Error: ' + data.message, 'error'); }
+  } catch (err) { showModal('Network error', 'error'); } finally { hideLoading(); }
 });
 document.getElementById('profilePicture').addEventListener('change', function(e) {
   const file = e.target.files[0]; const previewDiv = document.getElementById('profilePreview'); previewDiv.innerHTML = '';
@@ -263,8 +339,8 @@ function featureHouse(id) {
 }
 async function processPayment(method) {
   const phone = document.getElementById('phoneNumber').value.trim();
-  if (!phone) { alert('Enter mobile money number'); return; }
-  if (!phone.match(/^265[0-9]{9}$/)) { alert('Invalid phone number'); return; }
+  if (!phone) { showModal('Enter mobile money number', 'error'); return; }
+  if (!phone.match(/^265[0-9]{9}$/)) { showModal('Invalid phone number', 'error'); return; }
   const statusDiv = document.getElementById('paymentStatus');
   statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Initiating...';
   let endpoint, httpMethod, body;
@@ -305,40 +381,6 @@ async function loadUnreadCount() {
 }
 setInterval(loadUnreadCount, 30000);
 
-function initMap() {
-  const mapContainer = document.getElementById('map');
-  if (!mapContainer) return;
-  setTimeout(() => {
-    map = L.map('map').setView([-15.7861, 35.0058], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-    map.on("click", function (e) {
-      document.getElementById("latitude").value = e.latlng.lat;
-      document.getElementById("longitude").value = e.latlng.lng;
-      if (marker) map.removeLayer(marker);
-      marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
-    });
-  }, 100);
-}
-function getLocation() {
-  const statusDiv = document.getElementById('gpsStatus');
-  if (!statusDiv) return;
-  statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Getting location...';
-  navigator.geolocation.getCurrentPosition(position => {
-    const lat = position.coords.latitude, lng = position.coords.longitude;
-    document.getElementById("latitude").value = lat;
-    document.getElementById("longitude").value = lng;
-    map.setView([lat, lng], 16);
-    if (marker) map.removeLayer(marker);
-    marker = L.marker([lat, lng]).addTo(map);
-    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Location captured!';
-    setTimeout(() => statusDiv.innerHTML = '', 3000);
-  }, () => {
-    statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Unable to get location. Please allow permissions.';
-  });
-}
 async function loadMyHouses() {
   try {
     const res = await fetch("/api/houses/my-houses", { headers: { Authorization: "Bearer " + token } });
@@ -401,27 +443,15 @@ function renderHouses(houses) {
   houses.forEach(house => {
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     const card = document.createElement("div"); card.className = "house-card";
-
     let rentalStatusBadge = '';
-    if (house.rentalStatus === 'rented') {
-      rentalStatusBadge = '<span class="rental-badge rented"><i class="fas fa-check-circle"></i> Rented</span>';
-    } else if (house.rentalStatus === 'pending') {
-      rentalStatusBadge = '<span class="rental-badge pending"><i class="fas fa-clock"></i> Pending</span>';
-    } else {
-      rentalStatusBadge = '<span class="rental-badge available"><i class="fas fa-home"></i> Available</span>';
-    }
-
+    if (house.rentalStatus === 'rented') rentalStatusBadge = '<span class="rental-badge rented"><i class="fas fa-check-circle"></i> Rented</span>';
+    else if (house.rentalStatus === 'pending') rentalStatusBadge = '<span class="rental-badge pending"><i class="fas fa-clock"></i> Pending</span>';
+    else rentalStatusBadge = '<span class="rental-badge available"><i class="fas fa-home"></i> Available</span>';
     let rentalActionButton = '';
-    if (house.rentalStatus === 'available') {
-      rentalActionButton = `<button class="mark-rented-btn" data-id="${house._id}"><i class="fas fa-hand-peace"></i> Mark as Rented</button>`;
-    } else if (house.rentalStatus === 'rented') {
-      rentalActionButton = `<button class="mark-available-btn" data-id="${house._id}"><i class="fas fa-undo-alt"></i> Mark Available</button>`;
-    } else if (house.rentalStatus === 'pending') {
-      rentalActionButton = `<button class="mark-available-btn" data-id="${house._id}"><i class="fas fa-undo-alt"></i> Make Available</button>`;
-    }
-
+    if (house.rentalStatus === 'available') rentalActionButton = `<button class="mark-rented-btn" data-id="${house._id}"><i class="fas fa-hand-peace"></i> Mark as Rented</button>`;
+    else if (house.rentalStatus === 'rented') rentalActionButton = `<button class="mark-available-btn" data-id="${house._id}"><i class="fas fa-undo-alt"></i> Mark Available</button>`;
+    else if (house.rentalStatus === 'pending') rentalActionButton = `<button class="mark-available-btn" data-id="${house._id}"><i class="fas fa-undo-alt"></i> Make Available</button>`;
     const featureButton = house.featured ? '<span class="featured-badge"><i class="fas fa-star"></i> Featured</span>' : `<button class="feature-btn" onclick="featureHouse('${house._id}')"><i class="fas fa-crown"></i> Feature (K5000)</button>`;
-    
     card.innerHTML = `
       <img src="${img}">
       <div class="house-content">
@@ -442,23 +472,22 @@ function renderHouses(houses) {
     `;
     container.appendChild(card);
   });
-
   document.querySelectorAll('.mark-rented-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const houseId = btn.getAttribute('data-id');
-      if (confirm('Mark this property as rented? It will disappear from public listings.')) {
+      showModal('Mark this property as rented? It will disappear from public listings.', 'confirm', async () => {
         await updateRentalStatus(houseId, 'rented');
         loadMyHouses();
-      }
+      });
     });
   });
   document.querySelectorAll('.mark-available-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const houseId = btn.getAttribute('data-id');
-      if (confirm('Mark this property as available again? It will reappear on the front page.')) {
+      showModal('Mark this property as available again? It will reappear on the front page.', 'confirm', async () => {
         await updateRentalStatus(houseId, 'available');
         loadMyHouses();
-      }
+      });
     });
   });
 }
@@ -471,9 +500,9 @@ async function updateRentalStatus(houseId, status) {
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
       body: JSON.stringify({ rentalStatus: status })
     });
-    if (res.ok) alert(`Property marked as ${status}`);
-    else { const err = await res.json(); alert(err.message || 'Failed'); }
-  } catch (err) { alert('Network error'); }
+    if (res.ok) showModal(`Property marked as ${status}`, 'success');
+    else { const err = await res.json(); showModal(err.message || 'Failed', 'error'); }
+  } catch (err) { showModal('Network error', 'error'); }
 }
 
 window.openBookingModalFromDashboard = function(houseId, houseName) {
@@ -486,13 +515,14 @@ window.openBookingModalFromDashboard = function(houseId, houseName) {
   document.getElementById("bookingModal").style.display = "block";
 };
 async function deleteHouse(id) {
-  if (!confirm("Delete permanently?")) return;
-  showLoading();
-  try {
-    const res = await fetch("/api/houses/" + id, { method: "DELETE", headers: { Authorization: "Bearer " + token } });
-    if (res.ok) { alert("House deleted"); loadMyHouses(); }
-    else { const data = await res.json(); alert("Error: " + data.message); }
-  } catch (err) { alert("Network error"); } finally { hideLoading(); }
+  showModal('Delete this property permanently? This action cannot be undone.', 'confirm', async () => {
+    showLoading();
+    try {
+      const res = await fetch("/api/houses/" + id, { method: "DELETE", headers: { Authorization: "Bearer " + token } });
+      if (res.ok) { showModal('Property deleted', 'success'); loadMyHouses(); }
+      else { const data = await res.json(); showModal("Error: " + data.message, 'error'); }
+    } catch (err) { showModal("Network error", 'error'); } finally { hideLoading(); }
+  });
 }
 function openEditModal(houseId) {
   currentEditId = houseId;
@@ -521,13 +551,34 @@ function openEditModal(houseId) {
   flatpickr(unavailableInput, { mode: "multiple", dateFormat: "Y-m-d", defaultDate: house.unavailableDates ? house.unavailableDates.map(d => new Date(d)) : [] });
   document.getElementById("editModal").style.display = "block";
   setTimeout(() => {
-    if (!editMap) { editMap = L.map('editMap').setView([house.lat || -15.7861, house.lng || 35.0058], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(editMap); editMap.on("click", e => { document.getElementById("editLat").value = e.latlng.lat; document.getElementById("editLng").value = e.latlng.lng; if (editMarker) editMap.removeLayer(editMarker); editMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(editMap); }); }
-    else editMap.setView([house.lat || -15.7861, house.lng || 35.0058], 13);
-    if (house.lat && house.lng) { if (editMarker) editMap.removeLayer(editMarker); editMarker = L.marker([house.lat, house.lng]).addTo(editMap); }
-  }, 100);
+    if (!editMap) {
+      editMap = L.map('editMap').setView([house.lat || -15.7861, house.lng || 35.0058], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(editMap);
+      editMap.on("click", e => {
+        document.getElementById("editLat").value = e.latlng.lat;
+        document.getElementById("editLng").value = e.latlng.lng;
+        if (editMarker) editMap.removeLayer(editMarker);
+        editMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(editMap);
+      });
+    } else {
+      editMap.setView([house.lat || -15.7861, house.lng || 35.0058], 13);
+    }
+    if (house.lat && house.lng) {
+      if (editMarker) editMap.removeLayer(editMarker);
+      editMarker = L.marker([house.lat, house.lng]).addTo(editMap);
+    }
+  }, 200);
 }
 function closeEditModal() { document.getElementById("editModal").style.display = "none"; if (editMarker) editMap.removeLayer(editMarker); editMarker = null; }
-function getEditLocation() { navigator.geolocation.getCurrentPosition(pos => { document.getElementById("editLat").value = pos.coords.latitude; document.getElementById("editLng").value = pos.coords.longitude; editMap.setView([pos.coords.latitude, pos.coords.longitude], 16); if (editMarker) editMap.removeLayer(editMarker); editMarker = L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(editMap); }); }
+function getEditLocation() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById("editLat").value = pos.coords.latitude;
+    document.getElementById("editLng").value = pos.coords.longitude;
+    editMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+    if (editMarker) editMap.removeLayer(editMarker);
+    editMarker = L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(editMap);
+  });
+}
 document.getElementById("editForm").addEventListener("submit", async e => {
   e.preventDefault(); showLoading();
   const formData = new FormData(e.target);
@@ -537,22 +588,22 @@ document.getElementById("editForm").addEventListener("submit", async e => {
   formData.append("unavailableDates", JSON.stringify(dates));
   try {
     const res = await fetch("/api/houses/" + currentEditId, { method: "PUT", headers: { Authorization: "Bearer " + token }, body: formData });
-    if (res.ok) { alert("✅ House updated!"); closeEditModal(); loadMyHouses(); }
-    else { const data = await res.json(); alert("❌ Update failed: " + (data.message || "Unknown error")); }
-  } catch (err) { alert("❌ Network error"); } finally { hideLoading(); }
+    if (res.ok) { showModal("Property updated successfully!", 'success'); closeEditModal(); loadMyHouses(); }
+    else { const data = await res.json(); showModal("Update failed: " + (data.message || "Unknown error"), 'error'); }
+  } catch (err) { showModal("Network error", 'error'); } finally { hideLoading(); }
 });
 document.querySelector('input[name="images"]').addEventListener('change', function(e) {
   const preview = document.getElementById('imagePreview'); preview.innerHTML = '';
   Array.from(e.target.files).forEach(file => {
     if (!file.type.startsWith('image/')) return;
-    if (file.size > 10*1024*1024) { alert('File too large'); return; }
+    if (file.size > 10*1024*1024) { showModal('File too large', 'error'); return; }
     const reader = new FileReader();
     reader.onload = (event) => { const img = document.createElement('img'); img.src = event.target.result; img.style.width = '100px'; img.style.height = '100px'; img.style.objectFit = 'cover'; img.style.borderRadius = '8px'; preview.appendChild(img); };
     reader.readAsDataURL(file);
   });
 });
 
-// ========== UPDATED HOUSE FORM SUBMISSION (with propertyDetails and selectedType) ==========
+// ========== HOUSE FORM SUBMISSION (with propertyDetails) ==========
 document.getElementById("houseForm").addEventListener("submit", async e => {
   e.preventDefault();
   const name = document.getElementById('propName').value.trim();
@@ -561,27 +612,16 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
   const phone = document.getElementById('propPhone').value.trim();
   const description = document.getElementById('propDesc').value;
   const images = document.querySelector('input[name="images"]').files;
-  
-  // For ShortStay, override price with dailyPrice from propertyDetails
   if (selectedType === 'ShortStay') {
     const dailyPrice = document.getElementById('detail_dailyPrice')?.value;
-    if (!dailyPrice) {
-      alert('Please enter daily price for Short-Stay property');
-      hideLoading();
-      return;
-    }
+    if (!dailyPrice) { showModal('Please enter daily price for Short-Stay property', 'error'); hideLoading(); return; }
     price = dailyPrice;
   }
-  
   if (!name || !location || !price || price<=0 || !phone.match(/^265[0-9]{9}$/) || images.length===0) {
-    alert('Please fill all fields correctly');
+    showModal('Please fill all fields correctly', 'error');
     return;
   }
-  if (!selectedType) {
-    alert('Please select a property type from the 3D cards');
-    return;
-  }
-  
+  if (!selectedType) { showModal('Please select a property type from the 3D cards', 'error'); return; }
   showLoading();
   const formData = new FormData();
   formData.append('name', name);
@@ -590,68 +630,45 @@ document.getElementById("houseForm").addEventListener("submit", async e => {
   formData.append('phone', phone);
   formData.append('description', description);
   formData.append('type', selectedType);
-  
-  // Add amenities (checkboxes from step 3)
   const amenities = ['wifi', 'parking', 'furnished', 'petFriendly', 'pool', 'ac'];
   amenities.forEach(amenity => {
     const checkbox = document.querySelector(`input[name="${amenity}"]`);
     formData.append(amenity, checkbox && checkbox.checked ? 'on' : 'off');
   });
-  
-  // Add other common fields
   const condition = document.querySelector('select[name="condition"]')?.value || 'Good';
   const gender = document.querySelector('select[name="gender"]')?.value || 'none';
   const selfContained = document.querySelector('input[name="selfContained"]')?.checked ? 'on' : 'off';
   const lat = document.getElementById('latitude').value;
   const lng = document.getElementById('longitude').value;
   const virtualTourUrl = document.querySelector('input[name="virtualTourUrl"]')?.value || '';
-  
   formData.append('condition', condition);
   formData.append('gender', gender);
   formData.append('selfContained', selfContained);
   if (lat) formData.append('lat', lat);
   if (lng) formData.append('lng', lng);
   if (virtualTourUrl) formData.append('virtualTourUrl', virtualTourUrl);
-  
-  // Add propertyDetails
   const propertyDetails = collectPropertyDetails();
-  if (Object.keys(propertyDetails).length > 0) {
-    formData.append('propertyDetails', JSON.stringify(propertyDetails));
-  }
-  
-  // Append images
-  for (let i = 0; i < images.length; i++) {
-    formData.append('images', images[i]);
-  }
-  
+  if (Object.keys(propertyDetails).length > 0) formData.append('propertyDetails', JSON.stringify(propertyDetails));
+  for (let i = 0; i < images.length; i++) formData.append('images', images[i]);
   try {
     const res = await fetch("/api/houses", { method: "POST", headers: { Authorization: "Bearer " + token }, body: formData });
     const data = await res.json();
     if (res.ok) {
-      alert("✅ Property uploaded!");
-      // Reset form
+      showModal("Property uploaded successfully!", 'success');
       document.getElementById('houseForm').reset();
       document.getElementById('imagePreview').innerHTML = '';
       if (marker) map.removeLayer(marker);
-      // Reset type selection and details container
       selectedType = null;
       typeSpecificData = {};
       document.querySelectorAll('.type-card').forEach(card => card.classList.remove('selected'));
       document.getElementById('propertyDetailsContainer').innerHTML = '';
-      // Reset price fields visibility
       togglePriceFields('none');
       loadMyHouses();
-    } else {
-      alert("❌ Upload failed: " + (data.message || "Unknown error"));
-    }
-  } catch (err) {
-    alert("❌ Network error");
-  } finally {
-    hideLoading();
-  }
+    } else { showModal("Upload failed: " + (data.message || "Unknown error"), 'error'); }
+  } catch (err) { showModal("Network error", 'error'); } finally { hideLoading(); }
 });
 
-// ========== Load booking requests, offers, lease negotiations (unchanged) ==========
+// ========== BOOKINGS, OFFERS, LEASE (unchanged except alerts) ==========
 async function loadBookingRequests() {
   try {
     let allBookings = [];
@@ -682,9 +699,9 @@ async function updateBooking(bookingId, status) {
   showLoading();
   try {
     const res = await fetch(`/api/bookings/${bookingId}`, { method: "PUT", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ status }) });
-    if (res.ok) { alert(`Booking ${status}`); loadBookingRequests(); loadMyHouses(); }
-    else { const data = await res.json(); alert("Error: " + data.message); }
-  } catch (err) { alert("Network error"); } finally { hideLoading(); }
+    if (res.ok) { showModal(`Booking ${status}`, 'success'); loadBookingRequests(); loadMyHouses(); }
+    else { const data = await res.json(); showModal("Error: " + data.message, 'error'); }
+  } catch (err) { showModal("Network error", 'error'); } finally { hideLoading(); }
 }
 async function loadOffers() {
   try {
@@ -711,144 +728,99 @@ async function loadOffers() {
   } catch (err) { console.error(err); }
 }
 async function updateOffer(offerId, action) {
-  if (!confirm(`Are you sure you want to ${action} this offer?`)) return;
-  try {
-    const res = await fetch(`/api/offers/${offerId}/${action}`, { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
-    if (res.ok) { alert(`Offer ${action}ed`); loadOffers(); }
-    else { const data = await res.json(); alert('Failed: ' + data.message); }
-  } catch (err) { alert('Network error'); }
+  showModal(`Are you sure you want to ${action} this offer?`, 'confirm', async () => {
+    try {
+      const res = await fetch(`/api/offers/${offerId}/${action}`, { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
+      if (res.ok) { showModal(`Offer ${action}ed`, 'success'); loadOffers(); }
+      else { const data = await res.json(); showModal('Failed: ' + data.message, 'error'); }
+    } catch (err) { showModal('Network error', 'error'); }
+  });
 }
 async function deleteOffer(offerId) {
-  if (!confirm('Delete this offer permanently? This cannot be undone.')) return;
-  try {
-    const res = await fetch(`/api/offers/${offerId}`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
-    if (res.ok) { alert('Offer deleted'); loadOffers(); }
-    else { const data = await res.json(); alert('Failed: ' + data.message); }
-  } catch (err) { alert('Network error'); }
+  showModal('Delete this offer permanently? This cannot be undone.', 'confirm', async () => {
+    try {
+      const res = await fetch(`/api/offers/${offerId}`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+      if (res.ok) { showModal('Offer deleted', 'success'); loadOffers(); }
+      else { const data = await res.json(); showModal('Failed: ' + data.message, 'error'); }
+    } catch (err) { showModal('Network error', 'error'); }
+  });
 }
 function showCounterModal(offerId) {
-  const price = prompt('Enter your counter offer price (MWK):');
-  if (!price) return;
-  const moveInDate = prompt('Proposed move‑in date (YYYY-MM-DD):');
-  if (!moveInDate) return;
-  const comment = prompt('Optional message to tenant:');
-  fetch(`/api/offers/${offerId}/counter`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ counterOfferPrice: parseInt(price), moveInDate, landlordComment: comment || '' }) }).then(res => res.json()).then(data => { if (data.message) alert(data.message); loadOffers(); }).catch(err => console.error(err));
+  showModal('Enter your counter offer price (MWK):', 'info', () => {
+    const price = prompt('Enter your counter offer price (MWK):');
+    if (!price) return;
+    const moveInDate = prompt('Proposed move‑in date (YYYY-MM-DD):');
+    if (!moveInDate) return;
+    const comment = prompt('Optional message to tenant:');
+    fetch(`/api/offers/${offerId}/counter`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ counterOfferPrice: parseInt(price), moveInDate, landlordComment: comment || '' }) }).then(res => res.json()).then(data => { if (data.message) showModal(data.message, 'success'); loadOffers(); }).catch(err => console.error(err));
+  });
 }
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch("/api/lease/my", { headers: { Authorization: "Bearer " + token } });
-    if (!res.ok) {
-      console.error("Failed to fetch leases:", res.status, res.statusText);
-      document.getElementById("leaseList").innerHTML = "<p>Error loading lease negotiations. Please ensure the lease route is configured.</p>";
-      return;
-    }
+    if (!res.ok) { console.error("Failed to fetch leases:", res.status, res.statusText); document.getElementById("leaseList").innerHTML = "<p>Error loading lease negotiations. Please ensure the lease route is configured.</p>"; return; }
     const leases = await res.json();
     const container = document.getElementById("leaseList");
     if (!container) return;
-    if (!leases || leases.length === 0) {
-      container.innerHTML = "<p>No lease negotiations yet.</p>";
-      return;
-    }
+    if (!leases || leases.length === 0) { container.innerHTML = "<p>No lease negotiations yet.</p>"; return; }
     container.innerHTML = leases.map(lease => {
       let statusClass = 'offer-status';
       let statusText = lease.status;
-      if (lease.status === 'signed' || lease.status === 'active') {
-        statusClass += ' accepted';
-        statusText = 'Signed ✓';
-      } else if (lease.status === 'agreed') {
-        statusClass += ' pending';
-        statusText = 'Awaiting Signatures';
-      } else if (lease.status === 'negotiating') {
-        statusClass += ' pending';
-      } else if (lease.status === 'rejected') {
-        statusClass += ' rejected';
-      }
+      if (lease.status === 'signed' || lease.status === 'active') { statusClass += ' accepted'; statusText = 'Signed ✓'; }
+      else if (lease.status === 'agreed') { statusClass += ' pending'; statusText = 'Awaiting Signatures'; }
+      else if (lease.status === 'negotiating') { statusClass += ' pending'; }
+      else if (lease.status === 'rejected') { statusClass += ' rejected'; }
       const tenantName = lease.tenantId?.name || 'Not joined';
       const signedDate = lease.signedAt ? new Date(lease.signedAt).toLocaleDateString() : 'Not signed';
-      const downloadButton = (lease.status === 'signed' || lease.status === 'active') 
-        ? `<button class="btn" style="background: #2563eb; color: white; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; margin-left: 0.5rem;" onclick="downloadLeaseContract('${lease._id}')"><i class="fas fa-download"></i> Contract</button>`
-        : '';
+      const downloadButton = (lease.status === 'signed' || lease.status === 'active') ? `<button class="btn" style="background: #2563eb; color: white; padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.7rem; margin-left: 0.5rem;" onclick="downloadLeaseContract('${lease._id}')"><i class="fas fa-download"></i> Contract</button>` : '';
       return `
         <div class="lease-card">
-          <div class="offer-header">
-            <strong>${lease.houseId?.name || 'Unknown property'}</strong>
-            <span class="${statusClass}">${statusText}</span>
-          </div>
-          <div class="offer-details">
-            <p><i class="fas fa-user"></i> Tenant: ${tenantName}</p>
-            <p><i class="fas fa-money-bill-wave"></i> Rent: MWK ${lease.rentAmount?.toLocaleString()}</p>
-            <p><i class="fas fa-calendar-alt"></i> Start: ${new Date(lease.leaseStartDate).toLocaleDateString()}</p>
-            <p><i class="fas fa-chart-line"></i> Lease Score: ${lease.leaseScore}/100</p>
-            <p><i class="fas fa-calendar-check"></i> Signed Date: ${signedDate}</p>
-          </div>
-          <div class="offer-actions">
-            <button class="edit" onclick="window.location.href='lease-negotiation.html?id=${lease._id}'">Continue Negotiation</button>
-            ${downloadButton}
-          </div>
+          <div class="offer-header"><strong>${lease.houseId?.name || 'Unknown property'}</strong><span class="${statusClass}">${statusText}</span></div>
+          <div class="offer-details"><p><i class="fas fa-user"></i> Tenant: ${tenantName}</p><p><i class="fas fa-money-bill-wave"></i> Rent: MWK ${lease.rentAmount?.toLocaleString()}</p><p><i class="fas fa-calendar-alt"></i> Start: ${new Date(lease.leaseStartDate).toLocaleDateString()}</p><p><i class="fas fa-chart-line"></i> Lease Score: ${lease.leaseScore}/100</p><p><i class="fas fa-calendar-check"></i> Signed Date: ${signedDate}</p></div>
+          <div class="offer-actions"><button class="edit" onclick="window.location.href='lease-negotiation.html?id=${lease._id}'">Continue Negotiation</button>${downloadButton}</div>
         </div>
       `;
     }).join('');
-  } catch (err) {
-    console.error(err);
-    document.getElementById("leaseList").innerHTML = "<p>Error loading lease negotiations. Please refresh.</p>";
-  }
+  } catch (err) { console.error(err); document.getElementById("leaseList").innerHTML = "<p>Error loading lease negotiations. Please refresh.</p>"; }
 }
 window.downloadLeaseContract = async function(negotiationId) {
   try {
-    const res = await fetch(`/api/lease/download-temp/${negotiationId}`, {
-      headers: { Authorization: 'Bearer ' + token }
-    });
+    const res = await fetch(`/api/lease/download-temp/${negotiationId}`, { headers: { Authorization: 'Bearer ' + token } });
     const data = await res.json();
-    if (res.ok && data.downloadUrl) {
-      window.open(data.downloadUrl, '_blank');
-    } else {
-      alert('Failed to get download link');
-    }
-  } catch (err) {
-    alert('Network error');
-  }
+    if (res.ok && data.downloadUrl) { window.open(data.downloadUrl, '_blank'); }
+    else { showModal('Failed to get download link', 'error'); }
+  } catch (err) { showModal('Network error', 'error'); }
 };
-
 function addPremiumCrownToAvatar() {
   if (!currentUser) return;
   const isPremiumLandlord = currentUser.verificationType === 'premium' || currentUser.role === 'premium_landlord';
   if (!isPremiumLandlord) return;
-
   function addCrownToAvatarElement(avatarElement) {
     if (!avatarElement) return;
     if (avatarElement.parentElement && avatarElement.parentElement.classList.contains('avatar-container')) {
       if (!avatarElement.parentElement.querySelector('.premium-crown')) {
-        const crown = document.createElement('div');
-        crown.className = 'premium-crown';
-        crown.innerHTML = '<i class="fas fa-crown"></i>';
+        const crown = document.createElement('div'); crown.className = 'premium-crown'; crown.innerHTML = '<i class="fas fa-crown"></i>';
         avatarElement.parentElement.appendChild(crown);
       }
       return;
     }
     const parent = avatarElement.parentNode;
-    const container = document.createElement('div');
-    container.className = 'avatar-container';
-    parent.insertBefore(container, avatarElement);
-    container.appendChild(avatarElement);
-    const crown = document.createElement('div');
-    crown.className = 'premium-crown';
-    crown.innerHTML = '<i class="fas fa-crown"></i>';
+    const container = document.createElement('div'); container.className = 'avatar-container';
+    parent.insertBefore(container, avatarElement); container.appendChild(avatarElement);
+    const crown = document.createElement('div'); crown.className = 'premium-crown'; crown.innerHTML = '<i class="fas fa-crown"></i>';
     container.appendChild(crown);
   }
-
   const navbarAvatar = document.getElementById('userAvatar');
   if (navbarAvatar) addCrownToAvatarElement(navbarAvatar);
   const profileAvatar = document.getElementById('profileAvatar');
   if (profileAvatar) addCrownToAvatarElement(profileAvatar);
 }
 
-// ========== INITIALIZATION (with 3D cards) ==========
-initMap();
+// ========== INITIALIZATION ==========
 fetchUser();
 loadMyHouses();
 loadUnreadCount();
-generateTypeCards();  // <-- NEW: create the 3D property type cards
-
+generateTypeCards();
 setTimeout(() => {
   if (document.getElementById("offersList")) loadOffers();
   if (document.getElementById("leaseList")) loadLeaseNegotiations();
@@ -863,3 +835,5 @@ window.openEditProfile = openEditProfile;
 window.closeProfileModal = closeProfileModal;
 window.deleteOffer = deleteOffer;
 window.downloadLeaseContract = downloadLeaseContract;
+window.getEditLocation = getEditLocation;
+window.getLocation = getLocation;
