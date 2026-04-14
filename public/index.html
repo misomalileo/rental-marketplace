@@ -1076,7 +1076,7 @@
         <button id="toggleHeatmapBtn" class="spatial-btn"><i class="fas fa-fire"></i> Property Heatmap</button>
         <button id="walkabilityBtn" class="spatial-btn"><i class="fas fa-walking"></i> Walkability</button>
       </div>
-      <!-- Amenity Toggle Panel (NEW) -->
+      <!-- Amenity Toggle Panel -->
       <div class="amenity-toggles" id="amenityTogglePanel">
         <button class="amenity-toggle-btn" data-layer="hospitals"><i class="fas fa-hospital"></i> Hospitals</button>
         <button class="amenity-toggle-btn" data-layer="schools"><i class="fas fa-school"></i> Schools</button>
@@ -1159,7 +1159,7 @@
     </div>
   </footer>
 
-  <!-- ========== MODALS ========== -->
+  <!-- ========== MODALS (FULLY POPULATED) ========== -->
   <div id="dreamMatchModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('dreamMatchModal')">&times;</span>
@@ -1260,7 +1260,7 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <!-- ========== DISTRICT BOUNDARIES & FILTER (unchanged) ========== -->
+  <!-- ========== DISTRICT BOUNDARIES & FILTER ========== -->
   <script>
     let mapCheckInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map) {
@@ -1399,15 +1399,15 @@
     }
   </script>
 
-  <!-- ========== ALL AMENITY LAYERS + SUB‑DISTRICTS + TOGGLES ========== -->
+  <!-- ========== AMENITY LAYERS & SUB-DISTRICTS (NO DUPLICATE LOGIC) ========== -->
   <script>
+    // Wait for map and district layer to be ready
     let amenityLoadInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map && districtLayer) {
         clearInterval(amenityLoadInterval);
         console.log("Loading amenity layers...");
         loadAllAmenityLayers();
         loadSubDistricts();
-        initAmenityToggles();
       }
     }, 1000);
 
@@ -1416,12 +1416,6 @@
     let healthPoints = [];
     let schoolPoints = [];
     let marketPoints = [];
-    let heatmapLayer = null;
-    let heatmapActive = false;
-    let walkabilityLayer = null;
-
-    // Store references to amenity layers for toggling
-    let amenityLayerMap = {};
 
     function getAmenityName(feature) {
       if (feature.properties.name) return feature.properties.name;
@@ -1459,7 +1453,6 @@
         });
         layer.addTo(map);
         amenityLayers[layerName] = layer;
-        if (layerKey) amenityLayerMap[layerKey] = layer;
         if (storeArray && data.features) {
           data.features.forEach(f => {
             if (f.geometry && f.geometry.coordinates) {
@@ -1508,27 +1501,6 @@
       if (districtLayer) {
         L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
       }
-    }
-
-    function initAmenityToggles() {
-      const buttons = document.querySelectorAll('.amenity-toggle-btn');
-      buttons.forEach(btn => {
-        const layerKey = btn.dataset.layer;
-        const layer = amenityLayerMap[layerKey];
-        if (!layer) return;
-        // Initially hide all amenity layers (clean map)
-        map.removeLayer(layer);
-        btn.classList.remove('active');
-        btn.addEventListener('click', () => {
-          if (btn.classList.contains('active')) {
-            map.removeLayer(layer);
-            btn.classList.remove('active');
-          } else {
-            map.addLayer(layer);
-            btn.classList.add('active');
-          }
-        });
-      });
     }
 
     async function loadSubDistricts() {
@@ -1586,305 +1558,10 @@
       const applyBtn = document.getElementById('applyFiltersBtn');
       if (applyBtn) applyBtn.click();
     }
-
-    function showToast(message, type = 'info') {
-      const existing = document.querySelector('.toast-notification');
-      if (existing) existing.remove();
-      const toast = document.createElement('div');
-      toast.className = 'toast-notification';
-      toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    // Enhanced nearby function with detailed modal
-    let lastSelectedHouse = null;
-    function filterPropertiesNearAmenityDetailed(pointsArray, typeName) {
-      if (!pointsArray.length) {
-        showToast(`No ${typeName} data available.`, 'error');
-        return;
-      }
-      if (!lastSelectedHouse) {
-        showToast('Double‑click a property first to select it.', 'error');
-        return;
-      }
-      const radiusKm = parseFloat(document.getElementById('radiusSliderControl')?.value || 2);
-      const from = turf.point([lastSelectedHouse.lng, lastSelectedHouse.lat]);
-      const nearby = [];
-      for (const amenity of pointsArray) {
-        const to = turf.point([amenity.lng, amenity.lat]);
-        const distance = turf.distance(from, to, { units: 'kilometers' });
-        if (distance <= radiusKm) {
-          nearby.push({ name: amenity.name, distance, lat: amenity.lat, lng: amenity.lng });
-        }
-      }
-      if (nearby.length === 0) {
-        showToast(`No ${typeName} within ${radiusKm} km of ${lastSelectedHouse.name}.`);
-        return;
-      }
-      nearby.sort((a,b) => a.distance - b.distance);
-      const modalContent = `
-        <div style="max-height: 60vh; overflow-y: auto;">
-          <h3><i class="fas fa-location-dot"></i> Nearby ${typeName}</h3>
-          <p>Near <strong>${lastSelectedHouse.name}</strong> within ${radiusKm} km:</p>
-          <ul style="margin-top: 12px;">
-            ${nearby.slice(0,15).map(a => `
-              <li style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.03); border-radius: 12px;">
-                <i class="fas fa-map-marker-alt"></i> <strong>${a.name}</strong><br>
-                <i class="fas fa-arrows-up-down"></i> ${a.distance.toFixed(2)} km (approx. ${Math.round(a.distance/5 * 60)} min walk)<br>
-                <a href="https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}" target="_blank" style="font-size:0.7rem;">View on Google Maps <i class="fas fa-external-link-alt"></i></a>
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-      `;
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.display = 'flex';
-      modal.innerHTML = `<div class="modal-content" style="max-width: 400px;"><span class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</span>${modalContent}</div>`;
-      document.body.appendChild(modal);
-    }
-
-    // Override global nearby buttons to use detailed version
-    window.filterPropertiesNearAmenity = filterPropertiesNearAmenityDetailed;
-
-    // Double‑click: zoom map and store last selected house
-    function attachDoubleClickToHouseCards() {
-      const cards = document.querySelectorAll('.house-card');
-      cards.forEach(card => {
-        if (card.dataset.dblclickAttached) return;
-        card.dataset.dblclickAttached = 'true';
-        card.addEventListener('dblclick', async (e) => {
-          e.stopPropagation();
-          const houseId = card.querySelector('[data-house-id]')?.dataset.houseId ||
-                          card.querySelector('.slider .slides-container')?.dataset.houseId;
-          if (!houseId) return;
-          const house = allHouses?.find(h => h._id === houseId);
-          if (!house || !house.lat || !house.lng) return;
-          lastSelectedHouse = house;
-          map.flyTo([house.lat, house.lng], 16, { duration: 1.5 });
-          showToast(`📍 ${house.name} – now showing nearby amenities`, 'info');
-        });
-      });
-    }
-
-    const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
-    observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
-    setTimeout(attachDoubleClickToHouseCards, 2000);
-
-    function initHeatmap() {
-      if (typeof L.heatLayer === 'undefined') {
-        console.warn("Leaflet.heat plugin not loaded – heatmap disabled");
-        return;
-      }
-      if (typeof allHouses !== 'undefined' && allHouses.length > 0) {
-        const heatPoints = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
-        if (heatmapLayer) map.removeLayer(heatmapLayer);
-        heatmapLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 12 });
-        if (heatmapActive) heatmapLayer.addTo(map);
-      } else {
-        const demoPoints = [];
-        for (let i = 0; i < 200; i++) {
-          demoPoints.push([-15.786 + (Math.random() - 0.5) * 0.5, 35.005 + (Math.random() - 0.5) * 0.5, Math.random()]);
-        }
-        heatmapLayer = L.heatLayer(demoPoints, { radius: 25, blur: 15 });
-      }
-    }
-
-    function attachMapControlEvents() {
-      document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenityDetailed(healthPoints, 'Hospitals/Clinics'));
-      document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenityDetailed(schoolPoints, 'Schools'));
-      document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenityDetailed(marketPoints, 'Markets'));
-
-      const heatmapBtn = document.getElementById('toggleHeatmapBtn');
-      if (heatmapBtn) {
-        heatmapBtn.addEventListener('click', () => {
-          if (typeof L.heatLayer === 'undefined') {
-            showToast("Heatmap library not loaded. Please refresh.", 'error');
-            return;
-          }
-          heatmapActive = !heatmapActive;
-          if (heatmapActive) {
-            if (heatmapLayer) heatmapLayer.addTo(map);
-            heatmapBtn.classList.add('heatmap-active');
-            heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Hide Heatmap';
-          } else {
-            if (heatmapLayer) map.removeLayer(heatmapLayer);
-            heatmapBtn.classList.remove('heatmap-active');
-            heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
-          }
-        });
-      }
-
-      const walkBtn = document.getElementById('walkabilityBtn');
-      if (walkBtn) {
-        walkBtn.addEventListener('click', () => {
-          if (walkabilityLayer) {
-            map.removeLayer(walkabilityLayer);
-            walkabilityLayer = null;
-            walkBtn.style.background = '';
-          } else {
-            walkabilityLayer = L.polygon([[-15.8, 34.98], [-15.75, 34.98], [-15.75, 35.02], [-15.8, 35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
-            walkabilityLayer.bindPopup("Walkability zone: High (simulated)");
-            walkBtn.style.background = '#10b981';
-          }
-        });
-      }
-    }
-
-    if (typeof window.loadHouses === 'function') {
-      const originalLoadHouses = window.loadHouses;
-      window.loadHouses = async function(...args) {
-        await originalLoadHouses(...args);
-        if (typeof L.heatLayer !== 'undefined' && heatmapActive && typeof allHouses !== 'undefined') {
-          if (heatmapLayer) map.removeLayer(heatmapLayer);
-          const points = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
-          heatmapLayer = L.heatLayer(points, { radius: 25, blur: 15 });
-          if (heatmapActive) heatmapLayer.addTo(map);
-        }
-        setTimeout(attachDoubleClickToHouseCards, 500);
-      };
-    }
-
-    let toolbarInterval = setInterval(function() {
-      if (typeof map !== 'undefined' && map) {
-        clearInterval(toolbarInterval);
-        attachMapControlEvents();
-        initHeatmap();
-      }
-    }, 1500);
-  </script>
-
-  <!-- ========== DREAM MATCH LOGIC (FULLY INTEGRATED) ========== -->
-  <script>
-    function scoreHouseForDream(house, answers) {
-      let score = 0;
-      // Work from home
-      if (answers.workFromHome === "essential") {
-        if (house.bedrooms >= 2 || house.selfContained) score += 30;
-        else if (house.bedrooms >= 1) score += 10;
-      } else if (answers.workFromHome === "nice") {
-        if (house.bedrooms >= 2 || house.selfContained) score += 15;
-      }
-      // Social
-      if (answers.social === "often") {
-        if (house.pool) score += 25;
-        if (house.furnished) score += 15;
-        if (house.parking) score += 10;
-      } else if (answers.social === "sometimes") {
-        if (house.furnished) score += 10;
-      }
-      // Outdoor
-      if (answers.outdoor === "essential") {
-        if (house.petFriendly) score += 20;
-        if (house.selfContained) score += 10;
-      } else if (answers.outdoor === "nice") {
-        if (house.petFriendly) score += 10;
-      }
-      // Noise
-      if (answers.noise === "quiet") {
-        if (house.pool) score -= 15;
-        if (house.selfContained) score += 10;
-      } else if (answers.noise === "lively") {
-        if (house.pool) score += 15;
-        if (house.furnished) score += 5;
-      }
-      // Budget & bedrooms
-      if (answers.maxPrice && house.price > answers.maxPrice) score -= 100;
-      if (answers.bedrooms && house.bedrooms < answers.bedrooms) score -= 100;
-      if (house.averageRating) score += house.averageRating * 5;
-      // Property type match
-      if (answers.type && house.type !== answers.type) score -= 50;
-      return Math.max(0, score);
-    }
-
-    async function submitDreamMatch(e) {
-      e.preventDefault();
-      const type = document.getElementById('dream_type').value;
-      const workFromHome = document.getElementById('dream_workFromHome').value;
-      const social = document.getElementById('dream_social').value;
-      const outdoor = document.getElementById('dream_outdoor').value;
-      const noise = document.getElementById('dream_noise').value;
-      const maxPrice = parseInt(document.getElementById('dream_maxPrice').value) || Infinity;
-      const bedrooms = parseInt(document.getElementById('dream_bedrooms').value) || 0;
-
-      const resultsDiv = document.getElementById('dreamMatchResults');
-      const grid = document.getElementById('dreamMatchGrid');
-      resultsDiv.style.display = 'block';
-      grid.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div>';
-
-      if (!window.allHouses || !window.allHouses.length) {
-        grid.innerHTML = '<div style="text-align:center; padding:20px;">No properties loaded yet. Please refresh the page.</div>';
-        return;
-      }
-
-      const answers = { type, workFromHome, social, outdoor, noise, maxPrice, bedrooms };
-      const scored = window.allHouses.map(house => ({
-        house,
-        score: scoreHouseForDream(house, answers)
-      }));
-      scored.sort((a, b) => b.score - a.score);
-      const topMatches = scored.slice(0, 12).filter(s => s.score > 0);
-
-      if (topMatches.length === 0) {
-        grid.innerHTML = '<div style="text-align:center; padding:20px;">No properties match your criteria. Try increasing budget or adjusting preferences.</div>';
-        return;
-      }
-
-      grid.innerHTML = topMatches.map(s => `
-        <div class="dream-card" style="cursor:pointer;" onclick="showDetails('${s.house._id}'); closeModal('dreamMatchModal');">
-          <img src="${s.house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(s.house.name)}" style="width:100%; height:160px; object-fit:cover;">
-          <div class="dream-card-content">
-            <div class="dream-match-badge"><i class="fas fa-chart-line"></i> ${Math.round(s.score)}% Match</div>
-            <h3>${escapeHtml(s.house.name)}</h3>
-            <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(s.house.location)}</p>
-            <div class="dream-price">MWK ${Number(s.house.price).toLocaleString()}</div>
-            <button class="carousel-btn" onclick="event.stopPropagation(); showDetails('${s.house._id}'); closeModal('dreamMatchModal');">View Details</button>
-          </div>
-        </div>
-      `).join('');
-      showToast(`Found ${topMatches.length} dream matches!`);
-    }
-
-    document.getElementById('dreamMatchForm')?.addEventListener('submit', submitDreamMatch);
-  </script>
-
-  <!-- ========== PRICE CHANGE DISPLAY (ENHANCEMENT) ========== -->
-  <script>
-    // Override renderHouses to include old price and percentage change
-    if (typeof window.renderHouses === 'function') {
-      const originalRenderHouses = window.renderHouses;
-      window.renderHouses = function(houses) {
-        // Process houses to add price change display
-        houses = houses.map(house => {
-          if (house.oldPrice && house.oldPrice !== house.price) {
-            const change = house.price - house.oldPrice;
-            const percent = (change / house.oldPrice) * 100;
-            house.priceChangeHtml = `<span class="old-price">MWK ${house.oldPrice.toLocaleString()}</span> <span class="price-change ${change < 0 ? 'negative' : ''}">${change < 0 ? `${percent.toFixed(0)}% ↓` : `${percent.toFixed(0)}% ↑`}</span>`;
-          } else {
-            house.priceChangeHtml = '';
-          }
-          return house;
-        });
-        originalRenderHouses(houses);
-        // After rendering, insert price change into each card
-        setTimeout(() => {
-          document.querySelectorAll('.house-card').forEach((card, idx) => {
-            const house = houses[idx];
-            if (house && house.priceChangeHtml) {
-              const priceElement = card.querySelector('.price');
-              if (priceElement) {
-                priceElement.innerHTML = `<i class="fas fa-money-bill-wave"></i> ${house.priceChangeHtml} MWK ${house.price.toLocaleString()}`;
-              }
-            }
-          });
-        }, 50);
-      };
-    }
   </script>
 
   <script>
-    // Mobile menu and modal helpers (same as before)
+    // Mobile menu and modal helpers
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileDropdown = document.getElementById('mobileSettingsDropdown');
     if (mobileMenuBtn && mobileDropdown) {

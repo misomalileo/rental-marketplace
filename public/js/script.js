@@ -24,6 +24,12 @@ let healthPoints = [];
 let schoolPoints = [];
 let marketPoints = [];
 
+// For storing amenity layers (to toggle)
+let amenityLayers = {};
+
+// Last selected house for nearby searches
+let lastSelectedHouse = null;
+
 // ========== TOAST NOTIFICATION (replaces alert) ==========
 function showToast(message, type = 'info') {
   const existing = document.querySelector('.toast-notification');
@@ -139,15 +145,20 @@ async function loadHeroCarousel() {
   }
 }
 
-// ========== DREAM MATCH SCORING ==========
+// ========== DREAM MATCH SCORING (includes property type) ==========
 function scoreHouseForDream(house, answers) {
   let score = 0;
+  // Property type match (penalty if type doesn't match)
+  if (answers.type && house.type !== answers.type) score -= 50;
+
+  // Work from home
   if (answers.workFromHome === "essential") {
     if (house.bedrooms >= 2 || house.selfContained) score += 30;
     else if (house.bedrooms >= 1) score += 10;
   } else if (answers.workFromHome === "nice") {
     if (house.bedrooms >= 2 || house.selfContained) score += 15;
   }
+  // Social
   if (answers.social === "often") {
     if (house.pool) score += 25;
     if (house.furnished) score += 15;
@@ -155,12 +166,14 @@ function scoreHouseForDream(house, answers) {
   } else if (answers.social === "sometimes") {
     if (house.furnished) score += 10;
   }
+  // Outdoor
   if (answers.outdoor === "essential") {
     if (house.petFriendly) score += 20;
     if (house.selfContained) score += 10;
   } else if (answers.outdoor === "nice") {
     if (house.petFriendly) score += 10;
   }
+  // Noise
   if (answers.noise === "quiet") {
     if (house.pool) score -= 15;
     if (house.selfContained) score += 10;
@@ -168,15 +181,17 @@ function scoreHouseForDream(house, answers) {
     if (house.pool) score += 15;
     if (house.furnished) score += 5;
   }
+  // Budget & bedrooms
   if (answers.maxPrice && house.price > answers.maxPrice) score -= 100;
   if (answers.bedrooms && house.bedrooms < answers.bedrooms) score -= 100;
   if (house.averageRating) score += house.averageRating * 5;
   return Math.max(0, score);
 }
 
-// ========== DREAM MATCH SUBMIT (MULTIPLE RESULTS) ==========
+// ========== DREAM MATCH SUBMIT (MULTIPLE RESULTS, WITH TYPE) ==========
 async function submitDreamMatch(e) {
   e.preventDefault();
+  const type = document.getElementById("dream_type").value;
   const workFromHome = document.getElementById("dream_workFromHome").value;
   const social = document.getElementById("dream_social").value;
   const outdoor = document.getElementById("dream_outdoor").value;
@@ -185,9 +200,16 @@ async function submitDreamMatch(e) {
   const bedrooms = parseInt(document.getElementById("dream_bedrooms").value) || 0;
 
   const resultsDiv = document.getElementById("dreamMatchResults");
-  const wrapper = document.getElementById("dreamMatchWrapper");
+  const grid = document.getElementById("dreamMatchGrid");
   resultsDiv.style.display = "block";
-  wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div></div></div>';
+  if (!grid) {
+    // Fallback for old HTML structure
+    console.warn("Dream match grid not found, using old wrapper");
+    const wrapper = document.getElementById("dreamMatchWrapper");
+    if (wrapper) wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div></div></div>';
+  } else {
+    grid.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div>';
+  }
 
   let candidates = allHouses.filter(house => {
     if (maxPrice && house.price > maxPrice) return false;
@@ -196,11 +218,13 @@ async function submitDreamMatch(e) {
   });
 
   if (candidates.length === 0) {
-    wrapper.innerHTML = `<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content">No properties match your basic criteria. Try increasing budget or reducing bedrooms.</div></div></div>`;
+    const msg = '<div style="text-align:center; padding:20px;">No properties match your basic criteria. Try increasing budget or reducing bedrooms.</div>';
+    if (grid) grid.innerHTML = msg;
+    else if (document.getElementById("dreamMatchWrapper")) document.getElementById("dreamMatchWrapper").innerHTML = msg;
     return;
   }
 
-  const answers = { workFromHome, social, outdoor, noise, maxPrice, bedrooms };
+  const answers = { type, workFromHome, social, outdoor, noise, maxPrice, bedrooms };
   const scored = candidates.map(house => ({ house, score: scoreHouseForDream(house, answers) }));
   scored.sort((a, b) => b.score - a.score);
   const top = scored.slice(0, 12).map(s => ({
@@ -213,8 +237,7 @@ async function submitDreamMatch(e) {
     score: s.score
   }));
 
-  // Show multiple results as a grid
-  wrapper.innerHTML = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">` +
+  const resultsHtml = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">` +
     top.map(house => `
       <div class="dream-card" style="cursor:pointer;" onclick="showDetails('${house.id}'); closeDreamMatchModal();">
         <img src="${house.image}" alt="${escapeHtml(house.name)}" style="width:100%; height:160px; object-fit:cover;">
@@ -227,13 +250,18 @@ async function submitDreamMatch(e) {
         </div>
       </div>
     `).join('') + `</div>`;
+
+  if (grid) grid.innerHTML = resultsHtml;
+  else if (document.getElementById("dreamMatchWrapper")) document.getElementById("dreamMatchWrapper").innerHTML = resultsHtml;
+  showToast(`Found ${top.length} dream matches!`);
 }
 
 function openDreamMatchModal() {
   const modal = document.getElementById("dreamMatchModal");
   if (modal) modal.style.display = "block";
   document.getElementById("dreamMatchForm").reset();
-  document.getElementById("dreamMatchResults").style.display = "none";
+  const resultsDiv = document.getElementById("dreamMatchResults");
+  if (resultsDiv) resultsDiv.style.display = "none";
 }
 
 function closeDreamMatchModal() {
@@ -689,7 +717,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `<tr></tbody></table>`;
+  tableHtml += `<td></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -704,7 +732,7 @@ function openComparisonModal() {
 }
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
-// ========== RENDER HOUSE CARDS ==========
+// ========== RENDER HOUSE CARDS (with price change display) ==========
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
@@ -751,9 +779,22 @@ function renderHouses(houses) {
     if (house.rentalStatus === 'available') rentalStatusBadge = '<span class="badge available"><i class="fas fa-check-circle"></i> Available</span>';
     else if (house.rentalStatus === 'rented') rentalStatusBadge = '<span class="badge rented"><i class="fas fa-ban"></i> Rented</span>';
     else if (house.rentalStatus === 'pending') rentalStatusBadge = '<span class="badge pending"><i class="fas fa-clock"></i> Pending</span>';
+    
+    // Price display with old price and percentage change
     let priceHtml = '';
-    if (house.type === 'Hostel') priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / room</p>`;
-    else priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / month</p>`;
+    const priceValue = house.price;
+    const formattedPrice = `MWK ${Number(priceValue).toLocaleString()}`;
+    if (house.oldPrice && house.oldPrice !== priceValue) {
+      const oldPrice = house.oldPrice;
+      const change = priceValue - oldPrice;
+      const percent = ((change / oldPrice) * 100).toFixed(0);
+      const changeClass = change < 0 ? 'negative' : '';
+      const changeSymbol = change < 0 ? '↓' : '↑';
+      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${Math.abs(percent)}% ${changeSymbol}</span> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+    } else {
+      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+    }
+    
     const ratingStars = getStarRating(house.averageRating);
     const ratingText = house.averageRating ? house.averageRating.toFixed(1) : "N/A";
     const favIcon = favorites.includes(house._id) ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
@@ -1004,41 +1045,76 @@ async function showLandlordProfile(landlordId) {
 }
 function closeLandlordModal() { document.getElementById('landlordModal').style.display = 'none'; }
 
-// ========== NEARBY AMENITY FILTERS ==========
+// ========== DETAILED NEARBY AMENITY MODAL ==========
 function filterPropertiesNearAmenity(pointsArray, typeName) {
   if (!pointsArray.length) {
     showToast(`No ${typeName} data available.`, 'error');
     return;
   }
-  if (!allHouses.length) {
-    showToast('No properties loaded yet.', 'error');
+  if (!lastSelectedHouse) {
+    showToast('Double‑click a property first to select it.', 'error');
     return;
   }
   const radiusKm = parseFloat(document.getElementById('radiusSliderControl')?.value || 2);
-  const nearHouseIds = [];
-  for (const house of allHouses) {
-    if (!house.lat || !house.lng) continue;
-    const from = turf.point([house.lng, house.lat]);
-    let found = false;
-    for (const amenity of pointsArray) {
-      const to = turf.point([amenity.lng, amenity.lat]);
-      const distance = turf.distance(from, to, { units: 'kilometers' });
-      if (distance <= radiusKm) {
-        found = true;
-        break;
-      }
+  const from = turf.point([lastSelectedHouse.lng, lastSelectedHouse.lat]);
+  const nearby = [];
+  for (const amenity of pointsArray) {
+    const to = turf.point([amenity.lng, amenity.lat]);
+    const distance = turf.distance(from, to, { units: 'kilometers' });
+    if (distance <= radiusKm) {
+      nearby.push({ name: amenity.name, distance, lat: amenity.lat, lng: amenity.lng });
     }
-    if (found) nearHouseIds.push(house._id);
   }
-  if (nearHouseIds.length === 0) {
-    showToast(`No properties within ${radiusKm} km of any ${typeName}.`);
+  if (nearby.length === 0) {
+    showToast(`No ${typeName} within ${radiusKm} km of ${lastSelectedHouse.name}.`);
     return;
   }
-  const filteredHouses = allHouses.filter(h => nearHouseIds.includes(h._id));
-  renderHouses(filteredHouses);
-  renderMarkers(filteredHouses);
-  showToast(`Found ${nearHouseIds.length} properties near ${typeName}.`);
+  nearby.sort((a,b) => a.distance - b.distance);
+  const modalContent = `
+    <div style="max-height: 60vh; overflow-y: auto;">
+      <h3><i class="fas fa-location-dot"></i> Nearby ${typeName}</h3>
+      <p>Near <strong>${lastSelectedHouse.name}</strong> within ${radiusKm} km:</p>
+      <ul style="margin-top: 12px;">
+        ${nearby.slice(0,15).map(a => `
+          <li style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.03); border-radius: 12px;">
+            <i class="fas fa-map-marker-alt"></i> <strong>${a.name}</strong><br>
+            <i class="fas fa-arrows-up-down"></i> ${a.distance.toFixed(2)} km (approx. ${Math.round(a.distance/5 * 60)} min walk)<br>
+            <a href="https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}" target="_blank" style="font-size:0.7rem;">View on Google Maps <i class="fas fa-external-link-alt"></i></a>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  `;
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `<div class="modal-content" style="max-width: 400px;"><span class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</span>${modalContent}</div>`;
+  document.body.appendChild(modal);
 }
+
+// ========== DOUBLE-CLICK: FLY TO PROPERTY & STORE ==========
+function attachDoubleClickToHouseCards() {
+  const cards = document.querySelectorAll('.house-card');
+  cards.forEach(card => {
+    if (card.dataset.dblclickAttached) return;
+    card.dataset.dblclickAttached = 'true';
+    card.addEventListener('dblclick', async (e) => {
+      e.stopPropagation();
+      const houseId = card.querySelector('[data-house-id]')?.dataset.houseId ||
+                      card.querySelector('.slider .slides-container')?.dataset.houseId;
+      if (!houseId) return;
+      const house = allHouses?.find(h => h._id === houseId);
+      if (!house || !house.lat || !house.lng) return;
+      lastSelectedHouse = house;
+      map.flyTo([house.lat, house.lng], 16, { duration: 1.5 });
+      showToast(`📍 ${house.name} – now showing nearby amenities`, 'info');
+    });
+  });
+}
+
+const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
+observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
+setTimeout(attachDoubleClickToHouseCards, 2000);
 
 // ========== NEIGHBOURHOOD INSIGHTS ==========
 async function loadNeighbourhoodInsights(houseLat, houseLng) {
@@ -1446,6 +1522,93 @@ async function loadAndUpdateUserMenu() {
 userAvatar.addEventListener('click', (e) => { e.stopPropagation(); userMenu.classList.toggle('active'); });
 document.addEventListener('click', (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove('active'); });
 
+// ========== AMENITY TOGGLES (for map layers) ==========
+function initAmenityToggles() {
+  const buttons = document.querySelectorAll('.amenity-toggle-btn');
+  buttons.forEach(btn => {
+    const layerKey = btn.dataset.layer;
+    const layer = amenityLayers[layerKey];
+    if (!layer) return;
+    // Initially hide all amenity layers (clean map)
+    map.removeLayer(layer);
+    btn.classList.remove('active');
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('active')) {
+        map.removeLayer(layer);
+        btn.classList.remove('active');
+      } else {
+        map.addLayer(layer);
+        btn.classList.add('active');
+      }
+    });
+  });
+}
+
+// ========== LOAD AMENITY LAYERS (populate healthPoints, etc.) ==========
+async function loadAmenityLayers() {
+  const layers = [
+    { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints, key: 'hospitals' },
+    { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6', store: schoolPoints, key: 'schools' },
+    { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b', store: marketPoints, key: 'markets' },
+    { url: '/data/malawi_banks.geojson', name: 'Banks', icon: 'fas fa-university', color: '#8b5cf6', store: null, key: 'banks' },
+    { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b', store: null, key: 'police' },
+    { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981', store: null, key: 'fuel' },
+    { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899', store: null, key: 'restaurants' },
+    { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280', store: null, key: 'hotels' },
+    { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316', store: null, key: 'transport' },
+    { url: '/data/malawi_worship.geojson', name: 'Worship', icon: 'fas fa-church', color: '#a855f7', store: null, key: 'worship' },
+    { url: '/data/malawi_districts.geojson', name: 'Districts', isDistrict: true, key: 'districts' }
+  ];
+  for (const l of layers) {
+    try {
+      const res = await fetch(l.url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (l.isDistrict) {
+        const districtLayer = L.geoJSON(data, { style: { color: '#3b82f6', weight: 1.8, fillOpacity: 0.2 }, onEachFeature: (f, layer) => layer.bindPopup(f.properties.name) }).addTo(map);
+        amenityLayers[l.key] = districtLayer;
+      } else {
+        const layer = L.geoJSON(data, { pointToLayer: (feat, latlng) => L.marker(latlng, { icon: L.divIcon({ html: `<i class="${l.icon}" style="color:${l.color}; font-size:20px;"></i>`, iconSize: [24,24] }) }) });
+        layer.addTo(map);
+        amenityLayers[l.key] = layer;
+        if (l.store && data.features) {
+          data.features.forEach(f => {
+            if (f.geometry?.coordinates) {
+              l.store.push({ lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0], name: f.properties.name || 'Amenity' });
+            }
+          });
+        }
+      }
+    } catch(e) { console.warn(`Skipped ${l.url}`); }
+  }
+  console.log(`Loaded ${healthPoints.length} health facilities, ${schoolPoints.length} schools, ${marketPoints.length} markets`);
+  // After loading, initialise toggles if the HTML contains the amenity toggle panel
+  initAmenityToggles();
+}
+
+// ========== HEATMAP & WALKABILITY ==========
+let heatmapLayerGlobal = null;
+let heatmapActive = false;
+let walkabilityLayer = null;
+
+function initHeatmap() {
+  if (typeof L.heatLayer === 'undefined') {
+    console.warn("Leaflet.heat plugin not loaded – heatmap disabled");
+    return;
+  }
+  if (allHouses && allHouses.length > 0) {
+    const heatPoints = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
+    if (heatmapLayerGlobal) map.removeLayer(heatmapLayerGlobal);
+    heatmapLayerGlobal = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 12 });
+  } else {
+    const demoPoints = [];
+    for (let i = 0; i < 200; i++) {
+      demoPoints.push([-15.786 + (Math.random() - 0.5) * 0.5, 35.005 + (Math.random() - 0.5) * 0.5, Math.random()]);
+    }
+    heatmapLayerGlobal = L.heatLayer(demoPoints, { radius: 25, blur: 15 });
+  }
+}
+
 // ========== EVENT LISTENERS & INITIALIZATION ==========
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
@@ -1472,46 +1635,40 @@ const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
 if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
 window.closeDreamMatchModal = closeDreamMatchModal;
 
-// Nearby amenity buttons (new)
+// Nearby amenity buttons (now call the detailed version)
 document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
 document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
 document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
 
-// Heatmap (if L.heatLayer exists)
+// Heatmap button
 const heatmapBtn = document.getElementById('toggleHeatmapBtn');
 if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
-  let heatActive = false;
-  let heatLayer = null;
   heatmapBtn.addEventListener('click', () => {
-    if (!heatLayer) {
-      const points = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
-      heatLayer = L.heatLayer(points, { radius: 25, blur: 15 });
-    }
-    if (heatActive) {
-      map.removeLayer(heatLayer);
-      heatmapBtn.classList.remove('heatmap-active');
-      heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
-    } else {
-      map.addLayer(heatLayer);
+    if (!heatmapLayerGlobal) initHeatmap();
+    heatmapActive = !heatmapActive;
+    if (heatmapActive) {
+      if (heatmapLayerGlobal) map.addLayer(heatmapLayerGlobal);
       heatmapBtn.classList.add('heatmap-active');
       heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Hide Heatmap';
+    } else {
+      if (heatmapLayerGlobal) map.removeLayer(heatmapLayerGlobal);
+      heatmapBtn.classList.remove('heatmap-active');
+      heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
     }
-    heatActive = !heatActive;
   });
 }
 
-// Walkability (simulated)
-let walkLayer = null;
+// Walkability button
 const walkBtn = document.getElementById('walkabilityBtn');
 if (walkBtn) {
   walkBtn.addEventListener('click', () => {
-    if (walkLayer) {
-      map.removeLayer(walkLayer);
-      walkLayer = null;
+    if (walkabilityLayer) {
+      map.removeLayer(walkabilityLayer);
+      walkabilityLayer = null;
       walkBtn.style.background = '';
     } else {
-      walkLayer = L.polygon([[-15.8,34.98],[-15.75,34.98],[-15.75,35.02],[-15.8,35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
-      walkLayer.bindPopup('Walkability zone: High (simulated)');
+      walkabilityLayer = L.polygon([[-15.8,34.98],[-15.75,34.98],[-15.75,35.02],[-15.8,35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
+      walkabilityLayer.bindPopup('Walkability zone: High (simulated)');
       walkBtn.style.background = '#10b981';
     }
   });
@@ -1521,45 +1678,6 @@ if (walkBtn) {
 function syncDistrictFilter() {
   const districtSelect = document.getElementById('districtFilterSelect');
   if (districtSelect) districtSelect.value = currentDistrict || '';
-}
-
-// ========== LOAD AMENITY LAYERS (populate healthPoints, etc.) ==========
-async function loadAmenityLayers() {
-  const layers = [
-    { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints },
-    { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6', store: schoolPoints },
-    { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b', store: marketPoints },
-    { url: '/data/malawi_banks.geojson', name: 'Banks', icon: 'fas fa-university', color: '#8b5cf6' },
-    { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b' },
-    { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981' },
-    { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899' },
-    { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280' },
-    { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316' },
-    { url: '/data/malawi_worship.geojson', name: 'Worship', icon: 'fas fa-church', color: '#a855f7' },
-    { url: '/data/malawi_districts.geojson', name: 'Districts', isDistrict: true }
-  ];
-  for (const l of layers) {
-    try {
-      const res = await fetch(l.url);
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (l.isDistrict) {
-        const districtLayer = L.geoJSON(data, { style: { color: '#3b82f6', weight: 1.8, fillOpacity: 0.2 }, onEachFeature: (f, layer) => layer.bindPopup(f.properties.name) }).addTo(map);
-        // Add to layer control later
-      } else {
-        const layer = L.geoJSON(data, { pointToLayer: (feat, latlng) => L.marker(latlng, { icon: L.divIcon({ html: `<i class="${l.icon}" style="color:${l.color}; font-size:20px;"></i>`, iconSize: [24,24] }) }) });
-        layer.addTo(map);
-        if (l.store && data.features) {
-          data.features.forEach(f => {
-            if (f.geometry?.coordinates) {
-              l.store.push({ lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0], name: f.properties.name || 'Amenity' });
-            }
-          });
-        }
-      }
-    } catch(e) { console.warn(`Skipped ${l.url}`); }
-  }
-  console.log(`Loaded ${healthPoints.length} health facilities, ${schoolPoints.length} schools, ${marketPoints.length} markets`);
 }
 
 // ========== INITIALIZATION ==========
@@ -1582,7 +1700,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHouses(currentPage, currentType, currentFilters, currentSort);
   loadHeroCarousel();
   loadAndUpdateUserMenu();
-  loadAmenityLayers(); // This populates healthPoints, schoolPoints, marketPoints
+  loadAmenityLayers(); // This populates healthPoints, schoolPoints, marketPoints and sets up toggles
+  initHeatmap();
 });
 
 // Expose global functions
