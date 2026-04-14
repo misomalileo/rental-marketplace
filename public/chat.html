@@ -16,12 +16,14 @@
       box-sizing: border-box;
       font-family: 'Inter', sans-serif;
     }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
     body {
       background: #0a0a0f;
-      height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
     /* Navbar - minimal */
     .navbar {
@@ -30,6 +32,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .logo {
@@ -53,7 +56,7 @@
       margin-left: 0.8rem;
     }
 
-    /* Chat container */
+    /* Chat container - full height */
     .chat-container {
       display: flex;
       flex: 1;
@@ -62,7 +65,7 @@
       height: 100%;
     }
 
-    /* ========== LEFT SIDEBAR (CHAT LIST) ========== */
+    /* Sidebar (chat list) */
     .sidebar {
       width: 280px;
       background: #0f0f14;
@@ -76,18 +79,15 @@
       padding: 0.4rem 0.6rem;
       background: #1a1a2e;
       border-bottom: 1px solid #2a2a35;
+      flex-shrink: 0;
     }
     .sidebar-header h3 {
       font-size: 0.8rem;
       font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
     }
     .chat-list {
       flex: 1;
       overflow-y: auto;
-      list-style: none;
     }
     .chat-item {
       padding: 0.4rem 0.5rem;
@@ -97,8 +97,6 @@
       gap: 0.5rem;
       border-bottom: 1px solid #2a2a35;
     }
-    .chat-item:hover { background: #1a1a2e; }
-    .chat-item.active { background: #1e2a3a; }
     .chat-avatar {
       width: 36px;
       height: 36px;
@@ -107,11 +105,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 0.8rem;
       font-weight: 600;
       color: #0a0a0f;
-      font-size: 0.8rem;
-      position: relative;
       flex-shrink: 0;
+      position: relative;
     }
     .online-dot {
       position: absolute;
@@ -128,17 +126,16 @@
       min-width: 0;
     }
     .chat-info h4 {
-      margin: 0;
       font-size: 0.75rem;
       font-weight: 600;
-      color: #f1f5f9;
+      margin: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .chat-info p {
-      margin: 0;
       font-size: 0.6rem;
+      margin: 0;
       color: #94a3b8;
       white-space: nowrap;
       overflow: hidden;
@@ -156,18 +153,16 @@
       padding: 1px 4px;
       font-size: 0.6rem;
       font-weight: 700;
-      margin-top: 2px;
-      display: inline-block;
     }
 
-    /* ========== RIGHT CHAT AREA - EXTREMELY COMPACT ========== */
+    /* Main chat area - extremely compact */
     .main-chat {
       flex: 1;
       display: flex;
       flex-direction: column;
       background: #0f0f14;
       position: relative;
-      min-height: 0;
+      min-width: 0;
       height: 100%;
     }
     .chat-header {
@@ -187,8 +182,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 600;
       font-size: 0.75rem;
+      font-weight: 600;
       color: #0a0a0f;
       flex-shrink: 0;
     }
@@ -198,7 +193,6 @@
     .chat-header-info h3 {
       font-size: 0.8rem;
       margin: 0;
-      color: #f1f5f9;
     }
     .chat-header-info p {
       font-size: 0.55rem;
@@ -209,27 +203,25 @@
       font-size: 0.55rem;
       font-style: italic;
       color: #FFB347;
-      margin-top: 1px;
     }
     .chat-actions {
       display: flex;
       gap: 0.5rem;
     }
     .chat-actions i {
-      cursor: pointer;
       font-size: 0.9rem;
-      color: #cbd5e1;
+      cursor: pointer;
     }
 
-    /* Messages area - very tight, scrollable but shrinks */
+    /* Messages - the critical part */
     .messages {
-      flex: 1 1 auto;
+      flex: 1;
       overflow-y: auto;
       padding: 0.3rem;
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
-      min-height: 0;
+      min-height: 0;   /* allows it to shrink */
     }
     .message {
       max-width: 80%;
@@ -250,29 +242,27 @@
       border-bottom-left-radius: 3px;
     }
     .message-status {
-      display: inline-block;
-      margin-left: 2px;
       font-size: 0.5rem;
+      margin-left: 2px;
     }
     .message-time {
       font-size: 0.45rem;
-      opacity: 0.7;
       margin-top: 2px;
       text-align: right;
+      opacity: 0.7;
     }
     .audio-message audio {
       max-width: 140px;
       height: 24px;
     }
 
-    /* Quick replies - minimal */
+    /* Quick replies - hidden on mobile to save space; can be enabled */
     .quick-replies {
       display: flex;
       gap: 0.3rem;
       padding: 0.2rem 0.4rem;
       background: #0f0f14;
       overflow-x: auto;
-      white-space: nowrap;
       border-top: 1px solid #2a2a35;
       border-bottom: 1px solid #2a2a35;
       flex-shrink: 0;
@@ -322,7 +312,6 @@
     .input-area button:hover { background: #2563eb; color: white; }
     .send-btn { background: #2563eb; color: white; }
 
-    /* Mobile back button */
     .mobile-back {
       display: none;
       background: transparent;
@@ -330,10 +319,7 @@
       color: #cbd5e1;
       font-size: 1rem;
       cursor: pointer;
-      margin-right: 0.3rem;
     }
-
-    /* No chat placeholder */
     .no-chat {
       display: flex;
       align-items: center;
@@ -382,7 +368,6 @@
     .custom-modal-btn.confirm { background: #2563eb; color: white; }
     .custom-modal-btn.cancel { background: #334155; color: white; }
 
-    /* Context menu */
     .context-menu {
       position: absolute;
       background: #1e2a3a;
@@ -399,7 +384,6 @@
     }
     .context-menu div:hover { background: #2563eb; border-radius: 8px; }
 
-    /* Emoji picker */
     .emoji-picker-container {
       position: absolute;
       bottom: 60px;
@@ -414,7 +398,6 @@
       --category-button-color-active: #FF8C42;
     }
 
-    /* Scroll to bottom */
     .scroll-to-bottom {
       position: absolute;
       bottom: 65px;
@@ -438,7 +421,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Mobile responsive */
     @media (max-width: 768px) {
       .sidebar {
         position: absolute;
@@ -448,7 +430,6 @@
         height: 100%;
         transform: translateX(0);
         z-index: 20;
-        background: #0f0f14;
       }
       .sidebar.hide {
         transform: translateX(-100%);
@@ -462,6 +443,8 @@
       .message { max-width: 85%; }
       .input-area button { width: 30px; height: 30px; }
       .quick-reply-btn { padding: 0.1rem 0.4rem; font-size: 0.55rem; }
+      /* optional: hide quick replies on very small screens to save space */
+      .quick-replies { display: none; }
     }
     @media (min-width: 769px) {
       .sidebar {
