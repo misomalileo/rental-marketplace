@@ -281,19 +281,101 @@
       border-color: rgba(37,99,235,0.3);
     }
 
-    /* ========== DREAM MATCH CARDS – SMALLER, 3D, SOFT GREEN PATCHES ========== */
+    /* ========== FEATURED CAROUSEL – SMALL, NO WHITE SPACE, GREEN THEME ========== */
+    .carousel-section { margin: 1rem 1rem 2rem; }
+    .carousel-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      padding: 0.8rem 0.5rem;
+      box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
+    }
+    .carousel-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      font-family: 'Poppins', sans-serif;
+      padding: 0 1rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .carousel-title i { font-size: 1.3rem; background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+    .hero-swiper { padding: 0 0.5rem; overflow: visible; }
+    .swiper-slide { width: auto; border-radius: 20px; transition: transform 0.3s ease; }
+    .carousel-card {
+      background: linear-gradient(145deg, #ffffff, #f0faf0);
+      border-radius: 20px;
+      overflow: hidden;
+      width: 220px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+    }
+    .carousel-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 30px -12px rgba(16,185,129,0.3);
+    }
+    .carousel-card img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+    }
+    .carousel-card-content {
+      padding: 0.6rem;
+    }
+    .carousel-card-content h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: 'Poppins', sans-serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0.2rem;
+    }
+    .carousel-card-content p {
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin: 0.2rem 0;
+    }
+    .carousel-price {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #10b981;
+    }
+    .carousel-btn {
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.55rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.4rem;
+      transition: all 0.2s;
+    }
+    .carousel-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+    @media (max-width: 768px) {
+      .carousel-card { width: 180px; }
+      .carousel-card img { height: 110px; }
+      .carousel-card-content h3 { font-size: 0.7rem; }
+      .carousel-price { font-size: 0.65rem; }
+    }
+
+    /* ========== DREAM MATCH CARDS – SOFT GREEN, LUCID ICONS ========== */
     .dream-card {
       border-radius: 20px;
       overflow: hidden;
-      backdrop-filter: blur(4px);
       background: linear-gradient(145deg, #ffffff, #f0faf0);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.02);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
       transition: all 0.3s ease;
     }
     .dream-card:hover {
       transform: translateY(-8px) scale(1.02);
       box-shadow: 0 20px 35px -12px rgba(16,185,129,0.3);
-      border-color: rgba(16,185,129,0.4);
     }
     .dream-match-badge {
       background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
@@ -302,10 +384,14 @@
       border-radius: 40px;
       padding: 0.2rem 0.6rem;
       font-size: 0.65rem;
-      display: inline-block;
-      box-shadow: 0 2px 6px rgba(16,185,129,0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 0.3rem;
     }
+    .dream-match-badge i { color: #065f46; font-size: 0.6rem; }
     .dream-card img {
+      width: 100%;
       height: 140px;
       object-fit: cover;
     }
@@ -313,84 +399,29 @@
       padding: 0.6rem;
     }
     .dream-card-content h3 {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 700;
+      font-family: 'Poppins', sans-serif;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .dream-card-content p {
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin: 0.2rem 0;
     }
     .dream-price {
       font-size: 0.75rem;
       font-weight: 700;
       color: #10b981;
-      margin: 0.2rem 0;
+      margin: 0.3rem 0;
     }
     @media (max-width: 768px) {
       .dream-card img { height: 120px; }
-      .dream-card-content h3 { font-size: 0.7rem; }
-    }
-
-    /* ========== FEATURED CAROUSEL – SMALL 3D SLOTS ========== */
-    .carousel-section { margin: 1rem 1rem 2rem; }
-    .carousel-container {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border-radius: 28px;
-      padding: 0.8rem 0.3rem 1.2rem;
-      box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
-    }
-    .carousel-title {
-      font-size: 1.3rem;
-      padding: 0 0.8rem;
-      margin-bottom: 0.5rem;
-    }
-    .carousel-title i { font-size: 1.5rem; }
-    .hero-swiper { padding: 0.2rem 0.5rem; }
-    .swiper-slide { border-radius: 20px; }
-    .carousel-card {
-      background: var(--card-bg);
-      border-radius: 20px;
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-    .carousel-card:hover {
-      transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.2);
-    }
-    .carousel-card img {
-      height: 110px;
-      object-fit: cover;
-      transition: transform 0.5s ease;
-    }
-    .carousel-card:hover img {
-      transform: scale(1.03);
-    }
-    .carousel-card-content {
-      padding: 0.5rem;
-    }
-    .carousel-card-content h3 {
-      font-size: 0.7rem;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .carousel-price {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    .carousel-btn {
-      font-size: 0.55rem;
-      padding: 0.2rem 0.4rem;
-    }
-    @media (max-width: 768px) {
-      .carousel-title { font-size: 1.1rem; }
-      .carousel-card img { height: 90px; }
-      .hero-swiper { padding: 0; }
-      .carousel-card-content { padding: 0.4rem; }
-      .carousel-card-content h3 { font-size: 0.65rem; }
+      .dream-card-content h3 { font-size: 0.75rem; }
     }
 
     /* Category Tabs (unchanged) */
