@@ -19,10 +19,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heatmap.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
-  <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
-  <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heatmap.js"></script>
   <style>
     /* ========== GLOBAL ZOOM-PROOF RESET ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -134,7 +130,6 @@
       line-height: 1.5;
     }
     h1, h2, h3, .logo { font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
-
     i, .fas, .far, .fab { color: var(--icon-color); transition: all 0.2s; }
     .carousel-title i, .hero h1 i, .logo i {
       background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
@@ -156,154 +151,39 @@
     }
     button i, .save-search-btn i, .carousel-btn i, .tab-btn i { color: white !important; }
 
-    /* ========== MODERN IMAGE SLIDER ========== */
-    .slider {
-      position: relative;
-      width: 100%;
-      height: 140px;
-      overflow: hidden;
-      touch-action: pan-y pinch-zoom;
-    }
-    .slider .slides-container {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      height: 100%;
-    }
+    /* Slider */
+    .slider { position: relative; width: 100%; height: 140px; overflow: hidden; touch-action: pan-y pinch-zoom; }
+    .slider .slides-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; height: 100%; }
     .slider .slides-container::-webkit-scrollbar { display: none; }
-    .slider .slide {
-      flex: 0 0 100%;
-      scroll-snap-align: start;
-      width: 100%;
-      height: 100%;
-    }
-    .slider .slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-    }
-    .slider .dots {
-      position: absolute;
-      bottom: 8px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      z-index: 5;
-    }
-    .slider .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.6);
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-    .slider .dot.active {
-      width: 20px;
-      border-radius: 4px;
-      background: white;
-    }
+    .slider .slide { flex: 0 0 100%; scroll-snap-align: start; width: 100%; height: 100%; }
+    .slider .slide img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .slider .dots { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 5; }
+    .slider .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.6); transition: all 0.2s; cursor: pointer; }
+    .slider .dot.active { width: 20px; border-radius: 4px; background: white; }
 
-    /* Profile picture circular */
-    .user-avatar img,
-    .dropdown-header .avatar img,
-    .landlord-avatar img {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important;
-      border-radius: 50% !important;
-      display: block;
-    }
-    .user-avatar,
-    .dropdown-header .avatar,
-    .landlord-avatar {
-      border-radius: 50%;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
+    /* Avatars */
+    .user-avatar img, .dropdown-header .avatar img, .landlord-avatar img { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 50% !important; display: block; }
+    .user-avatar, .dropdown-header .avatar, .landlord-avatar { border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .user-avatar { width: 42px; height: 42px; }
     .dropdown-header .avatar { width: 44px; height: 44px; }
-    .landlord-avatar { width: 36px; height: 36px; }
-
-    /* Premium crown */
-    .avatar-container {
-      position: relative;
-      display: inline-block;
-    }
-    .premium-crown {
-      position: absolute;
-      top: -6px;
-      right: -6px;
-      background: linear-gradient(135deg, #FFD700, #FFA500);
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      color: white;
-      box-shadow: 0 0 4px rgba(0,0,0,0.3);
-      z-index: 5;
-      border: 1px solid rgba(255,255,255,0.3);
-    }
-    .premium-crown i {
-      font-size: 10px;
-      color: white !important;
-    }
-
-    /* Rental status badges */
+    .landlord-avatar { width: 36px; height: 36px; cursor: pointer; }
+    .avatar-container { position: relative; display: inline-block; }
+    .premium-crown { position: absolute; top: -6px; right: -6px; background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; box-shadow: 0 0 4px rgba(0,0,0,0.3); z-index: 5; border: 1px solid rgba(255,255,255,0.3); }
+    .premium-crown i { font-size: 10px; color: white !important; }
     .badge.available { background: #2ecc71; color: white; }
     .badge.rented { background: #e74c3c; color: white; }
     .badge.pending { background: #f39c12; color: white; }
     .fav-btn i { color: var(--icon-color) !important; }
     .fav-btn .fas.fa-heart { color: #e74c3c !important; }
 
-    /* Hero Carousel */
+    /* Carousel */
     .carousel-section { margin: 1rem 1.5rem 2rem; }
-    .carousel-container {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border-radius: 32px;
-      padding: 1rem 0.5rem 1.5rem;
-      box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    .carousel-title {
-      font-size: 1.6rem;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0 1.5rem;
-      margin-bottom: 0.8rem;
-    }
+    .carousel-container { background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 32px; padding: 1rem 0.5rem 1.5rem; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); }
+    .carousel-title { font-size: 1.6rem; font-weight: 800; display: flex; align-items: center; gap: 0.8rem; padding: 0 1.5rem; margin-bottom: 0.8rem; }
     .carousel-title i { font-size: 2rem; }
-    .carousel-subtitle {
-      font-size: 0.75rem;
-      font-weight: 500;
-      opacity: 0.8;
-      background: rgba(139,92,246,0.15);
-      padding: 0.2rem 0.8rem;
-      border-radius: 40px;
-    }
+    .carousel-subtitle { font-size: 0.75rem; font-weight: 500; opacity: 0.8; background: rgba(139,92,246,0.15); padding: 0.2rem 0.8rem; border-radius: 40px; }
     .hero-swiper { width: 100%; padding: 0.3rem 0.8rem; overflow: hidden; }
-    .swiper-slide {
-      background: var(--card-bg);
-      border-radius: 20px;
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
+    .swiper-slide { background: var(--card-bg); border-radius: 20px; overflow: hidden; transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .swiper-slide:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -8px rgba(0,0,0,0.15); }
     .carousel-card { display: flex; flex-direction: column; height: 100%; }
     .carousel-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
@@ -311,265 +191,79 @@
     .carousel-card-content h3 { font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.2rem; }
     .carousel-card-content p { font-size: 0.65rem; opacity: 0.8; margin: 0.1rem 0; display: flex; align-items: center; gap: 0.3rem; }
     .carousel-price { font-size: 0.75rem; font-weight: 700; color: var(--primary); margin: 0.3rem 0; }
-    .carousel-btn {
-      background: var(--button-bg); color: white; border: none; border-radius: 40px;
-      padding: 0.25rem 0.5rem; font-size: 0.6rem; font-weight: 500; cursor: pointer;
-      width: 100%; margin-top: 0.3rem; transition: all 0.2s;
-    }
+    .carousel-btn { background: var(--button-bg); color: white; border: none; border-radius: 40px; padding: 0.25rem 0.5rem; font-size: 0.6rem; font-weight: 500; cursor: pointer; width: 100%; margin-top: 0.3rem; transition: all 0.2s; }
     .carousel-btn:hover { background: var(--button-hover); transform: translateY(-2px); }
     .swiper-pagination-bullet { background: var(--text-color); opacity: 0.5; }
     .swiper-pagination-bullet-active { background: var(--primary); opacity: 1; }
-    .swiper-button-next, .swiper-button-prev {
-      color: var(--primary); background: rgba(255,255,255,0.8); width: 30px; height: 30px;
-      border-radius: 50%; backdrop-filter: blur(4px);
-    }
+    .swiper-button-next, .swiper-button-prev { color: var(--primary); background: rgba(255,255,255,0.8); width: 30px; height: 30px; border-radius: 50%; backdrop-filter: blur(4px); }
     .swiper-button-next:after, .swiper-button-prev:after { font-size: 0.8rem; font-weight: bold; }
 
-    /* Dream Match Cards */
-    .dream-card {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      background: var(--card-bg);
-      border-radius: 20px;
-      overflow: hidden;
-    }
-    .dream-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
-    .dream-card-content { padding: 0.6rem; flex: 1; display: flex; flex-direction: column; }
-    .dream-match-badge {
-      background: linear-gradient(135deg, #8B5CF6, #EC4899);
-      color: white;
-      border-radius: 20px;
-      padding: 0.15rem 0.5rem;
-      font-size: 0.65rem;
-      font-weight: 600;
-      display: inline-block;
-      margin-bottom: 0.3rem;
-      align-self: flex-start;
-    }
-    .dream-price { font-size: 0.75rem; font-weight: 700; color: var(--primary); margin: 0.3rem 0; }
-    #dreamMatchModal .form-group i,
-    #dreamMatchModal h2 i {
-      background: linear-gradient(135deg, #8B5CF6, #EC4899);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent !important;
-    }
-
-    /* Category Tabs */
-    .category-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin: 1.5rem 0;
-      justify-content: center;
-    }
-    .tab-btn {
-      background: var(--card-bg);
-      border: none;
-      border-radius: 60px;
-      padding: 0.5rem 1.2rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
-      color: var(--text-color);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      border: 1px solid var(--input-border);
-      font-family: 'Poppins', sans-serif;
-    }
+    /* Category Tabs & Filters */
+    .category-tabs { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.5rem 0; justify-content: center; }
+    .tab-btn { background: var(--card-bg); border: none; border-radius: 60px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1); color: var(--text-color); display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px); box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid var(--input-border); font-family: 'Poppins', sans-serif; }
     .tab-btn i { font-size: 1rem; transition: transform 0.2s; }
     .tab-btn:hover { transform: translateY(-3px); background: var(--button-bg); color: white; border-color: var(--button-bg); box-shadow: 0 10px 20px -5px rgba(37,99,235,0.3); }
     .tab-btn:hover i { transform: scale(1.1); color: white !important; }
-    .tab-btn.active {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
-      border-color: transparent;
-      box-shadow: 0 8px 20px rgba(37,99,235,0.4);
-    }
+    .tab-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-color: transparent; box-shadow: 0 8px 20px rgba(37,99,235,0.4); }
     .tab-btn.active i { color: white !important; }
 
-    /* ========== NAVBAR – DESKTOP ========== */
-    .navbar {
-      background: var(--navbar-bg);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255,255,255,0.3);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.8rem 2rem;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      flex-wrap: wrap;
-    }
+    /* Navbar */
+    .navbar { background: var(--navbar-bg); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.3); display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
     .logo { font-size: 1.6rem; font-weight: 800; }
     .logo i { margin-right: 6px; font-size: 1.4rem; }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-left: auto;
-    }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .nav-right { display: flex; align-items: center; gap: 1rem; margin-left: auto; }
     .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: color 0.2s; display: flex; align-items: center; gap: 6px; }
     .nav-links a:hover { color: var(--primary); }
-    .lang-select, .theme-select {
-      padding: 0.25rem 0.6rem; border-radius: 30px; border: 1px solid var(--input-border);
-      background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem;
-    }
+    .lang-select, .theme-select { padding: 0.25rem 0.6rem; border-radius: 30px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; }
     .user-menu { position: relative; cursor: pointer; }
-    .user-avatar {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-      transition: transform 0.2s;
-    }
+    .user-avatar { background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; transition: transform 0.2s; }
     .user-avatar:hover { transform: scale(1.05); }
     .user-avatar i { color: white !important; font-size: 24px; }
-    .user-dropdown {
-      position: absolute; top: 50px; right: 0; background: var(--card-bg);
-      backdrop-filter: blur(8px); border-radius: 24px; box-shadow: 0 12px 28px rgba(0,0,0,0.15);
-      width: 280px; overflow: hidden; opacity: 0; visibility: hidden; transition: all 0.2s;
-      border: 1px solid var(--input-border); z-index: 1001;
-    }
+    .user-dropdown { position: absolute; top: 50px; right: 0; background: var(--card-bg); backdrop-filter: blur(8px); border-radius: 24px; box-shadow: 0 12px 28px rgba(0,0,0,0.15); width: 280px; overflow: hidden; opacity: 0; visibility: hidden; transition: all 0.2s; border: 1px solid var(--input-border); z-index: 1001; }
     .user-menu.active .user-dropdown { opacity: 1; visibility: visible; transform: translateY(5px); }
     .dropdown-header { padding: 1rem; border-bottom: 1px solid var(--input-border); display: flex; align-items: center; gap: 0.8rem; }
-    .dropdown-header .avatar {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 1rem;
-      color: white;
-    }
+    .dropdown-header .avatar { background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; color: white; }
     .dropdown-header .info h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
     .dropdown-header .info p { font-size: 0.7rem; opacity: 0.7; }
-    .dropdown-item {
-      padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.8rem;
-      transition: background 0.2s; cursor: pointer; text-decoration: none; color: var(--text-color);
-    }
+    .dropdown-item { padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.8rem; transition: background 0.2s; cursor: pointer; text-decoration: none; color: var(--text-color); }
     .dropdown-item:hover { background: rgba(0,0,0,0.05); }
     .dropdown-item i { width: 24px; font-size: 1rem; }
-    .premium-badge {
-      background: linear-gradient(135deg, #f59e0b, #d97706); color: white;
-      padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.6rem; margin-left: 0.5rem;
-    }
+    .premium-badge { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.6rem; margin-left: 0.5rem; }
 
-    /* Hero section */
-    .hero {
-      text-align: center; padding: 3rem 2rem 2rem;
-      background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(14,165,164,0.05) 100%);
-      border-radius: 64px; margin: 1.5rem;
-    }
+    /* Hero */
+    .hero { text-align: center; padding: 3rem 2rem 2rem; background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(14,165,164,0.05) 100%); border-radius: 64px; margin: 1.5rem; }
     .hero h1 { font-size: 2.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
     .hero h1 i { font-size: 3.5rem; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
     .hero p { font-size: 1rem; font-weight: 400; color: var(--gray-500); margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
 
     .main-container { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
-
-    /* Filters */
-    .filters-row {
-      display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.5rem 0; justify-content: center;
-      align-items: center; background: var(--card-bg); padding: 0.6rem 1.2rem;
-      border-radius: 60px; border: 1px solid var(--input-border);
-    }
+    .filters-row { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.5rem 0; justify-content: center; align-items: center; background: var(--card-bg); padding: 0.6rem 1.2rem; border-radius: 60px; border: 1px solid var(--input-border); }
     .price-range { min-width: 180px; background: var(--input-bg); border-radius: 40px; padding: 0.2rem 1rem; border: 1px solid var(--input-border); }
     .price-range .range-values { display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.2rem; }
     #priceSlider { margin: 0.3rem 0; }
-    .sort-select, .save-search-btn {
-      padding: 0.4rem 1rem; border-radius: 40px; border: 1px solid var(--input-border);
-      background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; font-weight: 500;
-    }
+    .sort-select, .save-search-btn { padding: 0.4rem 1rem; border-radius: 40px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; font-weight: 500; }
     .save-search-btn { background: var(--button-bg); color: white; border: none; }
     .save-search-btn:hover { background: var(--button-hover); transform: translateY(-2px); }
-    .amenities-filters {
-      display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 1rem 0 1.2rem;
-    }
-    .amenities-filters label {
-      display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-color);
-      background: var(--input-bg); padding: 0.3rem 0.8rem; border-radius: 40px;
-      border: 1px solid var(--input-border); cursor: pointer;
-    }
+    .amenities-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 1rem 0 1.2rem; }
+    .amenities-filters label { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-color); background: var(--input-bg); padding: 0.3rem 0.8rem; border-radius: 40px; border: 1px solid var(--input-border); cursor: pointer; }
     .amenities-filters label:hover { background: var(--button-bg); color: white; border-color: var(--button-bg); }
-    #searchInput {
-      width: 100%; max-width: 450px; display: block; margin: 0.8rem auto;
-      padding: 0.6rem 1rem; border: 1px solid var(--input-border); border-radius: 60px;
-      background: var(--input-bg); color: var(--text-color); font-size: 0.85rem;
-    }
+    #searchInput { width: 100%; max-width: 450px; display: block; margin: 0.8rem auto; padding: 0.6rem 1rem; border: 1px solid var(--input-border); border-radius: 60px; background: var(--input-bg); color: var(--text-color); font-size: 0.85rem; }
 
     /* Property grid */
-    #houses-container {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-      gap: 1.2rem; margin: 1.5rem 0;
-    }
-    .house-card {
-      background: var(--card-bg); border-radius: 20px; overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.2,0.9,0.4,1.1);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05); cursor: pointer;
-      border: 1px solid var(--input-border);
-    }
+    #houses-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 1.2rem; margin: 1.5rem 0; }
+    .house-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; transition: all 0.4s cubic-bezier(0.2,0.9,0.4,1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05); cursor: pointer; border: 1px solid var(--input-border); }
     .house-card:hover { transform: translateY(-5px); box-shadow: 0 15px 25px -8px rgba(0,0,0,0.15); }
     .house-card-content { padding: 0.7rem; }
     .house-card-content h3 { font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .house-card-content p { margin: 0.15rem 0; font-size: 0.65rem; display: flex; align-items: center; gap: 0.3rem; }
     .house-card-content .price { font-size: 0.8rem; font-weight: 700; color: var(--primary); margin: 0.25rem 0; }
-    .badge {
-      display: inline-block; padding: 0.15rem 0.4rem; font-size: 0.55rem; font-weight: 600;
-      border-radius: 30px; margin-right: 0.2rem; text-transform: uppercase;
-    }
-    .verified-badge {
-      background: #1877F2 !important;
-      border-radius: 50% !important;
-      width: 18px !important;
-      height: 18px !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      margin-left: 6px !important;
-      flex-shrink: 0 !important;
-      border: 0.5px solid rgba(0, 0, 0, 0.12) !important;
-      box-shadow: 0 0 0 0.2px rgba(255, 255, 255, 0.1) !important;
-      padding: 0 !important;
-      text-transform: none !important;
-      font-size: 0 !important;
-      line-height: 1 !important;
-    }
-    .verified-badge i {
-      color: white !important;
-      font-size: 10px !important;
-      font-weight: 900 !important;
-      line-height: 1 !important;
-      transform: translateY(0.5px) !important;
-      display: inline-block !important;
-    }
-    .strong-fields {
-      margin: 0.2rem 0;
-      font-size: 0.65rem;
-      font-weight: 600;
-      color: var(--primary);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-    }
-    .strong-fields i {
-      margin-right: 0.2rem;
-      color: var(--primary);
-    }
+    .badge { display: inline-block; padding: 0.15rem 0.4rem; font-size: 0.55rem; font-weight: 600; border-radius: 30px; margin-right: 0.2rem; text-transform: uppercase; }
+    .verified-badge { background: #1877F2 !important; border-radius: 50% !important; width: 18px !important; height: 18px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; margin-left: 6px !important; flex-shrink: 0 !important; border: 0.5px solid rgba(0,0,0,0.12) !important; box-shadow: 0 0 0 0.2px rgba(255,255,255,0.1) !important; padding: 0 !important; text-transform: none !important; font-size: 0 !important; line-height: 1 !important; }
+    .verified-badge i { color: white !important; font-size: 10px !important; font-weight: 900 !important; line-height: 1 !important; transform: translateY(0.5px) !important; display: inline-block !important; }
+    .strong-fields { margin: 0.2rem 0; font-size: 0.65rem; font-weight: 600; color: var(--primary); display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .strong-fields i { margin-right: 0.2rem; color: var(--primary); }
     .badge.premium { background: #f1c40f; color: #2c3e50; }
     .badge.featured { background: #f1c40f; color: #2c3e50; }
     .badge.self-contained { background: #9b59b6; color: white; }
@@ -577,83 +271,34 @@
     .badge.gender-girls { background: #e84393; color: white; }
     .badge.gender-mixed { background: #f1c40f; color: #2c3e50; }
     .action-buttons { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
-    .read-more-btn {
-      background: none; border: 1px solid var(--input-border); border-radius: 30px;
-      padding: 0.15rem 0.4rem; font-size: 0.55rem; cursor: pointer; color: var(--primary);
-      margin-top: 0.4rem; align-self: flex-start;
-    }
+    .read-more-btn { background: none; border: 1px solid var(--input-border); border-radius: 30px; padding: 0.15rem 0.4rem; font-size: 0.55rem; cursor: pointer; color: var(--primary); margin-top: 0.4rem; align-self: flex-start; }
     .read-more-btn:hover { background: var(--primary); color: white; }
-    .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn {
-      background: var(--button-bg); color: white; border: none; padding: 0.15rem 0.4rem;
-      border-radius: 30px; font-size: 0.55rem; cursor: pointer;
-    }
+    .fav-btn, .chat-btn, .report-btn, .share-btn, .compare-btn { background: var(--button-bg); color: white; border: none; padding: 0.15rem 0.4rem; border-radius: 30px; font-size: 0.55rem; cursor: pointer; }
     .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
 
-    /* Pagination */
     .pagination { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin: 1.5rem 0; }
-    .page-btn {
-      background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 40px;
-      padding: 0.4rem 0.8rem; font-size: 0.75rem; cursor: pointer; color: var(--text-color);
-    }
+    .page-btn { background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 40px; padding: 0.4rem 0.8rem; font-size: 0.75rem; cursor: pointer; color: var(--text-color); }
     .page-btn:hover, .page-btn.active { background: var(--button-bg); color: white; }
 
-    /* Map */
+    /* Map section - improved controls */
     .map-section { margin: 1.5rem 0; }
     #map { height: 380px; width: 100%; border-radius: 28px; overflow: hidden; border: 1px solid var(--input-border); }
-    .map-controls { margin: 0.6rem 0; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
-    .map-controls button, .map-controls label {
-      background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 40px;
-      padding: 0.3rem 0.8rem; font-size: 0.75rem; cursor: pointer;
-    }
-    .gps-section {
-      background: var(--card-bg); border-radius: 28px; padding: 1.2rem; margin: 1.5rem 0;
-      text-align: center; border: 1px solid var(--input-border);
-    }
+    .map-controls { margin: 0.6rem 0; display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: flex-start; background: var(--card-bg); padding: 0.6rem 1rem; border-radius: 48px; border: 1px solid var(--input-border); }
+    .map-controls button, .map-controls label, .map-controls select { background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 40px; padding: 0.3rem 0.8rem; font-size: 0.75rem; cursor: pointer; color: var(--text-color); }
+    .map-controls button i { color: currentColor; }
+    .map-controls .spatial-btn { background: var(--button-bg); color: white; border: none; }
+    .map-controls .spatial-btn i { color: white; }
+    .map-controls .heatmap-active { background: #ef4444; }
+    .radius-slider { display: inline-flex; align-items: center; gap: 8px; background: var(--input-bg); padding: 0.2rem 0.8rem; border-radius: 40px; }
+
+    .gps-section { background: var(--card-bg); border-radius: 28px; padding: 1.2rem; margin: 1.5rem 0; text-align: center; border: 1px solid var(--input-border); }
     #getLocationBtn { background: var(--button-bg); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 40px; font-size: 0.85rem; cursor: pointer; }
 
-    /* Shortened Footer */
-    .footer {
-      background: var(--footer-bg);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(255,255,255,0.2);
-      margin-top: 2rem;
-      padding: 1.5rem 1rem 1rem;
-      font-size: 0.8rem;
-      position: relative;
-    }
-    .footer::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -50%;
-      width: 200%;
-      height: 100%;
-      background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05), transparent);
-      pointer-events: none;
-    }
-    .footer-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1rem;
-      position: relative;
-      z-index: 2;
-    }
-    .footer-col {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(4px);
-      border-radius: 20px;
-      padding: 0.8rem;
-      transition: all 0.3s ease;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .footer-col:hover {
-      transform: translateY(-3px);
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(255,255,255,0.3);
-    }
+    /* Footer */
+    .footer { background: var(--footer-bg); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.2); margin-top: 2rem; padding: 1.5rem 1rem 1rem; font-size: 0.8rem; position: relative; }
+    .footer-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem; position: relative; z-index: 2; }
+    .footer-col { background: rgba(255,255,255,0.05); backdrop-filter: blur(4px); border-radius: 20px; padding: 0.8rem; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
+    .footer-col:hover { transform: translateY(-3px); background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
     .footer-logo { font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .footer-tagline { opacity: 0.8; font-size: 0.7rem; }
     .footer-copyright { opacity: 0.6; font-size: 0.6rem; }
@@ -666,219 +311,53 @@
     .footer-newsletter { padding: 0.8rem; margin: 0 auto 0.8rem; max-width: 400px; }
     .footer-newsletter input { padding: 0.4rem 0.8rem; font-size: 0.7rem; }
     .footer-newsletter button { padding: 0.4rem 0.8rem; font-size: 0.7rem; }
-    .footer-bottom { font-size: 0.6rem; padding-top: 0.5rem; }
+    .footer-bottom { font-size: 0.6rem; padding-top: 0.5rem; display: flex; justify-content: space-between; flex-wrap: wrap; }
 
     /* Modals */
-    .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(6px); }
-    .modal-content { background-color: var(--card-bg); margin: 20px auto; padding: 20px; border-radius: 28px; width: 90%; max-width: 650px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
+    .modal { position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; }
+    .modal-content { background-color: var(--card-bg); margin: auto; padding: 20px; border-radius: 28px; width: 90%; max-width: 850px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
     .close-btn { position: absolute; top: 12px; right: 16px; color: #aaa; font-size: 28px; font-weight: 300; cursor: pointer; }
     .close-btn:hover { color: var(--text-color); }
     .modal-tab { background: var(--card-bg); border: 1px solid var(--input-border); padding: 4px 12px; border-radius: 40px; cursor: pointer; font-weight: 500; font-size: 0.8rem; }
     .modal-tab.active { background: var(--button-bg); color: white; }
     .lightbox-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .lightbox-content img { max-width: 90%; max-height: 90%; border-radius: 12px; }
-    .landlord-avatar {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 500;
-      color: white;
-      font-size: 0.9rem;
-      cursor: pointer;
-      margin-right: 8px;
-      overflow: hidden;
-    }
-    #compareFloatingBtn {
-      position: fixed; bottom: 80px; right: 20px; background: var(--button-bg); color: white;
-      border-radius: 60px; padding: 8px 16px; display: none; align-items: center; gap: 6px;
-      cursor: pointer; z-index: 9998; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 0.75rem; font-weight: 600;
-    }
+    .landlord-avatar { background: linear-gradient(135deg, var(--primary), var(--secondary)); display: inline-flex; align-items: center; justify-content: center; font-weight: 500; color: white; font-size: 0.9rem; cursor: pointer; margin-right: 8px; overflow: hidden; }
+    #compareFloatingBtn { position: fixed; bottom: 80px; right: 20px; background: var(--button-bg); color: white; border-radius: 60px; padding: 8px 16px; display: none; align-items: center; gap: 6px; cursor: pointer; z-index: 9998; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 0.75rem; font-weight: 600; }
 
-    /* ========== ENHANCED DISTRICT BOUNDARY STYLES ========== */
-    .district-boundary {
-      fill: #60a5fa;
-      fill-opacity: 0.2;
-      stroke: #3b82f6;
-      stroke-width: 1.8;
-      transition: all 0.3s ease;
-      filter: drop-shadow(0 0 2px rgba(59,130,246,0.3));
-    }
-    .district-boundary:hover {
-      fill-opacity: 0.4;
-      stroke-width: 3;
-      stroke: #2563eb;
-      filter: drop-shadow(0 0 8px rgba(37,99,235,0.6));
-      cursor: pointer;
-    }
-    .district-highlight {
-      fill: #f59e0b;
-      fill-opacity: 0.5;
-      stroke: #d97706;
-      stroke-width: 3.5;
-      filter: drop-shadow(0 0 12px rgba(245,158,11,0.8));
-    }
+    /* Uniform image slots for landlord properties */
+    .landlord-properties-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .landlord-property-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid var(--input-border); cursor: pointer; transition: transform 0.2s; }
+    .landlord-property-card:hover { transform: translateY(-3px); }
+    .landlord-property-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .landlord-property-card .info { padding: 0.5rem; }
+    .landlord-property-card .info h4 { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .landlord-property-card .info p { font-size: 0.7rem; }
 
-    /* ========== CRAZY DISTRICT DROPDOWN ========== */
-    .district-filter {
-      position: relative;
-    }
-    .district-filter select {
-      appearance: none;
-      background: linear-gradient(105deg, var(--primary), #8b5cf6);
-      border: none;
-      color: white;
-      font-weight: 600;
-      padding: 0.5rem 2rem 0.5rem 1rem;
-      border-radius: 60px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      min-width: 160px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      transition: all 0.2s;
-      text-align: center;
-      letter-spacing: 0.3px;
-    }
-    .district-filter select:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(37,99,235,0.4);
-      background: linear-gradient(105deg, var(--primary-dark), #7c3aed);
-    }
-    .district-filter::after {
-      content: '\f0d7';
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: white;
-      pointer-events: none;
-      font-size: 0.8rem;
-    }
+    /* Toast notification */
+    .toast-notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card-bg); color: var(--text-color); padding: 10px 20px; border-radius: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10001; font-size: 0.8rem; backdrop-filter: blur(8px); border: 1px solid var(--input-border); display: flex; align-items: center; gap: 8px; }
 
-    /* ========== FLOATING SPATIAL TOOLBAR (ON TOP OF MAP) ========== */
-    .floating-spatial-toolbar {
-      position: absolute;
-      top: 70px;
-      right: 10px;
-      z-index: 1000;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(16px);
-      border-radius: 60px;
-      padding: 0.5rem 0.8rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    }
-    .floating-spatial-toolbar .spatial-btn {
-      background: rgba(255,255,255,0.15);
-      color: white;
-      border: none;
-      border-radius: 40px;
-      padding: 0.3rem 0.8rem;
-      font-size: 0.7rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .floating-spatial-toolbar .spatial-btn:hover {
-      background: var(--primary);
-      transform: translateY(-2px);
-    }
-    .floating-spatial-toolbar .heatmap-toggle {
-      background: #8b5cf6;
-    }
-    .floating-spatial-toolbar .heatmap-toggle.active {
-      background: #ef4444;
-    }
+    /* District & subdistrict styles */
+    .district-boundary { fill: #60a5fa; fill-opacity: 0.2; stroke: #3b82f6; stroke-width: 1.8; transition: all 0.3s ease; filter: drop-shadow(0 0 2px rgba(59,130,246,0.3)); }
+    .district-boundary:hover { fill-opacity: 0.4; stroke-width: 3; stroke: #2563eb; filter: drop-shadow(0 0 8px rgba(37,99,235,0.6)); cursor: pointer; }
+    .district-highlight { fill: #f59e0b; fill-opacity: 0.5; stroke: #d97706; stroke-width: 3.5; filter: drop-shadow(0 0 12px rgba(245,158,11,0.8)); }
+    .district-filter { position: relative; }
+    .district-filter select { appearance: none; background: linear-gradient(105deg, var(--primary), #8b5cf6); border: none; color: white; font-weight: 600; padding: 0.5rem 2rem 0.5rem 1rem; border-radius: 60px; cursor: pointer; font-size: 0.8rem; min-width: 160px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.2s; text-align: center; letter-spacing: 0.3px; }
+    .district-filter select:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37,99,235,0.4); background: linear-gradient(105deg, var(--primary-dark), #7c3aed); }
+    .district-filter::after { content: '\f0d7'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: white; pointer-events: none; font-size: 0.8rem; }
+
     @media (max-width: 768px) {
-      .floating-spatial-toolbar {
-        top: 10px;
-        right: 10px;
-        left: auto;
-        padding: 0.3rem 0.5rem;
-        gap: 0.3rem;
-      }
-      .floating-spatial-toolbar .spatial-btn {
-        padding: 0.2rem 0.5rem;
-        font-size: 0.6rem;
-      }
-    }
-    /* ========== MOBILE THREE-DOTS MENU (GLASS + LUCIDE STYLE) ========== */
-    @media (max-width: 768px) {
-      .navbar {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.6rem 1rem;
-      }
+      .navbar { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; }
       .logo { order: 1; font-size: 1.3rem; }
       .nav-right { order: 2; margin-left: auto; gap: 0.5rem; }
       .lang-select, .theme-select { display: none; }
-      .mobile-menu-btn {
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.2);
-        font-size: 1.4rem;
-        cursor: pointer;
-        color: var(--text-color);
-        padding: 0.4rem 0.7rem;
-        border-radius: 40px;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .mobile-menu-btn:hover {
-        background: rgba(255,255,255,0.2);
-        transform: scale(1.02);
-      }
-      .mobile-settings-dropdown {
-        position: absolute;
-        top: 65px;
-        right: 10px;
-        background: rgba(0,0,0,0.75);
-        backdrop-filter: blur(16px);
-        border-radius: 24px;
-        box-shadow: 0 12px 28px rgba(0,0,0,0.3);
-        padding: 0.8rem;
-        display: none;
-        flex-direction: column;
-        gap: 0.8rem;
-        z-index: 1002;
-        border: 1px solid rgba(255,255,255,0.2);
-        min-width: 160px;
-      }
+      .mobile-menu-btn { background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); font-size: 1.4rem; cursor: pointer; color: var(--text-color); padding: 0.4rem 0.7rem; border-radius: 40px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+      .mobile-menu-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.02); }
+      .mobile-settings-dropdown { position: absolute; top: 65px; right: 10px; background: rgba(0,0,0,0.75); backdrop-filter: blur(16px); border-radius: 24px; box-shadow: 0 12px 28px rgba(0,0,0,0.3); padding: 0.8rem; display: none; flex-direction: column; gap: 0.8rem; z-index: 1002; border: 1px solid rgba(255,255,255,0.2); min-width: 160px; }
       .mobile-settings-dropdown.active { display: flex; }
-      .mobile-settings-dropdown select {
-        width: 100%;
-        padding: 0.5rem;
-        border-radius: 40px;
-        border: 1px solid rgba(255,255,255,0.2);
-        background: rgba(255,255,255,0.1);
-        color: white;
-        font-size: 0.8rem;
-        font-weight: 500;
-        cursor: pointer;
-      }
-      .mobile-settings-dropdown select option {
-        background: var(--card-bg);
-        color: var(--text-color);
-      }
-      .nav-links {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        margin-top: 0.6rem;
-        gap: 0.8rem;
-      }
+      .mobile-settings-dropdown select { width: 100%; padding: 0.5rem; border-radius: 40px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+      .mobile-settings-dropdown select option { background: var(--card-bg); color: var(--text-color); }
+      .nav-links { order: 3; width: 100%; justify-content: center; margin-top: 0.6rem; gap: 0.8rem; }
       .nav-links a { font-size: 0.8rem; }
       .hero { margin: 0.8rem; padding: 1rem; }
       .hero h1 { font-size: 1.5rem; }
@@ -895,13 +374,10 @@
       .footer-newsletter input { width: 100%; }
       .footer-bottom { flex-direction: column; text-align: center; gap: 0.5rem; }
       .district-filter select { font-size: 0.7rem; padding: 0.4rem 1.8rem 0.4rem 0.8rem; min-width: 130px; }
+      .map-controls { flex-direction: column; align-items: stretch; }
+      .radius-slider { justify-content: space-between; }
     }
-
-    /* Desktop: hide mobile menu button */
-    @media (min-width: 769px) {
-      .mobile-menu-btn { display: none; }
-      .mobile-settings-dropdown { display: none !important; }
-    }
+    @media (min-width: 769px) { .mobile-menu-btn { display: none; } .mobile-settings-dropdown { display: none !important; } }
   </style>
 </head>
 <body>
@@ -922,60 +398,30 @@
       <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-ellipsis-v"></i></button>
     </div>
     <div class="mobile-settings-dropdown" id="mobileSettingsDropdown">
-      <select id="mobileLangSelect" onchange="setLanguage(this.value); document.getElementById('mobileSettingsDropdown').classList.remove('active');">
-        <option value="en">English</option><option value="ny">Chichewa</option>
-      </select>
-      <select id="mobileThemeSelect" onchange="setTheme(this.value); document.getElementById('mobileSettingsDropdown').classList.remove('active');">
-        <option value="light">Light</option><option value="dark">Dark</option><option value="aquatic">Aquatic</option>
-        <option value="minimal">Minimal</option><option value="luxury">Luxury</option>
-      </select>
+      <select id="mobileLangSelect" onchange="setLanguage(this.value); document.getElementById('mobileSettingsDropdown').classList.remove('active');"><option value="en">English</option><option value="ny">Chichewa</option></select>
+      <select id="mobileThemeSelect" onchange="setTheme(this.value); document.getElementById('mobileSettingsDropdown').classList.remove('active');"><option value="light">Light</option><option value="dark">Dark</option><option value="aquatic">Aquatic</option><option value="minimal">Minimal</option><option value="luxury">Luxury</option></select>
     </div>
   </nav>
 
   <header class="hero">
     <div class="hero-content">
       <h1><i class="fas fa-home"></i> Khomo Lathu</h1>
-      <p>
-        <svg width="18" height="18" viewBox="0 0 18 18" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-          <path d="M9,2.5 A6.5,6.5 0 0,1 15.5,9 A6.5,6.5 0 0,1 9,15.5 A6.5,6.5 0 0,1 2.5,9 A6.5,6.5 0 0,1 9,2.5 Z" fill="#009CFF"/>
-          <circle cx="9" cy="9" r="6" fill="#009CFF"/>
-          <path d="M6.2 9.2 L8.2 11.2 L11.8 7.8" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-        Verified rentals from trusted landlords
-      </p>
+      <p><svg width="18" height="18" viewBox="0 0 18 18" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M9,2.5 A6.5,6.5 0 0,1 15.5,9 A6.5,6.5 0 0,1 9,15.5 A6.5,6.5 0 0,1 2.5,9 A6.5,6.5 0 0,1 9,2.5 Z" fill="#009CFF"/><circle cx="9" cy="9" r="6" fill="#009CFF"/><path d="M6.2 9.2 L8.2 11.2 L11.8 7.8" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Verified rentals from trusted landlords</p>
     </div>
   </header>
 
   <div class="carousel-section">
     <div class="carousel-container">
-      <div class="carousel-title">
-        <i class="fas fa-fire"></i> Featured Properties
-        <span class="carousel-subtitle">Handpicked for you</span>
-      </div>
-      <div class="swiper hero-swiper">
-        <div class="swiper-wrapper" id="carousel-wrapper"></div>
-        <div class="swiper-pagination"></div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
-      </div>
+      <div class="carousel-title"><i class="fas fa-fire"></i> Featured Properties <span class="carousel-subtitle">Handpicked for you</span></div>
+      <div class="swiper hero-swiper"><div class="swiper-wrapper" id="carousel-wrapper"></div><div class="swiper-pagination"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div>
     </div>
   </div>
 
   <main class="main-container">
     <div class="filters-row">
-      <div class="price-range">
-        <div class="range-values"><span id="priceMinLabel">Min: 0</span><span id="priceMaxLabel">Max: 2,000,000</span></div>
-        <div id="priceSlider"></div>
-        <input type="hidden" id="priceMin" value="0"><input type="hidden" id="priceMax" value="2000000">
-      </div>
-      <select id="regionFilter" class="sort-select">
-        <option value="">All Regions</option><option value="Northern">Northern</option><option value="Central">Central</option><option value="Southern">Southern</option>
-      </select>
-      <select id="sortSelect" class="sort-select">
-        <option value="default">Sort: Default</option><option value="price_asc">Price: Low to High</option>
-        <option value="price_desc">Price: High to Low</option><option value="newest">Newest First</option>
-        <option value="rating">Highest Rated</option><option value="distance">Nearest to Me</option>
-      </select>
+      <div class="price-range"><div class="range-values"><span id="priceMinLabel">Min: 0</span><span id="priceMaxLabel">Max: 2,000,000</span></div><div id="priceSlider"></div><input type="hidden" id="priceMin" value="0"><input type="hidden" id="priceMax" value="2000000"></div>
+      <select id="regionFilter" class="sort-select"><option value="">All Regions</option><option value="Northern">Northern</option><option value="Central">Central</option><option value="Southern">Southern</option></select>
+      <select id="sortSelect" class="sort-select"><option value="default">Sort: Default</option><option value="price_asc">Price: Low to High</option><option value="price_desc">Price: High to Low</option><option value="newest">Newest First</option><option value="rating">Highest Rated</option><option value="distance">Nearest to Me</option></select>
       <button id="saveSearchBtn" class="save-search-btn"><i class="fas fa-save"></i> Save Search</button>
       <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);"><i class="fas fa-filter"></i> Apply Filters</button>
     </div>
@@ -1010,15 +456,15 @@
 
     <section class="map-section" id="map-section">
       <h2><i class="fas fa-map"></i> Map View</h2>
-      <div class="map-controls">
+      <div class="map-controls" id="mapControlsBar">
         <button id="drawAreaBtn" class="save-search-btn"><i class="fas fa-draw-polygon"></i> Draw Area</button>
         <button id="clearDrawBtn" class="save-search-btn" style="background:#e74c3c;"><i class="fas fa-trash-alt"></i> Clear</button>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <label><i class="fas fa-location-dot"></i> Radius:</label>
-          <input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2">
-          <span id="radiusValueControl">2 km</span>
-          <button id="applyRadiusBtn" class="save-search-btn">Find</button>
-        </div>
+        <div class="radius-slider"><label><i class="fas fa-location-dot"></i> Radius:</label><input type="range" id="radiusSliderControl" min="0" max="5" step="0.5" value="2"><span id="radiusValueControl">2 km</span><button id="applyRadiusBtn" class="save-search-btn">Find</button></div>
+        <button id="nearbyHospitalsBtn" class="spatial-btn"><i class="fas fa-hospital"></i> Near Hospitals</button>
+        <button id="nearbySchoolsBtn" class="spatial-btn"><i class="fas fa-school"></i> Near Schools</button>
+        <button id="nearbyMarketsBtn" class="spatial-btn"><i class="fas fa-store"></i> Near Markets</button>
+        <button id="toggleHeatmapBtn" class="spatial-btn"><i class="fas fa-fire"></i> Property Heatmap</button>
+        <button id="walkabilityBtn" class="spatial-btn"><i class="fas fa-walking"></i> Walkability</button>
       </div>
       <div id="map"></div>
     </section>
@@ -1031,403 +477,258 @@
     </section>
   </main>
 
-  <!-- Shortened Footer -->
   <footer class="footer">
     <div class="footer-container">
-      <div class="footer-col">
-        <div class="footer-logo"><i class="fas fa-home"></i> Khomo Lathu</div>
-        <div class="footer-tagline">Find your perfect home in Malawi</div>
-        <div class="footer-copyright">© 2026 Khomo Lathu</div>
-        <div class="social-links">
-          <a href="#"><i class="fab fa-facebook-f"></i></a>
-          <a href="#"><i class="fab fa-twitter"></i></a>
-          <a href="#"><i class="fab fa-instagram"></i></a>
-          <a href="#"><i class="fab fa-whatsapp"></i></a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h3><i class="fas fa-bolt"></i> Quick Links</h3>
-        <ul>
-          <li><a href="#"><i class="fas fa-search"></i> Browse Properties</a></li>
-          <li><a href="register.html?role=landlord"><i class="fas fa-building"></i> Become a Landlord</a></li>
-          <li><a href="register.html?role=premium_user"><i class="fas fa-crown"></i> Become Premium User</a></li>
-          <li><a href="#"><i class="fas fa-question-circle"></i> How It Works</a></li>
-          <li><a href="#"><i class="fas fa-comments"></i> FAQ</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h3><i class="fas fa-headset"></i> Support</h3>
-        <ul>
-          <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact Us</a></li>
-          <li><a href="terms.html"><i class="fas fa-file-contract"></i> Terms</a></li>
-          <li><a href="privacy.html"><i class="fas fa-shield-alt"></i> Privacy</a></li>
-          <li><a href="#"><i class="fas fa-flag"></i> Report Issue</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h3><i class="fas fa-address-card"></i> Connect</h3>
-        <div class="contact-info">
-          <p><i class="fas fa-envelope"></i> <a href="mailto:socratesghambi99@gmail.com">socratesghambi99@gmail.com</a></p>
-          <p><i class="fas fa-phone-alt"></i> <a href="tel:+265996726966">0996726966</a></p>
-          <p><i class="fas fa-map-marker-alt"></i> Blantyre, Malawi</p>
-        </div>
-      </div>
+      <div class="footer-col"><div class="footer-logo"><i class="fas fa-home"></i> Khomo Lathu</div><div class="footer-tagline">Find your perfect home in Malawi</div><div class="footer-copyright">© 2026 Khomo Lathu</div><div class="social-links"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-twitter"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-whatsapp"></i></a></div></div>
+      <div class="footer-col"><h3><i class="fas fa-bolt"></i> Quick Links</h3><ul><li><a href="#"><i class="fas fa-search"></i> Browse Properties</a></li><li><a href="register.html?role=landlord"><i class="fas fa-building"></i> Become a Landlord</a></li><li><a href="register.html?role=premium_user"><i class="fas fa-crown"></i> Become Premium User</a></li><li><a href="#"><i class="fas fa-question-circle"></i> How It Works</a></li><li><a href="#"><i class="fas fa-comments"></i> FAQ</a></li></ul></div>
+      <div class="footer-col"><h3><i class="fas fa-headset"></i> Support</h3><ul><li><a href="contact.html"><i class="fas fa-envelope"></i> Contact Us</a></li><li><a href="terms.html"><i class="fas fa-file-contract"></i> Terms</a></li><li><a href="privacy.html"><i class="fas fa-shield-alt"></i> Privacy</a></li><li><a href="#"><i class="fas fa-flag"></i> Report Issue</a></li></ul></div>
+      <div class="footer-col"><h3><i class="fas fa-address-card"></i> Connect</h3><div class="contact-info"><p><i class="fas fa-envelope"></i> <a href="mailto:socratesghambi99@gmail.com">socratesghambi99@gmail.com</a></p><p><i class="fas fa-phone-alt"></i> <a href="tel:+265996726966">0996726966</a></p><p><i class="fas fa-map-marker-alt"></i> Blantyre, Malawi</p></div></div>
     </div>
-    <div class="footer-newsletter">
-      <h3><i class="fas fa-newspaper"></i> Stay Updated</h3>
-      <p>Get the latest listings and offers.</p>
-      <form id="footerNewsletterForm">
-        <input type="email" placeholder="Your email" required>
-        <button type="submit"><i class="fab fa-whatsapp"></i> Subscribe</button>
-      </form>
-      <p id="newsletterStatus"></p>
-    </div>
-    <div class="footer-bottom">
-      <div class="footer-bottom-left">
-        <select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select>
-      </div>
-      <div class="footer-bottom-right">Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</div>
-    </div>
+    <div class="footer-newsletter"><h3><i class="fas fa-newspaper"></i> Stay Updated</h3><p>Get the latest listings and offers.</p><form id="footerNewsletterForm"><input type="email" placeholder="Your email" required><button type="submit"><i class="fab fa-whatsapp"></i> Subscribe</button></form><p id="newsletterStatus"></p></div>
+    <div class="footer-bottom"><div class="footer-bottom-left"><select class="lang-select" onchange="setLanguage(this.value)"><option value="en">English</option><option value="ny">Chichewa</option></select></div><div class="footer-bottom-right">Built with <i class="fas fa-heart" style="color:#e74c3c;"></i> in Malawi</div></div>
   </footer>
 
-  <!-- Modals (unchanged) -->
-  <div id="dreamMatchModal" class="modal" style="display:none;">...</div>
-  <div id="propertyModal" class="modal" style="display:none;">...</div>
-  <div id="bookingModal" class="modal" style="display:none;">...</div>
-  <div id="lightboxModal" class="lightbox-modal" style="display:none;">...</div>
-  <div id="saveSearchModal" class="modal" style="display:none;">...</div>
-  <div id="landlordModal" class="modal" style="display:none;">...</div>
-  <div id="shareModal" class="modal" style="display:none;">...</div>
-  <div id="comparisonModal" class="modal" style="display:none;">...</div>
+  <!-- Modals -->
+  <div id="dreamMatchModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeModal('dreamMatchModal')">&times;</span><h2><i class="fas fa-magic"></i> Dream Match</h2><p>Tell us what you're looking for and we'll find the best matches.</p><form id="dreamMatchForm"><div class="form-group"><label>Property Type</label><select id="dreamType"><option value="">Any</option><option value="House">House</option><option value="Apartment">Apartment</option><option value="Room">Room</option><option value="Hostel">Hostel</option></select></div><div class="form-group"><label>Budget (MK)</label><input type="number" id="dreamMinBudget" placeholder="Min"><input type="number" id="dreamMaxBudget" placeholder="Max"></div><div class="form-group"><label>District</label><select id="dreamDistrict"><option value="">Any</option></select></div><div class="form-group"><label>Amenities</label><div><label><input type="checkbox" value="wifi"> WiFi</label><label><input type="checkbox" value="parking"> Parking</label><label><input type="checkbox" value="furnished"> Furnished</label></div></div><button type="submit" class="save-search-btn">Find My Dream Home</button></form><div id="dreamResults" style="margin-top:20px;"></div></div></div>
+  <div id="propertyModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeModal('propertyModal')">&times;</span><div id="propertyModalBody"></div></div></div>
+  <div id="bookingModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeModal('bookingModal')">&times;</span><h2>Booking Request</h2><form id="bookingForm"><input type="hidden" id="bookingHouseId"><input type="text" placeholder="Your Name" required><input type="email" placeholder="Email" required><input type="date" required><button type="submit">Send Request</button></form></div></div>
+  <div id="lightboxModal" class="lightbox-modal" style="display:none;"><div class="lightbox-content"><img id="lightboxImg" src=""><span class="close-btn" onclick="closeLightbox()">&times;</span></div></div>
+  <div id="saveSearchModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeModal('saveSearchModal')">&times;</span><h2>Save Search</h2><input type="text" id="searchName" placeholder="Search name"><button onclick="saveCurrentSearch()">Save</button></div></div>
+  <div id="landlordModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeModal('landlordModal')">&times;</span><div id="landlordModalBody"></div></div></div>
+  <div id="shareModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeModal('shareModal')">&times;</span><h2>Share Property</h2><p>Copy link: <input id="shareLink" readonly><button onclick="copyShareLink()">Copy</button></p></div></div>
+  <div id="comparisonModal" class="modal" style="display:none;"><div class="modal-content"><span class="close-btn" onclick="closeModal('comparisonModal')">&times;</span><h2>Compare Properties</h2><div id="compareList"></div></div></div>
   <div id="compareFloatingBtn"><i class="fas fa-chart-simple"></i> Compare (<span id="compareCount">0</span>/3)</div>
 
-  <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyCAmA_VnHhWVqfqEgpne3BUM0LuPCzTCRc';</script>
+  <!-- Required Libraries -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
-  <script src="js/i18n.js"></script>
-  <script src="js/theme.js"></script>
-  <script src="js/script.js"></script>
-  <script src="js/chatbot.js"></script>
-  <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <!-- ========== DISTRICT BOUNDARIES & FILTER ========== -->
+  <!-- Main Application Script (all features embedded) -->
   <script>
-    let mapCheckInterval = setInterval(function() {
-      if (typeof map !== 'undefined' && map) {
-        clearInterval(mapCheckInterval);
-        console.log("Map detected, loading district boundaries from local file...");
-        initDistrictBoundaries();
-      }
-    }, 500);
-
-    let districtLayer = null;
-    let currentHighlight = null;
-
-    function initDistrictBoundaries() {
-      const mapContainer = document.getElementById('map');
-      if (mapContainer) mapContainer.style.opacity = '0.7';
-
-      fetch('/data/malawi_districts.geojson')
-        .then(response => {
-          if (!response.ok) throw new Error('GeoJSON file not found. Please ensure it is saved at public/data/malawi_districts.geojson');
-          return response.json();
-        })
-        .then(geojson => {
-          districtLayer = L.geoJSON(geojson, {
-            style: function() {
-              return {
-                color: '#3b82f6',
-                weight: 1.8,
-                fillColor: '#60a5fa',
-                fillOpacity: 0.2,
-                className: 'district-boundary'
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              const districtName = feature.properties.name;
-              if (!districtName) return;
-              layer.bindPopup(`<strong>${districtName}</strong><br>Click to view properties`);
-
-              layer.on('click', function() {
-                map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-                if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                currentHighlight = layer;
-                layer.setStyle({
-                  fillColor: '#f59e0b',
-                  fillOpacity: 0.5,
-                  weight: 3.5,
-                  color: '#d97706'
-                });
-                filterPropertiesByDistrict(districtName);
-                const districtSelect = document.getElementById('districtFilterSelect');
-                if (districtSelect) districtSelect.value = districtName;
-              });
-
-              layer.on('mouseover', function() {
-                if (currentHighlight !== layer) {
-                  layer.setStyle({ fillOpacity: 0.4, weight: 2.8 });
-                }
-              });
-              layer.on('mouseout', function() {
-                if (currentHighlight !== layer) districtLayer.resetStyle(layer);
-                else {
-                  layer.setStyle({
-                    fillColor: '#f59e0b',
-                    fillOpacity: 0.5,
-                    weight: 3.5,
-                    color: '#d97706'
-                  });
-                }
-              });
-            }
-          }).addTo(map);
-
-          const districts = [];
-          L.geoJSON(geojson, {
-            onEachFeature: function(feature, layer) {
-              const name = feature.properties.name;
-              if (name && !districts.includes(name)) districts.push(name);
-            }
-          });
-          districts.sort();
-
-          const filterRow = document.querySelector('.filters-row');
-          if (filterRow && !document.getElementById('districtFilterSelect')) {
-            const districtDiv = document.createElement('div');
-            districtDiv.className = 'district-filter';
-            districtDiv.innerHTML = `
-              <select id="districtFilterSelect" class="sort-select" style="min-width: 160px;">
-                <option value="">All Districts</option>
-                ${districts.map(d => `<option value="${d}">${d}</option>`).join('')}
-              </select>
-            `;
-            filterRow.appendChild(districtDiv);
-
-            document.getElementById('districtFilterSelect').addEventListener('change', function(e) {
-              const selected = e.target.value;
-              if (selected) {
-                districtLayer.eachLayer(layer => {
-                  const name = layer.feature?.properties?.name;
-                  if (name === selected) {
-                    map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-                    if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                    currentHighlight = layer;
-                    layer.setStyle({
-                      fillColor: '#f59e0b',
-                      fillOpacity: 0.5,
-                      weight: 3.5,
-                      color: '#d97706'
-                    });
-                    filterPropertiesByDistrict(selected);
-                  }
-                });
-              } else {
-                if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                currentHighlight = null;
-                filterPropertiesByDistrict(null);
-                map.flyToBounds([[-17.2, 33.2], [-9.2, 36.2]], { duration: 1.2 });
-              }
-            });
-          }
-
-          mapContainer.style.opacity = '1';
-          console.log("District boundaries loaded successfully!");
-          map.attributionControl.addAttribution('District boundaries: <a href="https://simplemaps.com" target="_blank">SimpleMaps</a>');
-        })
-        .catch(error => {
-          console.error("Failed to load district boundaries:", error);
-          if (mapContainer) mapContainer.style.opacity = '1';
-        });
-    }
-
-    window.selectedDistrict = null;
-    function filterPropertiesByDistrict(district) {
-      window.selectedDistrict = district;
-      const applyBtn = document.getElementById('applyFiltersBtn');
-      if (applyBtn) applyBtn.click();
-      else console.log("District filter selected:", district);
-    }
-  </script>
-
-  <!-- ========== ALL AMENITY LAYERS + SUB‑DISTRICTS + SPATIAL TOOLS (FIXED) ========== -->
-  <script>
-    // Wait for map and district layer to be ready
-    let amenityLoadInterval = setInterval(function() {
-      if (typeof map !== 'undefined' && map && districtLayer) {
-        clearInterval(amenityLoadInterval);
-        console.log("Loading amenity layers...");
-        loadAllAmenityLayers();
-        loadSubDistricts();
-      }
-    }, 1000);
-
-    let amenityLayers = {};
-    let subDistrictLayer = null;
-    let healthPoints = [];
-    let schoolPoints = [];
-    let marketPoints = [];
+    // ========== GLOBAL VARIABLES ==========
+    let map;
+    let allHouses = [];
+    let currentHouses = [];
+    let currentPage = 1;
+    const itemsPerPage = 12;
+    let markersLayer;
+    let drawnItems;
+    let drawControl;
+    let priceSlider;
     let heatmapLayer = null;
     let heatmapActive = false;
     let walkabilityLayer = null;
+    
+    // Amenity points arrays
+    let healthPoints = [];
+    let schoolPoints = [];
+    let marketPoints = [];
+    let amenityLayers = {};
+    let districtLayer = null;
+    let subDistrictLayer = null;
 
-    function getAmenityName(feature) {
-      if (feature.properties.name) return feature.properties.name;
-      if (feature.properties.other_tags) {
-        const match = feature.properties.other_tags.match(/"name"=>"([^"]+)"/);
-        if (match) return match[1];
-      }
-      return "Amenity";
+    // Compare list
+    let compareList = [];
+
+    // ========== HELPER FUNCTIONS ==========
+    function showToast(message, type = 'info') {
+      const existing = document.querySelector('.toast-notification');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = 'toast-notification';
+      toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
     }
 
-    function createMarker(latlng, iconClass, color) {
-      return L.marker(latlng, {
-        icon: L.divIcon({
-          html: `<i class="${iconClass}" style="color:${color}; font-size:20px; text-shadow: 0 0 2px white;"></i>`,
-          iconSize: [24, 24],
-          className: 'custom-amenity-icon'
-        })
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+    window.closeModal = closeModal;
+
+    function closeLightbox() {
+      document.getElementById('lightboxModal').style.display = 'none';
+    }
+    window.closeLightbox = closeLightbox;
+
+    // ========== COMPARE FUNCTIONALITY ==========
+    function updateCompareUI() {
+      const btn = document.getElementById('compareFloatingBtn');
+      const countSpan = document.getElementById('compareCount');
+      if (compareList.length > 0) btn.style.display = 'flex'; else btn.style.display = 'none';
+      countSpan.innerText = compareList.length;
+    }
+
+    function addToCompare(houseId) {
+      if (compareList.includes(houseId)) { showToast('Already in compare list'); return; }
+      if (compareList.length >= 3) { showToast('Maximum 3 properties can be compared'); return; }
+      compareList.push(houseId);
+      updateCompareUI();
+      showToast('Property added to compare');
+    }
+    window.addToCompare = addToCompare;
+
+    function removeFromCompare(id) {
+      compareList = compareList.filter(i => i !== id);
+      updateCompareUI();
+      closeModal('comparisonModal');
+      showToast('Removed from compare');
+    }
+    window.removeFromCompare = removeFromCompare;
+
+    document.getElementById('compareFloatingBtn')?.addEventListener('click', () => {
+      const modal = document.getElementById('comparisonModal');
+      const container = document.getElementById('compareList');
+      if (!allHouses.length) { showToast('Properties not loaded'); return; }
+      const toCompare = allHouses.filter(h => compareList.includes(h._id));
+      if (toCompare.length === 0) { container.innerHTML = '<p>No properties selected.</p>'; }
+      else {
+        container.innerHTML = '<div class="comparison-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1rem;">' +
+          toCompare.map(h => `<div class="house-card"><img src="${h.images?.[0] || '/placeholder.jpg'}" style="height:150px; object-fit:cover;"><div class="house-card-content"><h3>${h.name}</h3><p>${h.price} MK</p><p>${h.location}</p><button class="save-search-btn" onclick="removeFromCompare('${h._id}')">Remove</button></div></div>`).join('') + '</div>';
+      }
+      modal.style.display = 'flex';
+    });
+
+    // ========== SHARE FUNCTIONALITY ==========
+    function shareProperty(house) {
+      const modal = document.getElementById('shareModal');
+      const linkInput = document.getElementById('shareLink');
+      const url = `${window.location.origin}/property/${house._id}`;
+      linkInput.value = url;
+      modal.style.display = 'flex';
+    }
+    window.shareProperty = shareProperty;
+
+    function copyShareLink() {
+      const inp = document.getElementById('shareLink');
+      inp.select();
+      document.execCommand('copy');
+      showToast('Link copied!');
+      closeModal('shareModal');
+    }
+    window.copyShareLink = copyShareLink;
+
+    // ========== LANDLORD PROFILE MODAL ==========
+    function showLandlordProfile(landlordId, landlordName, landlordBio, landlordAvatar, properties) {
+      const modal = document.getElementById('landlordModal');
+      const body = document.getElementById('landlordModalBody');
+      const filtered = allHouses.filter(p => p.landlordId === landlordId);
+      body.innerHTML = `
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+          <div class="landlord-avatar" style="width:70px; height:70px; font-size:2rem;">${landlordAvatar ? `<img src="${landlordAvatar}" style="width:100%;height:100%;object-fit:cover;">` : '<i class="fas fa-user-circle"></i>'}</div>
+          <div><h3>${landlordName || 'Landlord'}</h3><p>${landlordBio || 'Experienced property owner'}</p></div>
+        </div>
+        <h4>Other Properties by ${landlordName}</h4>
+        <div class="landlord-properties-grid">
+          ${filtered.map(p => `
+            <div class="landlord-property-card" onclick="viewProperty('${p._id}')">
+              <img src="${p.images?.[0] || '/placeholder.jpg'}" alt="${p.name}">
+              <div class="info"><h4>${p.name}</h4><p>${p.price} MK</p></div>
+            </div>
+          `).join('') || '<p>No other properties listed.</p>'}
+        </div>
+      `;
+      modal.style.display = 'flex';
+    }
+    window.showLandlordProfile = showLandlordProfile;
+
+    function viewProperty(houseId) {
+      const house = allHouses.find(h => h._id === houseId);
+      if (!house) return;
+      const modal = document.getElementById('propertyModal');
+      const body = document.getElementById('propertyModalBody');
+      body.innerHTML = `
+        <h3>${house.name}</h3>
+        <div class="slider" style="height:250px;"><div class="slides-container">${(house.images || []).map(img => `<div class="slide"><img src="${img}" onclick="openLightbox('${img}')"></div>`).join('')}</div><div class="dots"></div></div>
+        <p><i class="fas fa-map-marker-alt"></i> ${house.location}</p>
+        <p><i class="fas fa-money-bill-wave"></i> ${house.price} MK</p>
+        <p><i class="fas fa-info-circle"></i> ${house.description || 'No description'}</p>
+        <div class="action-buttons"><button class="save-search-btn" onclick="addToCompare('${house._id}')">Compare</button><button class="save-search-btn" onclick="shareProperty(house)">Share</button><button class="save-search-btn" onclick="closeModal('propertyModal')">Close</button></div>
+      `;
+      modal.style.display = 'flex';
+      initSliderInModal();
+    }
+    window.viewProperty = viewProperty;
+
+    function initSliderInModal() {
+      document.querySelectorAll('#propertyModal .slider').forEach(slider => {
+        const container = slider.querySelector('.slides-container');
+        const dotsContainer = slider.querySelector('.dots');
+        const slides = container.querySelectorAll('.slide');
+        if (slides.length <= 1) return;
+        slides.forEach((_, idx) => {
+          const dot = document.createElement('div');
+          dot.className = 'dot' + (idx === 0 ? ' active' : '');
+          dot.addEventListener('click', () => {
+            container.scrollTo({ left: idx * container.clientWidth, behavior: 'smooth' });
+          });
+          dotsContainer.appendChild(dot);
+        });
+        container.addEventListener('scroll', () => {
+          const index = Math.round(container.scrollLeft / container.clientWidth);
+          dotsContainer.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === index));
+        });
       });
     }
 
-    async function loadLayer(url, layerName, iconClass, color, storeArray = null) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          console.warn(`Skipping ${layerName} – file not found (404)`);
-          return null;
+    function openLightbox(imgSrc) {
+      const modal = document.getElementById('lightboxModal');
+      document.getElementById('lightboxImg').src = imgSrc;
+      modal.style.display = 'flex';
+    }
+    window.openLightbox = openLightbox;
+
+    // ========== DREAM MATCH (MULTIPLE RESULTS) ==========
+    document.getElementById('dreamMatchLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = document.getElementById('dreamMatchModal');
+      const districtSelect = document.getElementById('dreamDistrict');
+      if (allHouses.length) {
+        const districts = [...new Set(allHouses.map(h => h.district).filter(Boolean))];
+        districtSelect.innerHTML = '<option value="">Any</option>' + districts.map(d => `<option value="${d}">${d}</option>`).join('');
+      }
+      modal.style.display = 'flex';
+    });
+
+    document.getElementById('dreamMatchForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const type = document.getElementById('dreamType').value;
+      const minBudget = parseInt(document.getElementById('dreamMinBudget').value) || 0;
+      const maxBudget = parseInt(document.getElementById('dreamMaxBudget').value) || Infinity;
+      const district = document.getElementById('dreamDistrict').value;
+      const amenities = Array.from(document.querySelectorAll('#dreamMatchForm input[type="checkbox"]:checked')).map(cb => cb.value);
+      if (!allHouses.length) { showToast('Properties not loaded yet'); return; }
+      let matches = allHouses.filter(h => {
+        if (type && h.type !== type) return false;
+        if (h.price < minBudget || h.price > maxBudget) return false;
+        if (district && h.district !== district) return false;
+        if (amenities.length) {
+          const houseAmenities = (h.amenities || []).map(a => a.toLowerCase());
+          if (!amenities.every(a => houseAmenities.includes(a))) return false;
         }
-        const data = await response.json();
-        const layer = L.geoJSON(data, {
-          pointToLayer: (feature, latlng) => createMarker(latlng, iconClass, color),
-          onEachFeature: (feature, layer) => {
-            const name = getAmenityName(feature);
-            layer.bindPopup(`<strong>${name}</strong><br>${layerName}`);
-          }
-        });
-        layer.addTo(map);
-        amenityLayers[layerName] = layer;
-        if (storeArray && data.features) {
-          data.features.forEach(f => {
-            if (f.geometry && f.geometry.coordinates) {
-              storeArray.push({
-                lat: f.geometry.coordinates[1],
-                lng: f.geometry.coordinates[0],
-                name: getAmenityName(f)
-              });
-            }
-          });
-          console.log(`Loaded ${layerName}: ${data.features.length} features, stored ${storeArray.length} points`);
-        } else {
-          console.log(`Loaded ${layerName}: ${data.features?.length || 0} features`);
-        }
-        return layer;
-      } catch (err) {
-        console.warn(`Failed to load ${layerName}:`, err.message);
-        return null;
-      }
-    }
+        return true;
+      });
+      const resultsDiv = document.getElementById('dreamResults');
+      if (matches.length === 0) { resultsDiv.innerHTML = '<p>No properties match your dream criteria.</p>'; showToast('No matches found'); return; }
+      resultsDiv.innerHTML = `<h4>✨ ${matches.length} Dream Matches Found</h4><div class="landlord-properties-grid">` +
+        matches.slice(0, 12).map(h => `
+          <div class="landlord-property-card" onclick="viewProperty('${h._id}'); closeModal('dreamMatchModal');">
+            <img src="${h.images?.[0] || '/placeholder.jpg'}" style="height:160px; object-fit:cover;">
+            <div class="info"><h4>${h.name}</h4><p>${h.price} MK</p><p>${h.location}</p></div>
+          </div>
+        `).join('') + `</div>`;
+      showToast(`Found ${matches.length} dream matches!`);
+    });
 
-    async function loadAllAmenityLayers() {
-      const layers = [
-        { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints },
-        { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6', store: schoolPoints },
-        { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b', store: marketPoints },
-        { url: '/data/malawi_banks.geojson', name: 'Banks & ATMs', icon: 'fas fa-university', color: '#8b5cf6', store: null },
-        { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b', store: null },
-        { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981', store: null },
-        { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899', store: null },
-        { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280', store: null },
-        { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316', store: null },
-        { url: '/data/malawi_worship.geojson', name: 'Places of Worship', icon: 'fas fa-church', color: '#a855f7', store: null }
-      ];
-      for (const l of layers) {
-        await loadLayer(l.url, l.name, l.icon, l.color, l.store);
-      }
-
-      // Add layer control (only for layers that actually loaded)
-      const overlayControl = {};
-      for (const [name, layer] of Object.entries(amenityLayers)) {
-        overlayControl[name] = layer;
-      }
-      if (Object.keys(overlayControl).length > 0) {
-        L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
-      }
-      if (districtLayer) {
-        L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
-      }
-    }
-
-    async function loadSubDistricts() {
-      try {
-        const response = await fetch('/data/malawi_subdistricts.geojson');
-        if (!response.ok) throw new Error('Not found');
-        const data = await response.json();
-        subDistrictLayer = L.geoJSON(data, {
-          style: {
-            color: '#a855f7',
-            weight: 1.5,
-            fillColor: '#c084fc',
-            fillOpacity: 0.15,
-            dashArray: '5,5',
-            className: 'subdistrict-boundary'
-          },
-          onEachFeature: function(feature, layer) {
-            const name = feature.properties.name || 'Sub‑district';
-            layer.bindPopup(`<strong>${name}</strong><br>Click to view properties`);
-            layer.on('click', function() {
-              map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-              if (window.currentHighlightSub) subDistrictLayer.resetStyle(window.currentHighlightSub);
-              window.currentHighlightSub = layer;
-              layer.setStyle({
-                fillColor: '#f59e0b',
-                fillOpacity: 0.5,
-                weight: 2.5,
-                color: '#d97706'
-              });
-              filterPropertiesBySubDistrict(name);
-            });
-            layer.on('mouseover', function() {
-              if (window.currentHighlightSub !== layer) layer.setStyle({ fillOpacity: 0.3, weight: 2 });
-            });
-            layer.on('mouseout', function() {
-              if (window.currentHighlightSub !== layer) subDistrictLayer.resetStyle(layer);
-            });
-          }
-        }).addTo(map);
-        // Add to layer control (rebuild)
-        const overlayControl = {};
-        for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
-        overlayControl['Sub‑districts'] = subDistrictLayer;
-        if (districtLayer) overlayControl['Districts'] = districtLayer;
-        const existingControl = document.querySelector('.leaflet-control-layers');
-        if (existingControl) existingControl.remove();
-        L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
-        console.log("Sub‑districts loaded");
-      } catch (err) {
-        console.warn("Sub‑districts not loaded (file missing)");
-      }
-    }
-
-    function filterPropertiesBySubDistrict(subDistrictName) {
-      window.selectedSubDistrict = subDistrictName;
-      const applyBtn = document.getElementById('applyFiltersBtn');
-      if (applyBtn) applyBtn.click();
-    }
-
+    // ========== NEARBY FILTER (USING TURF) ==========
     function filterPropertiesNearAmenity(pointsArray, typeName) {
-      if (!pointsArray.length) {
-        alert(`No ${typeName} data available.`);
-        return;
-      }
-      if (typeof allHouses === 'undefined' || !allHouses.length) {
-        alert('No properties loaded yet.');
-        return;
-      }
-      const radiusKm = 2;
+      if (!pointsArray.length) { showToast(`No ${typeName} data available.`, 'error'); return; }
+      if (!allHouses.length) { showToast('No properties loaded yet.', 'error'); return; }
+      const radiusKm = parseFloat(document.getElementById('radiusSliderControl')?.value || 2);
       const nearHouseIds = [];
       for (const house of allHouses) {
         if (!house.lat || !house.lng) continue;
@@ -1436,209 +737,220 @@
         for (const amenity of pointsArray) {
           const to = turf.point([amenity.lng, amenity.lat]);
           const distance = turf.distance(from, to, { units: 'kilometers' });
-          if (distance <= radiusKm) {
-            found = true;
-            break;
-          }
+          if (distance <= radiusKm) { found = true; break; }
         }
         if (found) nearHouseIds.push(house._id);
       }
-      if (nearHouseIds.length === 0) {
-        alert(`No properties within ${radiusKm} km of any ${typeName}.`);
-        return;
-      }
+      if (nearHouseIds.length === 0) { showToast(`No properties within ${radiusKm} km of any ${typeName}.`); return; }
       const filteredHouses = allHouses.filter(h => nearHouseIds.includes(h._id));
-      if (window.renderHouses) window.renderHouses(filteredHouses);
-      if (window.renderMarkers) window.renderMarkers(filteredHouses);
-      alert(`Found ${nearHouseIds.length} properties near ${typeName}.`);
+      renderHouses(filteredHouses);
+      renderMarkers(filteredHouses);
+      showToast(`Found ${nearHouseIds.length} properties near ${typeName}.`);
     }
 
-    // Double‑click panel with Font Awesome icons
-    function attachDoubleClickToHouseCards() {
-      const cards = document.querySelectorAll('.house-card');
-      cards.forEach(card => {
-        if (card.dataset.dblclickAttached) return;
-        card.dataset.dblclickAttached = 'true';
-        card.addEventListener('dblclick', async (e) => {
-          e.stopPropagation();
-          const houseId = card.querySelector('[data-house-id]')?.dataset.houseId ||
-                          card.querySelector('.slider .slides-container')?.dataset.houseId;
-          if (!houseId) return;
-          const house = allHouses?.find(h => h._id === houseId);
-          if (!house || !house.lat || !house.lng) return;
-          map.flyTo([house.lat, house.lng], 15, { duration: 1.5 });
-
-          let nearestHospital = null, nearestSchool = null, nearestMarket = null;
-          const from = turf.point([house.lng, house.lat]);
-          if (healthPoints.length) {
-            let minDist = Infinity;
-            for (const h of healthPoints) {
-              const dist = turf.distance(from, turf.point([h.lng, h.lat]), { units: 'km' });
-              if (dist < minDist) { minDist = dist; nearestHospital = { name: h.name, dist: minDist }; }
-            }
-          }
-          if (schoolPoints.length) {
-            let minDist = Infinity;
-            for (const s of schoolPoints) {
-              const dist = turf.distance(from, turf.point([s.lng, s.lat]), { units: 'km' });
-              if (dist < minDist) { minDist = dist; nearestSchool = { name: s.name, dist: minDist }; }
-            }
-          }
-          if (marketPoints.length) {
-            let minDist = Infinity;
-            for (const m of marketPoints) {
-              const dist = turf.distance(from, turf.point([m.lng, m.lat]), { units: 'km' });
-              if (dist < minDist) { minDist = dist; nearestMarket = { name: m.name, dist: minDist }; }
-            }
-          }
-          const html = `
-            <div style="position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 20px; padding: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 10000; max-width: 300px; border: 1px solid var(--input-border);">
-              <strong>${house.name}</strong><br>
-              <i class="fas fa-hospital" style="color:#ef4444;"></i> Nearest Hospital: ${nearestHospital ? `${nearestHospital.name} (${nearestHospital.dist.toFixed(2)} km)` : 'N/A'}<br>
-              <i class="fas fa-school" style="color:#3b82f6;"></i> Nearest School: ${nearestSchool ? `${nearestSchool.name} (${nearestSchool.dist.toFixed(2)} km)` : 'N/A'}<br>
-              <i class="fas fa-store" style="color:#f59e0b;"></i> Nearest Market: ${nearestMarket ? `${nearestMarket.name} (${nearestMarket.dist.toFixed(2)} km)` : 'N/A'}<br>
-              <button id="closeNearbyPanel" style="margin-top: 0.5rem; background: var(--primary); color: white; border: none; border-radius: 20px; padding: 0.2rem 0.8rem; cursor: pointer;">Close</button>
+    // ========== RENDER HOUSES & MARKERS ==========
+    function renderHouses(houses) {
+      currentHouses = houses;
+      const start = (currentPage - 1) * itemsPerPage;
+      const paginated = houses.slice(start, start + itemsPerPage);
+      const container = document.getElementById('houses-container');
+      if (!paginated.length) { container.innerHTML = '<p>No properties found.</p>'; return; }
+      container.innerHTML = paginated.map(house => `
+        <div class="house-card" data-id="${house._id}">
+          <div class="slider" style="height:140px;"><div class="slides-container">${(house.images || []).map(img => `<div class="slide"><img src="${img}" onclick="event.stopPropagation();openLightbox('${img}')"></div>`).join('')}</div><div class="dots"></div></div>
+          <div class="house-card-content">
+            <h3>${house.name} ${house.verified ? '<span class="verified-badge"><i class="fas fa-check-circle"></i></span>' : ''}</h3>
+            <p><i class="fas fa-map-marker-alt"></i> ${house.location}</p>
+            <p class="price">${house.price.toLocaleString()} MK</p>
+            <div class="strong-fields"><i class="fas fa-bed"></i> ${house.bedrooms || '?'} beds <i class="fas fa-bath"></i> ${house.bathrooms || '?'} baths</div>
+            <div class="action-buttons">
+              <button class="read-more-btn" onclick="event.stopPropagation();viewProperty('${house._id}')">See more</button>
+              <button class="compare-btn" onclick="event.stopPropagation();addToCompare('${house._id}')"><i class="fas fa-chart-simple"></i> Compare</button>
+              <button class="share-btn" onclick="event.stopPropagation();shareProperty(${JSON.stringify(house).replace(/"/g, '&quot;')})"><i class="fas fa-share-alt"></i> Share</button>
             </div>
-          `;
-          let panel = document.getElementById('tempNearbyPanel');
-          if (panel) panel.remove();
-          panel = document.createElement('div');
-          panel.id = 'tempNearbyPanel';
-          panel.innerHTML = html;
-          document.body.appendChild(panel);
-          document.getElementById('closeNearbyPanel')?.addEventListener('click', () => panel.remove());
-          setTimeout(() => { if (panel) panel.remove(); }, 15000);
+            <div class="landlord-info" style="margin-top:8px; display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="event.stopPropagation();showLandlordProfile('${house.landlordId || ''}', '${house.landlordName || 'Landlord'}', '${house.landlordBio || ''}', '${house.landlordAvatar || ''}', [])">
+              <div class="landlord-avatar" style="width:24px; height:24px;">${house.landlordAvatar ? `<img src="${house.landlordAvatar}">` : '<i class="fas fa-user-circle"></i>'}</div>
+              <span style="font-size:0.7rem;">${house.landlordName || 'Property Owner'}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      // init sliders
+      document.querySelectorAll('#houses-container .slider').forEach(initSlider);
+      renderPagination();
+    }
+
+    function initSlider(slider) {
+      const container = slider.querySelector('.slides-container');
+      const dotsContainer = slider.querySelector('.dots');
+      const slides = container.querySelectorAll('.slide');
+      if (slides.length <= 1) return;
+      dotsContainer.innerHTML = '';
+      slides.forEach((_, idx) => {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (idx === 0 ? ' active' : '');
+        dot.addEventListener('click', () => container.scrollTo({ left: idx * container.clientWidth, behavior: 'smooth' }));
+        dotsContainer.appendChild(dot);
+      });
+      container.addEventListener('scroll', () => {
+        const index = Math.round(container.scrollLeft / container.clientWidth);
+        dotsContainer.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === index));
+      });
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(currentHouses.length / itemsPerPage);
+      const paginationDiv = document.getElementById('pagination');
+      if (totalPages <= 1) { paginationDiv.innerHTML = ''; return; }
+      let html = '';
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+      }
+      paginationDiv.innerHTML = html;
+      document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentPage = parseInt(btn.dataset.page);
+          renderHouses(currentHouses);
         });
       });
     }
 
-    const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
-    observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
-    setTimeout(attachDoubleClickToHouseCards, 2000);
-
-    // Heatmap with fallback if L.heatLayer is missing
-    function initHeatmap() {
-      if (typeof L.heatLayer === 'undefined') {
-        console.warn("Leaflet.heat plugin not loaded – heatmap disabled");
-        return;
-      }
-      if (typeof allHouses !== 'undefined' && allHouses.length > 0) {
-        const heatPoints = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
-        if (heatmapLayer) map.removeLayer(heatmapLayer);
-        heatmapLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 12 });
-        if (heatmapActive) heatmapLayer.addTo(map);
-      } else {
-        const demoPoints = [];
-        for (let i = 0; i < 200; i++) {
-          demoPoints.push([-15.786 + (Math.random() - 0.5) * 0.5, 35.005 + (Math.random() - 0.5) * 0.5, Math.random()]);
-        }
-        heatmapLayer = L.heatLayer(demoPoints, { radius: 25, blur: 15 });
-      }
-    }
-
-    // Create floating toolbar and attach events
-    function createFloatingToolbar() {
-      const mapContainer = document.getElementById('map');
-      if (!mapContainer) return;
-      const toolbarDiv = document.createElement('div');
-      toolbarDiv.className = 'floating-spatial-toolbar';
-      toolbarDiv.innerHTML = `
-        <button id="nearbyHospitalsBtn" class="spatial-btn"><i class="fas fa-hospital"></i> Near Hospitals</button>
-        <button id="nearbySchoolsBtn" class="spatial-btn"><i class="fas fa-school"></i> Near Schools</button>
-        <button id="nearbyMarketsBtn" class="spatial-btn"><i class="fas fa-store"></i> Near Markets</button>
-        <button id="toggleHeatmapBtn" class="spatial-btn heatmap-toggle"><i class="fas fa-fire"></i> Property Heatmap</button>
-        <button id="walkabilityBtn" class="spatial-btn"><i class="fas fa-walking"></i> Show Walkability</button>
-      `;
-      mapContainer.parentElement.style.position = 'relative';
-      mapContainer.parentElement.appendChild(toolbarDiv);
-
-      document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
-      document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
-      document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
-
-      const heatmapBtn = document.getElementById('toggleHeatmapBtn');
-      heatmapBtn?.addEventListener('click', () => {
-        if (typeof L.heatLayer === 'undefined') {
-          alert("Heatmap library not loaded. Please refresh.");
-          return;
-        }
-        heatmapActive = !heatmapActive;
-        if (heatmapActive) {
-          if (heatmapLayer) heatmapLayer.addTo(map);
-          heatmapBtn.classList.add('active');
-          heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Hide Heatmap';
-        } else {
-          if (heatmapLayer) map.removeLayer(heatmapLayer);
-          heatmapBtn.classList.remove('active');
-          heatmapBtn.innerHTML = '<i class="fas fa-fire"></i> Property Heatmap';
+    function renderMarkers(houses) {
+      if (markersLayer) map.removeLayer(markersLayer);
+      markersLayer = L.markerClusterGroup();
+      houses.forEach(house => {
+        if (house.lat && house.lng) {
+          const marker = L.marker([house.lat, house.lng]).bindPopup(`<b>${house.name}</b><br>${house.price} MK<br>${house.location}`);
+          markersLayer.addLayer(marker);
         }
       });
-
-      document.getElementById('walkabilityBtn')?.addEventListener('click', () => {
-        if (walkabilityLayer) {
-          map.removeLayer(walkabilityLayer);
-          walkabilityLayer = null;
-          document.getElementById('walkabilityBtn').style.background = '';
-        } else {
-          walkabilityLayer = L.polygon([[-15.8, 34.98], [-15.75, 34.98], [-15.75, 35.02], [-15.8, 35.02]], { color: 'green', fillOpacity: 0.3, weight: 2 }).addTo(map);
-          walkabilityLayer.bindPopup("Walkability zone: High (simulated)");
-          document.getElementById('walkabilityBtn').style.background = '#10b981';
-        }
-      });
+      map.addLayer(markersLayer);
     }
 
-    // Override loadHouses to update heatmap
-    if (typeof window.loadHouses === 'function') {
-      const originalLoadHouses = window.loadHouses;
-      window.loadHouses = async function(...args) {
-        await originalLoadHouses(...args);
-        if (typeof L.heatLayer !== 'undefined' && heatmapActive && typeof allHouses !== 'undefined') {
-          if (heatmapLayer) map.removeLayer(heatmapLayer);
-          const points = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
-          heatmapLayer = L.heatLayer(points, { radius: 25, blur: 15 });
-          if (heatmapActive) heatmapLayer.addTo(map);
-        }
-        setTimeout(attachDoubleClickToHouseCards, 500);
-      };
-    }
-
-    // Wait for map to be fully ready before creating toolbar
-    let toolbarInterval = setInterval(function() {
-      if (typeof map !== 'undefined' && map) {
-        clearInterval(toolbarInterval);
-        createFloatingToolbar();
+    // ========== LOAD HOUSES FROM API ==========
+    async function loadHouses() {
+      try {
+        const res = await fetch('/api/houses');
+        if (!res.ok) throw new Error('Failed to fetch');
+        allHouses = await res.json();
+        renderHouses(allHouses);
+        renderMarkers(allHouses);
+        initHeatmap();
+      } catch (err) {
+        console.warn('Using demo data');
+        allHouses = demoHouses;
+        renderHouses(allHouses);
+        renderMarkers(allHouses);
         initHeatmap();
       }
-    }, 1500);
-  </script>
-
-  <script>
-    // Mobile three‑dots menu toggle (unchanged)
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const mobileDropdown = document.getElementById('mobileSettingsDropdown');
-    if (mobileMenuBtn && mobileDropdown) {
-      mobileMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mobileDropdown.classList.toggle('active');
-      });
-      document.addEventListener('click', (e) => {
-        if (!mobileMenuBtn.contains(e.target) && !mobileDropdown.contains(e.target)) {
-          mobileDropdown.classList.remove('active');
-        }
-      });
-      const mobileLang = document.getElementById('mobileLangSelect');
-      const mobileTheme = document.getElementById('mobileThemeSelect');
-      const desktopLang = document.querySelector('.lang-select');
-      const desktopTheme = document.querySelector('.theme-select');
-      if (mobileLang && desktopLang) {
-        mobileLang.value = desktopLang.value;
-        mobileLang.addEventListener('change', () => { desktopLang.value = mobileLang.value; desktopLang.dispatchEvent(new Event('change')); });
-      }
-      if (mobileTheme && desktopTheme) {
-        mobileTheme.value = desktopTheme.value;
-        mobileTheme.addEventListener('change', () => { desktopTheme.value = mobileTheme.value; desktopTheme.dispatchEvent(new Event('change')); });
-      }
     }
+
+    // Demo data
+    const demoHouses = [
+      { _id: '1', name: 'Modern Family Home', location: 'Lilongwe, Area 3', price: 250000, bedrooms: 3, bathrooms: 2, lat: -13.9833, lng: 33.7833, images: ['https://picsum.photos/id/106/400/300'], verified: true, type: 'House', district: 'Lilongwe', landlordId: 'l1', landlordName: 'John Banda', landlordBio: 'Professional landlord with 10+ properties' },
+      { _id: '2', name: 'Cozy Studio Apartment', location: 'Blantyre, Sunnyside', price: 120000, bedrooms: 1, bathrooms: 1, lat: -15.7861, lng: 35.0058, images: ['https://picsum.photos/id/169/400/300'], verified: true, type: 'Apartment', district: 'Blantyre', landlordId: 'l2', landlordName: 'Mary Phiri', landlordBio: 'Friendly host' },
+      { _id: '3', name: 'Student Hostel', location: 'Zomba, Near Chancellor', price: 45000, bedrooms: 4, bathrooms: 2, lat: -15.385, lng: 35.318, images: ['https://picsum.photos/id/20/400/300'], verified: false, type: 'Hostel', district: 'Zomba', landlordId: 'l3', landlordName: 'Campus Stay Ltd', landlordBio: 'Specialized in student accommodation' }
+    ];
+
+    // ========== MAP & AMENITIES ==========
+    function initMap() {
+      map = L.map('map').setView([-13.9833, 33.7833], 7);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB' }).addTo(map);
+      drawnItems = L.featureGroup().addTo(map);
+      drawControl = new L.Control.Draw({ edit: { featureGroup: drawnItems }, draw: { polygon: true, rectangle: true, circle: false, polyline: false, marker: false } });
+      map.addControl(drawControl);
+      map.on(L.Draw.Event.CREATED, e => { drawnItems.addLayer(e.layer); filterByDrawArea(); });
+      document.getElementById('clearDrawBtn')?.addEventListener('click', () => { drawnItems.clearLayers(); renderHouses(allHouses); renderMarkers(allHouses); });
+      loadAmenityLayers();
+    }
+
+    async function loadAmenityLayers() {
+      const layers = [
+        { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints },
+        { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6', store: schoolPoints },
+        { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b', store: marketPoints },
+        { url: '/data/malawi_banks.geojson', name: 'Banks', icon: 'fas fa-university', color: '#8b5cf6' },
+        { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b' },
+        { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981' },
+        { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899' },
+        { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280' },
+        { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316' },
+        { url: '/data/malawi_worship.geojson', name: 'Worship', icon: 'fas fa-church', color: '#a855f7' },
+        { url: '/data/malawi_districts.geojson', name: 'Districts', isDistrict: true }
+      ];
+      for (const l of layers) {
+        try {
+          const res = await fetch(l.url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (l.isDistrict) {
+            districtLayer = L.geoJSON(data, { style: { color: '#3b82f6', weight: 1.8, fillOpacity: 0.2 }, onEachFeature: (f, layer) => layer.bindPopup(f.properties.name) }).addTo(map);
+          } else {
+            const layer = L.geoJSON(data, { pointToLayer: (feat, latlng) => L.marker(latlng, { icon: L.divIcon({ html: `<i class="${l.icon}" style="color:${l.color}; font-size:20px;"></i>`, iconSize: [24,24] }) }) });
+            layer.addTo(map);
+            amenityLayers[l.name] = layer;
+            if (l.store && data.features) {
+              data.features.forEach(f => { if (f.geometry?.coordinates) l.store.push({ lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0], name: f.properties.name || 'Amenity' }); });
+            }
+          }
+        } catch(e) { console.warn(`Skipped ${l.url}`); }
+      }
+      // Layer control
+      const overlayControl = {};
+      for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
+      if (districtLayer) overlayControl['Districts'] = districtLayer;
+      L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
+    }
+
+    function filterByDrawArea() {
+      if (drawnItems.getLayers().length === 0) return;
+      const bounds = drawnItems.getBounds();
+      const filtered = allHouses.filter(h => h.lat && h.lng && bounds.contains([h.lat, h.lng]));
+      renderHouses(filtered);
+      renderMarkers(filtered);
+    }
+
+    function initHeatmap() {
+      if (typeof L.heatLayer === 'undefined') return;
+      const points = allHouses.filter(h => h.lat && h.lng).map(h => [h.lat, h.lng, 1]);
+      heatmapLayer = L.heatLayer(points, { radius: 25, blur: 15 });
+    }
+
+    // Attach map control buttons
+    document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
+    document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
+    document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
+    document.getElementById('toggleHeatmapBtn')?.addEventListener('click', () => {
+      if (!heatmapLayer) initHeatmap();
+      heatmapActive = !heatmapActive;
+      if (heatmapActive) heatmapLayer.addTo(map);
+      else map.removeLayer(heatmapLayer);
+      const btn = document.getElementById('toggleHeatmapBtn');
+      btn.classList.toggle('heatmap-active');
+      btn.innerHTML = heatmapActive ? '<i class="fas fa-fire"></i> Hide Heatmap' : '<i class="fas fa-fire"></i> Property Heatmap';
+    });
+    document.getElementById('walkabilityBtn')?.addEventListener('click', () => {
+      if (walkabilityLayer) { map.removeLayer(walkabilityLayer); walkabilityLayer = null; }
+      else { walkabilityLayer = L.polygon([[-15.8,34.98],[-15.75,34.98],[-15.75,35.02],[-15.8,35.02]], { color:'green', fillOpacity:0.3 }).addTo(map).bindPopup('High walkability area'); }
+    });
+    document.getElementById('radiusSliderControl')?.addEventListener('input', (e) => document.getElementById('radiusValueControl').innerText = e.target.value + ' km');
+    document.getElementById('applyRadiusBtn')?.addEventListener('click', () => { if (window.lastNearbyCallback) window.lastNearbyCallback(); });
+
+    // ========== INITIALIZE ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadHouses();
+      // Mobile menu
+      const mobileBtn = document.getElementById('mobileMenuBtn');
+      const mobileDropdown = document.getElementById('mobileSettingsDropdown');
+      if (mobileBtn && mobileDropdown) {
+        mobileBtn.addEventListener('click', (e) => { e.stopPropagation(); mobileDropdown.classList.toggle('active'); });
+        document.addEventListener('click', (e) => { if (!mobileBtn.contains(e.target) && !mobileDropdown.contains(e.target)) mobileDropdown.classList.remove('active'); });
+      }
+      // Theme sync
+      const themeSelect = document.querySelector('.theme-select');
+      if (themeSelect) themeSelect.addEventListener('change', (e) => document.body.className = 'theme-' + e.target.value);
+    });
   </script>
 </body>
 </html>
