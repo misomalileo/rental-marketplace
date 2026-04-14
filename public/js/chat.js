@@ -5,9 +5,9 @@ let chats = [];
 let typingTimeout = null;
 let currentUser = null;
 let currentContextMessage = null;
-let reactionPickerVisible = false;
-let currentReactionMessageId = null;
-let scrollToBottomBtn = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
 
 function getToken() { return localStorage.getItem("token"); }
 const token = getToken();
@@ -33,7 +33,7 @@ function initSocket() {
     }
     updateChatList();
     if (message.senderId !== currentUser?._id && currentChatId !== chatId && Notification.permission === "granted") {
-      new Notification("New message from " + (message.senderName || "Someone"), { body: message.text });
+      new Notification("New message from " + (message.senderName || "Someone"), { body: message.text?.substring(0, 50) || "Media" });
     }
   });
   socket.on("messagesRead", ({ chatId }) => {
@@ -110,7 +110,7 @@ function updateChatList() {
   if (!container) return;
   container.innerHTML = "";
   if (!chats.length) {
-    container.innerHTML = '<li style="padding:1rem; text-align:center;">No conversations yet</li>';
+    container.innerHTML = '<li style="padding:0.8rem; text-align:center; color:#888;">No conversations yet</li>';
     return;
   }
   chats.forEach(chat => {
@@ -128,7 +128,7 @@ function updateChatList() {
       </div>
       <div class="chat-info">
         <h4>${other.name || "User"}</h4>
-        <p>${lastMsg ? (lastMsg.text?.length > 30 ? lastMsg.text.substring(0,30)+"…" : (lastMsg.text || "Media")) : "No messages yet"}</p>
+        <p>${lastMsg ? (lastMsg.text?.length > 25 ? lastMsg.text.substring(0,25)+"…" : (lastMsg.text || "Media")) : "No messages yet"}</p>
       </div>
       <div class="chat-time">
         ${lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
@@ -146,7 +146,6 @@ async function selectChat(chatId, otherUser) {
   await loadMessages(chatId);
   updateChatList();
   markMessagesAsRead(chatId);
-  // Fetch last seen
   if (otherUser._id) {
     try {
       const res = await fetch(`/api/auth/user/${otherUser._id}`, { headers: { Authorization: "Bearer " + token } });
@@ -168,7 +167,7 @@ function updateLastSeen(lastSeen, online) {
     const now = new Date();
     const diff = Math.floor((now - seenDate) / 1000 / 60);
     if (diff < 1) statusEl.innerHTML = "Last seen just now";
-    else if (diff < 60) statusEl.innerHTML = `Last seen ${diff} minutes ago`;
+    else if (diff < 60) statusEl.innerHTML = `Last seen ${diff} min ago`;
     else statusEl.innerHTML = `Last seen ${seenDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
   } else {
     statusEl.innerHTML = "Offline";
@@ -213,10 +212,12 @@ function renderChatHeader(chat) {
         <i class="fas fa-trash-alt" id="deleteChatBtn" title="Delete conversation"></i>
       </div>
     </div>
+    <div class="quick-replies" id="quickReplies"></div>
     <div class="messages" id="messagesContainer"></div>
     <div class="input-area">
       <button class="emoji-btn" id="emojiBtn"><i class="far fa-smile-wink"></i></button>
       <button class="attach-btn" id="attachBtn"><i class="fas fa-paperclip"></i></button>
+      <button class="voice-btn" id="voiceBtn"><i class="fas fa-microphone"></i></button>
       <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
       <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
     </div>
@@ -225,6 +226,7 @@ function renderChatHeader(chat) {
   document.getElementById("deleteChatBtn").addEventListener("click", () => deleteChat());
   document.getElementById("attachBtn").addEventListener("click", () => attachFile());
   document.getElementById("emojiBtn").addEventListener("click", () => toggleEmojiPicker());
+  document.getElementById("voiceBtn").addEventListener("click", () => toggleVoiceRecording());
   const input = document.getElementById("messageInput");
   const sendBtn = document.getElementById("sendBtn");
   if (input && sendBtn) {
@@ -236,6 +238,17 @@ function renderChatHeader(chat) {
     });
     sendBtn.onclick = sendMessage;
   }
+  // Quick replies
+  const quickContainer = document.getElementById("quickReplies");
+  const replies = ["🏠 Is this house available?", "💰 What's the price?", "👀 Can I view it?"];
+  quickContainer.innerHTML = replies.map(text => `<button class="quick-reply-btn" data-text="${text}">${text}</button>`).join("");
+  document.querySelectorAll(".quick-reply-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const text = btn.getAttribute("data-text");
+      document.getElementById("messageInput").value = text;
+      sendMessage();
+    });
+  });
   attachScrollToBottomButton();
 }
 
@@ -256,12 +269,92 @@ function toggleEmojiPicker() {
   }
   if (picker.style.display === "none" || !picker.style.display) {
     picker.style.display = "block";
-    const rect = document.getElementById("emojiBtn").getBoundingClientRect();
-    picker.style.position = "absolute";
-    picker.style.bottom = "70px";
-    picker.style.right = "20px";
   } else {
     picker.style.display = "none";
+  }
+}
+
+async function toggleVoiceRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunks.push(event.data);
+    };
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      const file = new File([audioBlob], "voice-message.webm", { type: 'audio/webm' });
+      await sendAudioFile(file);
+      stream.getTracks().forEach(track => track.stop());
+      document.getElementById("voiceBtn").innerHTML = '<i class="fas fa-microphone"></i>';
+      isRecording = false;
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    document.getElementById("voiceBtn").innerHTML = '<i class="fas fa-stop-circle"></i>';
+    setTimeout(() => {
+      if (isRecording) stopRecording();
+    }, 60000); // auto-stop after 60 sec
+  } catch (err) {
+    console.error("Microphone error:", err);
+    alert("Could not access microphone.");
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+  }
+}
+
+async function sendAudioFile(file) {
+  const formData = new FormData();
+  formData.append("image", file); // reuse image endpoint
+  try {
+    const uploadRes = await fetch("/api/chat/upload", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token },
+      body: formData
+    });
+    const uploadData = await uploadRes.json();
+    if (uploadRes.ok) {
+      const res = await fetch("/api/chat/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ chatId: currentChatId, text: uploadData.url, type: "audio" })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const tempMsg = {
+          _id: data._id,
+          text: data.text,
+          sender: data.sender,
+          createdAt: data.createdAt,
+          read: false,
+          delivered: false,
+          type: "audio"
+        };
+        appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
+        socket.emit("sendMessage", { chatId: currentChatId, text: uploadData.url, messageId: data._id, type: "audio" });
+        scrollMessagesToBottom();
+      } else {
+        alert("Failed to send voice message");
+      }
+    } else {
+      alert("Upload failed");
+    }
+  } catch (err) {
+    console.error("Voice upload error:", err);
+    alert("Network error");
   }
 }
 
@@ -277,12 +370,16 @@ function appendMessageToDOM(msg, container) {
   const div = document.createElement("div");
   div.className = `message ${isSent ? "sent" : "received"}`;
   div.setAttribute("data-id", msg._id);
-  let content = escapeHtml(msg.text);
+  let content = "";
   if (msg.type === "image") {
-    content = `<img src="${msg.text}" style="max-width:200px; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.text}')">`;
+    content = `<img src="${msg.text}" style="max-width:180px; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.text}')">`;
+  } else if (msg.type === "audio") {
+    content = `<div class="audio-message"><audio controls src="${msg.text}" style="max-width:180px; height:32px;"></audio></div>`;
+  } else {
+    content = `<div class="message-text">${escapeHtml(msg.text)}</div>`;
   }
   div.innerHTML = `
-    <div class="message-text">${content}</div>
+    ${content}
     <div class="message-time">
       ${new Date(msg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
       ${isSent ? `<span class="message-status">${getStatusIcon(msg)}</span>` : ""}
@@ -305,7 +402,7 @@ function appendMessageToDOM(msg, container) {
       div.addEventListener("touchmove", () => clearTimeout(timer));
     });
   }
-  // Reaction picker (long press on any message)
+  // Reaction picker (long press)
   div.addEventListener("contextmenu", (e) => {
     e.preventDefault();
     showReactionPicker(e.clientX, e.clientY, msg._id);
@@ -325,7 +422,7 @@ function showReactionPicker(x, y, messageId) {
   menu.className = "context-menu";
   menu.style.left = x + "px";
   menu.style.top = y + "px";
-  menu.style.minWidth = "200px";
+  menu.style.minWidth = "160px";
   menu.innerHTML = `
     <div data-reaction="❤️">❤️ Love</div>
     <div data-reaction="👍">👍 Like</div>
@@ -353,12 +450,7 @@ async function sendReaction(messageId, emoji) {
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify({ chatId: currentChatId, text: reactionText, type: "text" })
     });
-    if (res.ok) {
-      const data = await res.json();
-      // Optionally, also store reaction reference locally – not required
-    } else {
-      alert("Failed to send reaction");
-    }
+    if (!res.ok) alert("Failed to send reaction");
   } catch (err) {
     console.error(err);
   }
@@ -377,7 +469,6 @@ async function sendMessage() {
   input.disabled = true;
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) sendBtn.disabled = true;
-
   try {
     const res = await fetch("/api/chat/send", {
       method: "POST",
@@ -506,12 +597,7 @@ async function deleteChat() {
     if (res.ok) {
       currentChatId = null;
       currentOtherUser = null;
-      document.getElementById("mainChat").innerHTML = `
-        <div class="no-chat">
-          <i class="fas fa-comment-dots" style="font-size:3rem;"></i>
-          <p>Conversation deleted</p>
-        </div>
-      `;
+      document.getElementById("mainChat").innerHTML = `<div class="no-chat"><i class="fas fa-comment-dots"></i><p>Conversation deleted</p></div>`;
       loadChats();
     } else {
       alert("Failed to delete conversation");
