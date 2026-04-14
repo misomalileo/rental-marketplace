@@ -213,7 +213,7 @@
       cursor: pointer;
     }
 
-    /* Messages - the critical part */
+    /* Messages - tightly controlled height */
     .messages {
       flex: 1;
       overflow-y: auto;
@@ -222,6 +222,10 @@
       flex-direction: column;
       gap: 0.2rem;
       min-height: 0;   /* allows it to shrink */
+    }
+    /* Force messages container to never exceed available space */
+    .main-chat {
+      max-height: 100%;
     }
     .message {
       max-width: 80%;
@@ -256,25 +260,9 @@
       height: 24px;
     }
 
-    /* Quick replies - hidden on mobile to save space; can be enabled */
+    /* Quick replies - hidden on mobile to save vertical space */
     .quick-replies {
-      display: flex;
-      gap: 0.3rem;
-      padding: 0.2rem 0.4rem;
-      background: #0f0f14;
-      overflow-x: auto;
-      border-top: 1px solid #2a2a35;
-      border-bottom: 1px solid #2a2a35;
-      flex-shrink: 0;
-    }
-    .quick-reply-btn {
-      background: #1e2a3a;
-      border: none;
-      border-radius: 30px;
-      padding: 0.15rem 0.5rem;
-      font-size: 0.6rem;
-      color: #cbd5e1;
-      cursor: pointer;
+      display: none;
     }
 
     /* Input area - fixed at bottom, no extra space */
@@ -442,9 +430,7 @@
       }
       .message { max-width: 85%; }
       .input-area button { width: 30px; height: 30px; }
-      .quick-reply-btn { padding: 0.1rem 0.4rem; font-size: 0.55rem; }
-      /* optional: hide quick replies on very small screens to save space */
-      .quick-replies { display: none; }
+      /* quick replies already hidden */
     }
     @media (min-width: 769px) {
       .sidebar {
@@ -453,6 +439,10 @@
       }
       .mobile-back {
         display: none;
+      }
+      /* On desktop, quick replies can be shown */
+      .quick-replies {
+        display: flex;
       }
     }
   </style>
