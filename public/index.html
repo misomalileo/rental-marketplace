@@ -269,7 +269,7 @@
     .fav-btn .fas.fa-heart { color: #e74c3c !important; }
 
     /* ========== ENHANCED 3D CARDS & GRADIENTS ========== */
-    .house-card, .dream-card, .landlord-property-card, .carousel-card {
+    .house-card, .dream-card, .landlord-property-card {
       transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       border: 1px solid rgba(255,255,255,0.1);
@@ -280,18 +280,57 @@
       box-shadow: 0 20px 30px -12px rgba(0,0,0,0.2);
       border-color: rgba(37,99,235,0.3);
     }
+
+    /* ========== DREAM MATCH CARDS – SMALLER, 3D, SOFT GREEN PATCHES ========== */
+    .dream-card {
+      border-radius: 20px;
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+      background: linear-gradient(145deg, #ffffff, #f0faf0);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.02);
+      transition: all 0.3s ease;
+    }
+    .dream-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 35px -12px rgba(16,185,129,0.3);
+      border-color: rgba(16,185,129,0.4);
+    }
     .dream-match-badge {
-      background: linear-gradient(135deg, #10b981, #3b82f6);
-      box-shadow: 0 4px 10px rgba(16,185,129,0.3);
+      background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
+      color: #065f46;
+      font-weight: 700;
+      border-radius: 40px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.65rem;
+      display: inline-block;
+      box-shadow: 0 2px 6px rgba(16,185,129,0.2);
     }
-    .carousel-card img {
-      transition: transform 0.5s ease;
+    .dream-card img {
+      height: 140px;
+      object-fit: cover;
     }
-    .carousel-card:hover img {
-      transform: scale(1.02);
+    .dream-card-content {
+      padding: 0.6rem;
+    }
+    .dream-card-content h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dream-price {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #10b981;
+      margin: 0.2rem 0;
+    }
+    @media (max-width: 768px) {
+      .dream-card img { height: 120px; }
+      .dream-card-content h3 { font-size: 0.7rem; }
     }
 
-    /* ========== HERO CAROUSEL (MOBILE OPTIMISED) ========== */
+    /* ========== FEATURED CAROUSEL – SMALL 3D SLOTS ========== */
     .carousel-section { margin: 1rem 1rem 2rem; }
     .carousel-container {
       background: var(--card-bg);
@@ -307,35 +346,54 @@
     }
     .carousel-title i { font-size: 1.5rem; }
     .hero-swiper { padding: 0.2rem 0.5rem; }
-    .swiper-slide { border-radius: 16px; }
-    .carousel-card img { height: 120px; }
-    .carousel-card-content h3 { font-size: 0.75rem; }
-    .carousel-price { font-size: 0.7rem; }
-    .carousel-btn { font-size: 0.55rem; padding: 0.2rem 0.4rem; }
+    .swiper-slide { border-radius: 20px; }
+    .carousel-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    .carousel-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.2);
+    }
+    .carousel-card img {
+      height: 110px;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .carousel-card:hover img {
+      transform: scale(1.03);
+    }
+    .carousel-card-content {
+      padding: 0.5rem;
+    }
+    .carousel-card-content h3 {
+      font-size: 0.7rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .carousel-price {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .carousel-btn {
+      font-size: 0.55rem;
+      padding: 0.2rem 0.4rem;
+    }
     @media (max-width: 768px) {
       .carousel-title { font-size: 1.1rem; }
-      .carousel-card img { height: 100px; }
+      .carousel-card img { height: 90px; }
       .hero-swiper { padding: 0; }
       .carousel-card-content { padding: 0.4rem; }
+      .carousel-card-content h3 { font-size: 0.65rem; }
     }
 
-    /* ========== DREAM MATCH 3D STYLING ========== */
-    #dreamMatchModal .modal-content {
-      background: linear-gradient(135deg, rgba(16,185,129,0.05), rgba(59,130,246,0.05));
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(16,185,129,0.2);
-    }
-    .dream-match-badge {
-      background: linear-gradient(135deg, #10b981, #3b82f6);
-      font-weight: 700;
-      letter-spacing: 0.3px;
-    }
-    .dream-card {
-      border-radius: 20px;
-      backdrop-filter: blur(4px);
-    }
-
-    /* Category Tabs */
+    /* Category Tabs (unchanged) */
     .category-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -628,7 +686,7 @@
       border-radius: 40px;
     }
 
-    /* Amenity Toggles (new) */
+    /* Amenity Toggles */
     .amenity-toggles {
       margin: 0.6rem 0;
       display: flex;
@@ -1399,9 +1457,8 @@
     }
   </script>
 
-  <!-- ========== AMENITY LAYERS & SUB-DISTRICTS (NO DUPLICATE LOGIC) ========== -->
+  <!-- ========== AMENITY LAYERS & SUB-DISTRICTS ========== -->
   <script>
-    // Wait for map and district layer to be ready
     let amenityLoadInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map && districtLayer) {
         clearInterval(amenityLoadInterval);
