@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- TensorFlow.js and MobileNet for AI Image Search -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
   <style>
@@ -47,9 +46,9 @@
     .card:hover { transform: translateY(-10px) rotateX(2deg); border-color: rgba(255,140,66,0.6); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.5); }
     .card h2 { font-size: 1.5rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; font-weight: 700; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .card h2 i { font-size: 1.6rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
-    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover { border-color: #FF8C42; transform: translateX(6px); }
-    .saved-search-actions, .alert-actions, .whatsapp-actions { display: flex; gap: 1rem; margin-top: 0.7rem; }
+    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .email-alert-item:hover { border-color: #FF8C42; transform: translateX(6px); }
+    .saved-search-actions, .alert-actions, .whatsapp-actions, .email-actions { display: flex; gap: 1rem; margin-top: 0.7rem; flex-wrap: wrap; }
     button.small { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 0.3rem 1rem; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #cbd5e1; display: inline-flex; align-items: center; gap: 6px; }
     button.small:hover { background: rgba(255,140,66,0.2); border-color: #FF8C42; color: white; }
     .alert-toggle { color: #60a5fa; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.75rem; }
@@ -77,13 +76,11 @@
     .early-house-card p { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin: 0.2rem 0; }
     .early-house-card a { color: #FFB347; text-decoration: none; font-size: 0.7rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; margin-top: 0.3rem; align-self: flex-start; }
     @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } .premium-header { flex-direction: column; text-align: center; } .nav-links { gap: 1rem; } .tab-btn { padding: 0.5rem 1rem; font-size: 0.85rem; } }
-    /* WhatsApp specific styles */
     .whatsapp-number-setup { background: rgba(0,0,0,0.3); border-radius: 28px; padding: 1rem; margin-bottom: 1.2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
     .whatsapp-number-setup .form-group { flex: 1; margin-bottom: 0; }
     .whatsapp-number-setup label { font-size: 0.7rem; display: block; margin-bottom: 0.2rem; color: #94a3b8; }
     .whatsapp-number-setup input { margin-bottom: 0; }
     .whatsapp-number-setup button { margin-bottom: 0; }
-    /* Voice assistant styles */
     .voice-search-container { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin: 1rem 0; }
     .mic-btn { background: linear-gradient(135deg, #FF8C42, #E67E22); border: none; border-radius: 50%; width: 70px; height: 70px; font-size: 2rem; color: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(255,140,66,0.5); display: flex; align-items: center; justify-content: center; }
     .mic-btn.listening { background: #e74c3c; animation: pulse 1.5s infinite; }
@@ -94,7 +91,6 @@
     .voice-result p { margin: 0.3rem 0; font-size: 0.8rem; }
     .whatsapp-share-btn { background: #25D366; color: white; border: none; border-radius: 40px; padding: 0.4rem 1rem; font-size: 0.7rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-top: 0.5rem; }
     .whatsapp-share-btn:hover { background: #128C7E; }
-    /* ========== AI IMAGE SEARCH STYLES ========== */
     .image-upload-area { border: 2px dashed rgba(255,140,66,0.5); border-radius: 28px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem; }
     .image-upload-area:hover { border-color: #FF8C42; background: rgba(255,140,66,0.05); }
     .image-upload-area i { font-size: 2rem; margin-bottom: 0.5rem; color: #FFB347; }
@@ -142,14 +138,16 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="tools"><i class="fas fa-tools"></i> Premium Tools</button>
       <button class="tab-btn" data-tab="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp Alerts</button>
+      <button class="tab-btn" data-tab="email"><i class="fas fa-envelope"></i> Email Alerts</button>   <!-- NEW TAB -->
       <button class="tab-btn" data-tab="alerts"><i class="fas fa-bell"></i> Price Alerts</button>
       <button class="tab-btn" data-tab="notifications"><i class="fas fa-inbox"></i> Notifications</button>
       <button class="tab-btn" data-tab="portfolio"><i class="fas fa-id-card"></i> Portfolio & Boost</button>
     </div>
 
+    <!-- ========== PREMIUM TOOLS TAB (unchanged) ========== -->
     <div id="tab-tools" class="tab-content active">
       <div class="dashboard-grid">
-        <!-- NEW: AI Image Search Card -->
+        <!-- AI Image Search Card -->
         <div class="card">
           <h2><i class="fas fa-image"></i> AI Image Search</h2>
           <p style="font-size:0.75rem; margin-bottom:0.5rem;">Upload a photo of a house you like, and our AI will find visually similar properties.</p>
@@ -166,7 +164,7 @@
           <div id="similarResults" class="similar-houses-list" style="margin-top:1rem;"></div>
         </div>
 
-        <!-- Voice Assistant Card (existing) -->
+        <!-- Voice Assistant Card -->
         <div class="card">
           <h2><i class="fas fa-microphone-alt"></i> Voice Assistant</h2>
           <p style="font-size:0.75rem; margin-bottom:0.5rem;">Speak naturally – e.g., “Find a 3-bedroom house in Lilongwe under 250,000 MWK with a garden”</p>
@@ -234,7 +232,7 @@
       </div>
     </div>
 
-    <!-- NEW WhatsApp Alerts Tab -->
+    <!-- ========== WHATSAPP ALERTS TAB (unchanged) ========== -->
     <div id="tab-whatsapp" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
@@ -259,6 +257,23 @@
       </div>
     </div>
 
+    <!-- ========== NEW: EMAIL ALERTS TAB ========== -->
+    <div id="tab-email" class="tab-content">
+      <div class="dashboard-grid">
+        <div class="card" style="grid-column: span 2;">
+          <h2><i class="fas fa-envelope"></i> Email Property Alerts</h2>
+          <p style="font-size:0.75rem; margin-bottom: 1rem;">Receive instant email notifications when new properties match your saved searches. Toggle alerts on/off for each search.</p>
+          
+          <div style="margin-top: 1rem;">
+            <h3><i class="fas fa-search"></i> Your Saved Searches (Email Alerts)</h3>
+            <div id="emailAlertsList">Loading...</div>
+            <button id="newEmailSearchBtn" class="small" style="margin-top: 0.5rem;"><i class="fas fa-plus-circle"></i> Create New Search</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PRICE ALERTS TAB (unchanged) ========== -->
     <div id="tab-alerts" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
@@ -272,6 +287,7 @@
       </div>
     </div>
 
+    <!-- ========== NOTIFICATIONS TAB (unchanged) ========== -->
     <div id="tab-notifications" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
@@ -286,6 +302,7 @@
       </div>
     </div>
 
+    <!-- ========== PORTFOLIO & BOOST TAB (unchanged) ========== -->
     <div id="tab-portfolio" class="tab-content">
       <div class="dashboard-grid">
         <div class="card">
@@ -325,7 +342,7 @@
     let predictorChart = null;
     let currentWhatsappNumber = "";
 
-    // ========== VOICE ASSISTANT IMPLEMENTATION ==========
+    // ========== VOICE ASSISTANT (unchanged) ==========
     let recognition = null;
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -338,20 +355,14 @@
     function parseVoiceQuery(text) {
       text = text.toLowerCase();
       let filters = {};
-
-      // Extract bedrooms
       let bedroomMatch = text.match(/(\d+)\s*bedroom/);
       if (bedroomMatch) filters.bedrooms = parseInt(bedroomMatch[1]);
-
-      // Extract max price
       let priceMatch = text.match(/(\d+)\s*(?:thousand|k|,?)/i);
       if (priceMatch) {
         let price = parseInt(priceMatch[1]);
         if (text.includes('thousand') || text.includes('k')) price *= 1000;
         filters.maxPrice = price;
       }
-
-      // Extract location (simple city names)
       const cities = ['lilongwe', 'blantyre', 'mzuzu', 'zomba', 'mulanje', 'thyolo', 'mangochi', 'balaka', 'chikwawa', 'nsanje', 'phalombe', 'machinga', 'dedza', 'salima', 'mchinji', 'ntcheu', 'kasungu', 'dowa', 'nkhotakota'];
       for (let city of cities) {
         if (text.includes(city)) {
@@ -359,21 +370,16 @@
           break;
         }
       }
-
-      // Property type
       if (text.includes('house')) filters.type = 'House';
       else if (text.includes('apartment')) filters.type = 'Apartment';
       else if (text.includes('room')) filters.type = 'Room';
       else if (text.includes('hostel')) filters.type = 'Hostel';
       else if (text.includes('office')) filters.type = 'Office';
-
-      // Amenities (garden, pool, parking, wifi, furnished)
       if (text.includes('garden')) filters.hasGarden = true;
       if (text.includes('pool')) filters.pool = true;
       if (text.includes('parking')) filters.parking = true;
       if (text.includes('wifi')) filters.wifi = true;
       if (text.includes('furnished')) filters.furnished = true;
-
       return filters;
     }
 
@@ -389,7 +395,6 @@
         if (filters.wifi) params.append('wifi', 'true');
         if (filters.furnished) params.append('furnished', 'true');
         params.append('limit', 5);
-
         const res = await fetch(`/api/houses?${params.toString()}`);
         const data = await res.json();
         return data.houses || [];
@@ -413,16 +418,13 @@
       const resultDiv = document.getElementById('voiceResult');
       const recognisedTextP = document.getElementById('recognisedText');
       const topMatchDiv = document.getElementById('topMatchResult');
-
       recognisedTextP.innerText = recognizedText;
-
       if (!properties || properties.length === 0) {
         topMatchDiv.innerHTML = '<p>❌ No properties found matching your request. Try different words.</p>';
         speakText('Sorry, no properties found. Please try again.');
         resultDiv.style.display = 'block';
         return;
       }
-
       const top = properties[0];
       const shareUrl = `https://rental-marketplace-irmj.onrender.com/house/${top._id}`;
       topMatchDiv.innerHTML = `
@@ -434,7 +436,6 @@
         <button class="whatsapp-share-btn" onclick="shareOnWhatsApp('${shareUrl}', '${escapeHtml(top.name)}')"><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
       `;
       resultDiv.style.display = 'block';
-
       const speakMsg = `Found ${properties.length} properties. The top match is ${top.name} in ${top.location} for ${top.price} Malawian Kwacha per month.`;
       speakText(speakMsg);
     }
@@ -457,14 +458,11 @@
       const statusDiv = document.getElementById('voiceStatus');
       btn.classList.add('listening');
       statusDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Listening... Speak now.';
-
       recognition.start();
-
       recognition.onresult = async (event) => {
         const transcript = event.results[0][0].transcript;
         statusDiv.innerHTML = `✅ Recognised: "${transcript}"`;
         btn.classList.remove('listening');
-
         const filters = parseVoiceQuery(transcript);
         if (Object.keys(filters).length === 0) {
           statusDiv.innerHTML = '⚠️ Could not understand filters. Try saying "3 bedroom house under 200 thousand"';
@@ -474,13 +472,11 @@
         const properties = await performVoiceSearch(filters);
         displayAndSpeakTopMatch(properties, transcript);
       };
-
       recognition.onerror = (event) => {
         console.error(event.error);
         statusDiv.innerHTML = `❌ Error: ${event.error}. Please try again.`;
         btn.classList.remove('listening');
       };
-
       recognition.onend = () => {
         if (btn.classList.contains('listening')) {
           btn.classList.remove('listening');
@@ -488,9 +484,8 @@
         }
       };
     });
-    // ========== END VOICE ASSISTANT ==========
 
-    // ========== NEW AI IMAGE SEARCH IMPLEMENTATION (with model loading state) ==========
+    // ========== AI IMAGE SEARCH (unchanged) ==========
     let mobilenetModel = null;
     const modelStatusSpan = document.getElementById('modelStatus');
     const searchBtn = document.getElementById('searchSimilarBtn');
@@ -505,7 +500,7 @@
       } catch (err) {
         console.error("Failed to load MobileNet", err);
         modelStatusSpan.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Model failed to load. Retrying...';
-        setTimeout(loadMobileNet, 3000); // retry after 3 seconds
+        setTimeout(loadMobileNet, 3000);
       }
     }
     loadMobileNet();
@@ -581,7 +576,6 @@
       }
     });
 
-    // Drag & drop for image upload
     const dropArea = document.getElementById('imageUploadArea');
     dropArea.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -605,10 +599,11 @@
         reader.readAsDataURL(file);
       }
     });
-    // ========== END AI IMAGE SEARCH ==========
 
+    // ========== LOGOUT ==========
     function logout() { localStorage.clear(); window.location.href = "login.html"; }
 
+    // ========== TAB SWITCHING ==========
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -619,6 +614,7 @@
       });
     });
 
+    // ========== LOAD PREMIUM STATUS & ALL DATA ==========
     async function loadPremiumStatus() {
       try {
         const res = await fetch("/api/premium/status", { headers: { Authorization: "Bearer " + token } });
@@ -637,6 +633,7 @@
           loadPortfolioLink();
           loadWhatsappSearches();
           loadUserWhatsappNumber();
+          loadEmailAlerts();      // <-- load email alerts tab
         } else {
           isActivePremium = false;
           statusArea.innerHTML = `<i class="fas fa-lock"></i> Inactive – activate to unlock`;
@@ -651,6 +648,7 @@
       } catch (err) { console.error(err); }
     }
 
+    // ========== WHATSAPP NUMBER & SEARCHES (unchanged) ==========
     async function loadUserWhatsappNumber() {
       try {
         const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
@@ -769,6 +767,121 @@
       await createWhatsappSearch(filters, name, whatsappNumber);
     });
 
+    // ========== EMAIL ALERTS (NEW) ==========
+    async function loadEmailAlerts() {
+      if (!isActivePremium) return;
+      try {
+        const res = await fetch("/api/saved-searches/my-searches", { headers: { Authorization: "Bearer " + token } });
+        const searches = await res.json();
+        const container = document.getElementById("emailAlertsList");
+        if (!container) return;
+        if (searches.length === 0) {
+          container.innerHTML = "<p><i class='fas fa-info-circle'></i> No saved searches. Create one to receive email alerts.</p>";
+          return;
+        }
+        container.innerHTML = searches.map(search => `
+          <div class="email-alert-item" data-id="${search._id}">
+            <div><strong><i class="fas fa-search"></i> ${escapeHtml(search.name)}</strong></div>
+            <div style="font-size:0.7rem;">Filters: ${JSON.stringify(search.filters)}</div>
+            <div style="font-size:0.65rem; color:#94a3b8;">Email: ${search.userEmail}</div>
+            <div class="email-actions">
+              <label style="display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" class="email-toggle" data-id="${search._id}" ${search.emailEnabled ? 'checked' : ''}>
+                <span class="alert-toggle"><i class="fas fa-envelope"></i> Send email alerts for new matching properties</span>
+              </label>
+              <button class="small delete-email-btn" data-id="${search._id}"><i class="fas fa-trash-alt"></i> Delete</button>
+            </div>
+          </div>
+        `).join('');
+
+        // Attach toggle event listeners
+        document.querySelectorAll('.email-toggle').forEach(toggle => {
+          toggle.addEventListener('change', async (e) => {
+            const searchId = toggle.getAttribute('data-id');
+            const enabled = toggle.checked;
+            try {
+              const res = await fetch(`/api/saved-searches/toggle-email/${searchId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+                body: JSON.stringify({ emailEnabled: enabled })
+              });
+              if (res.ok) {
+                alert(`Email alerts ${enabled ? 'enabled' : 'disabled'}`);
+              } else {
+                alert("Failed to update");
+                toggle.checked = !enabled;
+              }
+            } catch (err) {
+              alert("Network error");
+              toggle.checked = !enabled;
+            }
+          });
+        });
+
+        document.querySelectorAll('.delete-email-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = btn.getAttribute('data-id');
+            if (confirm("Delete this saved search? You will no longer receive email alerts for it.")) {
+              try {
+                const res = await fetch(`/api/saved-searches/delete-search/${id}`, {
+                  method: "DELETE",
+                  headers: { Authorization: "Bearer " + token }
+                });
+                if (res.ok) {
+                  loadEmailAlerts(); // refresh
+                } else {
+                  alert("Failed to delete");
+                }
+              } catch (err) { alert("Network error"); }
+            }
+          });
+        });
+      } catch (err) { console.error(err); document.getElementById("emailAlertsList").innerHTML = "<p>Error loading searches.</p>"; }
+    }
+
+    document.getElementById("newEmailSearchBtn")?.addEventListener("click", async () => {
+      if (!isActivePremium) { alert("Activate premium to create saved searches."); return; }
+      const name = prompt("Give this search a name (e.g., 'Houses in Blantyre under 300k'):");
+      if (!name) return;
+      let minPrice = prompt("Minimum price (MWK):", "0");
+      let maxPrice = prompt("Maximum price (MWK):", "2000000");
+      let type = prompt("Property type (House, Apartment, Room, Hostel, Office) or leave empty for all:", "");
+      let region = prompt("Region (Northern, Central, Southern) or leave empty for all:", "");
+      let bedrooms = prompt("Minimum bedrooms:", "0");
+      const filters = {};
+      if (minPrice && !isNaN(minPrice)) filters.minPrice = parseInt(minPrice);
+      if (maxPrice && !isNaN(maxPrice)) filters.maxPrice = parseInt(maxPrice);
+      if (type && type.trim()) filters.type = type;
+      if (region && region.trim()) filters.region = region;
+      if (bedrooms && !isNaN(bedrooms) && bedrooms > 0) filters.bedrooms = parseInt(bedrooms);
+      // For email alerts, we still need a WhatsApp number (the model requires it). Use a placeholder if not provided.
+      let whatsappNumber = document.getElementById("whatsappNumberInput")?.value.trim();
+      if (!whatsappNumber) {
+        whatsappNumber = "265000000000"; // dummy – will be replaced on save? Actually the backend requires a valid number.
+        // Better to ask user for WhatsApp number if not set
+        whatsappNumber = prompt("Please enter your WhatsApp number (format 265XXXXXXXXX) for notifications (even if you only want email, this is required):");
+        if (!whatsappNumber || !/^265\d{9}$/.test(whatsappNumber)) {
+          alert("Valid WhatsApp number is required to create a saved search.");
+          return;
+        }
+      }
+      try {
+        const res = await fetch("/api/saved-searches/save-search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ name, filters, whatsappNumber })
+        });
+        if (res.ok) {
+          alert("Search saved! You will receive email alerts for new matching properties.");
+          loadEmailAlerts();
+        } else {
+          const err = await res.json();
+          alert("Error: " + err.message);
+        }
+      } catch (err) { alert("Network error"); }
+    });
+
+    // ========== OTHER FUNCTIONS (unchanged) ==========
     async function loadUserHouses() {
       try {
         const res = await fetch("/api/houses?owner=me", { headers: { Authorization: "Bearer " + token } });

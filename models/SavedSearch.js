@@ -2,18 +2,15 @@
 const mongoose = require('mongoose');
 
 const savedSearchSchema = new mongoose.Schema({
-    // ========== EXISTING FIELDS (unchanged) ==========
     userEmail: { type: String, required: true },
     whatsappNumber: { type: String, required: true },
     filters: { type: Object, required: true },
     createdAt: { type: Date, default: Date.now },
-    
-    // ========== NEW FIELDS (added) ==========
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // links to premium user
-    name: { type: String, default: 'Saved Search' } // optional name for the search
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    name: { type: String, default: 'Saved Search' },
+    emailEnabled: { type: Boolean, default: true }   // <-- NEW: whether to send email alerts
 });
 
-// Optional: add an index for faster queries by userId
 savedSearchSchema.index({ userId: 1 });
 
 module.exports = mongoose.model('SavedSearch', savedSearchSchema);

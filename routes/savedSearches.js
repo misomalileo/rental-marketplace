@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const SavedSearch = require('../models/SavedSearch');
-const User = require('../models/User'); // <-- added to fetch user details
+const User = require('../models/User');
 
 // GET all saved searches for the logged-in user
 router.get('/my-searches', auth, async (req, res) => {
@@ -23,12 +23,10 @@ router.post('/save-search', auth, async (req, res) => {
         if (!whatsappNumber) {
             return res.status(400).json({ message: 'WhatsApp number is required' });
         }
-        // Basic WhatsApp number validation (Malawi format)
         if (!/^265\d{9}$/.test(whatsappNumber)) {
             return res.status(400).json({ message: 'WhatsApp number must be in format 265XXXXXXXXX (12 digits total)' });
         }
         
-        // Fetch the user to get their email address
         const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -36,10 +34,11 @@ router.post('/save-search', auth, async (req, res) => {
 
         const savedSearch = new SavedSearch({
             userId: req.user.id,
-            userEmail: user.email,   // ✅ now guaranteed to exist
+            userEmail: user.email,
             whatsappNumber,
             filters,
-            name: name || 'Saved Search'
+            name: name || 'Saved Search',
+            emailEnabled: true   // default on
         });
         await savedSearch.save();
         res.json({ message: 'Search saved successfully', search: savedSearch });
@@ -55,6 +54,26 @@ router.delete('/delete-search/:id', auth, async (req, res) => {
         const search = await SavedSearch.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
         if (!search) return res.status(404).json({ message: 'Search not found' });
         res.json({ message: 'Search deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ========== NEW: Toggle email notifications for a saved search ==========
+router.put('/toggle-email/:id', auth, async (req, res) => {
+    try {
+        const { emailEnabled } = req.body;
+        if (typeof emailEnabled !== 'boolean') {
+            return res.status(400).json({ message: 'emailEnabled must be a boolean' });
+        }
+        const search = await SavedSearch.findOne({ _id: req.params.id, userId: req.user.id });
+        if (!search) {
+            return res.status(404).json({ message: 'Search not found' });
+        }
+        search.emailEnabled = emailEnabled;
+        await search.save();
+        res.json({ message: `Email alerts ${emailEnabled ? 'enabled' : 'disabled'}`, search });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
