@@ -5,24 +5,42 @@ const { sendEmail } = require('./emailService');
 
 async function notifyMatchingSavedSearches(house) {
   try {
-    const savedSearches = await SavedSearch.find().populate('userId', 'isPremium email');
+    console.log(`📧 Checking email notifications for house: ${house.name} (${house._id})`);
     
-    const matchingSearches = savedSearches.filter(search => {
+    const savedSearches = await SavedSearch.find().populate('userId', 'isPremium email');
+    console.log(`📋 Found ${savedSearches.length} saved searches`);
+
+    for (const search of savedSearches) {
       const user = search.userId;
-      if (user && !user.isPremium) return false;
-      if (!search.emailEnabled) return false;  // <-- only if email alerts are ON
-      return houseMatchesFilters(house, search.filters);
-    });
+      console.log(`🔎 Search: ${search.name || 'unnamed'}, user: ${user?.email || 'no user'}, emailEnabled: ${search.emailEnabled}, isPremium: ${user?.isPremium}`);
 
-    if (matchingSearches.length === 0) return;
+      if (!user) {
+        console.log(`❌ Skipping: no user linked to search ${search._id}`);
+        continue;
+      }
+      if (!user.isPremium) {
+        console.log(`❌ Skipping: user ${user.email} is not premium`);
+        continue;
+      }
+      if (!search.emailEnabled) {
+        console.log(`❌ Skipping: email alerts disabled for search ${search._id}`);
+        continue;
+      }
+      if (!search.userEmail) {
+        console.log(`❌ Skipping: no userEmail in saved search ${search._id}`);
+        continue;
+      }
 
-    const baseUrl = process.env.FRONTEND_URL || 'https://rental-marketplace-irmj.onrender.com';
-    const houseUrl = `${baseUrl}/house/${house._id}`;
+      const matches = houseMatchesFilters(house, search.filters);
+      if (!matches) {
+        console.log(`❌ No match: filters don't match house`);
+        continue;
+      }
 
-    for (const search of matchingSearches) {
-      const to = search.userEmail;
-      if (!to) continue;
-
+      console.log(`✅ Match found! Sending email to ${search.userEmail}`);
+      
+      const baseUrl = process.env.FRONTEND_URL || 'https://rental-marketplace-irmj.onrender.com';
+      const houseUrl = `${baseUrl}/house/${house._id}`;
       const subject = `🏠 New property matching your saved search: "${search.name || 'Saved Search'}"`;
       const html = `
         <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; border-radius: 28px; padding: 20px; border: 1px solid #e2e8f0;">
@@ -43,12 +61,13 @@ async function notifyMatchingSavedSearches(house) {
       `;
 
       try {
-        await sendEmail({ to, subject, html });
-        console.log(`✅ Email sent to ${to} for house ${house._id}`);
+        await sendEmail({ to: search.userEmail, subject, html });
+        console.log(`✅ Email sent to ${search.userEmail}`);
       } catch (err) {
-        console.error(`❌ Failed to send email to ${to}:`, err.message);
+        console.error(`❌ Failed to send email to ${search.userEmail}:`, err.message);
       }
     }
+    console.log("✅ Email alerts processing complete");
   } catch (err) {
     console.error('Error in notifyMatchingSavedSearches:', err);
   }
