@@ -471,7 +471,7 @@ document.getElementById('editImages').addEventListener('change', function(e) {
   updateImagePreview('editImagePreview', editUploadFileList, 'editImages');
 });
 
-// ========== EDIT MODAL FUNCTIONS ==========
+// ========== EDIT MODAL FUNCTIONS (with working tabs) ==========
 function openEditModal(houseId) {
   currentEditId = houseId;
   const house = myHouses.find(h => h._id === houseId);
@@ -514,6 +514,12 @@ function openEditModal(houseId) {
       editMarker = L.marker([house.lat, house.lng]).addTo(editMap);
     }
   }, 200);
+  
+  // Activate the first tab
+  document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
+  document.getElementById('editBasic').classList.add('active');
+  document.querySelectorAll('.edit-tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.edit-tab-btn[data-edit-tab="basic"]').classList.add('active');
 }
 
 function closeEditModal() { document.getElementById('editModal').style.display = 'none'; if (editMarker) editMap.removeLayer(editMarker); editMarker = null; }
@@ -530,6 +536,17 @@ function getEditLocation() {
 }
 window.getEditLocation = getEditLocation;
 
+// Edit modal tab switching
+document.querySelectorAll('.edit-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabId = btn.getAttribute('data-edit-tab');
+    document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
+    document.getElementById(`edit${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`).classList.add('active');
+    document.querySelectorAll('.edit-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
 document.getElementById('editForm').addEventListener('submit', async e => {
   e.preventDefault(); showLoading();
   const formData = new FormData(e.target);
@@ -537,7 +554,6 @@ document.getElementById('editForm').addEventListener('submit', async e => {
   const unavailable = document.getElementById('editUnavailableDates').value;
   const dates = unavailable ? unavailable.split(', ').filter(d => d) : [];
   formData.append('unavailableDates', JSON.stringify(dates));
-  // Append new images from editUploadFileList
   for (let file of editUploadFileList) {
     formData.append('images', file);
   }
