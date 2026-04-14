@@ -5,6 +5,9 @@ let chats = [];
 let typingTimeout = null;
 let currentUser = null;
 let currentContextMessage = null;
+let reactionPickerVisible = false;
+let currentReactionMessageId = null;
+let scrollToBottomBtn = null;
 
 function getToken() { return localStorage.getItem("token"); }
 const token = getToken();
@@ -26,6 +29,7 @@ function initSocket() {
       const existing = document.querySelector(`.message[data-id="${message._id}"]`);
       if (!existing) appendMessageToDOM(message, document.getElementById("messagesContainer"));
       markMessagesAsRead(currentChatId);
+      scrollMessagesToBottom();
     }
     updateChatList();
     if (message.senderId !== currentUser?._id && currentChatId !== chatId && Notification.permission === "granted") {
@@ -124,7 +128,7 @@ function updateChatList() {
       </div>
       <div class="chat-info">
         <h4>${other.name || "User"}</h4>
-        <p>${lastMsg ? (lastMsg.text.length > 30 ? lastMsg.text.substring(0,30)+"…" : lastMsg.text) : "No messages yet"}</p>
+        <p>${lastMsg ? (lastMsg.text?.length > 30 ? lastMsg.text.substring(0,30)+"…" : (lastMsg.text || "Media")) : "No messages yet"}</p>
       </div>
       <div class="chat-time">
         ${lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
@@ -142,6 +146,33 @@ async function selectChat(chatId, otherUser) {
   await loadMessages(chatId);
   updateChatList();
   markMessagesAsRead(chatId);
+  // Fetch last seen
+  if (otherUser._id) {
+    try {
+      const res = await fetch(`/api/auth/user/${otherUser._id}`, { headers: { Authorization: "Bearer " + token } });
+      if (res.ok) {
+        const userData = await res.json();
+        updateLastSeen(userData.lastSeen, userData.online);
+      }
+    } catch (err) { console.error("Failed to fetch last seen", err); }
+  }
+}
+
+function updateLastSeen(lastSeen, online) {
+  const statusEl = document.querySelector(".chat-header-info p:not(.typing-indicator)");
+  if (!statusEl) return;
+  if (online) {
+    statusEl.innerHTML = "Online";
+  } else if (lastSeen) {
+    const seenDate = new Date(lastSeen);
+    const now = new Date();
+    const diff = Math.floor((now - seenDate) / 1000 / 60);
+    if (diff < 1) statusEl.innerHTML = "Last seen just now";
+    else if (diff < 60) statusEl.innerHTML = `Last seen ${diff} minutes ago`;
+    else statusEl.innerHTML = `Last seen ${seenDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+  } else {
+    statusEl.innerHTML = "Offline";
+  }
 }
 
 async function loadMessages(chatId) {
@@ -154,13 +185,12 @@ async function loadMessages(chatId) {
     }
     if (!res.ok) throw new Error(`Failed: ${res.status}`);
     const chat = await res.json();
-    // Ensure the main chat area is properly set up before rendering messages
     if (!document.getElementById("messagesContainer")) {
       renderChatHeader(chat);
     }
     renderMessages(chat.messages);
-    const messagesDiv = document.querySelector(".messages");
-    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    scrollMessagesToBottom();
+    attachScrollToBottomButton();
   } catch (err) {
     console.error("Error loading messages:", err);
     document.getElementById("mainChat").innerHTML = `<div class="no-chat"><p>Failed to load messages</p></div>`;
@@ -176,6 +206,7 @@ function renderChatHeader(chat) {
       <div class="avatar">${other?.name?.charAt(0) || "?"}</div>
       <div class="chat-header-info">
         <h3>${other?.name || "User"}</h3>
+        <p class="status-text">Online</p>
         <p class="typing-indicator" style="display:none;">Typing...</p>
       </div>
       <div class="chat-actions">
@@ -184,13 +215,16 @@ function renderChatHeader(chat) {
     </div>
     <div class="messages" id="messagesContainer"></div>
     <div class="input-area">
+      <button class="emoji-btn" id="emojiBtn"><i class="far fa-smile-wink"></i></button>
       <button class="attach-btn" id="attachBtn"><i class="fas fa-paperclip"></i></button>
       <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
       <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
     </div>
+    <div class="scroll-to-bottom" id="scrollToBottomBtn"><i class="fas fa-arrow-down"></i></div>
   `;
   document.getElementById("deleteChatBtn").addEventListener("click", () => deleteChat());
   document.getElementById("attachBtn").addEventListener("click", () => attachFile());
+  document.getElementById("emojiBtn").addEventListener("click", () => toggleEmojiPicker());
   const input = document.getElementById("messageInput");
   const sendBtn = document.getElementById("sendBtn");
   if (input && sendBtn) {
@@ -201,6 +235,33 @@ function renderChatHeader(chat) {
       typingTimeout = setTimeout(() => { socket.emit("typing", { chatId: currentChatId, isTyping: false }); }, 1000);
     });
     sendBtn.onclick = sendMessage;
+  }
+  attachScrollToBottomButton();
+}
+
+function toggleEmojiPicker() {
+  let picker = document.querySelector("emoji-picker");
+  if (!picker) {
+    picker = document.createElement("emoji-picker");
+    picker.classList.add("emoji-picker-container");
+    document.body.appendChild(picker);
+    picker.addEventListener("emoji-click", (e) => {
+      const input = document.getElementById("messageInput");
+      if (input) {
+        input.value += e.detail.unicode;
+        input.focus();
+      }
+      picker.style.display = "none";
+    });
+  }
+  if (picker.style.display === "none" || !picker.style.display) {
+    picker.style.display = "block";
+    const rect = document.getElementById("emojiBtn").getBoundingClientRect();
+    picker.style.position = "absolute";
+    picker.style.bottom = "70px";
+    picker.style.right = "20px";
+  } else {
+    picker.style.display = "none";
   }
 }
 
@@ -228,34 +289,84 @@ function appendMessageToDOM(msg, container) {
     </div>
   `;
   container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
   if (isSent) {
     div.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       currentContextMessage = msg._id;
       showContextMenu(e.clientX, e.clientY);
     });
+    div.addEventListener("touchstart", (e) => {
+      let timer;
+      timer = setTimeout(() => {
+        currentContextMessage = msg._id;
+        showContextMenu(e.touches[0].clientX, e.touches[0].clientY);
+      }, 500);
+      div.addEventListener("touchend", () => clearTimeout(timer));
+      div.addEventListener("touchmove", () => clearTimeout(timer));
+    });
   }
+  // Reaction picker (long press on any message)
+  div.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    showReactionPicker(e.clientX, e.clientY, msg._id);
+  });
+  div.addEventListener("touchstart", (e) => {
+    let timer;
+    timer = setTimeout(() => {
+      showReactionPicker(e.touches[0].clientX, e.touches[0].clientY, msg._id);
+    }, 500);
+    div.addEventListener("touchend", () => clearTimeout(timer));
+    div.addEventListener("touchmove", () => clearTimeout(timer));
+  });
 }
 
-function showContextMenu(x, y) {
-  const existing = document.querySelector(".context-menu");
-  if (existing) existing.remove();
+function showReactionPicker(x, y, messageId) {
   const menu = document.createElement("div");
   menu.className = "context-menu";
   menu.style.left = x + "px";
   menu.style.top = y + "px";
-  menu.innerHTML = `<div id="deleteMsgBtn">Delete for me</div>`;
+  menu.style.minWidth = "200px";
+  menu.innerHTML = `
+    <div data-reaction="❤️">❤️ Love</div>
+    <div data-reaction="👍">👍 Like</div>
+    <div data-reaction="😂">😂 Funny</div>
+    <div data-reaction="😮">😮 Wow</div>
+    <div data-reaction="😢">😢 Sad</div>
+    <div data-reaction="😡">😡 Angry</div>
+  `;
   document.body.appendChild(menu);
-  document.getElementById("deleteMsgBtn").onclick = () => {
-    deleteMessage(currentContextMessage);
-    menu.remove();
-  };
+  document.querySelectorAll("[data-reaction]").forEach(el => {
+    el.addEventListener("click", async () => {
+      const emoji = el.getAttribute("data-reaction");
+      await sendReaction(messageId, emoji);
+      menu.remove();
+    });
+  });
   document.addEventListener("click", () => menu.remove(), { once: true });
+}
+
+async function sendReaction(messageId, emoji) {
+  const reactionText = `Reacted with ${emoji} to a message`;
+  try {
+    const res = await fetch("/api/chat/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({ chatId: currentChatId, text: reactionText, type: "text" })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      // Optionally, also store reaction reference locally – not required
+    } else {
+      alert("Failed to send reaction");
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 function getStatusIcon(msg) {
   if (msg.read) return '<i class="fas fa-check-double" style="color:#34b7f1;"></i>';
+  if (msg.delivered) return '<i class="fas fa-check-double"></i>';
   return '<i class="fas fa-check"></i>';
 }
 
@@ -287,6 +398,7 @@ async function sendMessage() {
       appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
       input.value = "";
       socket.emit("sendMessage", { chatId: currentChatId, text, messageId: data._id });
+      scrollMessagesToBottom();
     } else {
       alert("Failed to send: " + (data.message || "Unknown error"));
     }
@@ -335,6 +447,7 @@ async function attachFile() {
           };
           appendMessageToDOM(tempMsg, document.getElementById("messagesContainer"));
           socket.emit("sendMessage", { chatId: currentChatId, text: uploadData.url, messageId: data._id, type: "image" });
+          scrollMessagesToBottom();
         } else {
           alert("Failed to send image");
         }
@@ -347,6 +460,22 @@ async function attachFile() {
     }
   };
   input.click();
+}
+
+function showContextMenu(x, y) {
+  const existing = document.querySelector(".context-menu");
+  if (existing) existing.remove();
+  const menu = document.createElement("div");
+  menu.className = "context-menu";
+  menu.style.left = x + "px";
+  menu.style.top = y + "px";
+  menu.innerHTML = `<div id="deleteMsgBtn">Delete for me</div>`;
+  document.body.appendChild(menu);
+  document.getElementById("deleteMsgBtn").onclick = () => {
+    deleteMessage(currentContextMessage);
+    menu.remove();
+  };
+  document.addEventListener("click", () => menu.remove(), { once: true });
 }
 
 async function deleteMessage(messageId) {
@@ -408,10 +537,36 @@ function updateReadStatus() {
 
 function updateOnlineStatus(userId, online) {
   if (currentOtherUser && currentOtherUser._id === userId) {
-    const dot = document.querySelector(".chat-header .online-dot");
-    if (dot) dot.style.display = online ? "block" : "none";
+    const statusEl = document.querySelector(".chat-header-info p:not(.typing-indicator)");
+    if (statusEl) statusEl.innerHTML = online ? "Online" : "Offline";
   }
   updateChatList();
+}
+
+function scrollMessagesToBottom() {
+  const container = document.getElementById("messagesContainer");
+  if (container) {
+    container.scrollTop = container.scrollHeight;
+  }
+  const btn = document.getElementById("scrollToBottomBtn");
+  if (btn) btn.classList.remove("visible");
+}
+
+function attachScrollToBottomButton() {
+  const container = document.getElementById("messagesContainer");
+  const btn = document.getElementById("scrollToBottomBtn");
+  if (!container || !btn) return;
+  container.addEventListener("scroll", () => {
+    const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
+    if (atBottom) {
+      btn.classList.remove("visible");
+    } else {
+      btn.classList.add("visible");
+    }
+  });
+  btn.addEventListener("click", () => {
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  });
 }
 
 function escapeHtml(str) {

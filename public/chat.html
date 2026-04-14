@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>Khomo Lathu | Messages</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#075E54">
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Emoji Picker (lightweight) -->
+  <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.22.0/index.js" type="module"></script>
   <style>
     * {
       margin: 0;
@@ -204,6 +206,12 @@
       opacity: 0.8;
       margin: 0;
     }
+    .typing-indicator {
+      font-size: 0.7rem;
+      font-style: italic;
+      color: #a0a0a0;
+      margin-top: 2px;
+    }
     .chat-actions {
       display: flex;
       gap: 0.8rem;
@@ -224,13 +232,14 @@
       background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.03"><path fill="none" d="M0 0h100v100H0z"/><circle cx="20" cy="20" r="4" fill="white"/><circle cx="80" cy="80" r="6" fill="white"/><circle cx="50" cy="50" r="3" fill="white"/></svg>');
     }
     .message {
-      max-width: 70%;
+      max-width: 75%;
       padding: 0.5rem 0.8rem;
       border-radius: 18px;
       position: relative;
       word-wrap: break-word;
       animation: fadeIn 0.2s ease;
       font-size: 0.85rem;
+      transition: transform 0.1s;
     }
     .message.sent {
       align-self: flex-end;
@@ -244,6 +253,9 @@
       color: #e4e6eb;
       border-bottom-left-radius: 4px;
     }
+    .message-text {
+      white-space: pre-wrap;
+    }
     .message-status {
       display: inline-block;
       margin-left: 6px;
@@ -254,6 +266,17 @@
       opacity: 0.7;
       margin-top: 4px;
       text-align: right;
+    }
+    .reaction-badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(0,0,0,0.2);
+      border-radius: 20px;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      margin-top: 4px;
+      gap: 4px;
+      cursor: pointer;
     }
     .input-area {
       padding: 0.8rem;
@@ -273,7 +296,7 @@
       outline: none;
     }
     .input-area input::placeholder { color: #888; }
-    .attach-btn, .send-btn {
+    .attach-btn, .send-btn, .emoji-btn {
       background: #075E54;
       color: white;
       border: none;
@@ -286,8 +309,8 @@
       align-items: center;
       justify-content: center;
     }
-    .attach-btn:hover, .send-btn:hover { background: #128C7E; }
-    .attach-btn:disabled, .send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .attach-btn:hover, .send-btn:hover, .emoji-btn:hover { background: #128C7E; }
+    .attach-btn:disabled, .send-btn:disabled, .emoji-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .no-chat {
       display: flex;
       align-items: center;
@@ -312,6 +335,40 @@
       transition: background 0.2s;
     }
     .context-menu div:hover { background: #075E54; }
+    /* Emoji picker */
+    .emoji-picker-container {
+      position: absolute;
+      bottom: 70px;
+      right: 20px;
+      z-index: 2000;
+      display: none;
+    }
+    emoji-picker {
+      --background: #2a2a2a;
+      --border-radius: 16px;
+      --category-button-color: #888;
+      --category-button-color-active: #075E54;
+    }
+    .scroll-to-bottom {
+      position: absolute;
+      bottom: 80px;
+      right: 20px;
+      background: #075E54;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      z-index: 100;
+    }
+    .scroll-to-bottom.visible {
+      opacity: 1;
+    }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -364,7 +421,7 @@
       localStorage.removeItem("role");
       window.location = "login.html";
     }
-    // Resize sidebar functionality
+    // Resize sidebar
     const sidebar = document.getElementById('sidebar');
     const resizeHandle = document.getElementById('resizeHandle');
     let startX, startWidth;
