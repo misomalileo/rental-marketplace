@@ -420,6 +420,58 @@ async function deleteHouse(id) {
   });
 }
 
+// ========== IMAGE PREVIEW WITH REMOVE BUTTON ==========
+let uploadFileList = [];
+let editUploadFileList = [];
+
+function updateImagePreview(containerId, fileList, inputElementId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < fileList.length; i++) {
+    const file = fileList[i];
+    if (!file.type.startsWith('image/')) continue;
+    const reader = new FileReader();
+    reader.onload = (function(idx) {
+      return function(e) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-preview-item';
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.className = 'image-preview-remove';
+        removeBtn.addEventListener('click', (function(i) {
+          return function() {
+            fileList.splice(i, 1);
+            updateImagePreview(containerId, fileList, inputElementId);
+            const dataTransfer = new DataTransfer();
+            for (let f of fileList) dataTransfer.items.add(f);
+            document.getElementById(inputElementId).files = dataTransfer.files;
+          };
+        })(idx));
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        container.appendChild(wrapper);
+      };
+    })(i);
+    reader.readAsDataURL(file);
+  }
+}
+
+document.getElementById('uploadImages').addEventListener('change', function(e) {
+  const files = Array.from(e.target.files);
+  uploadFileList = files;
+  updateImagePreview('imagePreview', uploadFileList, 'uploadImages');
+});
+
+document.getElementById('editImages').addEventListener('change', function(e) {
+  const files = Array.from(e.target.files);
+  editUploadFileList = files;
+  updateImagePreview('editImagePreview', editUploadFileList, 'editImages');
+});
+
+// ========== EDIT MODAL FUNCTIONS ==========
 function openEditModal(houseId) {
   currentEditId = houseId;
   const house = myHouses.find(h => h._id === houseId);
@@ -485,9 +537,13 @@ document.getElementById('editForm').addEventListener('submit', async e => {
   const unavailable = document.getElementById('editUnavailableDates').value;
   const dates = unavailable ? unavailable.split(', ').filter(d => d) : [];
   formData.append('unavailableDates', JSON.stringify(dates));
+  // Append new images from editUploadFileList
+  for (let file of editUploadFileList) {
+    formData.append('images', file);
+  }
   try {
     const res = await fetch('/api/houses/' + currentEditId, { method: 'PUT', headers: { Authorization: 'Bearer ' + token }, body: formData });
-    if (res.ok) { showModal('Property updated!', 'success'); closeEditModal(); loadMyHouses(); }
+    if (res.ok) { showModal('Property updated!', 'success'); closeEditModal(); loadMyHouses(); editUploadFileList = []; document.getElementById('editImagePreview').innerHTML = ''; }
     else { const data = await res.json(); showModal('Update failed: ' + (data.message || 'Unknown error'), 'error'); }
   } catch (err) { showModal('Network error', 'error'); } finally { hideLoading(); }
 });
@@ -712,14 +768,13 @@ document.getElementById('houseForm').addEventListener('submit', async e => {
   let price = document.getElementById('propPrice').value;
   const phone = document.getElementById('propPhone').value.trim();
   const description = document.getElementById('propDesc').value;
-  const images = document.querySelector('input[name="images"]').files;
   if (selectedType === 'ShortStay') {
     const daily = document.getElementById('detail_dailyPrice')?.value;
     if (!daily) { showModal('Please enter daily price for Short-Stay', 'error'); return; }
     price = daily;
   }
-  if (!name || !location || !price || price <= 0 || !phone.match(/^265[0-9]{9}$/) || images.length === 0) {
-    showModal('Please fill all fields correctly', 'error'); return;
+  if (!name || !location || !price || price <= 0 || !phone.match(/^265[0-9]{9}$/) || uploadFileList.length === 0) {
+    showModal('Please fill all fields correctly and select at least one image', 'error'); return;
   }
   if (!selectedType) { showModal('Please select a property type', 'error'); return; }
   showLoading();
@@ -745,7 +800,9 @@ document.getElementById('houseForm').addEventListener('submit', async e => {
   if (vt) formData.append('virtualTourUrl', vt);
   const details = collectPropertyDetails();
   if (Object.keys(details).length) formData.append('propertyDetails', JSON.stringify(details));
-  for (let i = 0; i < images.length; i++) formData.append('images', images[i]);
+  for (let file of uploadFileList) {
+    formData.append('images', file);
+  }
   try {
     const res = await fetch('/api/houses', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
     const data = await res.json();
@@ -758,20 +815,10 @@ document.getElementById('houseForm').addEventListener('submit', async e => {
       document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
       document.getElementById('propertyDetailsContainer').innerHTML = '';
       togglePriceFields('none');
+      uploadFileList = [];
       loadMyHouses();
     } else showModal('Upload failed: ' + (data.message || 'Unknown error'), 'error');
   } catch (err) { showModal('Network error', 'error'); } finally { hideLoading(); }
-});
-
-document.querySelector('input[name="images"]').addEventListener('change', function(e) {
-  const preview = document.getElementById('imagePreview');
-  preview.innerHTML = '';
-  Array.from(e.target.files).forEach(file => {
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = ev => { const img = document.createElement('img'); img.src = ev.target.result; img.style.width = '70px'; img.style.height = '70px'; img.style.objectFit = 'cover'; img.style.borderRadius = '8px'; preview.appendChild(img); };
-    reader.readAsDataURL(file);
-  });
 });
 
 function animateValue(el, start, end, duration) {
