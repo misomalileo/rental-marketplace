@@ -21,7 +21,7 @@
     .nav-links a { color: #cbd5e1; text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
     .nav-links a i { color: #FF8C42; }
     .nav-links a:hover { color: #FFB347; transform: translateY(-2px); }
-    .dashboard-container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
+    .dashboard-container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; width: 100%; overflow-x: hidden; }
     .premium-header { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border-radius: 48px; padding: 2rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border: 1px solid rgba(255,140,66,0.4); box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,140,66,0.2); backdrop-filter: blur(4px); position: relative; overflow: hidden; }
     .premium-header::before { content: ''; position: absolute; top: -50%; left: -30%; width: 160%; height: 200%; background: radial-gradient(circle, rgba(255,140,66,0.15), transparent 70%); animation: slowRotate 25s linear infinite; pointer-events: none; }
     @keyframes slowRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -43,11 +43,11 @@
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem; perspective: 1000px; }
-    .card { background: rgba(20, 30, 45, 0.65); backdrop-filter: blur(12px); border-radius: 36px; padding: 1.6rem; border: 1px solid rgba(255,255,255,0.08); transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1); transform-style: preserve-3d; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+    .card { background: rgba(20, 30, 45, 0.65); backdrop-filter: blur(12px); border-radius: 36px; padding: 1.6rem; border: 1px solid rgba(255,255,255,0.08); transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1); transform-style: preserve-3d; box-shadow: 0 8px 20px rgba(0,0,0,0.2); width: 100%; max-width: 100%; overflow: hidden; }
     .card:hover { transform: translateY(-10px) rotateX(2deg); border-color: rgba(255,140,66,0.6); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.5); }
-    .card h2 { font-size: 1.5rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; font-weight: 700; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .card h2 { font-size: 1.5rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; font-weight: 700; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; flex-wrap: wrap; }
     .card h2 i { font-size: 1.6rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; overflow-x: auto; }
     .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .email-alert-item:hover { border-color: #FF8C42; transform: translateX(6px); }
     .saved-search-actions, .alert-actions, .whatsapp-actions, .email-actions { display: flex; gap: 1rem; margin-top: 0.7rem; flex-wrap: wrap; }
     button.small { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 0.3rem 1rem; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #cbd5e1; display: inline-flex; align-items: center; gap: 6px; }
@@ -55,7 +55,7 @@
     .alert-toggle { color: #60a5fa; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.75rem; }
     input, select, textarea { background: rgba(10, 15, 25, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 60px; padding: 0.7rem 1.2rem; color: white; width: 100%; font-size: 0.9rem; margin-bottom: 0.8rem; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: #FF8C42; box-shadow: 0 0 0 2px rgba(255,140,66,0.2); }
-    canvas { max-height: 200px; margin: 0.5rem 0; }
+    canvas { max-height: 200px; margin: 0.5rem 0; width: 100%; }
     .notification-scroll { max-height: 300px; overflow-y: auto; padding-right: 0.5rem; }
     .notification-scroll::-webkit-scrollbar { width: 4px; }
     .notification-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
@@ -76,9 +76,12 @@
     .early-house-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .early-house-card p { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin: 0.2rem 0; }
     .early-house-card a { color: #FFB347; text-decoration: none; font-size: 0.7rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; margin-top: 0.3rem; align-self: flex-start; }
-    /* ========== MOBILE RESPONSIVE: REDUCED SIZES ========== */
+    /* ========== MOBILE RESPONSIVE: NO HORIZONTAL SCROLL ========== */
     @media (max-width: 768px) {
       .dashboard-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .card { padding: 1rem; border-radius: 28px; }
+      .card h2 { font-size: 1.2rem; margin-bottom: 0.8rem; }
+      .card h2 i { font-size: 1.3rem; }
       .premium-header { flex-direction: column; text-align: center; padding: 1rem; }
       .premium-header h1 { font-size: 1.5rem; }
       .premium-header h1 i { font-size: 1.5rem; }
@@ -88,9 +91,6 @@
       .nav-links { gap: 0.8rem; }
       .nav-links a { font-size: 0.75rem; }
       .tab-btn { padding: 0.4rem 1rem; font-size: 0.8rem; }
-      .card { padding: 1rem; border-radius: 28px; }
-      .card h2 { font-size: 1.2rem; margin-bottom: 0.8rem; }
-      .card h2 i { font-size: 1.3rem; }
       .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item { padding: 0.6rem; }
       .early-house-card h3 { font-size: 0.85rem; }
       .early-house-card p { font-size: 0.65rem; }
@@ -100,8 +100,12 @@
       .similar-house-item { gap: 0.6rem; padding: 0.6rem; }
       .similar-house-img { width: 50px; height: 50px; }
       .similar-house-info h4 { font-size: 0.75rem; }
+      .voice-search-container { gap: 0.5rem; }
+      .voice-result { padding: 0.6rem; }
+      .negotiationResult, .priorityStatus, .predictionResult { font-size: 0.7rem; }
+      input, select, textarea { font-size: 0.8rem; padding: 0.5rem 0.8rem; }
     }
-    /* Custom Modal (replaces alerts) */
+    /* Custom Modal */
     .custom-modal-overlay {
       position: fixed;
       top: 0;
@@ -218,7 +222,7 @@
             <input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/webp">
             <img id="uploadedImagePreview" alt="Preview">
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <button id="searchSimilarBtn" class="small" style="width:auto;" disabled><i class="fas fa-search"></i> Find Similar Properties</button>
             <span id="modelStatus" class="model-loading"><i class="fas fa-spinner fa-pulse"></i> Loading AI model...</span>
           </div>
@@ -255,7 +259,7 @@
           <select id="negotiateHouseSelect">
             <option value="">Your properties (if any)</option>
           </select>
-          <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
+          <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0; flex-wrap: wrap;">
             <span style="font-size:0.7rem;">Or enter custom ID:</span>
             <input type="text" id="manualHouseId" placeholder="e.g., 67b2c8f9a1b2c3d4e5f6a7b8" style="flex:1; margin-bottom:0;">
           </div>
@@ -365,7 +369,7 @@
       <div class="dashboard-grid">
         <div class="card">
           <h2><i class="fas fa-id-card"></i> Premium Badge & Portfolio</h2>
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; flex-wrap: wrap;">
             <div style="background: linear-gradient(135deg, #FFD966, #FF8C42); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
               <i class="fas fa-crown" style="font-size: 2rem; color: white;"></i>
             </div>
@@ -374,7 +378,7 @@
               <p style="font-size: 0.75rem; color:#94a3b8;">Your listings show a shiny premium badge</p>
             </div>
           </div>
-          <div class="portfolio-link">
+          <div class="portfolio-link" style="word-break: break-all;">
             <i class="fas fa-globe"></i>
             <span>Your public portfolio:</span>
             <a href="#" id="portfolioLink" target="_blank">khomolathu.com/portfolio/yourname</a>
@@ -400,7 +404,7 @@
     let predictorChart = null;
     let currentWhatsappNumber = "";
 
-    // ========== CUSTOM MODAL SYSTEM (replaces alert/confirm) ==========
+    // ========== CUSTOM MODAL SYSTEM ==========
     function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
       const overlay = document.createElement('div');
       overlay.className = 'custom-modal-overlay';
