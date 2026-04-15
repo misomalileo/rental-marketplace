@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Premium User | Khomo Lathu</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b); color: #f1f5f9; font-family: 'Inter', sans-serif; min-height: 100vh; }
+    /* Navbar - slightly compacted for mobile */
     .navbar { background: rgba(15,23,42,0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000; }
     .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .logo i { font-size: 1.6rem; margin-right: 6px; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -75,7 +76,67 @@
     .early-house-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .early-house-card p { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin: 0.2rem 0; }
     .early-house-card a { color: #FFB347; text-decoration: none; font-size: 0.7rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; margin-top: 0.3rem; align-self: flex-start; }
-    @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } .premium-header { flex-direction: column; text-align: center; } .nav-links { gap: 1rem; } .tab-btn { padding: 0.5rem 1rem; font-size: 0.85rem; } }
+    /* ========== MOBILE RESPONSIVE: REDUCED SIZES ========== */
+    @media (max-width: 768px) {
+      .dashboard-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .premium-header { flex-direction: column; text-align: center; padding: 1rem; }
+      .premium-header h1 { font-size: 1.5rem; }
+      .premium-header h1 i { font-size: 1.5rem; }
+      .navbar { padding: 0.5rem 1rem; }
+      .logo { font-size: 1.2rem; }
+      .logo i { font-size: 1rem; }
+      .nav-links { gap: 0.8rem; }
+      .nav-links a { font-size: 0.75rem; }
+      .tab-btn { padding: 0.4rem 1rem; font-size: 0.8rem; }
+      .card { padding: 1rem; border-radius: 28px; }
+      .card h2 { font-size: 1.2rem; margin-bottom: 0.8rem; }
+      .card h2 i { font-size: 1.3rem; }
+      .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item { padding: 0.6rem; }
+      .early-house-card h3 { font-size: 0.85rem; }
+      .early-house-card p { font-size: 0.65rem; }
+      .mic-btn { width: 50px; height: 50px; font-size: 1.5rem; }
+      .whatsapp-number-setup { flex-direction: column; align-items: stretch; }
+      .whatsapp-number-setup button { width: 100%; }
+      .similar-house-item { gap: 0.6rem; padding: 0.6rem; }
+      .similar-house-img { width: 50px; height: 50px; }
+      .similar-house-info h4 { font-size: 0.75rem; }
+    }
+    /* Custom Modal (replaces alerts) */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .custom-modal {
+      background: #1e2a3a;
+      border-radius: 28px;
+      width: 85%;
+      max-width: 320px;
+      padding: 1.2rem;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .custom-modal i { font-size: 2.5rem; margin-bottom: 0.8rem; color: #FF8C42; }
+    .custom-modal h3 { font-size: 1.2rem; margin-bottom: 0.4rem; color: white; }
+    .custom-modal p { font-size: 0.8rem; margin-bottom: 1rem; color: #94a3b8; }
+    .custom-modal-buttons { display: flex; gap: 0.8rem; justify-content: center; }
+    .custom-modal-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+    .custom-modal-btn.confirm { background: #2563eb; color: white; }
+    .custom-modal-btn.cancel { background: #334155; color: white; }
     .whatsapp-number-setup { background: rgba(0,0,0,0.3); border-radius: 28px; padding: 1rem; margin-bottom: 1.2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
     .whatsapp-number-setup .form-group { flex: 1; margin-bottom: 0; }
     .whatsapp-number-setup label { font-size: 0.7rem; display: block; margin-bottom: 0.2rem; color: #94a3b8; }
@@ -138,13 +199,13 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="tools"><i class="fas fa-tools"></i> Premium Tools</button>
       <button class="tab-btn" data-tab="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp Alerts</button>
-      <button class="tab-btn" data-tab="email"><i class="fas fa-envelope"></i> Email Alerts</button>   <!-- NEW TAB -->
+      <button class="tab-btn" data-tab="email"><i class="fas fa-envelope"></i> Email Alerts</button>
       <button class="tab-btn" data-tab="alerts"><i class="fas fa-bell"></i> Price Alerts</button>
       <button class="tab-btn" data-tab="notifications"><i class="fas fa-inbox"></i> Notifications</button>
       <button class="tab-btn" data-tab="portfolio"><i class="fas fa-id-card"></i> Portfolio & Boost</button>
     </div>
 
-    <!-- ========== PREMIUM TOOLS TAB (unchanged) ========== -->
+    <!-- ========== PREMIUM TOOLS TAB ========== -->
     <div id="tab-tools" class="tab-content active">
       <div class="dashboard-grid">
         <!-- AI Image Search Card -->
@@ -232,13 +293,12 @@
       </div>
     </div>
 
-    <!-- ========== WHATSAPP ALERTS TAB (unchanged) ========== -->
+    <!-- ========== WHATSAPP ALERTS TAB ========== -->
     <div id="tab-whatsapp" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
           <h2><i class="fab fa-whatsapp"></i> WhatsApp Property Alerts</h2>
           <p style="font-size:0.75rem; margin-bottom: 1rem;">Get instant WhatsApp notifications when new properties match your saved criteria. Ensure your number is correct.</p>
-          
           <div class="whatsapp-number-setup">
             <div class="form-group" style="flex:2;">
               <label><i class="fas fa-phone-alt"></i> Your WhatsApp Number (with country code)</label>
@@ -247,7 +307,6 @@
             </div>
             <button id="saveWhatsappNumberBtn" class="small"><i class="fas fa-save"></i> Save Number</button>
           </div>
-
           <div style="margin-top: 1rem;">
             <h3><i class="fas fa-search"></i> Your Saved WhatsApp Searches</h3>
             <div id="whatsappSearchesList">Loading...</div>
@@ -257,13 +316,12 @@
       </div>
     </div>
 
-    <!-- ========== NEW: EMAIL ALERTS TAB ========== -->
+    <!-- ========== EMAIL ALERTS TAB ========== -->
     <div id="tab-email" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
           <h2><i class="fas fa-envelope"></i> Email Property Alerts</h2>
           <p style="font-size:0.75rem; margin-bottom: 1rem;">Receive instant email notifications when new properties match your saved searches. Toggle alerts on/off for each search.</p>
-          
           <div style="margin-top: 1rem;">
             <h3><i class="fas fa-search"></i> Your Saved Searches (Email Alerts)</h3>
             <div id="emailAlertsList">Loading...</div>
@@ -273,7 +331,7 @@
       </div>
     </div>
 
-    <!-- ========== PRICE ALERTS TAB (unchanged) ========== -->
+    <!-- ========== PRICE ALERTS TAB ========== -->
     <div id="tab-alerts" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
@@ -287,7 +345,7 @@
       </div>
     </div>
 
-    <!-- ========== NOTIFICATIONS TAB (unchanged) ========== -->
+    <!-- ========== NOTIFICATIONS TAB ========== -->
     <div id="tab-notifications" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
@@ -302,7 +360,7 @@
       </div>
     </div>
 
-    <!-- ========== PORTFOLIO & BOOST TAB (unchanged) ========== -->
+    <!-- ========== PORTFOLIO & BOOST TAB ========== -->
     <div id="tab-portfolio" class="tab-content">
       <div class="dashboard-grid">
         <div class="card">
@@ -342,7 +400,24 @@
     let predictorChart = null;
     let currentWhatsappNumber = "";
 
-    // ========== VOICE ASSISTANT (unchanged) ==========
+    // ========== CUSTOM MODAL SYSTEM (replaces alert/confirm) ==========
+    function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
+      const overlay = document.createElement('div');
+      overlay.className = 'custom-modal-overlay';
+      let icon = '<i class="fas fa-info-circle"></i>';
+      let title = 'Information';
+      if (type === 'success') { icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; title = 'Success'; }
+      else if (type === 'error') { icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>'; title = 'Error'; }
+      else if (type === 'confirm') { icon = '<i class="fas fa-question-circle" style="color: #f59e0b;"></i>'; title = 'Confirmation'; }
+      overlay.innerHTML = `<div class="custom-modal">${icon}<h3>${title}</h3><p>${message}</p><div class="custom-modal-buttons">${type === 'confirm' ? '<button class="custom-modal-btn confirm">Yes, Proceed</button><button class="custom-modal-btn cancel">Cancel</button>' : '<button class="custom-modal-btn confirm">OK</button>'}</div></div>`;
+      document.body.appendChild(overlay);
+      const confirmBtn = overlay.querySelector('.confirm');
+      const cancelBtn = overlay.querySelector('.cancel');
+      confirmBtn?.addEventListener('click', () => { overlay.remove(); if (onConfirm) onConfirm(); });
+      cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
+    }
+
+    // ========== VOICE ASSISTANT ==========
     let recognition = null;
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -447,11 +522,11 @@
 
     document.getElementById('startVoiceBtn').addEventListener('click', () => {
       if (!recognition) {
-        alert('Voice recognition is not supported in your browser. Please use Chrome or Edge.');
+        showModal('Voice recognition is not supported in your browser. Please use Chrome or Edge.', 'error');
         return;
       }
       if (!isActivePremium) {
-        alert('Voice search is a premium feature. Please activate your premium subscription.');
+        showModal('Voice search is a premium feature. Please activate your premium subscription.', 'error');
         return;
       }
       const btn = document.getElementById('startVoiceBtn');
@@ -485,7 +560,7 @@
       };
     });
 
-    // ========== AI IMAGE SEARCH (unchanged) ==========
+    // ========== AI IMAGE SEARCH ==========
     let mobilenetModel = null;
     const modelStatusSpan = document.getElementById('modelStatus');
     const searchBtn = document.getElementById('searchSimilarBtn');
@@ -534,16 +609,16 @@
     });
     document.getElementById('searchSimilarBtn').addEventListener('click', async () => {
       if (!isActivePremium) {
-        alert("Image search is a premium feature. Please activate your premium subscription.");
+        showModal("Image search is a premium feature. Please activate your premium subscription.", 'error');
         return;
       }
       if (!mobilenetModel) {
-        alert("AI model is still loading. Please wait a moment and try again.");
+        showModal("AI model is still loading. Please wait a moment and try again.", 'error');
         return;
       }
       const imgElement = document.getElementById('uploadedImagePreview');
       if (!imgElement.src || imgElement.style.display === 'none') {
-        alert("Please upload an image first.");
+        showModal("Please upload an image first.", 'error');
         return;
       }
       const resultsDiv = document.getElementById('similarResults');
@@ -633,7 +708,7 @@
           loadPortfolioLink();
           loadWhatsappSearches();
           loadUserWhatsappNumber();
-          loadEmailAlerts();      // <-- load email alerts tab
+          loadEmailAlerts();
         } else {
           isActivePremium = false;
           statusArea.innerHTML = `<i class="fas fa-lock"></i> Inactive – activate to unlock`;
@@ -648,7 +723,7 @@
       } catch (err) { console.error(err); }
     }
 
-    // ========== WHATSAPP NUMBER & SEARCHES (unchanged) ==========
+    // ========== WHATSAPP NUMBER & SEARCHES ==========
     async function loadUserWhatsappNumber() {
       try {
         const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
@@ -668,14 +743,14 @@
           body: JSON.stringify({ whatsappNumber: number })
         });
         if (res.ok) {
-          alert("WhatsApp number saved!");
+          showModal("WhatsApp number saved!", 'success');
           currentWhatsappNumber = number;
           return true;
         } else {
-          alert("Failed to save number");
+          showModal("Failed to save number", 'error');
           return false;
         }
-      } catch (err) { alert("Network error"); return false; }
+      } catch (err) { showModal("Network error", 'error'); return false; }
     }
 
     async function loadWhatsappSearches() {
@@ -702,10 +777,10 @@
         document.querySelectorAll('.delete-whatsapp-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             const id = btn.getAttribute('data-id');
-            if (confirm("Delete this WhatsApp search?")) {
+            showModal("Delete this WhatsApp search?", 'confirm', async () => {
               await deleteWhatsappSearch(id);
               loadWhatsappSearches();
-            }
+            });
           });
         });
       } catch (err) { console.error(err); document.getElementById("whatsappSearchesList").innerHTML = "<p>Error loading searches.</p>"; }
@@ -718,7 +793,7 @@
           headers: { Authorization: "Bearer " + token }
         });
         if (!res.ok) throw new Error("Delete failed");
-      } catch (err) { alert("Failed to delete"); }
+      } catch (err) { showModal("Failed to delete", 'error'); }
     }
 
     async function createWhatsappSearch(filters, name, whatsappNumber) {
@@ -729,28 +804,28 @@
           body: JSON.stringify({ name, filters, whatsappNumber })
         });
         if (res.ok) {
-          alert("WhatsApp search saved!");
+          showModal("WhatsApp search saved!", 'success');
           loadWhatsappSearches();
           return true;
         } else {
           const err = await res.json();
-          alert("Error: " + err.message);
+          showModal("Error: " + err.message, 'error');
           return false;
         }
-      } catch (err) { alert("Network error"); return false; }
+      } catch (err) { showModal("Network error", 'error'); return false; }
     }
 
     document.getElementById("saveWhatsappNumberBtn")?.addEventListener("click", async () => {
       const number = document.getElementById("whatsappNumberInput").value.trim();
-      if (!number) { alert("Please enter your WhatsApp number"); return; }
-      if (!/^265\d{9}$/.test(number)) { alert("Number must be in format 265XXXXXXXXX (12 digits)"); return; }
+      if (!number) { showModal("Please enter your WhatsApp number", 'error'); return; }
+      if (!/^265\d{9}$/.test(number)) { showModal("Number must be in format 265XXXXXXXXX (12 digits)", 'error'); return; }
       await saveWhatsappNumber(number);
     });
 
     document.getElementById("newWhatsappSearchBtn")?.addEventListener("click", async () => {
-      if (!isActivePremium) { alert("Activate premium to use WhatsApp alerts."); return; }
+      if (!isActivePremium) { showModal("Activate premium to use WhatsApp alerts.", 'error'); return; }
       const whatsappNumber = document.getElementById("whatsappNumberInput").value.trim();
-      if (!whatsappNumber) { alert("Please save your WhatsApp number first."); return; }
+      if (!whatsappNumber) { showModal("Please save your WhatsApp number first.", 'error'); return; }
       const name = prompt("Give this search a name (e.g., 'Houses in Lilongwe'):");
       if (!name) return;
       let minPrice = prompt("Minimum price (MWK):", "0");
@@ -767,7 +842,7 @@
       await createWhatsappSearch(filters, name, whatsappNumber);
     });
 
-    // ========== EMAIL ALERTS (NEW) ==========
+    // ========== EMAIL ALERTS ==========
     async function loadEmailAlerts() {
       if (!isActivePremium) return;
       try {
@@ -794,7 +869,6 @@
           </div>
         `).join('');
 
-        // Attach toggle event listeners
         document.querySelectorAll('.email-toggle').forEach(toggle => {
           toggle.addEventListener('change', async (e) => {
             const searchId = toggle.getAttribute('data-id');
@@ -806,13 +880,13 @@
                 body: JSON.stringify({ emailEnabled: enabled })
               });
               if (res.ok) {
-                alert(`Email alerts ${enabled ? 'enabled' : 'disabled'}`);
+                showModal(`Email alerts ${enabled ? 'enabled' : 'disabled'}`, 'success');
               } else {
-                alert("Failed to update");
+                showModal("Failed to update", 'error');
                 toggle.checked = !enabled;
               }
             } catch (err) {
-              alert("Network error");
+              showModal("Network error", 'error');
               toggle.checked = !enabled;
             }
           });
@@ -821,26 +895,26 @@
         document.querySelectorAll('.delete-email-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             const id = btn.getAttribute('data-id');
-            if (confirm("Delete this saved search? You will no longer receive email alerts for it.")) {
+            showModal("Delete this saved search? You will no longer receive email alerts for it.", 'confirm', async () => {
               try {
                 const res = await fetch(`/api/saved-searches/delete-search/${id}`, {
                   method: "DELETE",
                   headers: { Authorization: "Bearer " + token }
                 });
                 if (res.ok) {
-                  loadEmailAlerts(); // refresh
+                  loadEmailAlerts();
                 } else {
-                  alert("Failed to delete");
+                  showModal("Failed to delete", 'error');
                 }
-              } catch (err) { alert("Network error"); }
-            }
+              } catch (err) { showModal("Network error", 'error'); }
+            });
           });
         });
       } catch (err) { console.error(err); document.getElementById("emailAlertsList").innerHTML = "<p>Error loading searches.</p>"; }
     }
 
     document.getElementById("newEmailSearchBtn")?.addEventListener("click", async () => {
-      if (!isActivePremium) { alert("Activate premium to create saved searches."); return; }
+      if (!isActivePremium) { showModal("Activate premium to create saved searches.", 'error'); return; }
       const name = prompt("Give this search a name (e.g., 'Houses in Blantyre under 300k'):");
       if (!name) return;
       let minPrice = prompt("Minimum price (MWK):", "0");
@@ -854,14 +928,11 @@
       if (type && type.trim()) filters.type = type;
       if (region && region.trim()) filters.region = region;
       if (bedrooms && !isNaN(bedrooms) && bedrooms > 0) filters.bedrooms = parseInt(bedrooms);
-      // For email alerts, we still need a WhatsApp number (the model requires it). Use a placeholder if not provided.
       let whatsappNumber = document.getElementById("whatsappNumberInput")?.value.trim();
       if (!whatsappNumber) {
-        whatsappNumber = "265000000000"; // dummy – will be replaced on save? Actually the backend requires a valid number.
-        // Better to ask user for WhatsApp number if not set
         whatsappNumber = prompt("Please enter your WhatsApp number (format 265XXXXXXXXX) for notifications (even if you only want email, this is required):");
         if (!whatsappNumber || !/^265\d{9}$/.test(whatsappNumber)) {
-          alert("Valid WhatsApp number is required to create a saved search.");
+          showModal("Valid WhatsApp number is required to create a saved search.", 'error');
           return;
         }
       }
@@ -872,16 +943,16 @@
           body: JSON.stringify({ name, filters, whatsappNumber })
         });
         if (res.ok) {
-          alert("Search saved! You will receive email alerts for new matching properties.");
+          showModal("Search saved! You will receive email alerts for new matching properties.", 'success');
           loadEmailAlerts();
         } else {
           const err = await res.json();
-          alert("Error: " + err.message);
+          showModal("Error: " + err.message, 'error');
         }
-      } catch (err) { alert("Network error"); }
+      } catch (err) { showModal("Network error", 'error'); }
     });
 
-    // ========== OTHER FUNCTIONS (unchanged) ==========
+    // ========== OTHER FUNCTIONS ==========
     async function loadUserHouses() {
       try {
         const res = await fetch("/api/houses?owner=me", { headers: { Authorization: "Bearer " + token } });
@@ -946,18 +1017,18 @@
       `).join('');
     }
     window.boostProperty = async function(houseId) {
-      if (!isActivePremium) { alert("Activate premium to boost."); return; }
+      if (!isActivePremium) { showModal("Activate premium to boost.", 'error'); return; }
       localStorage.setItem(`boost_${houseId}`, new Date(Date.now() + 24*60*60*1000).toISOString());
-      alert("✅ Property boosted for 24h!");
+      showModal("✅ Property boosted for 24h!", 'success');
       renderBoostList();
     };
 
     document.getElementById("negotiateBtn").addEventListener("click", async () => {
-      if (!isActivePremium) { alert("Activate premium to use AI negotiator."); return; }
+      if (!isActivePremium) { showModal("Activate premium to use AI negotiator.", 'error'); return; }
       let houseId = document.getElementById("negotiateHouseSelect").value;
       const manualId = document.getElementById("manualHouseId").value.trim();
       if (manualId) houseId = manualId;
-      if (!houseId) { alert("Please select a property or enter a custom house ID."); return; }
+      if (!houseId) { showModal("Please select a property or enter a custom house ID.", 'error'); return; }
       const resultDiv = document.getElementById("negotiationResult");
       resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing market...';
       try {
@@ -983,9 +1054,9 @@
     });
 
     document.getElementById("requestPriorityBtn").addEventListener("click", async () => {
-      if (!isActivePremium) { alert("Activate premium to request priority viewing."); return; }
+      if (!isActivePremium) { showModal("Activate premium to request priority viewing.", 'error'); return; }
       const houseId = document.getElementById("priorityHouseSelect").value;
-      if (!houseId) { alert("Please select a property."); return; }
+      if (!houseId) { showModal("Please select a property.", 'error'); return; }
       const statusDiv = document.getElementById("priorityStatus");
       statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending request...';
       try {
@@ -1024,7 +1095,7 @@
       `).join('');
     }
     window.togglePriceAlert = async (idx, enabled) => {
-      if (!isActivePremium) { alert("Activate premium to manage alerts."); return; }
+      if (!isActivePremium) { showModal("Activate premium to manage alerts.", 'error'); return; }
       await fetch(`/api/premium/saved-searches/${idx}/alert`, {
         method: "PUT",
         headers: { "Content-Type":"application/json", Authorization:"Bearer "+token },
@@ -1033,9 +1104,9 @@
       loadPremiumStatus();
     };
     document.getElementById("simulatePriceDropBtn")?.addEventListener("click", () => {
-      if (!isActivePremium) { alert("Activate premium to test alerts."); return; }
+      if (!isActivePremium) { showModal("Activate premium to test alerts.", 'error'); return; }
       addDemoNotification("💰 Price Drop Alert", "One of your saved searches has a new listing with a 15% lower price!");
-      alert("Test notification sent! Check the Notifications tab.");
+      showModal("Test notification sent! Check the Notifications tab.", 'success');
     });
 
     function renderNotifications(notifications) {
@@ -1058,7 +1129,7 @@
     }
     document.getElementById("markAllReadBtn")?.addEventListener("click", async () => {
       if (!isActivePremium) return;
-      alert("Mark all as read (simulated).");
+      showModal("Mark all as read (simulated).", 'info');
     });
 
     async function loadEarlyAccess() {
@@ -1133,7 +1204,7 @@
     document.getElementById("copyPortfolioBtn")?.addEventListener("click", () => {
       const link = document.getElementById("portfolioLink").href;
       navigator.clipboard.writeText(link);
-      alert("Portfolio link copied!");
+      showModal("Portfolio link copied!", 'success');
     });
 
     function renderSavedSearches(searches) {
@@ -1153,18 +1224,19 @@
       `).join('');
     }
     window.toggleAlert = async (idx, enable) => {
-      if (!isActivePremium) return alert("Activate premium.");
+      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
       await fetch(`/api/premium/saved-searches/${idx}/alert`, { method: "PUT", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ enabled: enable }) });
       loadPremiumStatus();
     };
     window.deleteSearch = async (idx) => {
-      if (!isActivePremium) return alert("Activate premium.");
-      if (!confirm("Delete?")) return;
-      await fetch(`/api/premium/saved-searches/${idx}`, { method: "DELETE", headers: { Authorization:"Bearer "+token } });
-      loadPremiumStatus();
+      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
+      showModal("Delete this saved search?", 'confirm', async () => {
+        await fetch(`/api/premium/saved-searches/${idx}`, { method: "DELETE", headers: { Authorization:"Bearer "+token } });
+        loadPremiumStatus();
+      });
     };
     document.getElementById("newSearchBtn").addEventListener("click", async () => {
-      if (!isActivePremium) return alert("Activate premium.");
+      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
       const name = prompt("Search name:");
       if (!name) return;
       await fetch("/api/premium/saved-searches", { method: "POST", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ name, filters: {}, alertEnabled: true }) });
@@ -1178,10 +1250,10 @@
         const res = await fetch(url, { method: "POST", headers: { Authorization:"Bearer "+token } });
         const data = await res.json();
         if (data.test || data.payment_url) {
-          if (data.test) { alert("✅ Test activation successful! Reloading..."); window.location.reload(); }
+          if (data.test) { showModal("✅ Test activation successful! Reloading...", 'success', () => window.location.reload()); }
           else window.location.href = data.payment_url;
-        } else alert("Activation failed.");
-      } catch (err) { alert("Error."); }
+        } else showModal("Activation failed.", 'error');
+      } catch (err) { showModal("Error.", 'error'); }
     }
     document.getElementById("activateBtn").addEventListener("click", activatePremium);
     document.getElementById("activateFromBannerBtn").addEventListener("click", activatePremium);
