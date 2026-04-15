@@ -281,7 +281,7 @@
       border-color: rgba(37,99,235,0.3);
     }
 
-    /* ========== WOOOW FEATURED CAROUSEL – ENHANCED ========== */
+    /* ========== WOOOW FEATURED CAROUSEL – ENHANCED (THEME-AWARE) ========== */
     .carousel-section { margin: 1rem 1rem 2rem; }
     .carousel-container {
       background: var(--card-bg);
@@ -301,7 +301,6 @@
       align-items: center;
       gap: 0.6rem;
     }
-    /* Premium gradient – much stronger and visible */
     .carousel-title i {
       font-size: 1.5rem;
       background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F);
@@ -327,7 +326,6 @@
       letter-spacing: 0.3px;
       box-shadow: 0 2px 8px rgba(255,140,66,0.3);
     }
-    /* Promo banner below subtitle */
     .promo-banner {
       text-align: center;
       margin: 0.5rem auto 0;
@@ -350,8 +348,9 @@
     }
     .hero-swiper { padding: 0 0.5rem; overflow: visible; }
     .swiper-slide { width: auto; border-radius: 24px; transition: transform 0.4s ease; }
+    /* Theme‑aware carousel card – uses card background variable and adapts text colour */
     .carousel-card {
-      background: linear-gradient(145deg, #ffffff, #f8fef8);
+      background: var(--card-bg);
       border-radius: 24px;
       overflow: hidden;
       width: 260px;
@@ -384,6 +383,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       margin-bottom: 0.2rem;
+      color: var(--text-color);
     }
     .carousel-card-content p {
       font-size: 0.7rem;
@@ -391,6 +391,8 @@
       align-items: center;
       gap: 0.3rem;
       margin: 0.2rem 0;
+      color: var(--text-color);
+      opacity: 0.8;
     }
     .carousel-price {
       font-size: 0.75rem;
