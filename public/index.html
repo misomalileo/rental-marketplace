@@ -301,35 +301,38 @@
       align-items: center;
       gap: 0.6rem;
     }
-    /* Premium gradient for the title */
+    /* Premium gradient – much stronger and visible */
     .carousel-title i {
       font-size: 1.5rem;
       background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent !important;
+      text-shadow: 0 0 8px rgba(255,140,66,0.3);
     }
     .carousel-title span {
       background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      text-shadow: 0 0 8px rgba(255,140,66,0.3);
     }
     .carousel-subtitle {
       font-size: 0.7rem;
-      font-weight: 500;
-      color: #334155;
-      background: rgba(0,0,0,0.04);
+      font-weight: 600;
+      color: #ffffff;
+      background: #FF8C42;
       padding: 0.2rem 0.8rem;
       border-radius: 40px;
       letter-spacing: 0.3px;
+      box-shadow: 0 2px 8px rgba(255,140,66,0.3);
     }
     /* Promo banner below subtitle */
     .promo-banner {
       text-align: center;
       margin: 0.5rem auto 0;
       padding: 0.3rem 0.8rem;
-      background: linear-gradient(135deg, rgba(255,140,66,0.1), rgba(255,215,0,0.05));
+      background: linear-gradient(135deg, rgba(255,140,66,0.15), rgba(255,215,0,0.08));
       border-radius: 40px;
       display: inline-block;
       width: auto;
@@ -338,7 +341,7 @@
       font-weight: 600;
       color: #FF8C42;
       animation: subtlePulse 2s infinite;
-      border: 1px solid rgba(255,140,66,0.3);
+      border: 1px solid rgba(255,140,66,0.5);
     }
     @keyframes subtlePulse {
       0% { opacity: 0.7; transform: scale(1); }
@@ -418,11 +421,53 @@
       transition: all 0.2s;
     }
     .carousel-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+    /* Ad slide specific styling */
+    .ad-slide {
+      background: linear-gradient(135deg, #1e2a3a, #0f172a);
+      border: 1px solid rgba(255,140,66,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+    }
+    .ad-slide .ad-content {
+      padding: 1rem;
+    }
+    .ad-slide i {
+      font-size: 2.5rem;
+      color: #FF8C42;
+      margin-bottom: 0.5rem;
+    }
+    .ad-slide h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      color: white;
+    }
+    .ad-slide p {
+      font-size: 0.7rem;
+      color: #cbd5e1;
+      margin-bottom: 0.5rem;
+    }
+    .ad-slide .ad-btn {
+      background: #FF8C42;
+      color: #0f172a;
+      border: none;
+      border-radius: 40px;
+      padding: 0.2rem 0.8rem;
+      font-size: 0.6rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
     @media (max-width: 768px) {
       .carousel-card { width: 200px; }
       .carousel-card img { height: 130px; }
       .carousel-card-content h3 { font-size: 0.75rem; }
       .carousel-price { font-size: 0.7rem; }
+      .ad-slide i { font-size: 2rem; }
+      .ad-slide h4 { font-size: 0.85rem; }
     }
 
     /* ========== DREAM MATCH CARDS – SOFT GREEN, LUCID ICONS ========== */
@@ -1889,7 +1934,7 @@
   </script>
 
   <script>
-    // Override the carousel loading to fetch 20 houses and add property type
+    // Override the carousel loading to fetch 20 houses and add property type + AD slide at the end
     (function() {
       const originalLoadHeroCarousel = window.loadHeroCarousel;
       if (originalLoadHeroCarousel) {
@@ -1897,13 +1942,10 @@
           try {
             const res = await fetch('/api/houses?page=1&limit=20');
             const data = await res.json();
-            const houses = data.houses || [];
+            let houses = data.houses || [];
             const wrapper = document.getElementById('carousel-wrapper');
             if (!wrapper) return;
-            if (houses.length === 0) {
-              wrapper.innerHTML = '<div class="swiper-slide">No properties to display</div>';
-              return;
-            }
+            
             // Helper to get display type name
             const getDisplayType = (type) => {
               const typeMap = {
@@ -1913,7 +1955,9 @@
               };
               return typeMap[type] || type;
             };
-            wrapper.innerHTML = houses.map(house => `
+            
+            // Build property slides
+            let slidesHtml = houses.map(house => `
               <div class="swiper-slide">
                 <div class="carousel-card">
                   <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}">
@@ -1927,6 +1971,22 @@
                 </div>
               </div>
             `).join('');
+            
+            // Add an AD slide at the end (fills the right space)
+            const adSlide = `
+              <div class="swiper-slide ad-slide" onclick="window.location.href='premium-dashboard.html'">
+                <div class="ad-content">
+                  <i class="fas fa-crown"></i>
+                  <h4>Go Premium</h4>
+                  <p>Unlock early access, price drops & AI insights</p>
+                  <div class="ad-btn">Upgrade Now →</div>
+                </div>
+              </div>
+            `;
+            slidesHtml += adSlide;
+            
+            wrapper.innerHTML = slidesHtml;
+            
             if (window.heroSwiper) window.heroSwiper.destroy(true, true);
             window.heroSwiper = new Swiper('.hero-swiper', {
               loop: true,
