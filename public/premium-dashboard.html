@@ -13,7 +13,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b); color: #f1f5f9; font-family: 'Inter', sans-serif; min-height: 100vh; }
-    /* Navbar - slightly compacted for mobile */
+    /* Navbar */
     .navbar { background: rgba(15,23,42,0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000; }
     .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .logo i { font-size: 1.6rem; margin-right: 6px; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -21,12 +21,12 @@
     .nav-links a { color: #cbd5e1; text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
     .nav-links a i { color: #FF8C42; }
     .nav-links a:hover { color: #FFB347; transform: translateY(-2px); }
-    .dashboard-container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; width: 100%; overflow-x: hidden; }
+    .dashboard-container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; width: 100%; overflow-x: hidden; }
     .premium-header { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border-radius: 48px; padding: 2rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border: 1px solid rgba(255,140,66,0.4); box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,140,66,0.2); backdrop-filter: blur(4px); position: relative; overflow: hidden; }
     .premium-header::before { content: ''; position: absolute; top: -50%; left: -30%; width: 160%; height: 200%; background: radial-gradient(circle, rgba(255,140,66,0.15), transparent 70%); animation: slowRotate 25s linear infinite; pointer-events: none; }
     @keyframes slowRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .premium-header h1 { font-size: 2.2rem; font-weight: 800; display: flex; align-items: center; gap: 0.8rem; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; z-index: 1; }
-    .premium-header h1 i { font-size: 2.2rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .premium-header h1 { font-size: 2rem; font-weight: 800; display: flex; align-items: center; gap: 0.8rem; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; z-index: 1; }
+    .premium-header h1 i { font-size: 2rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .premium-status { background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); padding: 0.5rem 1.2rem; border-radius: 60px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.1); z-index: 1; }
     .premium-status i { color: #FFB347; }
     .test-mode-toggle { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.5); padding: 0.3rem 1rem; border-radius: 60px; z-index: 1; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1); }
@@ -42,18 +42,95 @@
     .tab-content { display: none; animation: fadeIn 0.3s ease; }
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem; perspective: 1000px; }
-    .card { background: rgba(20, 30, 45, 0.65); backdrop-filter: blur(12px); border-radius: 36px; padding: 1.6rem; border: 1px solid rgba(255,255,255,0.08); transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1); transform-style: preserve-3d; box-shadow: 0 8px 20px rgba(0,0,0,0.2); width: 100%; max-width: 100%; overflow: hidden; }
-    .card:hover { transform: translateY(-10px) rotateX(2deg); border-color: rgba(255,140,66,0.6); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.5); }
-    .card h2 { font-size: 1.5rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; font-weight: 700; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; flex-wrap: wrap; }
-    .card h2 i { font-size: 1.6rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; overflow-x: auto; }
-    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .email-alert-item:hover { border-color: #FF8C42; transform: translateX(6px); }
-    .saved-search-actions, .alert-actions, .whatsapp-actions, .email-actions { display: flex; gap: 1rem; margin-top: 0.7rem; flex-wrap: wrap; }
-    button.small { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 0.3rem 1rem; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #cbd5e1; display: inline-flex; align-items: center; gap: 6px; }
+    /* SINGLE COLUMN LAYOUT - ALL CARDS STACKED VERTICALLY */
+    .dashboard-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .card {
+      background: rgba(20, 30, 45, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      transform-style: preserve-3d;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    .card:hover {
+      transform: translateY(-6px) rotateX(2deg);
+      border-color: rgba(255,140,66,0.6);
+      box-shadow: 0 30px 40px -15px rgba(0,0,0,0.5);
+    }
+    .card h2 {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, #FFB347);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      flex-wrap: wrap;
+    }
+    .card h2 i {
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #FFD966, #FF8C42);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item {
+      background: rgba(10, 15, 25, 0.7);
+      border-radius: 24px;
+      padding: 0.9rem;
+      margin-bottom: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.2s;
+      overflow-x: auto;
+    }
+    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .email-alert-item:hover {
+      border-color: #FF8C42;
+      transform: translateX(6px);
+    }
+    .saved-search-actions, .alert-actions, .whatsapp-actions, .email-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.7rem;
+      flex-wrap: wrap;
+    }
+    button.small {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 40px;
+      padding: 0.3rem 1rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #cbd5e1;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
     button.small:hover { background: rgba(255,140,66,0.2); border-color: #FF8C42; color: white; }
     .alert-toggle { color: #60a5fa; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.75rem; }
-    input, select, textarea { background: rgba(10, 15, 25, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 60px; padding: 0.7rem 1.2rem; color: white; width: 100%; font-size: 0.9rem; margin-bottom: 0.8rem; }
+    input, select, textarea {
+      background: rgba(10, 15, 25, 0.8);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 60px;
+      padding: 0.7rem 1rem;
+      color: white;
+      width: 100%;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+    }
     input:focus, select:focus, textarea:focus { outline: none; border-color: #FF8C42; box-shadow: 0 0 0 2px rgba(255,140,66,0.2); }
     canvas { max-height: 200px; margin: 0.5rem 0; width: 100%; }
     .notification-scroll { max-height: 300px; overflow-y: auto; padding-right: 0.5rem; }
@@ -61,11 +138,42 @@
     .notification-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
     .notification-scroll::-webkit-scrollbar-thumb { background: #FF8C42; border-radius: 4px; }
     .view-all-btn { margin-top: 0.5rem; text-align: center; }
-    .early-access-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
-    .early-house-card { background: rgba(10, 15, 25, 0.8); border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; display: flex; flex-direction: column; }
-    .early-house-card:hover { transform: translateY(-6px); border-color: #FF8C42; box-shadow: 0 20px 25px -12px rgba(0,0,0,0.4); }
-    .slider { position: relative; width: 100%; height: 160px; overflow: hidden; touch-action: pan-y pinch-zoom; }
-    .slider .slides-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; height: 100%; }
+    .early-access-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .early-house-card {
+      background: rgba(10, 15, 25, 0.8);
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+    .early-house-card:hover {
+      transform: translateY(-4px);
+      border-color: #FF8C42;
+      box-shadow: 0 20px 25px -12px rgba(0,0,0,0.4);
+    }
+    .slider {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      overflow: hidden;
+      touch-action: pan-y pinch-zoom;
+    }
+    .slider .slides-container {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      height: 100%;
+    }
     .slider .slides-container::-webkit-scrollbar { display: none; }
     .slider .slide { flex: 0 0 100%; scroll-snap-align: start; width: 100%; height: 100%; }
     .slider .slide img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
@@ -73,38 +181,9 @@
     .slider .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.6); transition: all 0.2s; cursor: pointer; }
     .slider .dot.active { width: 20px; border-radius: 4px; background: white; }
     .early-house-card .info { padding: 0.8rem; flex: 1; display: flex; flex-direction: column; }
-    .early-house-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .early-house-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .early-house-card p { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin: 0.2rem 0; }
     .early-house-card a { color: #FFB347; text-decoration: none; font-size: 0.7rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; margin-top: 0.3rem; align-self: flex-start; }
-    /* ========== MOBILE RESPONSIVE: NO HORIZONTAL SCROLL ========== */
-    @media (max-width: 768px) {
-      .dashboard-grid { grid-template-columns: 1fr; gap: 1rem; }
-      .card { padding: 1rem; border-radius: 28px; }
-      .card h2 { font-size: 1.2rem; margin-bottom: 0.8rem; }
-      .card h2 i { font-size: 1.3rem; }
-      .premium-header { flex-direction: column; text-align: center; padding: 1rem; }
-      .premium-header h1 { font-size: 1.5rem; }
-      .premium-header h1 i { font-size: 1.5rem; }
-      .navbar { padding: 0.5rem 1rem; }
-      .logo { font-size: 1.2rem; }
-      .logo i { font-size: 1rem; }
-      .nav-links { gap: 0.8rem; }
-      .nav-links a { font-size: 0.75rem; }
-      .tab-btn { padding: 0.4rem 1rem; font-size: 0.8rem; }
-      .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item { padding: 0.6rem; }
-      .early-house-card h3 { font-size: 0.85rem; }
-      .early-house-card p { font-size: 0.65rem; }
-      .mic-btn { width: 50px; height: 50px; font-size: 1.5rem; }
-      .whatsapp-number-setup { flex-direction: column; align-items: stretch; }
-      .whatsapp-number-setup button { width: 100%; }
-      .similar-house-item { gap: 0.6rem; padding: 0.6rem; }
-      .similar-house-img { width: 50px; height: 50px; }
-      .similar-house-info h4 { font-size: 0.75rem; }
-      .voice-search-container { gap: 0.5rem; }
-      .voice-result { padding: 0.6rem; }
-      .negotiationResult, .priorityStatus, .predictionResult { font-size: 0.7rem; }
-      input, select, textarea { font-size: 0.8rem; padding: 0.5rem 0.8rem; }
-    }
     /* Custom Modal */
     .custom-modal-overlay {
       position: fixed;
@@ -141,34 +220,105 @@
     }
     .custom-modal-btn.confirm { background: #2563eb; color: white; }
     .custom-modal-btn.cancel { background: #334155; color: white; }
-    .whatsapp-number-setup { background: rgba(0,0,0,0.3); border-radius: 28px; padding: 1rem; margin-bottom: 1.2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+    .whatsapp-number-setup {
+      background: rgba(0,0,0,0.3);
+      border-radius: 28px;
+      padding: 1rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
     .whatsapp-number-setup .form-group { flex: 1; margin-bottom: 0; }
     .whatsapp-number-setup label { font-size: 0.7rem; display: block; margin-bottom: 0.2rem; color: #94a3b8; }
     .whatsapp-number-setup input { margin-bottom: 0; }
     .whatsapp-number-setup button { margin-bottom: 0; }
-    .voice-search-container { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin: 1rem 0; }
-    .mic-btn { background: linear-gradient(135deg, #FF8C42, #E67E22); border: none; border-radius: 50%; width: 70px; height: 70px; font-size: 2rem; color: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(255,140,66,0.5); display: flex; align-items: center; justify-content: center; }
+    .voice-search-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .mic-btn {
+      background: linear-gradient(135deg, #FF8C42, #E67E22);
+      border: none;
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 0 15px rgba(255,140,66,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     .mic-btn.listening { background: #e74c3c; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231,76,60,0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(231,76,60,0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231,76,60,0); } }
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231,76,60,0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(231,76,60,0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231,76,60,0); }
+    }
     .voice-status { font-size: 0.9rem; color: #FFB347; text-align: center; min-height: 2.5rem; }
     .voice-result { background: rgba(0,0,0,0.4); border-radius: 24px; padding: 1rem; margin-top: 1rem; width: 100%; }
     .voice-result h4 { margin-bottom: 0.5rem; color: #FFB347; }
     .voice-result p { margin: 0.3rem 0; font-size: 0.8rem; }
     .whatsapp-share-btn { background: #25D366; color: white; border: none; border-radius: 40px; padding: 0.4rem 1rem; font-size: 0.7rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-top: 0.5rem; }
     .whatsapp-share-btn:hover { background: #128C7E; }
-    .image-upload-area { border: 2px dashed rgba(255,140,66,0.5); border-radius: 28px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem; }
+    .image-upload-area {
+      border: 2px dashed rgba(255,140,66,0.5);
+      border-radius: 28px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 1rem;
+    }
     .image-upload-area:hover { border-color: #FF8C42; background: rgba(255,140,66,0.05); }
     .image-upload-area i { font-size: 2rem; margin-bottom: 0.5rem; color: #FFB347; }
     .image-upload-area input { display: none; }
     #uploadedImagePreview { max-width: 100%; max-height: 200px; border-radius: 20px; margin-top: 0.5rem; display: none; }
     .similar-houses-list { margin-top: 1rem; max-height: 400px; overflow-y: auto; }
-    .similar-house-item { display: flex; gap: 1rem; align-items: center; background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.8rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+    .similar-house-item {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      background: rgba(10, 15, 25, 0.7);
+      border-radius: 24px;
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.2s;
+    }
     .similar-house-item:hover { border-color: #FF8C42; transform: translateX(6px); }
     .similar-house-img { width: 60px; height: 60px; object-fit: cover; border-radius: 16px; }
     .similar-house-info { flex: 1; }
     .similar-house-info h4 { font-size: 0.85rem; margin-bottom: 0.2rem; }
     .similar-house-info p { font-size: 0.7rem; margin: 0; color: #94a3b8; }
     .model-loading { display: inline-block; margin-left: 0.5rem; font-size: 0.7rem; color: #FFB347; }
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .dashboard-container { max-width: 100%; margin: 1rem auto; padding: 0 0.8rem; }
+      .premium-header { padding: 1rem; }
+      .premium-header h1 { font-size: 1.4rem; }
+      .premium-header h1 i { font-size: 1.4rem; }
+      .navbar { padding: 0.5rem 1rem; }
+      .logo { font-size: 1.2rem; }
+      .logo i { font-size: 1rem; }
+      .nav-links { gap: 0.8rem; }
+      .nav-links a { font-size: 0.75rem; }
+      .tab-btn { padding: 0.4rem 1rem; font-size: 0.8rem; }
+      .card { padding: 1rem; }
+      .card h2 { font-size: 1.2rem; }
+      .card h2 i { font-size: 1.3rem; }
+      .early-access-list { grid-template-columns: 1fr; }
+      .mic-btn { width: 50px; height: 50px; font-size: 1.5rem; }
+      .similar-house-img { width: 50px; height: 50px; }
+      .similar-house-info h4 { font-size: 0.75rem; }
+    }
   </style>
 </head>
 <body>
@@ -290,7 +440,7 @@
         </div>
 
         <!-- Early Access Listings -->
-        <div class="card" style="grid-column: span 2;">
+        <div class="card">
           <h2><i class="fas fa-clock"></i> Early Access – New Listings (24h exclusive)</h2>
           <div id="earlyAccessList" class="early-access-list">Loading...</div>
         </div>
