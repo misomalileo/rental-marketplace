@@ -301,7 +301,20 @@
       align-items: center;
       gap: 0.6rem;
     }
-    .carousel-title i { font-size: 1.5rem; background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+    /* Premium gradient for the title */
+    .carousel-title i {
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+    }
+    .carousel-title span {
+      background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
     .carousel-subtitle {
       font-size: 0.7rem;
       font-weight: 500;
@@ -310,6 +323,27 @@
       padding: 0.2rem 0.8rem;
       border-radius: 40px;
       letter-spacing: 0.3px;
+    }
+    /* Promo banner below subtitle */
+    .promo-banner {
+      text-align: center;
+      margin: 0.5rem auto 0;
+      padding: 0.3rem 0.8rem;
+      background: linear-gradient(135deg, rgba(255,140,66,0.1), rgba(255,215,0,0.05));
+      border-radius: 40px;
+      display: inline-block;
+      width: auto;
+      backdrop-filter: blur(4px);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #FF8C42;
+      animation: subtlePulse 2s infinite;
+      border: 1px solid rgba(255,140,66,0.3);
+    }
+    @keyframes subtlePulse {
+      0% { opacity: 0.7; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.02); }
+      100% { opacity: 0.7; transform: scale(1); }
     }
     .hero-swiper { padding: 0 0.5rem; overflow: visible; }
     .swiper-slide { width: auto; border-radius: 24px; transition: transform 0.4s ease; }
@@ -359,6 +393,16 @@
       font-size: 0.75rem;
       font-weight: 800;
       color: #10b981;
+    }
+    .property-type-badge {
+      display: inline-block;
+      background: rgba(37,99,235,0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-top: 0.2rem;
     }
     .carousel-btn {
       background: linear-gradient(135deg, #10b981, #3b82f6);
@@ -1279,14 +1323,17 @@
   <div class="carousel-section">
     <div class="carousel-container">
       <div class="carousel-title">
-        <i class="fas fa-fire"></i> Featured Properties
+        <i class="fas fa-fire"></i> <span>Featured Properties</span>
         <span class="carousel-subtitle">Handpicked for you</span>
+      </div>
+      <!-- Promotional banner below subtitle -->
+      <div class="promo-banner">
+        <i class="fas fa-gem"></i> Limited Offer: Premium users get early access to new listings! <i class="fas fa-arrow-right"></i>
       </div>
       <div class="swiper hero-swiper">
         <div class="swiper-wrapper" id="carousel-wrapper"></div>
         <div class="swiper-pagination"></div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
+        <!-- navigation arrows removed -->
       </div>
     </div>
   </div>
@@ -1842,6 +1889,73 @@
   </script>
 
   <script>
+    // Override the carousel loading to fetch 20 houses and add property type
+    (function() {
+      const originalLoadHeroCarousel = window.loadHeroCarousel;
+      if (originalLoadHeroCarousel) {
+        window.loadHeroCarousel = async function() {
+          try {
+            const res = await fetch('/api/houses?page=1&limit=20');
+            const data = await res.json();
+            const houses = data.houses || [];
+            const wrapper = document.getElementById('carousel-wrapper');
+            if (!wrapper) return;
+            if (houses.length === 0) {
+              wrapper.innerHTML = '<div class="swiper-slide">No properties to display</div>';
+              return;
+            }
+            // Helper to get display type name
+            const getDisplayType = (type) => {
+              const typeMap = {
+                'House': 'House', 'Apartment': 'Apartment', 'Room': 'Room', 'Hostel': 'Hostel',
+                'Office': 'Office', 'FurnishedApartment': 'Furnished Apt', 'ShortStay': 'Short-Stay',
+                'SharedLiving': 'Shared Living', 'StudentAccommodation': 'Student Acc'
+              };
+              return typeMap[type] || type;
+            };
+            wrapper.innerHTML = houses.map(house => `
+              <div class="swiper-slide">
+                <div class="carousel-card">
+                  <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}">
+                  <div class="carousel-card-content">
+                    <h3>${escapeHtml(house.name)}</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
+                    <div class="carousel-price">MWK ${Number(house.price).toLocaleString()}</div>
+                    <div class="property-type-badge"><i class="fas ${getTypeIcon(house.type)}"></i> ${getDisplayType(house.type)}</div>
+                    <button class="carousel-btn" onclick="showDetails('${house._id}')">View Details</button>
+                  </div>
+                </div>
+              </div>
+            `).join('');
+            if (window.heroSwiper) window.heroSwiper.destroy(true, true);
+            window.heroSwiper = new Swiper('.hero-swiper', {
+              loop: true,
+              autoplay: { delay: 5000, disableOnInteraction: false },
+              effect: 'slide',
+              grabCursor: true,
+              slidesPerView: 1,
+              spaceBetween: 20,
+              breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
+              pagination: { el: '.swiper-pagination', clickable: true },
+              navigation: false  // removes arrows
+            });
+          } catch (err) {
+            console.error('Failed to load carousel:', err);
+          }
+        };
+      }
+      // Helper function (if not already defined)
+      function getTypeIcon(type) {
+        const iconMap = {
+          'House': 'fa-home', 'Apartment': 'fa-building', 'Room': 'fa-bed', 'Hostel': 'fa-hotel',
+          'Office': 'fa-briefcase', 'FurnishedApartment': 'fa-couch', 'ShortStay': 'fa-calendar-week',
+          'SharedLiving': 'fa-users', 'StudentAccommodation': 'fa-graduation-cap'
+        };
+        return iconMap[type] || 'fa-home';
+      }
+      window.getTypeIcon = getTypeIcon;
+    })();
+
     // Back to top button logic
     const backToTop = document.getElementById('backToTop');
     window.addEventListener('scroll', () => {
