@@ -202,6 +202,7 @@
   let currentDownloadUrl = null;
   let signaturePad = null;
   let currentUserId = null;
+  let refreshInterval = null;
 
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
@@ -229,8 +230,10 @@
         renderContractInfo();
         initSignaturePad();
         updateUIAfterLoad();
-        // If both signed, fetch download URL immediately
+        
+        // If both signed, fetch download URL immediately and stop polling
         if (contract.signedByLandlord && contract.signedByTenant) {
+          if (refreshInterval) clearInterval(refreshInterval);
           await refreshDownloadUrl();
         }
       } else {
@@ -310,6 +313,18 @@
     }
   }
 
+  // Auto-refresh every 5 seconds if not both signed
+  function startAutoRefresh() {
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(async () => {
+      if (contract && contract.signedByLandlord && contract.signedByTenant) {
+        clearInterval(refreshInterval);
+        return;
+      }
+      await loadContract();
+    }, 5000);
+  }
+
   document.getElementById('clearBtn').addEventListener('click', () => {
     if (signaturePad) signaturePad.clear();
   });
@@ -343,14 +358,11 @@
       const data = await res.json();
       if (res.ok) {
         showToast('Signature saved!', 'success');
-        // Force a fresh load of the contract after a short delay to ensure backend updated
-        setTimeout(async () => {
-          await loadContract();
-          if (contract.signedByLandlord && contract.signedByTenant) {
-            await refreshDownloadUrl();
-            showToast('Both parties have signed! You can now download the contract.', 'success');
-          }
-        }, 1000);
+        await loadContract();
+        if (data.signedPdfUrl) {
+          showToast('Both parties have signed! You can now download the contract.', 'success');
+          await refreshDownloadUrl();
+        }
       } else {
         showToast(data.message || 'Failed to sign', 'error');
       }
@@ -372,6 +384,7 @@
   });
 
   loadContract();
+  startAutoRefresh();
 </script>
 </body>
 </html>

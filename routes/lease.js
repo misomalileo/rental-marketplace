@@ -11,6 +11,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
+// Helper: calculate lease score (0-100)
 function calculateLeaseScore(negotiation) {
   let score = 70;
   if (negotiation.rentAmount > 0 && negotiation.rentAmount < 1000000) score += 5;
@@ -23,6 +24,7 @@ function calculateLeaseScore(negotiation) {
   return Math.min(100, Math.max(0, score));
 }
 
+// AI clause suggestions (rule-based, Malawi specific)
 function generateAiSuggestions(negotiation) {
   const suggestions = [];
   if (negotiation.depositAmount > negotiation.rentAmount * 3) {
@@ -70,6 +72,9 @@ function generateAiSuggestions(negotiation) {
   return suggestions;
 }
 
+// ============================================================
+// PROFESSIONAL MALAWI TENANCY AGREEMENT PDF GENERATOR (stable)
+// ============================================================
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
     const contractDir = path.join(__dirname, '../contracts');
@@ -86,6 +91,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       }
     };
 
+    // Header
     doc.rect(0, 0, doc.page.width, 100).fill('#1e3a5f');
     doc.fillColor('white')
       .fontSize(24)
@@ -101,6 +107,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       .text(`This Tenancy Agreement is made on this ${today}`, 50, 120, { align: 'center' });
     doc.moveDown(0.5);
 
+    // 1. PARTIES
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('1. PARTIES', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`Landlord:`, 60, doc.y + 5);
@@ -112,6 +119,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`Principal place of business / residence: ${tenant.address || tenant.email}`, 70, doc.y + 15);
     doc.moveDown(2);
 
+    // 2. PREMISES
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('2. PREMISES', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`The Landlord hereby agrees to lease to the Tenant, and the Tenant agrees to rent, the property located at:`, 50, doc.y + 5);
@@ -119,12 +127,14 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.font('Helvetica').text(`(hereinafter referred to as "the Property")`, 60, doc.y + 35);
     doc.moveDown(3);
 
+    // 3. TERM
     const startDate = new Date(negotiation.leaseStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('3. TERM OF TENANCY', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`The tenancy shall commence on ${startDate} and shall continue on a month-to-month basis unless terminated in accordance with this Agreement.`, 50, doc.y + 5);
     doc.moveDown(2);
 
+    // 4. RENT
     const monthlyRent = negotiation.rentAmount.toLocaleString();
     const threeMonthsAdvance = (negotiation.rentAmount * 3).toLocaleString();
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('4. RENT AND PAYMENT TERMS', 50, doc.y + 10);
@@ -134,6 +144,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`c) All rent payments shall be made in a manner agreed upon by both parties.`, 60, doc.y + 35);
     doc.moveDown(3);
 
+    // 5. MAINTENANCE
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('5. MAINTENANCE AND REPAIRS', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`a) The Tenant shall keep the Property in good and tenantable condition at all times.`, 60, doc.y + 5);
@@ -141,6 +152,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`c) The Tenant shall not be responsible for damages resulting from the Landlord’s negligence or structural defects.`, 60, doc.y + 35);
     doc.moveDown(3);
 
+    // 6. UTILITIES
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('6. UTILITIES', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`The Tenant shall be responsible for payment of all utility bills related to the Property, including but not limited to:`, 50, doc.y + 5);
@@ -149,6 +161,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`• Any other applicable services`, 70, doc.y + 50);
     doc.moveDown(4);
 
+    // 7. TERMINATION
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('7. TERMINATION', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`a) Either party may terminate this Agreement by providing ${negotiation.noticePeriodDays || 30} days written notice.`, 60, doc.y + 5);
@@ -158,11 +171,13 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`   • Allow for reasonable wear and tear`, 70, doc.y + 65);
     doc.moveDown(5);
 
+    // 8. GOVERNING LAW
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('8. GOVERNING LAW', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`This Agreement shall be governed and interpreted in accordance with the laws of the Republic of Malawi.`, 50, doc.y + 5);
     doc.moveDown(2);
 
+    // 9. ADDITIONAL TERMS (agreed clauses only)
     if (negotiation.clauses && negotiation.clauses.length > 0) {
       doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('9. ADDITIONAL TERMS', 50, doc.y + 10);
       doc.fillColor('#333333').fontSize(10).font('Helvetica');
@@ -182,6 +197,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       doc.moveDown(2);
     }
 
+    // 10. SIGNATURES
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('10. SIGNATURES', 50, doc.y + 15);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     let sigY = doc.y + 10;
@@ -217,6 +233,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     }
     doc.text(`Date: ______________`, 310, sigY + 70);
 
+    // Witnesses
     const witnessY = sigY + 110;
     checkPageBreak(80);
     doc.fontSize(10).font('Helvetica-Bold').text(`WITNESSES (Optional but Recommended)`, 50, witnessY);
@@ -228,6 +245,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`   Signature: ______________________`, 70, witnessY + 75);
     doc.text(`   Date: __________________________`, 70, witnessY + 90);
 
+    // Footer (safe method)
     const pageRange = doc.bufferedPageRange();
     const startPage = pageRange.start;
     const totalPages = pageRange.count;
@@ -421,7 +439,7 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// ========== FIXED SIGN ROUTE ==========
+// FIXED SIGN ROUTE – now properly updates status and returns signedPdfUrl
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const { signature } = req.body;
@@ -446,6 +464,7 @@ router.put('/sign/:contractId', auth, async (req, res) => {
 
     // Check if both parties have now signed
     const bothSigned = contract.signedByLandlord && contract.signedByTenant;
+    let signedPdfUrl = null;
     
     if (bothSigned) {
       // Update contract status to active
@@ -464,18 +483,19 @@ router.put('/sign/:contractId', auth, async (req, res) => {
         console.log(`✅ House ${house._id} marked as rented after lease signing`);
       }
       
-      // Regenerate PDF with both signatures (don't await to avoid blocking response)
+      // Regenerate PDF with both signatures
       const negotiation = await LeaseNegotiation.findById(contract.negotiationId);
       const houseForPDF = await House.findById(contract.houseId);
       const landlord = await User.findById(contract.landlordId);
       const tenant = await User.findById(contract.tenantId);
+      try {
+        await generatePDFWithSignatures(negotiation, houseForPDF, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
+        signedPdfUrl = `/api/lease/download-temp/${negotiation._id}`;
+      } catch (pdfErr) {
+        console.error('PDF generation error:', pdfErr);
+        // Even if PDF fails, we still return success for the signature
+      }
       
-      // Generate PDF in background, but don't wait for it to complete
-      generatePDFWithSignatures(negotiation, houseForPDF, landlord, tenant, contract.landlordSignature, contract.tenantSignature)
-        .then(() => console.log('PDF regenerated with both signatures'))
-        .catch(err => console.error('PDF regeneration error:', err));
-      
-      const signedPdfUrl = `/api/lease/download-temp/${negotiation._id}`;
       return res.json({ contract, signedPdfUrl });
     }
     
