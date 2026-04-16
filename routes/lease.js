@@ -203,16 +203,14 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     let sigY = doc.y + 10;
     checkPageBreak(180);
     
-    // Landlord signature
     doc.text(`FOR THE LANDLORD`, 60, sigY);
     doc.text(`Name: ${landlord.name}`, 70, sigY + 15);
-    if (signatureLandlord && signatureLandlord !== 'null') {
+    if (signatureLandlord) {
       try {
         const base64Data = signatureLandlord.replace(/^data:image\/png;base64,/, '');
         const imgBuffer = Buffer.from(base64Data, 'base64');
         doc.image(imgBuffer, 70, sigY + 30, { width: 100 });
       } catch(e) {
-        console.error('Landlord signature error:', e);
         doc.text(`___________________`, 70, sigY + 40);
       }
     } else {
@@ -220,16 +218,14 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     }
     doc.text(`Date: ______________`, 70, sigY + 70);
     
-    // Tenant signature
     doc.text(`FOR THE TENANT`, 300, sigY);
     doc.text(`Name: ${tenant.name}`, 310, sigY + 15);
-    if (signatureTenant && signatureTenant !== 'null') {
+    if (signatureTenant) {
       try {
         const base64Data = signatureTenant.replace(/^data:image\/png;base64,/, '');
         const imgBuffer = Buffer.from(base64Data, 'base64');
         doc.image(imgBuffer, 310, sigY + 30, { width: 100 });
       } catch(e) {
-        console.error('Tenant signature error:', e);
         doc.text(`___________________`, 310, sigY + 40);
       }
     } else {
@@ -571,7 +567,9 @@ router.get('/download-signed/:token', async (req, res) => {
   }
 });
 
-// FORCE GENERATE PDF – uses negotiationId, ignores contract status
+// ============================================================
+// FORCE GENERATE PDF – merges signatures from all contracts for this negotiation
+// ============================================================
 router.get('/force-pdf/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -583,21 +581,59 @@ router.get('/force-pdf/:negotiationId', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
     
-    // Find ANY contract associated with this negotiation (there might be multiple)
-    const contract = await SmartContract.findOne({ negotiationId: negotiation._id });
-    if (!contract) return res.status(404).json({ message: 'No contract found for this negotiation' });
+    // Find ALL contracts for this negotiation
+    const contracts = await SmartContract.find({ negotiationId: negotiation._id });
+    if (!contracts.length) return res.status(404).json({ message: 'No contracts found for this negotiation' });
     
-    // Get signatures directly from contract (they are stored as base64 strings)
-    const landlordSig = contract.landlordSignature;
-    const tenantSig = contract.tenantSignature;
+    // Merge signatures from all contracts
+    let landlordSignature = null;
+    let tenantSignature = null;
+    let landlordSigned = false;
+    let tenantSigned = false;
     
-    console.log(`Force PDF: landlordSig exists: ${!!landlordSig}, tenantSig exists: ${!!tenantSig}`);
+    for (const contract of contracts) {
+      if (contract.landlordSignature && !landlordSignature) {
+        landlordSignature = contract.landlordSignature;
+        landlordSigned = true;
+      }
+      if (contract.tenantSignature && !tenantSignature) {
+        tenantSignature = contract.tenantSignature;
+        tenantSigned = true;
+      }
+      if (contract.signedByLandlord) landlordSigned = true;
+      if (contract.signedByTenant) tenantSigned = true;
+    }
     
+    // If we have signatures but flags are false, update the first contract to have both flags true
+    if ((landlordSignature || tenantSignature) && contracts.length > 0) {
+      const primaryContract = contracts[0];
+      let needsUpdate = false;
+      if (landlordSignature && !primaryContract.signedByLandlord) {
+        primaryContract.signedByLandlord = true;
+        primaryContract.landlordSignature = landlordSignature;
+        needsUpdate = true;
+      }
+      if (tenantSignature && !primaryContract.signedByTenant) {
+        primaryContract.signedByTenant = true;
+        primaryContract.tenantSignature = tenantSignature;
+        needsUpdate = true;
+      }
+      if (needsUpdate) {
+        if (primaryContract.signedByLandlord && primaryContract.signedByTenant) {
+          primaryContract.status = 'active';
+          primaryContract.signedAt = new Date();
+        }
+        await primaryContract.save();
+      }
+    }
+    
+    // Get house and user details
     const house = await House.findById(negotiation.houseId);
     const landlord = await User.findById(negotiation.landlordId);
     const tenant = await User.findById(negotiation.tenantId);
     
-    await generatePDFWithSignatures(negotiation, house, landlord, tenant, landlordSig, tenantSig);
+    // Generate PDF with merged signatures
+    await generatePDFWithSignatures(negotiation, house, landlord, tenant, landlordSignature, tenantSignature);
     
     const token = jwt.sign({ negotiationId: negotiation._id, userId }, process.env.JWT_SECRET, { expiresIn: '5m' });
     const downloadUrl = `/api/lease/download-signed/${token}`;
