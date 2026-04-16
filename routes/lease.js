@@ -73,7 +73,7 @@ function generateAiSuggestions(negotiation) {
 }
 
 // ============================================================
-// PROFESSIONAL MALAWI TENANCY AGREEMENT PDF GENERATOR (stable)
+// PROFESSIONAL MALAWI TENANCY AGREEMENT PDF GENERATOR
 // ============================================================
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
@@ -439,7 +439,7 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// FIXED SIGN ROUTE – now properly updates status and returns signedPdfUrl
+// FIXED SIGN ROUTE – ensures status becomes 'active' and PDF is regenerated
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const { signature } = req.body;
@@ -493,7 +493,6 @@ router.put('/sign/:contractId', auth, async (req, res) => {
         signedPdfUrl = `/api/lease/download-temp/${negotiation._id}`;
       } catch (pdfErr) {
         console.error('PDF generation error:', pdfErr);
-        // Even if PDF fails, we still return success for the signature
       }
       
       return res.json({ contract, signedPdfUrl });
@@ -501,6 +500,52 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     
     // Not both signed yet
     res.json({ contract });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error: ' + err.message });
+  }
+});
+
+// FORCE ACTIVATE CONTRACT – manually regenerate PDF and set status to active
+router.post('/force-activate/:contractId', auth, async (req, res) => {
+  try {
+    const contract = await SmartContract.findById(req.params.contractId);
+    if (!contract) return res.status(404).json({ message: 'Contract not found' });
+    
+    const userId = req.user.id;
+    if (contract.landlordId.toString() !== userId && contract.tenantId.toString() !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    // Check if both signatures exist
+    if (!contract.signedByLandlord || !contract.signedByTenant) {
+      return res.status(400).json({ message: 'Both parties have not signed yet' });
+    }
+    
+    // Update contract status
+    contract.status = 'active';
+    contract.signedAt = new Date();
+    await contract.save();
+    
+    // Update negotiation status
+    await LeaseNegotiation.findByIdAndUpdate(contract.negotiationId, { status: 'signed' });
+    
+    // Mark house as rented
+    const house = await House.findById(contract.houseId);
+    if (house && house.rentalStatus === 'available') {
+      house.rentalStatus = 'rented';
+      await house.save();
+    }
+    
+    // Regenerate PDF with both signatures
+    const negotiation = await LeaseNegotiation.findById(contract.negotiationId);
+    const houseForPDF = await House.findById(contract.houseId);
+    const landlord = await User.findById(contract.landlordId);
+    const tenant = await User.findById(contract.tenantId);
+    await generatePDFWithSignatures(negotiation, houseForPDF, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
+    
+    const downloadUrl = `/api/lease/download-temp/${negotiation._id}`;
+    res.json({ success: true, downloadUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error: ' + err.message });
