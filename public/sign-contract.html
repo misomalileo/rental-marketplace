@@ -231,7 +231,6 @@
         renderContractInfo();
         initSignaturePad();
         updateUIAfterLoad();
-        // If both signed, try to get download URL
         if (contract.signedByLandlord && contract.signedByTenant) {
           await refreshDownloadUrl();
         }
@@ -276,7 +275,6 @@
       statusDiv.innerHTML = '<i class="fas fa-clock"></i> You have already signed. Waiting for the other party to sign.';
       statusDiv.className = 'status warning';
       downloadBtn.style.display = 'none';
-      // Show force activate button only if both have actually signed but status didn't update
       forceActivateBtn.style.display = 'inline-flex';
     } else {
       signBtn.disabled = false;
@@ -308,7 +306,6 @@
       if (res.ok && data.downloadUrl) {
         currentDownloadUrl = data.downloadUrl;
         document.getElementById('downloadBtn').onclick = () => window.open(currentDownloadUrl, '_blank');
-        showToast('Download ready', 'success');
       } else {
         console.error('Failed to get download URL', data);
       }
@@ -333,7 +330,6 @@
         document.getElementById('downloadBtn').onclick = () => window.open(currentDownloadUrl, '_blank');
         document.getElementById('downloadBtn').style.display = 'inline-flex';
         document.getElementById('forceActivateBtn').style.display = 'none';
-        // Reload contract to update UI
         await loadContract();
       } else {
         showToast(data.message || 'Activation failed', 'error');
