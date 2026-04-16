@@ -203,14 +203,16 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     let sigY = doc.y + 10;
     checkPageBreak(180);
     
+    // Landlord signature
     doc.text(`FOR THE LANDLORD`, 60, sigY);
     doc.text(`Name: ${landlord.name}`, 70, sigY + 15);
-    if (signatureLandlord) {
+    if (signatureLandlord && signatureLandlord !== 'null') {
       try {
         const base64Data = signatureLandlord.replace(/^data:image\/png;base64,/, '');
         const imgBuffer = Buffer.from(base64Data, 'base64');
         doc.image(imgBuffer, 70, sigY + 30, { width: 100 });
       } catch(e) {
+        console.error('Landlord signature error:', e);
         doc.text(`___________________`, 70, sigY + 40);
       }
     } else {
@@ -218,14 +220,16 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     }
     doc.text(`Date: ______________`, 70, sigY + 70);
     
+    // Tenant signature
     doc.text(`FOR THE TENANT`, 300, sigY);
     doc.text(`Name: ${tenant.name}`, 310, sigY + 15);
-    if (signatureTenant) {
+    if (signatureTenant && signatureTenant !== 'null') {
       try {
         const base64Data = signatureTenant.replace(/^data:image\/png;base64,/, '');
         const imgBuffer = Buffer.from(base64Data, 'base64');
         doc.image(imgBuffer, 310, sigY + 30, { width: 100 });
       } catch(e) {
+        console.error('Tenant signature error:', e);
         doc.text(`___________________`, 310, sigY + 40);
       }
     } else {
@@ -579,11 +583,15 @@ router.get('/force-pdf/:negotiationId', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
     
+    // Find ANY contract associated with this negotiation (there might be multiple)
     const contract = await SmartContract.findOne({ negotiationId: negotiation._id });
     if (!contract) return res.status(404).json({ message: 'No contract found for this negotiation' });
     
+    // Get signatures directly from contract (they are stored as base64 strings)
     const landlordSig = contract.landlordSignature;
     const tenantSig = contract.tenantSignature;
+    
+    console.log(`Force PDF: landlordSig exists: ${!!landlordSig}, tenantSig exists: ${!!tenantSig}`);
     
     const house = await House.findById(negotiation.houseId);
     const landlord = await User.findById(negotiation.landlordId);
