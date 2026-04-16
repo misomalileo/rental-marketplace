@@ -73,8 +73,8 @@ function generateAiSuggestions(negotiation) {
 }
 
 // ============================================================
-// PROFESSIONAL MALAWI TENANCY AGREEMENT PDF GENERATOR
-// (Fixed footer – no switchToPage errors)
+// FIXED: PROFESSIONAL MALAWI TENANCY AGREEMENT PDF GENERATOR
+// No recursion, no page index errors
 // ============================================================
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
@@ -85,18 +85,6 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
 
-    // Helper to add footer to the current page
-    const addFooter = () => {
-      const pageCount = doc.bufferedPageRange().count;
-      const currentPage = doc.bufferedPageRange().start + pageCount - 1;
-      doc.switchToPage(currentPage);
-      doc.fillColor('#95a5a6').fontSize(8)
-        .text(`Khomo Lathu - Trusted Rentals in Malawi | Page ${currentPage + 1} of ${pageCount}`, 50, doc.page.height - 30, { align: 'center' });
-    };
-
-    // Automatically add footer when a new page is created
-    doc.on('pageAdded', () => addFooter());
-
     const checkPageBreak = (requiredSpace) => {
       if (doc.y + requiredSpace > doc.page.height - 80) {
         doc.addPage();
@@ -104,7 +92,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       }
     };
 
-    // Header (first page only)
+    // ----- Title & Header (first page) -----
     doc.rect(0, 0, doc.page.width, 100).fill('#1e3a5f');
     doc.fillColor('white')
       .fontSize(24)
@@ -258,8 +246,16 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`   Signature: ______________________`, 70, witnessY + 75);
     doc.text(`   Date: __________________________`, 70, witnessY + 90);
 
-    // Final footer for the last page
-    addFooter();
+    // ========== FOOTER: Add page numbers to all pages (safe method) ==========
+    const pageRange = doc.bufferedPageRange();
+    const startPage = pageRange.start;
+    const totalPages = pageRange.count;
+    
+    for (let i = 0; i < totalPages; i++) {
+      doc.switchToPage(startPage + i);
+      doc.fillColor('#95a5a6').fontSize(8)
+        .text(`Khomo Lathu - Trusted Rentals in Malawi | Page ${i + 1} of ${totalPages}`, 50, doc.page.height - 30, { align: 'center' });
+    }
 
     doc.end();
     writeStream.on('finish', () => resolve(pdfPath));
