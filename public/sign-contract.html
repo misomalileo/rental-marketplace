@@ -182,7 +182,7 @@
         <button id="signBtn" class="btn btn-success"><i class="fas fa-check-circle"></i> Sign Contract</button>
       </div>
     </div>
-    <div id="status" class="status info"><i class="fas fa-info-circle"></i> Draw your signature above and click "Sign Contract".</div>
+    <div id="status" class="status info"><i class="fas fa-info-circle"></i> Draw your signature and click "Sign Contract".</div>
     <div class="btn-group" style="justify-content: space-between; margin-top: 1rem;">
       <button id="refreshBtn" class="btn btn-secondary"><i class="fas fa-sync-alt"></i> Refresh Status</button>
       <button id="downloadBtn" class="btn btn-primary" style="display: none;"><i class="fas fa-download"></i> Download Signed Contract</button>
@@ -229,7 +229,7 @@
         renderContractInfo();
         initSignaturePad();
         updateUIAfterLoad();
-        // If both signed, ensure download URL is fetched
+        // If both signed, fetch download URL immediately
         if (contract.signedByLandlord && contract.signedByTenant) {
           await refreshDownloadUrl();
         }
@@ -267,8 +267,6 @@
       statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Both parties have signed. Contract is active!';
       statusDiv.className = 'status success';
       downloadBtn.style.display = 'inline-flex';
-      // Ensure download URL is refreshed
-      refreshDownloadUrl();
     } else if (userHasSigned) {
       signBtn.disabled = true;
       statusDiv.innerHTML = '<i class="fas fa-clock"></i> You have already signed. Waiting for the other party to sign.';
@@ -303,6 +301,7 @@
       if (res.ok && data.downloadUrl) {
         currentDownloadUrl = data.downloadUrl;
         document.getElementById('downloadBtn').onclick = () => window.open(currentDownloadUrl, '_blank');
+        showToast('Download ready', 'success');
       } else {
         console.error('Failed to get download URL', data);
       }
@@ -318,7 +317,12 @@
   document.getElementById('refreshBtn').addEventListener('click', async () => {
     showToast('Refreshing contract status...', 'info');
     await loadContract();
-    showToast('Status updated', 'success');
+    if (contract.signedByLandlord && contract.signedByTenant) {
+      await refreshDownloadUrl();
+      showToast('Contract is active! You can now download.', 'success');
+    } else {
+      showToast('Status updated', 'success');
+    }
   });
 
   document.getElementById('signBtn').addEventListener('click', async () => {
@@ -341,9 +345,10 @@
         showToast('Signature saved!', 'success');
         // Reload contract to get updated signatures
         await loadContract();
-        // If both have signed, download button will appear via updateUIAfterLoad
+        // If both signed, download button will appear
         if (data.signedPdfUrl) {
           showToast('Both parties have signed! You can now download the contract.', 'success');
+          await refreshDownloadUrl();
         }
       } else {
         showToast(data.message || 'Failed to sign', 'error');
