@@ -64,7 +64,6 @@
       padding: 0.8rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.03);
       border: 1px solid #e2e8f0;
-      transition: all 0.2s;
     }
     .info-card i {
       color: #FF8C42;
@@ -143,53 +142,6 @@
     .status.success { background: #dcfce7; color: #15803d; display: block; }
     .status.info { background: #dbeafe; color: #1e40af; display: block; }
     .status.error { background: #fee2e2; color: #b91c1c; display: block; }
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    .modal-card {
-      background: white;
-      border-radius: 32px;
-      padding: 1.5rem;
-      max-width: 320px;
-      width: 85%;
-      text-align: center;
-      animation: fadeScale 0.2s ease;
-    }
-    @keyframes fadeScale {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    .modal-card i {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .modal-card p {
-      margin: 0.8rem 0;
-      font-size: 0.9rem;
-    }
-    .modal-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-top: 1rem;
-    }
-    .modal-buttons button {
-      padding: 0.5rem 1.2rem;
-      border-radius: 40px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-    }
     .toast {
       position: fixed;
       bottom: 20px;
@@ -254,13 +206,14 @@
   let signaturePad = null;
   let currentUserId = null;
 
-  // Get user ID
+  // Get user ID from token
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     currentUserId = payload.id;
-  } catch(e) {}
+  } catch(e) {
+    console.error('Failed to parse token', e);
+  }
 
-  // Toast notification (replaces alert)
   function showToast(message, type = 'info') {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
@@ -269,27 +222,6 @@
     toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
-  }
-
-  // Custom modal (replaces confirm)
-  function showModal(message, onConfirm, onCancel) {
-    const modalDiv = document.createElement('div');
-    modalDiv.className = 'modal';
-    modalDiv.innerHTML = `
-      <div class="modal-card">
-        <i class="fas fa-question-circle" style="color:#FF8C42;"></i>
-        <p>${message}</p>
-        <div class="modal-buttons">
-          <button class="modal-confirm" style="background:#10b981; color:white;">Yes</button>
-          <button class="modal-cancel" style="background:#e2e8f0;">Cancel</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modalDiv);
-    const confirmBtn = modalDiv.querySelector('.modal-confirm');
-    const cancelBtn = modalDiv.querySelector('.modal-cancel');
-    confirmBtn.onclick = () => { modalDiv.remove(); if (onConfirm) onConfirm(); };
-    cancelBtn.onclick = () => { modalDiv.remove(); if (onCancel) onCancel(); };
   }
 
   async function loadContract() {
@@ -302,36 +234,35 @@
         negotiationId = contract.negotiationId;
         renderContractInfo();
         initSignaturePad();
+        
+        const isLandlord = contract.landlordId._id === currentUserId;
+        const alreadySigned = isLandlord ? contract.signedByLandlord : contract.signedByTenant;
+        
         if (contract.signedByLandlord && contract.signedByTenant) {
           document.getElementById('signBtn').disabled = true;
           document.getElementById('status').innerHTML = '<i class="fas fa-check-circle"></i> Both parties have signed. Contract is active!';
           document.getElementById('status').className = 'status success';
           await refreshDownloadUrl();
           document.getElementById('downloadBtn').style.display = 'inline-flex';
+        } else if (alreadySigned) {
+          document.getElementById('signBtn').disabled = true;
+          document.getElementById('status').innerHTML = '<i class="fas fa-check-circle"></i> You have already signed. Waiting for the other party.';
+          document.getElementById('status').className = 'status info';
         } else {
-          // Check if current user already signed
-          const isLandlord = contract.landlordId._id === currentUserId;
-          const alreadySigned = isLandlord ? contract.signedByLandlord : contract.signedByTenant;
-          if (alreadySigned) {
-            document.getElementById('signBtn').disabled = true;
-            document.getElementById('status').innerHTML = '<i class="fas fa-check-circle"></i> You have already signed. Waiting for the other party.';
-            document.getElementById('status').className = 'status info';
-          } else {
-            document.getElementById('status').innerHTML = '<i class="fas fa-pen-fancy"></i> Draw your signature and click "Sign Contract".';
-            document.getElementById('status').className = 'status info';
-          }
+          document.getElementById('status').innerHTML = '<i class="fas fa-pen-fancy"></i> Draw your signature and click "Sign Contract".';
+          document.getElementById('status').className = 'status info';
         }
       } else {
-        showToast('Failed to load contract', 'error');
+        const error = await res.json();
+        showToast(error.message || 'Failed to load contract', 'error');
       }
     } catch (err) {
-      showToast('Network error', 'error');
+      showToast('Network error loading contract', 'error');
     }
   }
 
   function renderContractInfo() {
     const container = document.getElementById('contractInfo');
-    const isLandlord = contract.landlordId._id === currentUserId;
     const landlordSigned = contract.signedByLandlord;
     const tenantSigned = contract.signedByTenant;
     container.innerHTML = `
@@ -345,7 +276,6 @@
   function initSignaturePad() {
     const canvas = document.getElementById('signatureCanvas');
     if (!canvas) return;
-    // Set canvas dimensions properly
     const ratio = Math.max(window.devicePixelRatio || 1, 1);
     canvas.width = canvas.offsetWidth * ratio;
     canvas.height = canvas.offsetHeight * ratio;
@@ -363,8 +293,7 @@
       const data = await res.json();
       if (res.ok && data.downloadUrl) {
         currentDownloadUrl = data.downloadUrl;
-        const downloadBtn = document.getElementById('downloadBtn');
-        downloadBtn.onclick = () => window.open(currentDownloadUrl, '_blank');
+        document.getElementById('downloadBtn').onclick = () => window.open(currentDownloadUrl, '_blank');
       }
     } catch (err) {
       console.error('Failed to refresh download URL', err);
@@ -375,49 +304,51 @@
     if (signaturePad) signaturePad.clear();
   });
 
-  document.getElementById('signBtn').addEventListener('click', () => {
+  document.getElementById('signBtn').addEventListener('click', async () => {
     if (!signaturePad || signaturePad.isEmpty()) {
       showToast('Please draw your signature first', 'error');
       return;
     }
+    
     const signatureData = signaturePad.toDataURL();
     const btn = document.getElementById('signBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing...';
     
-    fetch(`/api/lease/sign/${contractId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ signature: signatureData })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.contract || data.signedPdfUrl) {
-          showToast('Contract signed successfully!', 'success');
-          if (data.signedPdfUrl) {
-            showToast('Both parties have signed! You can download the contract.', 'success');
-            document.getElementById('downloadBtn').style.display = 'inline-flex';
-            refreshDownloadUrl();
-          }
-          loadContract(); // refresh status
-        } else {
-          showToast('Failed to sign', 'error');
-        }
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-check-circle"></i> Sign Contract';
-      })
-      .catch(err => {
-        showToast('Network error', 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-check-circle"></i> Sign Contract';
+    try {
+      const res = await fetch(`/api/lease/sign/${contractId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ signature: signatureData })
       });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        showToast('Contract signed successfully!', 'success');
+        if (data.signedPdfUrl) {
+          showToast('Both parties have signed! You can download the contract.', 'success');
+          document.getElementById('downloadBtn').style.display = 'inline-flex';
+          await refreshDownloadUrl();
+        }
+        await loadContract(); // refresh status
+      } else {
+        showToast(data.message || 'Failed to sign contract', 'error');
+      }
+    } catch (err) {
+      console.error('Sign error:', err);
+      showToast('Network error while signing', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-check-circle"></i> Sign Contract';
+    }
   });
 
   document.getElementById('downloadBtn').addEventListener('click', () => {
     if (currentDownloadUrl) {
       window.open(currentDownloadUrl, '_blank');
     } else {
-      showToast('No contract available', 'error');
+      showToast('No contract available to download', 'error');
     }
   });
 
