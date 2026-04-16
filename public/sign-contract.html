@@ -343,13 +343,14 @@
       const data = await res.json();
       if (res.ok) {
         showToast('Signature saved!', 'success');
-        // Reload contract to get updated signatures
-        await loadContract();
-        // If both signed, download button will appear
-        if (data.signedPdfUrl) {
-          showToast('Both parties have signed! You can now download the contract.', 'success');
-          await refreshDownloadUrl();
-        }
+        // Force a fresh load of the contract after a short delay to ensure backend updated
+        setTimeout(async () => {
+          await loadContract();
+          if (contract.signedByLandlord && contract.signedByTenant) {
+            await refreshDownloadUrl();
+            showToast('Both parties have signed! You can now download the contract.', 'success');
+          }
+        }, 1000);
       } else {
         showToast(data.message || 'Failed to sign', 'error');
       }
