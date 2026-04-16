@@ -1,6 +1,24 @@
 // ======================================
 // Digital Lease Agreements
 // ======================================
+
+// Helper: show modal (custom, no alerts)
+function showLeaseModal(message, type = 'info', onConfirm = null, onCancel = null) {
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+  let icon = '<i class="fas fa-info-circle"></i>';
+  let title = 'Information';
+  if (type === 'success') { icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; title = 'Success'; }
+  else if (type === 'error') { icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>'; title = 'Error'; }
+  else if (type === 'confirm') { icon = '<i class="fas fa-question-circle" style="color: #f59e0b;"></i>'; title = 'Confirmation'; }
+  overlay.innerHTML = `<div class="custom-modal">${icon}<h3>${title}</h3><p>${message}</p><div class="custom-modal-buttons">${type === 'confirm' ? '<button class="custom-modal-btn confirm">Yes, Proceed</button><button class="custom-modal-btn cancel">Cancel</button>' : '<button class="custom-modal-btn confirm">OK</button>'}</div></div>`;
+  document.body.appendChild(overlay);
+  const confirmBtn = overlay.querySelector('.confirm');
+  const cancelBtn = overlay.querySelector('.cancel');
+  confirmBtn?.addEventListener('click', () => { overlay.remove(); if (onConfirm) onConfirm(); });
+  cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
+}
+
 async function generateLease(bookingId) {
   const res = await fetch(`/api/leases/generate/${bookingId}`, {
     method: 'POST',
@@ -10,7 +28,7 @@ async function generateLease(bookingId) {
   if (res.ok) {
     openLeaseModal(data.leaseId, data.pdfUrl);
   } else {
-    alert('Failed to generate lease');
+    showLeaseModal('Failed to generate lease', 'error');
   }
 }
 
@@ -49,7 +67,7 @@ function clearSignature() {
 }
 async function saveSignature(leaseId) {
   if (!signaturePad || signaturePad.isEmpty()) {
-    alert('Please sign first');
+    showLeaseModal('Please sign first', 'error');
     return;
   }
   const dataURL = signaturePad.toDataURL();
@@ -62,10 +80,10 @@ async function saveSignature(leaseId) {
     body: JSON.stringify({ signatureData: dataURL })
   });
   if (res.ok) {
-    alert('Lease signed successfully!');
+    showLeaseModal('Lease signed successfully!', 'success');
     closeLeaseModal();
   } else {
-    alert('Failed to sign lease');
+    showLeaseModal('Failed to sign lease', 'error');
   }
 }
 function closeLeaseModal() {
