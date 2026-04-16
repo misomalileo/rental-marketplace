@@ -324,7 +324,7 @@ async function loadUnreadCount() {
     if (badge && unread > 0) badge.textContent = unread;
   } catch (err) { console.warn('Chat not available'); }
 }
-setInterval(loadUnreadCount, 30000);
+setInterval(loadUnreadCount, 60000); // reduced frequency
 
 // ========== MY HOUSES ==========
 async function loadMyHouses() {
@@ -471,11 +471,14 @@ document.getElementById('editImages').addEventListener('change', function(e) {
   updateImagePreview('editImagePreview', editUploadFileList, 'editImages');
 });
 
-// ========== EDIT MODAL FUNCTIONS (with fixed map) ==========
+// ========== EDIT MODAL FUNCTIONS (using local myHouses, no extra fetch) ==========
 function openEditModal(houseId) {
   currentEditId = houseId;
   const house = myHouses.find(h => h._id === houseId);
-  if (!house) return;
+  if (!house) {
+    showModal('Property not found in local data', 'error');
+    return;
+  }
   document.getElementById('editHouseId').value = house._id;
   document.getElementById('editName').value = house.name || '';
   document.getElementById('editLocation').value = house.location || '';
@@ -498,7 +501,7 @@ function openEditModal(houseId) {
   if (unavail._flatpickr) unavail._flatpickr.destroy();
   flatpickr(unavail, { mode: 'multiple', dateFormat: 'Y-m-d', defaultDate: house.unavailableDates ? house.unavailableDates.map(d => new Date(d)) : [] });
   
-  // Fix: Initialize map properly in the location tab
+  // Initialize map in the location tab
   setTimeout(() => {
     const lat = parseFloat(house.lat) || -15.7861;
     const lng = parseFloat(house.lng) || 35.0058;
@@ -954,4 +957,4 @@ fetchUser();
 loadMyHouses();
 loadUnreadCount();
 generateTypeCards();
-setTimeout(() => { loadOffers(); loadLeaseNegotiations(); }, 500);
+setTimeout(() => { loadOffers(); loadLeaseNegotiations(); }, 1000);
