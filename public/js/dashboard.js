@@ -471,7 +471,7 @@ document.getElementById('editImages').addEventListener('change', function(e) {
   updateImagePreview('editImagePreview', editUploadFileList, 'editImages');
 });
 
-// ========== EDIT MODAL (map fixed) ==========
+// ========== EDIT MODAL (FIXED MAP) ==========
 function openEditModal(houseId) {
   currentEditId = houseId;
   const house = myHouses.find(h => h._id === houseId);
@@ -509,40 +509,66 @@ function openEditModal(houseId) {
   document.querySelectorAll('.edit-tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelector('.edit-tab-btn[data-edit-tab="basic"]').classList.add('active');
   
-  // Defer map initialisation until location tab is clicked
-  const locationTabBtn = document.querySelector('.edit-tab-btn[data-edit-tab="location"]');
-  const oldClick = locationTabBtn.onclick;
-  locationTabBtn.onclick = (e) => {
-    if (oldClick) oldClick(e);
-    setTimeout(() => {
-      const lat = parseFloat(document.getElementById('editLat').value) || -15.7861;
-      const lng = parseFloat(document.getElementById('editLng').value) || 35.0058;
-      if (editMap) editMap.remove();
-      editMap = L.map('editMap').setView([lat, lng], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(editMap);
-      if (document.getElementById('editLat').value && document.getElementById('editLng').value) {
-        editMarker = L.marker([lat, lng]).addTo(editMap).bindPopup('Property location');
-      }
-      editMap.on('click', function(ev) {
-        document.getElementById('editLat').value = ev.latlng.lat;
-        document.getElementById('editLng').value = ev.latlng.lng;
-        if (editMarker) editMap.removeLayer(editMarker);
-        editMarker = L.marker(ev.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
-      });
-      editMap.invalidateSize();
-    }, 100);
+  // Remove any existing map to prevent duplication
+  if (editMap) {
+    editMap.remove();
+    editMap = null;
+    editMarker = null;
+  }
+  
+  // Function to initialise the map in the location tab
+  const initLocationMap = () => {
+    const lat = parseFloat(document.getElementById('editLat').value) || -15.7861;
+    const lng = parseFloat(document.getElementById('editLng').value) || 35.0058;
+    if (editMap) editMap.remove();
+    editMap = L.map('editMap').setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(editMap);
+    if (document.getElementById('editLat').value && document.getElementById('editLng').value) {
+      editMarker = L.marker([lat, lng]).addTo(editMap).bindPopup('Property location');
+    }
+    editMap.on('click', function(ev) {
+      document.getElementById('editLat').value = ev.latlng.lat;
+      document.getElementById('editLng').value = ev.latlng.lng;
+      if (editMarker) editMap.removeLayer(editMarker);
+      editMarker = L.marker(ev.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
+    });
+    // Force map to resize correctly after a short delay
+    setTimeout(() => { editMap.invalidateSize(); }, 200);
   };
+  
+  // Attach click event to the location tab button
+  const locationTabBtn = document.querySelector('.edit-tab-btn[data-edit-tab="location"]');
+  if (locationTabBtn) {
+    // Remove previous listeners to avoid duplicates
+    const newBtn = locationTabBtn.cloneNode(true);
+    locationTabBtn.parentNode.replaceChild(newBtn, locationTabBtn);
+    newBtn.addEventListener('click', (e) => {
+      // Switch tab manually
+      document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
+      document.getElementById('editLocationTab').classList.add('active');
+      document.querySelectorAll('.edit-tab-btn').forEach(b => b.classList.remove('active'));
+      newBtn.classList.add('active');
+      // Initialise map after the tab is visible
+      setTimeout(initLocationMap, 100);
+    });
+    // If the location tab is already active (unlikely), init immediately
+    if (document.getElementById('editLocationTab').classList.contains('active')) {
+      setTimeout(initLocationMap, 100);
+    }
+  }
 }
-function closeEditModal() { document.getElementById('editModal').style.display = 'none'; if (editMarker) editMap.removeLayer(editMarker); editMarker = null; }
+function closeEditModal() { document.getElementById('editModal').style.display = 'none'; if (editMap) editMap.remove(); editMap = null; editMarker = null; }
 window.closeEditModal = closeEditModal;
 
 function getEditLocation() {
   navigator.geolocation.getCurrentPosition(pos => {
     document.getElementById('editLat').value = pos.coords.latitude;
     document.getElementById('editLng').value = pos.coords.longitude;
-    editMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
-    if (editMarker) editMap.removeLayer(editMarker);
-    editMarker = L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(editMap);
+    if (editMap) {
+      editMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+      if (editMarker) editMap.removeLayer(editMarker);
+      editMarker = L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(editMap);
+    }
   });
 }
 window.getEditLocation = getEditLocation;
@@ -690,7 +716,7 @@ function showCounterModal(offerId) {
   }).then(res => res.json()).then(data => { if (data.message) showModal(data.message, 'success'); loadOffers(); }).catch(err => console.error(err));
 }
 
-// ========== LEASE (status + end button) ==========
+// ========== LEASE ==========
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch('/api/lease/my', { headers: { Authorization: 'Bearer ' + token } });
