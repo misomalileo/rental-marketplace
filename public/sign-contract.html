@@ -159,16 +159,6 @@
       from { opacity: 0; transform: translateX(-50%) translateY(10px); }
       to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
-    .debug-info {
-      background: #f1f5f9;
-      border-radius: 16px;
-      padding: 0.8rem;
-      margin-top: 1rem;
-      font-size: 0.7rem;
-      font-family: monospace;
-      word-break: break-all;
-      display: none;
-    }
     @media (max-width: 640px) {
       body { padding: 0.5rem; }
       .content { padding: 1rem; }
@@ -196,10 +186,9 @@
     <div id="status" class="status info"><i class="fas fa-info-circle"></i> Draw your signature and click "Sign Contract".</div>
     <div class="btn-group" style="justify-content: space-between; margin-top: 1rem; flex-wrap: wrap;">
       <button id="refreshBtn" class="btn btn-secondary"><i class="fas fa-sync-alt"></i> Refresh Status</button>
-      <button id="forceActivateBtn" class="btn btn-danger" style="display: none;"><i class="fas fa-bolt"></i> Force Activate & Download</button>
+      <button id="forcePdfBtn" class="btn btn-danger"><i class="fas fa-file-pdf"></i> Generate PDF Now</button>
       <button id="downloadBtn" class="btn btn-primary" style="display: none;"><i class="fas fa-download"></i> Download Contract</button>
     </div>
-    <div id="debugInfo" class="debug-info"></div>
   </div>
 </div>
 
@@ -231,13 +220,6 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
-  function showDebug(message) {
-    const debugDiv = document.getElementById('debugInfo');
-    debugDiv.style.display = 'block';
-    debugDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
-    debugDiv.scrollTop = debugDiv.scrollHeight;
-  }
-
   async function loadContract() {
     try {
       const res = await fetch(`/api/lease/contract/${contractId}`, {
@@ -249,10 +231,6 @@
         renderContractInfo();
         initSignaturePad();
         updateUIAfterLoad();
-        if (contract.signedByLandlord && contract.signedByTenant) {
-          await refreshDownloadUrl();
-        }
-        showDebug(`Contract loaded: landlordSigned=${contract.signedByLandlord}, tenantSigned=${contract.signedByTenant}, landlordSig=${!!contract.landlordSignature}, tenantSig=${!!contract.tenantSignature}, status=${contract.status}`);
       } else {
         const error = await res.json();
         showToast(error.message || 'Failed to load contract', 'error');
@@ -280,27 +258,19 @@
     const bothSigned = contract.signedByLandlord && contract.signedByTenant;
     const signBtn = document.getElementById('signBtn');
     const statusDiv = document.getElementById('status');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const forceActivateBtn = document.getElementById('forceActivateBtn');
 
     if (bothSigned) {
       signBtn.disabled = true;
-      statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Both parties have signed. Contract is active!';
+      statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Both parties have signed. Click "Generate PDF Now" to download.';
       statusDiv.className = 'status success';
-      downloadBtn.style.display = 'inline-flex';
-      forceActivateBtn.style.display = 'none';
     } else if (userHasSigned) {
       signBtn.disabled = true;
-      statusDiv.innerHTML = '<i class="fas fa-clock"></i> You have already signed. Waiting for the other party to sign.';
+      statusDiv.innerHTML = '<i class="fas fa-clock"></i> You have already signed. Waiting for the other party. Click "Generate PDF Now" to see if both have signed.';
       statusDiv.className = 'status warning';
-      downloadBtn.style.display = 'none';
-      forceActivateBtn.style.display = 'inline-flex';
     } else {
       signBtn.disabled = false;
       statusDiv.innerHTML = '<i class="fas fa-pen-fancy"></i> Draw your signature and click "Sign Contract".';
       statusDiv.className = 'status info';
-      downloadBtn.style.display = 'none';
-      forceActivateBtn.style.display = 'none';
     }
   }
 
@@ -315,53 +285,32 @@
     signaturePad.clear();
   }
 
-  async function refreshDownloadUrl() {
-    if (!negotiationId) return;
-    try {
-      const res = await fetch(`/api/lease/download-temp/${negotiationId}`, {
-        headers: { Authorization: 'Bearer ' + token }
-      });
-      const data = await res.json();
-      if (res.ok && data.downloadUrl) {
-        currentDownloadUrl = data.downloadUrl;
-        document.getElementById('downloadBtn').onclick = () => window.open(currentDownloadUrl, '_blank');
-      } else {
-        console.error('Failed to get download URL', data);
-      }
-    } catch (err) {
-      console.error('Refresh download URL error', err);
+  async function generatePdf() {
+    if (!negotiationId) {
+      showToast('Negotiation ID not found', 'error');
+      return;
     }
-  }
-
-  async function forceActivateContract() {
-    const btn = document.getElementById('forceActivateBtn');
+    const btn = document.getElementById('forcePdfBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...';
-    showDebug('Force activate called...');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     try {
-      const res = await fetch(`/api/lease/force-activate/${contractId}`, {
-        method: 'POST',
+      const res = await fetch(`/api/lease/force-pdf/${negotiationId}`, {
         headers: { Authorization: 'Bearer ' + token }
       });
       const data = await res.json();
-      showDebug(`Force activate response: ${JSON.stringify(data)}`);
       if (res.ok && data.downloadUrl) {
-        showToast('Contract activated! Download ready.', 'success');
         currentDownloadUrl = data.downloadUrl;
         document.getElementById('downloadBtn').onclick = () => window.open(currentDownloadUrl, '_blank');
         document.getElementById('downloadBtn').style.display = 'inline-flex';
-        document.getElementById('forceActivateBtn').style.display = 'none';
-        await loadContract();
+        showToast('PDF generated! Click download.', 'success');
       } else {
-        showToast(data.message || 'Activation failed', 'error');
-        showDebug(`Activation failed: ${data.message}`);
+        showToast(data.message || 'Failed to generate PDF', 'error');
       }
     } catch (err) {
       showToast('Network error', 'error');
-      showDebug(`Network error: ${err.message}`);
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-bolt"></i> Force Activate & Download';
+      btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF Now';
     }
   }
 
@@ -370,17 +319,12 @@
   });
 
   document.getElementById('refreshBtn').addEventListener('click', async () => {
-    showToast('Refreshing contract status...', 'info');
+    showToast('Refreshing...', 'info');
     await loadContract();
-    if (contract.signedByLandlord && contract.signedByTenant) {
-      await refreshDownloadUrl();
-      showToast('Contract is active! You can now download.', 'success');
-    } else {
-      showToast('Status updated', 'success');
-    }
+    showToast('Status updated', 'success');
   });
 
-  document.getElementById('forceActivateBtn').addEventListener('click', forceActivateContract);
+  document.getElementById('forcePdfBtn').addEventListener('click', generatePdf);
 
   document.getElementById('signBtn').addEventListener('click', async () => {
     if (!signaturePad || signaturePad.isEmpty()) {
@@ -391,7 +335,6 @@
     const btn = document.getElementById('signBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing...';
-    showDebug('Signing contract...');
     try {
       const res = await fetch(`/api/lease/sign/${contractId}`, {
         method: 'PUT',
@@ -399,21 +342,14 @@
         body: JSON.stringify({ signature: signatureData })
       });
       const data = await res.json();
-      showDebug(`Sign response: ${JSON.stringify(data)}`);
       if (res.ok) {
         showToast('Signature saved!', 'success');
         await loadContract();
-        if (data.signedPdfUrl) {
-          showToast('Both parties have signed! You can now download the contract.', 'success');
-          await refreshDownloadUrl();
-        }
       } else {
         showToast(data.message || 'Failed to sign', 'error');
       }
     } catch (err) {
-      console.error(err);
       showToast('Network error while signing', 'error');
-      showDebug(`Sign error: ${err.message}`);
     } finally {
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-check-circle"></i> Sign Contract';
@@ -424,7 +360,7 @@
     if (currentDownloadUrl) {
       window.open(currentDownloadUrl, '_blank');
     } else {
-      showToast('No contract available to download', 'error');
+      showToast('No PDF available. Click "Generate PDF Now" first.', 'error');
     }
   });
 

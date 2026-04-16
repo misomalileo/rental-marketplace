@@ -439,7 +439,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// FIXED SIGN ROUTE – ensures status becomes 'active' and PDF is regenerated
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const { signature } = req.body;
@@ -462,33 +461,25 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     
     if (updated) await contract.save();
 
-    // Check if both parties have now signed (by checking actual signature data)
     const bothSigned = (contract.signedByLandlord && contract.signedByTenant) || 
                        (contract.landlordSignature && contract.tenantSignature);
     let signedPdfUrl = null;
     
     if (bothSigned) {
-      // Ensure flags are true
       if (contract.landlordSignature && !contract.signedByLandlord) contract.signedByLandlord = true;
       if (contract.tenantSignature && !contract.signedByTenant) contract.signedByTenant = true;
       
-      // Update contract status to active
       contract.status = 'active';
       contract.signedAt = new Date();
       await contract.save();
-      
-      // Update negotiation status
       await LeaseNegotiation.findByIdAndUpdate(contract.negotiationId, { status: 'signed' });
       
-      // Mark house as rented
       const house = await House.findById(contract.houseId);
       if (house && house.rentalStatus === 'available') {
         house.rentalStatus = 'rented';
         await house.save();
-        console.log(`✅ House ${house._id} marked as rented after lease signing`);
       }
       
-      // Regenerate PDF with both signatures
       const negotiation = await LeaseNegotiation.findById(contract.negotiationId);
       const houseForPDF = await House.findById(contract.houseId);
       const landlord = await User.findById(contract.landlordId);
@@ -499,11 +490,8 @@ router.put('/sign/:contractId', auth, async (req, res) => {
       } catch (pdfErr) {
         console.error('PDF generation error:', pdfErr);
       }
-      
       return res.json({ contract, signedPdfUrl });
     }
-    
-    // Not both signed yet
     res.json({ contract });
   } catch (err) {
     console.error(err);
@@ -579,57 +567,33 @@ router.get('/download-signed/:token', async (req, res) => {
   }
 });
 
-// FORCE ACTIVATE CONTRACT – checks actual signature data, not just flags
-router.post('/force-activate/:contractId', auth, async (req, res) => {
+// FORCE GENERATE PDF – uses negotiationId, ignores contract status
+router.get('/force-pdf/:negotiationId', auth, async (req, res) => {
   try {
-    const contract = await SmartContract.findById(req.params.contractId);
-    if (!contract) return res.status(404).json({ message: 'Contract not found' });
+    const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
+    if (!negotiation) return res.status(404).json({ message: 'Negotiation not found' });
     
     const userId = req.user.id;
-    if (contract.landlordId.toString() !== userId && contract.tenantId.toString() !== userId) {
+    if (negotiation.landlordId.toString() !== userId && 
+        (!negotiation.tenantId || negotiation.tenantId.toString() !== userId)) {
       return res.status(403).json({ message: 'Not authorized' });
     }
     
-    // Check if both signature fields have data (not null/undefined)
-    const landlordHasSig = contract.landlordSignature && contract.landlordSignature !== null;
-    const tenantHasSig = contract.tenantSignature && contract.tenantSignature !== null;
+    const contract = await SmartContract.findOne({ negotiationId: negotiation._id });
+    if (!contract) return res.status(404).json({ message: 'No contract found for this negotiation' });
     
-    if (!landlordHasSig || !tenantHasSig) {
-      return res.status(400).json({ 
-        message: `Both parties have not signed yet. Landlord signature: ${!!landlordHasSig}, Tenant signature: ${!!tenantHasSig}`,
-        landlordSigExists: !!landlordHasSig,
-        tenantSigExists: !!tenantHasSig
-      });
-    }
+    const landlordSig = contract.landlordSignature;
+    const tenantSig = contract.tenantSignature;
     
-    // Force update flags if signatures exist
-    if (landlordHasSig && !contract.signedByLandlord) contract.signedByLandlord = true;
-    if (tenantHasSig && !contract.signedByTenant) contract.signedByTenant = true;
+    const house = await House.findById(negotiation.houseId);
+    const landlord = await User.findById(negotiation.landlordId);
+    const tenant = await User.findById(negotiation.tenantId);
     
-    // Update contract status
-    contract.status = 'active';
-    contract.signedAt = new Date();
-    await contract.save();
+    await generatePDFWithSignatures(negotiation, house, landlord, tenant, landlordSig, tenantSig);
     
-    // Update negotiation status
-    await LeaseNegotiation.findByIdAndUpdate(contract.negotiationId, { status: 'signed' });
-    
-    // Mark house as rented
-    const house = await House.findById(contract.houseId);
-    if (house && house.rentalStatus === 'available') {
-      house.rentalStatus = 'rented';
-      await house.save();
-    }
-    
-    // Regenerate PDF with both signatures
-    const negotiation = await LeaseNegotiation.findById(contract.negotiationId);
-    const houseForPDF = await House.findById(contract.houseId);
-    const landlord = await User.findById(contract.landlordId);
-    const tenant = await User.findById(contract.tenantId);
-    await generatePDFWithSignatures(negotiation, houseForPDF, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
-    
-    const downloadUrl = `/api/lease/download-temp/${negotiation._id}`;
-    res.json({ success: true, downloadUrl });
+    const token = jwt.sign({ negotiationId: negotiation._id, userId }, process.env.JWT_SECRET, { expiresIn: '5m' });
+    const downloadUrl = `/api/lease/download-signed/${token}`;
+    res.json({ downloadUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error: ' + err.message });
