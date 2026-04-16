@@ -471,7 +471,7 @@ document.getElementById('editImages').addEventListener('change', function(e) {
   updateImagePreview('editImagePreview', editUploadFileList, 'editImages');
 });
 
-// ========== EDIT MODAL FUNCTIONS (with working tabs) ==========
+// ========== EDIT MODAL FUNCTIONS (with fixed map) ==========
 function openEditModal(houseId) {
   currentEditId = houseId;
   const house = myHouses.find(h => h._id === houseId);
@@ -497,24 +497,26 @@ function openEditModal(houseId) {
   const unavail = document.getElementById('editUnavailableDates');
   if (unavail._flatpickr) unavail._flatpickr.destroy();
   flatpickr(unavail, { mode: 'multiple', dateFormat: 'Y-m-d', defaultDate: house.unavailableDates ? house.unavailableDates.map(d => new Date(d)) : [] });
-  document.getElementById('editModal').style.display = 'block';
+  
+  // Fix: Initialize map properly in the location tab
   setTimeout(() => {
-    if (!editMap) {
-      editMap = L.map('editMap').setView([house.lat || -15.7861, house.lng || 35.0058], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(editMap);
-      editMap.on('click', e => {
-        document.getElementById('editLat').value = e.latlng.lat;
-        document.getElementById('editLng').value = e.latlng.lng;
-        if (editMarker) editMap.removeLayer(editMarker);
-        editMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(editMap);
-      });
-    } else editMap.setView([house.lat || -15.7861, house.lng || 35.0058], 13);
+    const lat = parseFloat(house.lat) || -15.7861;
+    const lng = parseFloat(house.lng) || 35.0058;
+    if (editMap) editMap.remove();
+    editMap = L.map('editMap').setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(editMap);
     if (house.lat && house.lng) {
-      if (editMarker) editMap.removeLayer(editMarker);
-      editMarker = L.marker([house.lat, house.lng]).addTo(editMap);
+      editMarker = L.marker([house.lat, house.lng]).addTo(editMap).bindPopup(house.name);
     }
+    editMap.on('click', function(e) {
+      document.getElementById('editLat').value = e.latlng.lat;
+      document.getElementById('editLng').value = e.latlng.lng;
+      if (editMarker) editMap.removeLayer(editMarker);
+      editMarker = L.marker(e.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
+    });
   }, 200);
   
+  document.getElementById('editModal').style.display = 'block';
   // Activate the first tab
   document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
   document.getElementById('editBasic').classList.add('active');
@@ -680,7 +682,7 @@ function showCounterModal(offerId) {
   }).then(res => res.json()).then(data => { if (data.message) showModal(data.message, 'success'); loadOffers(); }).catch(err => console.error(err));
 }
 
-// ========== LEASE ==========
+// ========== LEASE (FIXED: status & end lease button) ==========
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch('/api/lease/my', { headers: { Authorization: 'Bearer ' + token } });
@@ -689,18 +691,72 @@ async function loadLeaseNegotiations() {
     const container = document.getElementById('leaseList');
     if (!container) return;
     if (!leases.length) { container.innerHTML = '<p>No lease negotiations yet.</p>'; return; }
-    container.innerHTML = leases.map(l => {
+    container.innerHTML = '';
+    for (const l of leases) {
+      let contractStatus = 'pending';
+      let contractId = null;
+      try {
+        const contractRes = await fetch(`/api/lease/contract/by-negotiation/${l._id}`, { headers: { Authorization: 'Bearer ' + token } });
+        if (contractRes.ok) {
+          const contract = await contractRes.json();
+          contractStatus = contract.status;
+          contractId = contract._id;
+        }
+      } catch(e) { console.warn(e); }
+      
       let statusClass = 'offer-status';
       let statusText = l.status;
-      if (l.status === 'signed' || l.status === 'active') { statusClass += ' accepted'; statusText = 'Signed ✓'; }
+      if (contractStatus === 'active') { statusClass += ' accepted'; statusText = 'Signed & Active'; }
+      else if (contractStatus === 'terminated') { statusClass += ' rejected'; statusText = 'Terminated'; }
+      else if (l.status === 'signed') { statusClass += ' accepted'; statusText = 'Signed ✓'; }
       else if (l.status === 'agreed') { statusClass += ' pending'; statusText = 'Awaiting Signatures'; }
-      else if (l.status === 'negotiating') { statusClass += ' pending'; }
-      else if (l.status === 'rejected') { statusClass += ' rejected'; }
-      const downloadBtn = (l.status === 'signed' || l.status === 'active') ? `<button class="edit" style="margin-left:0.5rem;" onclick="downloadLeaseContract('${l._id}')">Contract</button>` : '';
-      return `<div class="lease-card"><div class="offer-header"><strong>${l.houseId?.name || 'Unknown'}</strong><span class="${statusClass}">${statusText}</span></div><div class="offer-details"><p><i class="fas fa-user"></i> Tenant: ${l.tenantId?.name || 'Not joined'}</p><p><i class="fas fa-money-bill-wave"></i> Rent: MWK ${l.rentAmount?.toLocaleString()}</p><p><i class="fas fa-calendar-alt"></i> Start: ${new Date(l.leaseStartDate).toLocaleDateString()}</p><p><i class="fas fa-chart-line"></i> Score: ${l.leaseScore}/100</p><p><i class="fas fa-calendar-check"></i> Signed: ${l.signedAt ? new Date(l.signedAt).toLocaleDateString() : 'Not signed'}</p></div><div class="offer-actions"><button class="edit" onclick="window.location.href='lease-negotiation.html?id=${l._id}'">Continue Negotiation</button>${downloadBtn}</div></div>`;
-    }).join('');
+      else if (l.status === 'negotiating') { statusClass += ' pending'; statusText = 'Negotiating'; }
+      
+      const downloadBtn = (contractStatus === 'active' || l.status === 'signed') ? `<button class="edit" style="margin-left:0.5rem;" onclick="downloadLeaseContract('${l._id}')">Contract</button>` : '';
+      const endLeaseBtn = (contractStatus === 'active') ? `<button class="mark-rented-btn" onclick="endLease('${contractId}')" style="margin-left:0.5rem;"><i class="fas fa-ban"></i> End Lease</button>` : '';
+      
+      container.innerHTML += `
+        <div class="lease-card">
+          <div class="offer-header"><strong>${l.houseId?.name || 'Unknown'}</strong><span class="${statusClass}">${statusText}</span></div>
+          <div class="offer-details">
+            <p><i class="fas fa-user"></i> Tenant: ${l.tenantId?.name || 'Not joined'}</p>
+            <p><i class="fas fa-money-bill-wave"></i> Rent: MWK ${l.rentAmount?.toLocaleString()}</p>
+            <p><i class="fas fa-calendar-alt"></i> Start: ${new Date(l.leaseStartDate).toLocaleDateString()}</p>
+            <p><i class="fas fa-chart-line"></i> Score: ${l.leaseScore}/100</p>
+            <p><i class="fas fa-calendar-check"></i> Signed: ${l.signedAt ? new Date(l.signedAt).toLocaleDateString() : 'Not signed'}</p>
+          </div>
+          <div class="offer-actions">
+            <button class="edit" onclick="window.location.href='lease-negotiation.html?id=${l._id}'">Continue Negotiation</button>
+            ${downloadBtn}
+            ${endLeaseBtn}
+          </div>
+        </div>
+      `;
+    }
   } catch (err) { console.error(err); document.getElementById('leaseList').innerHTML = '<p>Error loading leases.</p>'; }
 }
+
+async function endLease(contractId) {
+  showModal('WARNING: Ending the lease will terminate the contract and mark the property as available. Are you sure?', 'confirm', async () => {
+    showLoading();
+    try {
+      const res = await fetch(`/api/lease/terminate/${contractId}`, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showModal('Lease terminated successfully.', 'success');
+        loadLeaseNegotiations();
+        loadMyHouses();
+      } else {
+        showModal(data.message || 'Failed to terminate lease', 'error');
+      }
+    } catch (err) { showModal('Network error', 'error'); } finally { hideLoading(); }
+  });
+}
+window.endLease = endLease;
+
 window.downloadLeaseContract = async function(id) {
   try {
     const res = await fetch(`/api/lease/download-temp/${id}`, { headers: { Authorization: 'Bearer ' + token } });
@@ -883,6 +939,15 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
 });
 function closeBookingModal() { document.getElementById('bookingModal').style.display = 'none'; }
 window.closeBookingModal = closeBookingModal;
+
+// ========== LOAD MORE BUTTON FIX ==========
+const loadMoreBtn = document.getElementById('loadMoreHousesBtn');
+if (loadMoreBtn) {
+  loadMoreBtn.addEventListener('click', () => {
+    housesPage++;
+    renderHousesPage();
+  });
+}
 
 // ========== INIT ==========
 fetchUser();
