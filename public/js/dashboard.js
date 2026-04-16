@@ -324,7 +324,7 @@ async function loadUnreadCount() {
     if (badge && unread > 0) badge.textContent = unread;
   } catch (err) { console.warn('Chat not available'); }
 }
-setInterval(loadUnreadCount, 60000); // reduced frequency
+setInterval(loadUnreadCount, 60000);
 
 // ========== MY HOUSES ==========
 async function loadMyHouses() {
@@ -471,12 +471,12 @@ document.getElementById('editImages').addEventListener('change', function(e) {
   updateImagePreview('editImagePreview', editUploadFileList, 'editImages');
 });
 
-// ========== EDIT MODAL FUNCTIONS (using local myHouses, no extra fetch) ==========
+// ========== EDIT MODAL (map fixed) ==========
 function openEditModal(houseId) {
   currentEditId = houseId;
   const house = myHouses.find(h => h._id === houseId);
   if (!house) {
-    showModal('Property not found in local data', 'error');
+    showModal('Property not found', 'error');
     return;
   }
   document.getElementById('editHouseId').value = house._id;
@@ -501,59 +501,52 @@ function openEditModal(houseId) {
   if (unavail._flatpickr) unavail._flatpickr.destroy();
   flatpickr(unavail, { mode: 'multiple', dateFormat: 'Y-m-d', defaultDate: house.unavailableDates ? house.unavailableDates.map(d => new Date(d)) : [] });
   
-  // Show modal first
   document.getElementById('editModal').style.display = 'block';
   
-  // Initialize map after modal is visible (use a longer delay and invalidate size)
-  setTimeout(() => {
-    const lat = parseFloat(house.lat) || -15.7861;
-    const lng = parseFloat(house.lng) || 35.0058;
-    if (editMap) editMap.remove();
-    editMap = L.map('editMap').setView([lat, lng], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(editMap);
-    if (house.lat && house.lng) {
-      editMarker = L.marker([house.lat, house.lng]).addTo(editMap).bindPopup(house.name);
-    }
-    editMap.on('click', function(e) {
-      document.getElementById('editLat').value = e.latlng.lat;
-      document.getElementById('editLng').value = e.latlng.lng;
-      if (editMarker) editMap.removeLayer(editMarker);
-      editMarker = L.marker(e.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
-    });
-    // Force map to resize correctly
-    setTimeout(() => { editMap.invalidateSize(); }, 100);
-  }, 300);
-  
-  // Activate the first tab
+  // Activate first tab
   document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
   document.getElementById('editBasic').classList.add('active');
   document.querySelectorAll('.edit-tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelector('.edit-tab-btn[data-edit-tab="basic"]').classList.add('active');
+  
+  // Defer map initialisation until location tab is clicked
+  const locationTabBtn = document.querySelector('.edit-tab-btn[data-edit-tab="location"]');
+  const oldClick = locationTabBtn.onclick;
+  locationTabBtn.onclick = (e) => {
+    if (oldClick) oldClick(e);
+    setTimeout(() => {
+      const lat = parseFloat(document.getElementById('editLat').value) || -15.7861;
+      const lng = parseFloat(document.getElementById('editLng').value) || 35.0058;
+      if (editMap) editMap.remove();
+      editMap = L.map('editMap').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(editMap);
+      if (document.getElementById('editLat').value && document.getElementById('editLng').value) {
+        editMarker = L.marker([lat, lng]).addTo(editMap).bindPopup('Property location');
+      }
+      editMap.on('click', function(ev) {
+        document.getElementById('editLat').value = ev.latlng.lat;
+        document.getElementById('editLng').value = ev.latlng.lng;
+        if (editMarker) editMap.removeLayer(editMarker);
+        editMarker = L.marker(ev.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
+      });
+      editMap.invalidateSize();
+    }, 100);
+  };
 }
-
-function closeEditModal() { 
-  document.getElementById('editModal').style.display = 'none'; 
-  if (editMap) editMap.remove(); 
-  editMap = null; 
-  editMarker = null; 
-}
+function closeEditModal() { document.getElementById('editModal').style.display = 'none'; if (editMarker) editMap.removeLayer(editMarker); editMarker = null; }
 window.closeEditModal = closeEditModal;
 
 function getEditLocation() {
   navigator.geolocation.getCurrentPosition(pos => {
     document.getElementById('editLat').value = pos.coords.latitude;
     document.getElementById('editLng').value = pos.coords.longitude;
-    if (editMap) {
-      editMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
-      if (editMarker) editMap.removeLayer(editMarker);
-      editMarker = L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(editMap);
-      editMap.invalidateSize();
-    }
+    editMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+    if (editMarker) editMap.removeLayer(editMarker);
+    editMarker = L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(editMap);
   });
 }
 window.getEditLocation = getEditLocation;
 
-// Edit modal tab switching
 document.querySelectorAll('.edit-tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const tabId = btn.getAttribute('data-edit-tab');
@@ -561,10 +554,6 @@ document.querySelectorAll('.edit-tab-btn').forEach(btn => {
     document.getElementById(`edit${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`).classList.add('active');
     document.querySelectorAll('.edit-tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    // If location tab is selected, ensure map is resized
-    if (tabId === 'location' && editMap) {
-      setTimeout(() => { editMap.invalidateSize(); }, 100);
-    }
   });
 });
 
@@ -701,7 +690,7 @@ function showCounterModal(offerId) {
   }).then(res => res.json()).then(data => { if (data.message) showModal(data.message, 'success'); loadOffers(); }).catch(err => console.error(err));
 }
 
-// ========== LEASE (FIXED: status & end lease button) ==========
+// ========== LEASE (status + end button) ==========
 async function loadLeaseNegotiations() {
   try {
     const res = await fetch('/api/lease/my', { headers: { Authorization: 'Bearer ' + token } });
@@ -959,7 +948,7 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
 function closeBookingModal() { document.getElementById('bookingModal').style.display = 'none'; }
 window.closeBookingModal = closeBookingModal;
 
-// ========== LOAD MORE BUTTON FIX ==========
+// ========== LOAD MORE BUTTON ==========
 const loadMoreBtn = document.getElementById('loadMoreHousesBtn');
 if (loadMoreBtn) {
   loadMoreBtn.addEventListener('click', () => {

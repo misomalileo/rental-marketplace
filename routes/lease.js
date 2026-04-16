@@ -84,12 +84,10 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
 
-    // Helper to draw decorative line
     const drawLine = (y, color = '#cbd5e1') => {
       doc.moveTo(50, y).lineTo(doc.page.width - 50, y).stroke(color);
     };
 
-    // Helper to check page break
     const checkPageBreak = (requiredSpace) => {
       if (doc.y + requiredSpace > doc.page.height - 80) {
         doc.addPage();
@@ -288,7 +286,7 @@ async function generateBeautifulPDF(negotiation, house, landlord, tenant) {
   return generatePDFWithSignatures(negotiation, house, landlord, tenant, null, null);
 }
 
-// ========== ROUTES (unchanged - keep all your existing routes) ==========
+// ========== ROUTES (existing) ==========
 
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
@@ -528,6 +526,18 @@ router.get('/contract/:contractId', auth, async (req, res) => {
       .populate('houseId', 'name location')
       .populate('landlordId', 'name email')
       .populate('tenantId', 'name email');
+    if (!contract) return res.status(404).json({ message: 'Contract not found' });
+    res.json(contract);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ========== NEW ENDPOINT: get contract by negotiation ID ==========
+router.get('/contract/by-negotiation/:negotiationId', auth, async (req, res) => {
+  try {
+    const contract = await SmartContract.findOne({ negotiationId: req.params.negotiationId });
     if (!contract) return res.status(404).json({ message: 'Contract not found' });
     res.json(contract);
   } catch (err) {
