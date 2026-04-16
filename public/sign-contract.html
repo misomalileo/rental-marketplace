@@ -8,11 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
       font-family: 'Inter', sans-serif;
@@ -141,7 +137,7 @@
     }
     .status.success { background: #dcfce7; color: #15803d; display: block; }
     .status.info { background: #dbeafe; color: #1e40af; display: block; }
-    .status.error { background: #fee2e2; color: #b91c1c; display: block; }
+    .status.warning { background: #fef3c7; color: #b45309; display: block; }
     .toast {
       position: fixed;
       bottom: 20px;
@@ -206,13 +202,10 @@
   let signaturePad = null;
   let currentUserId = null;
 
-  // Get user ID from token
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     currentUserId = payload.id;
-  } catch(e) {
-    console.error('Failed to parse token', e);
-  }
+  } catch(e) { console.error('Token parse error', e); }
 
   function showToast(message, type = 'info') {
     const existing = document.querySelector('.toast');
@@ -234,24 +227,7 @@
         negotiationId = contract.negotiationId;
         renderContractInfo();
         initSignaturePad();
-        
-        const isLandlord = contract.landlordId._id === currentUserId;
-        const alreadySigned = isLandlord ? contract.signedByLandlord : contract.signedByTenant;
-        
-        if (contract.signedByLandlord && contract.signedByTenant) {
-          document.getElementById('signBtn').disabled = true;
-          document.getElementById('status').innerHTML = '<i class="fas fa-check-circle"></i> Both parties have signed. Contract is active!';
-          document.getElementById('status').className = 'status success';
-          await refreshDownloadUrl();
-          document.getElementById('downloadBtn').style.display = 'inline-flex';
-        } else if (alreadySigned) {
-          document.getElementById('signBtn').disabled = true;
-          document.getElementById('status').innerHTML = '<i class="fas fa-check-circle"></i> You have already signed. Waiting for the other party.';
-          document.getElementById('status').className = 'status info';
-        } else {
-          document.getElementById('status').innerHTML = '<i class="fas fa-pen-fancy"></i> Draw your signature and click "Sign Contract".';
-          document.getElementById('status').className = 'status info';
-        }
+        updateUIAfterLoad();
       } else {
         const error = await res.json();
         showToast(error.message || 'Failed to load contract', 'error');
@@ -271,6 +247,33 @@
       <div class="info-card"><i class="fas fa-user"></i><strong>Tenant</strong><span>${contract.tenantId?.name} ${tenantSigned ? '✓' : '⏳'}</span></div>
       <div class="info-card"><i class="fas fa-flag-checkered"></i><strong>Status</strong><span>${contract.status}</span></div>
     `;
+  }
+
+  function updateUIAfterLoad() {
+    const isLandlord = contract.landlordId._id === currentUserId;
+    const userHasSigned = isLandlord ? contract.signedByLandlord : contract.signedByTenant;
+    const bothSigned = contract.signedByLandlord && contract.signedByTenant;
+    const signBtn = document.getElementById('signBtn');
+    const statusDiv = document.getElementById('status');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    if (bothSigned) {
+      signBtn.disabled = true;
+      statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Both parties have signed. Contract is active!';
+      statusDiv.className = 'status success';
+      downloadBtn.style.display = 'inline-flex';
+      refreshDownloadUrl();
+    } else if (userHasSigned) {
+      signBtn.disabled = true;
+      statusDiv.innerHTML = '<i class="fas fa-clock"></i> You have already signed. Waiting for the other party to sign.';
+      statusDiv.className = 'status warning';
+      downloadBtn.style.display = 'none';
+    } else {
+      signBtn.disabled = false;
+      statusDiv.innerHTML = '<i class="fas fa-pen-fancy"></i> Draw your signature and click "Sign Contract".';
+      statusDiv.className = 'status info';
+      downloadBtn.style.display = 'none';
+    }
   }
 
   function initSignaturePad() {
@@ -294,9 +297,11 @@
       if (res.ok && data.downloadUrl) {
         currentDownloadUrl = data.downloadUrl;
         document.getElementById('downloadBtn').onclick = () => window.open(currentDownloadUrl, '_blank');
+      } else {
+        console.error('Failed to get download URL');
       }
     } catch (err) {
-      console.error('Failed to refresh download URL', err);
+      console.error('Refresh download URL error', err);
     }
   }
 
@@ -309,34 +314,30 @@
       showToast('Please draw your signature first', 'error');
       return;
     }
-    
     const signatureData = signaturePad.toDataURL();
     const btn = document.getElementById('signBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing...';
-    
     try {
       const res = await fetch(`/api/lease/sign/${contractId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ signature: signatureData })
       });
-      
       const data = await res.json();
-      
       if (res.ok) {
-        showToast('Contract signed successfully!', 'success');
+        showToast('Signature saved!', 'success');
+        // Reload contract to get updated signatures
+        await loadContract();
+        // If both have signed, download button will appear via updateUIAfterLoad
         if (data.signedPdfUrl) {
-          showToast('Both parties have signed! You can download the contract.', 'success');
-          document.getElementById('downloadBtn').style.display = 'inline-flex';
-          await refreshDownloadUrl();
+          showToast('Both parties have signed! You can now download the contract.', 'success');
         }
-        await loadContract(); // refresh status
       } else {
-        showToast(data.message || 'Failed to sign contract', 'error');
+        showToast(data.message || 'Failed to sign', 'error');
       }
     } catch (err) {
-      console.error('Sign error:', err);
+      console.error(err);
       showToast('Network error while signing', 'error');
     } finally {
       btn.disabled = false;
