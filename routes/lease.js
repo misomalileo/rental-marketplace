@@ -73,7 +73,7 @@ function generateAiSuggestions(negotiation) {
 }
 
 // ============================================================
-// NEW: Professional Malawi Tenancy Agreement PDF Generator
+// PROFESSIONAL MALAWI TENANCY AGREEMENT PDF GENERATOR
 // ============================================================
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
@@ -84,13 +84,6 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
 
-    // Helper to draw a horizontal line
-    const hr = (y) => {
-      doc.moveTo(50, y).lineTo(doc.page.width - 50, y).stroke('#cccccc');
-      return y + 10;
-    };
-
-    // Helper to add a new page if needed
     const checkPageBreak = (requiredSpace) => {
       if (doc.y + requiredSpace > doc.page.height - 50) {
         doc.addPage();
@@ -98,7 +91,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       }
     };
 
-    // ----- Title & Header -----
+    // Header
     doc.rect(0, 0, doc.page.width, 100).fill('#1e3a5f');
     doc.fillColor('white')
       .fontSize(24)
@@ -109,7 +102,6 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
       .text('(MALAWI)', 50, 65, { align: 'center' });
     doc.fillColor('#333333');
 
-    // Date line
     const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     doc.fontSize(10)
       .text(`This Tenancy Agreement is made on this ${today}`, 50, 120, { align: 'center' });
@@ -135,15 +127,14 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.font('Helvetica').text(`(hereinafter referred to as "the Property")`, 60, doc.y + 35);
     doc.moveDown(3);
 
-    // 3. TERM OF TENANCY
+    // 3. TERM
     const startDate = new Date(negotiation.leaseStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    const endDate = negotiation.leaseEndDate ? new Date(negotiation.leaseEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'month-to-month';
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('3. TERM OF TENANCY', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`The tenancy shall commence on ${startDate} and shall continue on a month-to-month basis unless terminated in accordance with this Agreement.`, 50, doc.y + 5);
     doc.moveDown(2);
 
-    // 4. RENT AND PAYMENT TERMS
+    // 4. RENT
     const monthlyRent = negotiation.rentAmount.toLocaleString();
     const threeMonthsAdvance = (negotiation.rentAmount * 3).toLocaleString();
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('4. RENT AND PAYMENT TERMS', 50, doc.y + 10);
@@ -153,7 +144,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`c) All rent payments shall be made in a manner agreed upon by both parties.`, 60, doc.y + 35);
     doc.moveDown(3);
 
-    // 5. MAINTENANCE AND REPAIRS
+    // 5. MAINTENANCE
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('5. MAINTENANCE AND REPAIRS', 50, doc.y + 10);
     doc.fillColor('#333333').fontSize(10).font('Helvetica');
     doc.text(`a) The Tenant shall keep the Property in good and tenantable condition at all times.`, 60, doc.y + 5);
@@ -186,13 +177,13 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`This Agreement shall be governed and interpreted in accordance with the laws of the Republic of Malawi.`, 50, doc.y + 5);
     doc.moveDown(2);
 
-    // 9. ADDITIONAL TERMS (custom clauses from negotiation)
+    // 9. ADDITIONAL TERMS (agreed clauses only)
     if (negotiation.clauses && negotiation.clauses.length > 0) {
       doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('9. ADDITIONAL TERMS', 50, doc.y + 10);
       doc.fillColor('#333333').fontSize(10).font('Helvetica');
       let yOffset = doc.y + 5;
       negotiation.clauses.forEach((clause, idx) => {
-        if (!clause.isAgreed) return; // only show agreed clauses
+        if (!clause.isAgreed) return;
         const text = `${idx + 1}. ${clause.title}: ${clause.description}`;
         checkPageBreak(20);
         doc.text(text, 60, yOffset);
@@ -212,7 +203,6 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     let sigY = doc.y + 10;
     checkPageBreak(180);
     
-    // Landlord signature
     doc.text(`FOR THE LANDLORD`, 60, sigY);
     doc.text(`Name: ${landlord.name}`, 70, sigY + 15);
     if (signatureLandlord) {
@@ -228,7 +218,6 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     }
     doc.text(`Date: ______________`, 70, sigY + 70);
     
-    // Tenant signature
     doc.text(`FOR THE TENANT`, 300, sigY);
     doc.text(`Name: ${tenant.name}`, 310, sigY + 15);
     if (signatureTenant) {
@@ -244,7 +233,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     }
     doc.text(`Date: ______________`, 310, sigY + 70);
 
-    // Witnesses (optional)
+    // Witnesses
     const witnessY = sigY + 110;
     checkPageBreak(80);
     doc.fontSize(10).font('Helvetica-Bold').text(`WITNESSES (Optional but Recommended)`, 50, witnessY);
@@ -256,7 +245,7 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     doc.text(`   Signature: ______________________`, 70, witnessY + 75);
     doc.text(`   Date: __________________________`, 70, witnessY + 90);
 
-    // Footer with page numbers
+    // Footer
     const pageCount = doc.bufferedPageRange().count;
     for (let i = 0; i < pageCount; i++) {
       doc.switchToPage(i);
@@ -270,12 +259,11 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
   });
 }
 
-// Alias for initial PDF (without signatures)
 async function generateBeautifulPDF(negotiation, house, landlord, tenant) {
   return generatePDFWithSignatures(negotiation, house, landlord, tenant, null, null);
 }
 
-// ========== ROUTES (unchanged from original) ==========
+// ========== ROUTES ==========
 
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
@@ -506,6 +494,32 @@ router.get('/contract/:contractId', auth, async (req, res) => {
       .populate('tenantId', 'name email');
     if (!contract) return res.status(404).json({ message: 'Contract not found' });
     res.json(contract);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// NEW: Download contract by contract ID (creates temporary token)
+router.get('/contract/:contractId/download', auth, async (req, res) => {
+  try {
+    const contract = await SmartContract.findById(req.params.contractId);
+    if (!contract) return res.status(404).json({ message: 'Contract not found' });
+    
+    const userId = req.user.id;
+    if (contract.landlordId.toString() !== userId && contract.tenantId.toString() !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    const negotiation = await LeaseNegotiation.findById(contract.negotiationId);
+    if (!negotiation) return res.status(404).json({ message: 'Negotiation not found' });
+    
+    const filePath = path.join(__dirname, '../contracts', `contract_${negotiation._id}.pdf`);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'PDF not found' });
+    
+    const token = jwt.sign({ negotiationId: negotiation._id, userId }, process.env.JWT_SECRET, { expiresIn: '5m' });
+    const downloadUrl = `/api/lease/download-signed/${token}`;
+    res.json({ downloadUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
