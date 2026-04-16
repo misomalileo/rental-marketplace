@@ -501,7 +501,10 @@ function openEditModal(houseId) {
   if (unavail._flatpickr) unavail._flatpickr.destroy();
   flatpickr(unavail, { mode: 'multiple', dateFormat: 'Y-m-d', defaultDate: house.unavailableDates ? house.unavailableDates.map(d => new Date(d)) : [] });
   
-  // Initialize map in the location tab
+  // Show modal first
+  document.getElementById('editModal').style.display = 'block';
+  
+  // Initialize map after modal is visible (use a longer delay and invalidate size)
   setTimeout(() => {
     const lat = parseFloat(house.lat) || -15.7861;
     const lng = parseFloat(house.lng) || 35.0058;
@@ -517,9 +520,10 @@ function openEditModal(houseId) {
       if (editMarker) editMap.removeLayer(editMarker);
       editMarker = L.marker(e.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
     });
-  }, 200);
+    // Force map to resize correctly
+    setTimeout(() => { editMap.invalidateSize(); }, 100);
+  }, 300);
   
-  document.getElementById('editModal').style.display = 'block';
   // Activate the first tab
   document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
   document.getElementById('editBasic').classList.add('active');
@@ -527,16 +531,24 @@ function openEditModal(houseId) {
   document.querySelector('.edit-tab-btn[data-edit-tab="basic"]').classList.add('active');
 }
 
-function closeEditModal() { document.getElementById('editModal').style.display = 'none'; if (editMarker) editMap.removeLayer(editMarker); editMarker = null; }
+function closeEditModal() { 
+  document.getElementById('editModal').style.display = 'none'; 
+  if (editMap) editMap.remove(); 
+  editMap = null; 
+  editMarker = null; 
+}
 window.closeEditModal = closeEditModal;
 
 function getEditLocation() {
   navigator.geolocation.getCurrentPosition(pos => {
     document.getElementById('editLat').value = pos.coords.latitude;
     document.getElementById('editLng').value = pos.coords.longitude;
-    editMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
-    if (editMarker) editMap.removeLayer(editMarker);
-    editMarker = L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(editMap);
+    if (editMap) {
+      editMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+      if (editMarker) editMap.removeLayer(editMarker);
+      editMarker = L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(editMap);
+      editMap.invalidateSize();
+    }
   });
 }
 window.getEditLocation = getEditLocation;
@@ -549,6 +561,10 @@ document.querySelectorAll('.edit-tab-btn').forEach(btn => {
     document.getElementById(`edit${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`).classList.add('active');
     document.querySelectorAll('.edit-tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    // If location tab is selected, ensure map is resized
+    if (tabId === 'location' && editMap) {
+      setTimeout(() => { editMap.invalidateSize(); }, 100);
+    }
   });
 });
 
