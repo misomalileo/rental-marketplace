@@ -10,129 +10,82 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+      background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 1.5rem;
-      position: relative;
-      overflow-x: hidden;
     }
-
-    body::before {
-      content: '';
-      position: absolute;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,140,66,0.06) 1px, transparent 1px);
-      background-size: 40px 40px;
-      animation: moveBg 60s linear infinite;
-      pointer-events: none;
-    }
-
-    @keyframes moveBg {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(-20%, -20%); }
-    }
-
     .register-container {
       width: 100%;
       max-width: 520px;
-      background: rgba(20, 25, 40, 0.75);
-      backdrop-filter: blur(16px);
-      border-radius: 48px;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+      background: #ffffff;
+      border-radius: 32px;
+      box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
       padding: 2rem;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      border: 1px solid rgba(255,255,255,0.1);
-      transform-style: preserve-3d;
+      border: 1px solid #e2e8f0;
     }
-
-    .register-container:hover {
-      transform: translateY(-8px) rotateX(2deg);
-      box-shadow: 0 30px 60px -15px rgba(0,0,0,0.5);
-    }
-
     .logo {
       text-align: center;
       margin-bottom: 1.5rem;
     }
-
     .logo i {
-      font-size: 3.2rem;
+      font-size: 3rem;
       background: linear-gradient(135deg, #FF8C42, #FFD966);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
-
     .logo h2 {
       font-family: 'Poppins', sans-serif;
       font-weight: 700;
-      font-size: 1.9rem;
+      font-size: 1.8rem;
       margin-top: 0.5rem;
-      background: linear-gradient(135deg, #ffffff, #FFB347);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      color: #1e293b;
     }
-
     .role-badge {
       text-align: center;
       margin-bottom: 1.5rem;
-      background: rgba(255,140,66,0.15);
+      background: #fef9e8;
       padding: 0.6rem;
       border-radius: 60px;
       font-size: 0.85rem;
       font-weight: 500;
-      color: #FFB347;
-      border: 1px solid rgba(255,140,66,0.3);
-      backdrop-filter: blur(4px);
+      color: #FF8C42;
+      border: 1px solid #ffe4b5;
     }
-
     .input-group {
       margin-bottom: 1rem;
     }
-
     .input-group label {
       display: block;
       margin-bottom: 0.4rem;
       font-weight: 500;
       font-size: 0.8rem;
-      color: #cbd5e1;
+      color: #334155;
     }
-
     .input-group input {
       width: 100%;
       padding: 0.85rem 1.2rem;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid #cbd5e1;
       border-radius: 32px;
       font-size: 0.9rem;
-      transition: all 0.2s;
-      background: rgba(255,255,255,0.05);
-      color: #f1f5f9;
+      transition: border-color 0.2s;
+      background: #ffffff;
+      color: #0f172a;
       outline: none;
     }
-
     .input-group input:focus {
       border-color: #FF8C42;
-      box-shadow: 0 0 0 4px rgba(255,140,66,0.2);
-      background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 0 3px rgba(255,140,66,0.1);
     }
-
     .input-group input::placeholder {
       color: #94a3b8;
     }
-
     .register-btn {
       width: 100%;
       padding: 0.9rem;
@@ -143,48 +96,37 @@
       font-weight: 700;
       font-size: 1rem;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: opacity 0.2s;
       margin-top: 0.8rem;
       font-family: 'Poppins', sans-serif;
-      box-shadow: 0 8px 20px -6px rgba(230,126,34,0.4);
     }
-
     .register-btn:hover {
-      transform: scale(1.02);
-      background: linear-gradient(105deg, #E67E22, #D35400);
+      opacity: 0.9;
     }
-
     .register-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
-
     .divider {
       display: flex;
       align-items: center;
       margin: 1.5rem 0;
-      color: #64748b;
+      color: #94a3b8;
       font-size: 0.75rem;
     }
-
     .divider::before,
     .divider::after {
       content: '';
       flex: 1;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid #e2e8f0;
     }
-
-    .divider span {
-      margin: 0 0.8rem;
-    }
-
+    .divider span { margin: 0 0.8rem; }
     .social-buttons {
       display: flex;
       flex-direction: column;
       gap: 0.8rem;
       margin-bottom: 1rem;
     }
-
     .social-btn {
       display: flex;
       align-items: center;
@@ -196,40 +138,40 @@
       font-weight: 500;
       font-size: 0.9rem;
       cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.05);
-      color: #e2e8f0;
+      transition: opacity 0.2s;
       text-decoration: none;
+      border: none;
     }
-
-    .social-btn i {
-      font-size: 1.2rem;
+    .google-btn {
+      background: #ffffff;
+      color: #3c4043;
+      border: 1px solid #dadce0;
     }
-
-    .social-btn:hover {
-      transform: translateY(-3px);
-      background: rgba(255,255,255,0.12);
-      border-color: #FF8C42;
+    .google-btn svg { width: 20px; height: 20px; }
+    .google-btn:hover { background: #f8f9fa; }
+    .facebook-btn {
+      background: #1877f2;
+      color: white;
     }
-
+    .facebook-btn svg { width: 20px; height: 20px; fill: white; }
+    .facebook-btn:hover { background: #166fe5; }
+    .apple-btn {
+      background: #000000;
+      color: white;
+    }
+    .apple-btn svg { width: 20px; height: 20px; fill: white; }
+    .apple-btn:hover { background: #1c1c1e; }
     .login-link {
       text-align: center;
       margin-top: 1rem;
       font-size: 0.8rem;
-      color: #94a3b8;
+      color: #475569;
     }
-
     .login-link a {
-      color: #FFB347;
+      color: #FF8C42;
       font-weight: 600;
       text-decoration: none;
     }
-
-    .login-link a:hover {
-      text-decoration: underline;
-    }
-
     .message {
       margin-top: 1rem;
       padding: 0.8rem;
@@ -237,37 +179,19 @@
       font-size: 0.8rem;
       text-align: center;
       display: none;
-      backdrop-filter: blur(8px);
-      animation: fadeInUp 0.3s ease;
     }
-
     .message.error {
-      background: rgba(220,38,38,0.2);
-      color: #fecaca;
+      background: #fee2e2;
+      color: #b91c1c;
       border: 1px solid #ef4444;
     }
-
     .message.success {
-      background: rgba(34,197,94,0.2);
-      color: #bbf7d0;
+      background: #dcfce7;
+      color: #15803d;
       border: 1px solid #22c55e;
     }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
     @media (max-width: 640px) {
-      .register-container {
-        padding: 1.5rem;
-      }
+      .register-container { padding: 1.5rem; }
     }
   </style>
 </head>
@@ -293,7 +217,7 @@
       <div class="input-group">
         <label><i class="fab fa-whatsapp"></i> WhatsApp Number</label>
         <input type="tel" id="phone" placeholder="265XXXXXXXXX" pattern="265[0-9]{9}" required>
-        <small style="font-size: 0.7rem; color: #94a3b8;">Format: 265 followed by 9 digits</small>
+        <small style="font-size: 0.7rem; color: #64748b;">Format: 265 followed by 9 digits</small>
       </div>
       <div class="input-group">
         <label><i class="fas fa-lock"></i> Password</label>
@@ -309,19 +233,29 @@
     </form>
     <div id="message" class="message"></div>
 
-    <div class="divider">
-      <span>or sign up with</span>
-    </div>
+    <div class="divider"><span>or sign up with</span></div>
 
     <div class="social-buttons">
       <a id="googleSignupBtn" class="social-btn google-btn">
-        <i class="fab fa-google"></i> Continue with Google
-      </a>
-      <a href="/api/auth/apple" class="social-btn apple-btn">
-        <i class="fab fa-apple"></i> Continue with Apple
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+          <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+          <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+          <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+          <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+        </svg>
+        Continue with Google
       </a>
       <a href="/api/auth/facebook" class="social-btn facebook-btn">
-        <i class="fab fa-facebook-f"></i> Continue with Facebook
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.294h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z" fill="white"/>
+        </svg>
+        Continue with Facebook
+      </a>
+      <a href="/api/auth/apple" class="social-btn apple-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M16.365 3.993c.862-1.041 1.44-2.478 1.282-3.993-1.239.05-2.742.824-3.632 1.862-.798.921-1.497 2.381-1.309 3.785 1.382.107 2.796-.704 3.659-1.654zM19.75 8.044c-1.478-.014-2.734.84-3.444.84-.718 0-1.82-.799-2.992-.799-1.65 0-3.129.96-3.979 2.442-1.691 2.933-.436 7.273 1.203 9.656.805 1.174 1.764 2.493 3.02 2.445 1.213-.049 1.672-.785 3.136-.785 1.464 0 1.888.785 3.139.76 1.294-.024 2.112-1.191 2.918-2.364.921-1.342 1.298-2.648 1.319-2.716-.028-.012-2.552-.98-2.578-3.891-.026-2.451 1.996-3.62 2.088-3.681-1.14-1.674-2.914-1.862-3.527-1.887z"/>
+        </svg>
+        Continue with Apple
       </a>
     </div>
 
