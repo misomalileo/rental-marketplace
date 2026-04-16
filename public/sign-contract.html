@@ -159,6 +159,16 @@
       from { opacity: 0; transform: translateX(-50%) translateY(10px); }
       to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
+    .debug-info {
+      background: #f1f5f9;
+      border-radius: 16px;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      font-size: 0.7rem;
+      font-family: monospace;
+      word-break: break-all;
+      display: none;
+    }
     @media (max-width: 640px) {
       body { padding: 0.5rem; }
       .content { padding: 1rem; }
@@ -189,6 +199,7 @@
       <button id="forceActivateBtn" class="btn btn-danger" style="display: none;"><i class="fas fa-bolt"></i> Force Activate & Download</button>
       <button id="downloadBtn" class="btn btn-primary" style="display: none;"><i class="fas fa-download"></i> Download Contract</button>
     </div>
+    <div id="debugInfo" class="debug-info"></div>
   </div>
 </div>
 
@@ -220,6 +231,13 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
+  function showDebug(message) {
+    const debugDiv = document.getElementById('debugInfo');
+    debugDiv.style.display = 'block';
+    debugDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+  }
+
   async function loadContract() {
     try {
       const res = await fetch(`/api/lease/contract/${contractId}`, {
@@ -234,6 +252,7 @@
         if (contract.signedByLandlord && contract.signedByTenant) {
           await refreshDownloadUrl();
         }
+        showDebug(`Contract loaded: landlordSigned=${contract.signedByLandlord}, tenantSigned=${contract.signedByTenant}, landlordSig=${!!contract.landlordSignature}, tenantSig=${!!contract.tenantSignature}, status=${contract.status}`);
       } else {
         const error = await res.json();
         showToast(error.message || 'Failed to load contract', 'error');
@@ -318,12 +337,14 @@
     const btn = document.getElementById('forceActivateBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...';
+    showDebug('Force activate called...');
     try {
       const res = await fetch(`/api/lease/force-activate/${contractId}`, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + token }
       });
       const data = await res.json();
+      showDebug(`Force activate response: ${JSON.stringify(data)}`);
       if (res.ok && data.downloadUrl) {
         showToast('Contract activated! Download ready.', 'success');
         currentDownloadUrl = data.downloadUrl;
@@ -333,9 +354,11 @@
         await loadContract();
       } else {
         showToast(data.message || 'Activation failed', 'error');
+        showDebug(`Activation failed: ${data.message}`);
       }
     } catch (err) {
       showToast('Network error', 'error');
+      showDebug(`Network error: ${err.message}`);
     } finally {
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-bolt"></i> Force Activate & Download';
@@ -368,6 +391,7 @@
     const btn = document.getElementById('signBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing...';
+    showDebug('Signing contract...');
     try {
       const res = await fetch(`/api/lease/sign/${contractId}`, {
         method: 'PUT',
@@ -375,6 +399,7 @@
         body: JSON.stringify({ signature: signatureData })
       });
       const data = await res.json();
+      showDebug(`Sign response: ${JSON.stringify(data)}`);
       if (res.ok) {
         showToast('Signature saved!', 'success');
         await loadContract();
@@ -388,6 +413,7 @@
     } catch (err) {
       console.error(err);
       showToast('Network error while signing', 'error');
+      showDebug(`Sign error: ${err.message}`);
     } finally {
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-check-circle"></i> Sign Contract';

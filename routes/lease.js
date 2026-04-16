@@ -73,7 +73,7 @@ function generateAiSuggestions(negotiation) {
 }
 
 // ============================================================
-// PROFESSIONAL MALAWI TENANCY AGREEMENT PDF GENERATOR (FIXED)
+// PROFESSIONAL MALAWI TENANCY AGREEMENT PDF GENERATOR
 // ============================================================
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
@@ -462,11 +462,16 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     
     if (updated) await contract.save();
 
-    // Check if both parties have now signed
-    const bothSigned = contract.signedByLandlord && contract.signedByTenant;
+    // Check if both parties have now signed (by checking actual signature data)
+    const bothSigned = (contract.signedByLandlord && contract.signedByTenant) || 
+                       (contract.landlordSignature && contract.tenantSignature);
     let signedPdfUrl = null;
     
     if (bothSigned) {
+      // Ensure flags are true
+      if (contract.landlordSignature && !contract.signedByLandlord) contract.signedByLandlord = true;
+      if (contract.tenantSignature && !contract.signedByTenant) contract.signedByTenant = true;
+      
       // Update contract status to active
       contract.status = 'active';
       contract.signedAt = new Date();
@@ -493,7 +498,6 @@ router.put('/sign/:contractId', auth, async (req, res) => {
         signedPdfUrl = `/api/lease/download-temp/${negotiation._id}`;
       } catch (pdfErr) {
         console.error('PDF generation error:', pdfErr);
-        // Even if PDF fails, we still return success for the signature
       }
       
       return res.json({ contract, signedPdfUrl });
@@ -575,7 +579,7 @@ router.get('/download-signed/:token', async (req, res) => {
   }
 });
 
-// FORCE ACTIVATE CONTRACT – manually regenerate PDF and set status to active
+// FORCE ACTIVATE CONTRACT – checks actual signature data, not just flags
 router.post('/force-activate/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId);
@@ -586,10 +590,21 @@ router.post('/force-activate/:contractId', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
     
-    // Check if both signatures exist
-    if (!contract.signedByLandlord || !contract.signedByTenant) {
-      return res.status(400).json({ message: 'Both parties have not signed yet' });
+    // Check if both signature fields have data (not null/undefined)
+    const landlordHasSig = contract.landlordSignature && contract.landlordSignature !== null;
+    const tenantHasSig = contract.tenantSignature && contract.tenantSignature !== null;
+    
+    if (!landlordHasSig || !tenantHasSig) {
+      return res.status(400).json({ 
+        message: `Both parties have not signed yet. Landlord signature: ${!!landlordHasSig}, Tenant signature: ${!!tenantHasSig}`,
+        landlordSigExists: !!landlordHasSig,
+        tenantSigExists: !!tenantHasSig
+      });
     }
+    
+    // Force update flags if signatures exist
+    if (landlordHasSig && !contract.signedByLandlord) contract.signedByLandlord = true;
+    if (tenantHasSig && !contract.signedByTenant) contract.signedByTenant = true;
     
     // Update contract status
     contract.status = 'active';
