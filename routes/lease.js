@@ -72,7 +72,9 @@ function generateAiSuggestions(negotiation) {
   return suggestions;
 }
 
-// Generate PDF with embedded signatures (always regenerates fresh)
+// ============================================================
+// NEW: Professional Malawi Tenancy Agreement PDF Generator
+// ============================================================
 async function generatePDFWithSignatures(negotiation, house, landlord, tenant, signatureLandlord, signatureTenant) {
   return new Promise((resolve, reject) => {
     const contractDir = path.join(__dirname, '../contracts');
@@ -82,97 +84,179 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
     const writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
 
-    // Background and header
-    doc.rect(0, 0, doc.page.width, doc.page.height).fill('#fef9e8');
-    doc.rect(0, 0, doc.page.width, 80).fill('#1e3a5f');
-    doc.fillColor('white').fontSize(22).font('Helvetica-Bold')
-      .text('🏠 RESIDENTIAL LEASE AGREEMENT', 50, 25, { align: 'center' });
-    doc.fillColor('#f1c40f').fontSize(12).font('Helvetica')
-      .text('Malawi Standard Tenancy Contract', 50, 55, { align: 'center' });
+    // Helper to draw a horizontal line
+    const hr = (y) => {
+      doc.moveTo(50, y).lineTo(doc.page.width - 50, y).stroke('#cccccc');
+      return y + 10;
+    };
 
-    let y = 100;
-    doc.fillColor('#2c3e50').fontSize(10).font('Helvetica');
-    doc.text(`📅 Date: ${new Date().toLocaleDateString()}`, 50, y);
-    y += 20;
-    doc.font('Helvetica-Bold').text('1. PARTIES & PROPERTY', 50, y);
-    y += 15;
-    doc.font('Helvetica')
-      .text(`Property Address: ${house.name}, ${house.location}`, 60, y)
-      .text(`Landlord: ${landlord.name} (${landlord.email})`, 60, y + 15)
-      .text(`Tenant: ${tenant.name} (${tenant.email})`, 60, y + 30);
-    y += 60;
+    // Helper to add a new page if needed
+    const checkPageBreak = (requiredSpace) => {
+      if (doc.y + requiredSpace > doc.page.height - 50) {
+        doc.addPage();
+        doc.y = 50;
+      }
+    };
 
-    doc.rect(50, y, doc.page.width - 100, 100).stroke('#3498db');
-    doc.fillColor('#3498db').font('Helvetica-Bold').text('LEASE TERMS', 55, y + 5);
-    doc.fillColor('#2c3e50').font('Helvetica')
-      .text(`Start Date: ${new Date(negotiation.leaseStartDate).toLocaleDateString()}`, 60, y + 25)
-      .text(`End Date: ${new Date(negotiation.leaseEndDate).toLocaleDateString()}`, 60, y + 40)
-      .text(`Monthly Rent: MWK ${negotiation.rentAmount.toLocaleString()}`, 60, y + 55)
-      .text(`Security Deposit: MWK ${negotiation.depositAmount.toLocaleString()} (refundable)`, 60, y + 70);
-    y += 110;
+    // ----- Title & Header -----
+    doc.rect(0, 0, doc.page.width, 100).fill('#1e3a5f');
+    doc.fillColor('white')
+      .fontSize(24)
+      .font('Helvetica-Bold')
+      .text('TENANCY AGREEMENT', 50, 35, { align: 'center' });
+    doc.fontSize(12)
+      .font('Helvetica')
+      .text('(MALAWI)', 50, 65, { align: 'center' });
+    doc.fillColor('#333333');
 
-    doc.font('Helvetica-Bold').text('2. ADDITIONAL CLAUSES', 50, y);
-    y += 15;
-    doc.font('Helvetica');
-    negotiation.clauses.forEach((clause, idx) => {
-      const text = `${idx + 1}. ${clause.title}: ${clause.description}`;
-      doc.text(text, 60, y);
-      y += 18;
-      if (y > 700) { doc.addPage(); y = 50; }
-    });
-    y += 10;
+    // Date line
+    const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.fontSize(10)
+      .text(`This Tenancy Agreement is made on this ${today}`, 50, 120, { align: 'center' });
+    doc.moveDown(0.5);
 
-    doc.font('Helvetica-Bold').text('3. STANDARD CONDITIONS (Malawi Law)', 50, y);
-    y += 15;
-    doc.font('Helvetica')
-      .text(`• Notice Period: ${negotiation.noticePeriodDays} days`, 60, y)
-      .text(`• Late Fee: ${negotiation.lateFeePercentage}% of monthly rent per day (after 5 days grace)`, 60, y + 15)
-      .text(`• Maintenance: ${negotiation.maintenanceResponsibility} responsible for major repairs`, 60, y + 30)
-      .text(`• Utilities: ${negotiation.utilitiesIncluded ? 'Included in rent' : 'Tenant pays separately'}`, 60, y + 45)
-      .text(`• Pets: ${negotiation.petPolicy}`, 60, y + 60);
-    y += 85;
+    // 1. PARTIES
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('1. PARTIES', 50, doc.y + 10);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    doc.text(`Landlord:`, 60, doc.y + 5);
+    doc.text(`${landlord.name}`, 70, doc.y + 5);
+    doc.text(`Of ${landlord.address || 'Not specified'}`, 70, doc.y + 5);
+    doc.moveDown();
+    doc.text(`Tenant:`, 60, doc.y);
+    doc.text(`${tenant.name}`, 70, doc.y);
+    doc.text(`Principal place of business / residence: ${tenant.address || tenant.email}`, 70, doc.y + 15);
+    doc.moveDown(2);
 
-    doc.font('Helvetica-Bold').text('4. GOVERNING LAW', 50, y);
-    y += 15;
-    doc.font('Helvetica')
-      .text('This agreement is governed by the laws of Malawi, including the Rented Premises (Control of Rent) Act and common law principles.', 60, y);
-    y += 40;
+    // 2. PREMISES
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('2. PREMISES', 50, doc.y + 10);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    doc.text(`The Landlord hereby agrees to lease to the Tenant, and the Tenant agrees to rent, the property located at:`, 50, doc.y + 5);
+    doc.font('Helvetica-Bold').text(`${house.name}, ${house.location}`, 60, doc.y + 20);
+    doc.font('Helvetica').text(`(hereinafter referred to as "the Property")`, 60, doc.y + 35);
+    doc.moveDown(3);
 
-    // Signature area
-    doc.moveTo(50, y).lineTo(doc.page.width - 50, y).stroke();
-    y += 10;
-    doc.font('Helvetica').text('Signed by:', 50, y);
-    y += 20;
+    // 3. TERM OF TENANCY
+    const startDate = new Date(negotiation.leaseStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const endDate = negotiation.leaseEndDate ? new Date(negotiation.leaseEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'month-to-month';
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('3. TERM OF TENANCY', 50, doc.y + 10);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    doc.text(`The tenancy shall commence on ${startDate} and shall continue on a month-to-month basis unless terminated in accordance with this Agreement.`, 50, doc.y + 5);
+    doc.moveDown(2);
 
+    // 4. RENT AND PAYMENT TERMS
+    const monthlyRent = negotiation.rentAmount.toLocaleString();
+    const threeMonthsAdvance = (negotiation.rentAmount * 3).toLocaleString();
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('4. RENT AND PAYMENT TERMS', 50, doc.y + 10);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    doc.text(`a) The Tenant shall pay rent of: MWK ${monthlyRent} per month`, 60, doc.y + 5);
+    doc.text(`b) The Tenant shall pay three (3) months’ rent in advance prior to occupancy, on or before ${startDate}. Amount: MWK ${threeMonthsAdvance}`, 60, doc.y + 20);
+    doc.text(`c) All rent payments shall be made in a manner agreed upon by both parties.`, 60, doc.y + 35);
+    doc.moveDown(3);
+
+    // 5. MAINTENANCE AND REPAIRS
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('5. MAINTENANCE AND REPAIRS', 50, doc.y + 10);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    doc.text(`a) The Tenant shall keep the Property in good and tenantable condition at all times.`, 60, doc.y + 5);
+    doc.text(`b) The Tenant shall be responsible for routine maintenance and repairs during the tenancy period.`, 60, doc.y + 20);
+    doc.text(`c) The Tenant shall not be responsible for damages resulting from the Landlord’s negligence or structural defects.`, 60, doc.y + 35);
+    doc.moveDown(3);
+
+    // 6. UTILITIES
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('6. UTILITIES', 50, doc.y + 10);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    doc.text(`The Tenant shall be responsible for payment of all utility bills related to the Property, including but not limited to:`, 50, doc.y + 5);
+    doc.text(`• Electricity`, 70, doc.y + 20);
+    doc.text(`• Water`, 70, doc.y + 35);
+    doc.text(`• Any other applicable services`, 70, doc.y + 50);
+    doc.moveDown(4);
+
+    // 7. TERMINATION
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('7. TERMINATION', 50, doc.y + 10);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    doc.text(`a) Either party may terminate this Agreement by providing ${negotiation.noticePeriodDays || 30} days written notice.`, 60, doc.y + 5);
+    doc.text(`b) Upon termination, the Tenant shall:`, 60, doc.y + 20);
+    doc.text(`   • Vacate the Property`, 70, doc.y + 35);
+    doc.text(`   • Return it in the same condition as received`, 70, doc.y + 50);
+    doc.text(`   • Allow for reasonable wear and tear`, 70, doc.y + 65);
+    doc.moveDown(5);
+
+    // 8. GOVERNING LAW
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('8. GOVERNING LAW', 50, doc.y + 10);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    doc.text(`This Agreement shall be governed and interpreted in accordance with the laws of the Republic of Malawi.`, 50, doc.y + 5);
+    doc.moveDown(2);
+
+    // 9. ADDITIONAL TERMS (custom clauses from negotiation)
+    if (negotiation.clauses && negotiation.clauses.length > 0) {
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('9. ADDITIONAL TERMS', 50, doc.y + 10);
+      doc.fillColor('#333333').fontSize(10).font('Helvetica');
+      let yOffset = doc.y + 5;
+      negotiation.clauses.forEach((clause, idx) => {
+        if (!clause.isAgreed) return; // only show agreed clauses
+        const text = `${idx + 1}. ${clause.title}: ${clause.description}`;
+        checkPageBreak(20);
+        doc.text(text, 60, yOffset);
+        yOffset += 20;
+      });
+      doc.y = yOffset + 10;
+    } else {
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('9. ADDITIONAL TERMS', 50, doc.y + 10);
+      doc.fillColor('#333333').fontSize(10).font('Helvetica');
+      doc.text(`Any additional terms and conditions shall be agreed upon by both parties, documented in writing, and form part of this Agreement as an addendum.`, 50, doc.y + 5);
+      doc.moveDown(2);
+    }
+
+    // 10. SIGNATURES
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e3a5f').text('10. SIGNATURES', 50, doc.y + 15);
+    doc.fillColor('#333333').fontSize(10).font('Helvetica');
+    let sigY = doc.y + 10;
+    checkPageBreak(180);
+    
     // Landlord signature
-    doc.text(`Landlord: ${landlord.name}`, 60, y);
+    doc.text(`FOR THE LANDLORD`, 60, sigY);
+    doc.text(`Name: ${landlord.name}`, 70, sigY + 15);
     if (signatureLandlord) {
       try {
-        // Remove data:image/png;base64, prefix
         const base64Data = signatureLandlord.replace(/^data:image\/png;base64,/, '');
         const imgBuffer = Buffer.from(base64Data, 'base64');
-        doc.image(imgBuffer, 250, y - 10, { width: 100 });
-      } catch(e) { console.error('Failed to embed landlord signature', e); doc.text(`___________________`, 250, y); }
+        doc.image(imgBuffer, 70, sigY + 30, { width: 100 });
+      } catch(e) {
+        doc.text(`___________________`, 70, sigY + 40);
+      }
     } else {
-      doc.text(`___________________`, 250, y);
+      doc.text(`___________________`, 70, sigY + 40);
     }
-    doc.text(`Date: __________`, 400, y);
-    y += 40;
-
+    doc.text(`Date: ______________`, 70, sigY + 70);
+    
     // Tenant signature
-    doc.text(`Tenant: ${tenant.name}`, 60, y);
+    doc.text(`FOR THE TENANT`, 300, sigY);
+    doc.text(`Name: ${tenant.name}`, 310, sigY + 15);
     if (signatureTenant) {
       try {
         const base64Data = signatureTenant.replace(/^data:image\/png;base64,/, '');
         const imgBuffer = Buffer.from(base64Data, 'base64');
-        doc.image(imgBuffer, 250, y - 10, { width: 100 });
-      } catch(e) { console.error('Failed to embed tenant signature', e); doc.text(`___________________`, 250, y); }
+        doc.image(imgBuffer, 310, sigY + 30, { width: 100 });
+      } catch(e) {
+        doc.text(`___________________`, 310, sigY + 40);
+      }
     } else {
-      doc.text(`___________________`, 250, y);
+      doc.text(`___________________`, 310, sigY + 40);
     }
-    doc.text(`Date: __________`, 400, y);
+    doc.text(`Date: ______________`, 310, sigY + 70);
 
-    // Footer
+    // Witnesses (optional)
+    const witnessY = sigY + 110;
+    checkPageBreak(80);
+    doc.fontSize(10).font('Helvetica-Bold').text(`WITNESSES (Optional but Recommended)`, 50, witnessY);
+    doc.fontSize(10).font('Helvetica');
+    doc.text(`1. Name: __________________________`, 70, witnessY + 15);
+    doc.text(`   Signature: ______________________`, 70, witnessY + 30);
+    doc.text(`   Date: __________________________`, 70, witnessY + 45);
+    doc.text(`2. Name: __________________________`, 70, witnessY + 60);
+    doc.text(`   Signature: ______________________`, 70, witnessY + 75);
+    doc.text(`   Date: __________________________`, 70, witnessY + 90);
+
+    // Footer with page numbers
     const pageCount = doc.bufferedPageRange().count;
     for (let i = 0; i < pageCount; i++) {
       doc.switchToPage(i);
@@ -186,17 +270,17 @@ async function generatePDFWithSignatures(negotiation, house, landlord, tenant, s
   });
 }
 
+// Alias for initial PDF (without signatures)
 async function generateBeautifulPDF(negotiation, house, landlord, tenant) {
   return generatePDFWithSignatures(negotiation, house, landlord, tenant, null, null);
 }
 
-// ========== ROUTES (order matters – static routes before dynamic :id) ==========
+// ========== ROUTES (unchanged from original) ==========
 
 router.get('/test', (req, res) => {
   res.json({ message: 'Lease route is working!' });
 });
 
-// Get all lease negotiations for landlord
 router.get('/my', auth, async (req, res) => {
   try {
     const leases = await LeaseNegotiation.find({ landlordId: req.user.id })
@@ -210,7 +294,6 @@ router.get('/my', auth, async (req, res) => {
   }
 });
 
-// Check existing negotiation for tenant
 router.get('/check/:houseId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findOne({
@@ -224,7 +307,6 @@ router.get('/check/:houseId', auth, async (req, res) => {
   }
 });
 
-// Start a new lease negotiation (landlord)
 router.post('/start', auth, async (req, res) => {
   try {
     const { houseId, rentAmount, depositAmount, leaseStartDate, leaseEndDate } = req.body;
@@ -260,7 +342,6 @@ router.post('/start', auth, async (req, res) => {
   }
 });
 
-// Join negotiation (tenant)
 router.post('/join/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -276,7 +357,6 @@ router.post('/join/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Add or update a clause
 router.put('/clause/:negotiationId', auth, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -311,7 +391,6 @@ router.put('/clause/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Agree to a clause
 router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -334,7 +413,6 @@ router.put('/agree/:negotiationId/:clauseIndex', auth, async (req, res) => {
   }
 });
 
-// Finalize and generate initial PDF
 router.post('/finalize/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -371,7 +449,6 @@ router.post('/finalize/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// ========== UPDATED Sign contract (auto‑mark house as rented) ==========
 router.put('/sign/:contractId', auth, async (req, res) => {
   try {
     const { signature } = req.body;
@@ -392,14 +469,12 @@ router.put('/sign/:contractId', auth, async (req, res) => {
     }
     if (updated) await contract.save();
 
-    // If both have signed, regenerate PDF with both signatures
     if (contract.signedByLandlord && contract.signedByTenant) {
       contract.status = 'active';
       contract.signedAt = new Date();
       await contract.save();
       await LeaseNegotiation.findByIdAndUpdate(contract.negotiationId, { status: 'signed' });
 
-      // ========== NEW: Mark the house as rented ==========
       const house = await House.findById(contract.houseId);
       if (house && house.rentalStatus === 'available') {
         house.rentalStatus = 'rented';
@@ -413,7 +488,6 @@ router.put('/sign/:contractId', auth, async (req, res) => {
       const tenant = await User.findById(contract.tenantId);
       await generatePDFWithSignatures(negotiation, houseForPDF, landlord, tenant, contract.landlordSignature, contract.tenantSignature);
       
-      // Return the new signed PDF URL so frontend can refresh
       const signedPdfUrl = `/api/lease/download-temp/${negotiation._id}`;
       return res.json({ contract, signedPdfUrl });
     }
@@ -424,7 +498,6 @@ router.put('/sign/:contractId', auth, async (req, res) => {
   }
 });
 
-// Get contract details
 router.get('/contract/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId)
@@ -439,7 +512,6 @@ router.get('/contract/:contractId', auth, async (req, res) => {
   }
 });
 
-// Generate a temporary signed download URL (valid 5 minutes)
 router.get('/download-temp/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId);
@@ -459,7 +531,6 @@ router.get('/download-temp/:negotiationId', auth, async (req, res) => {
   }
 });
 
-// Serve signed download (no auth required, token is enough)
 router.get('/download-signed/:token', async (req, res) => {
   try {
     const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
@@ -474,7 +545,6 @@ router.get('/download-signed/:token', async (req, res) => {
   }
 });
 
-// Setup recurring payment
 router.post('/setup-payment', auth, async (req, res) => {
   try {
     const { contractId, paymentMethod, phoneNumber } = req.body;
@@ -501,7 +571,6 @@ router.post('/setup-payment', auth, async (req, res) => {
   }
 });
 
-// Process auto payment
 router.post('/process-payment/:paymentId', auth, async (req, res) => {
   try {
     const payment = await RecurringPayment.findById(req.params.paymentId);
@@ -520,7 +589,6 @@ router.post('/process-payment/:paymentId', auth, async (req, res) => {
   }
 });
 
-// Terminate lease
 router.put('/terminate/:contractId', auth, async (req, res) => {
   try {
     const contract = await SmartContract.findById(req.params.contractId);
@@ -540,7 +608,6 @@ router.put('/terminate/:contractId', auth, async (req, res) => {
   }
 });
 
-// Get lease negotiation details (must be LAST)
 router.get('/:negotiationId', auth, async (req, res) => {
   try {
     const negotiation = await LeaseNegotiation.findById(req.params.negotiationId)
