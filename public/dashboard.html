@@ -629,5 +629,268 @@
   <script src="js/theme.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/chatbot.js"></script>
+  <script>
+    // ========== FIXES: Load More Properties, Edit Modal Map, Lease Actions ==========
+    (function() {
+      // --- Fix Load More button (pagination) ---
+      let currentPage = 1;
+      const loadMoreBtn = document.getElementById('loadMoreHousesBtn');
+      if (loadMoreBtn) {
+        // Override the existing loadHouses function to support pagination
+        const originalLoadHouses = window.loadHouses;
+        window.loadHouses = async function(page = 1, append = false) {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+          try {
+            const res = await fetch(`/api/houses/my?page=${page}&limit=6`, {
+              headers: { Authorization: 'Bearer ' + token }
+            });
+            const data = await res.json();
+            if (res.ok) {
+              if (append) {
+                // Append new houses to existing list
+                const container = document.getElementById('my-houses');
+                data.houses.forEach(house => {
+                  container.appendChild(createHouseCard(house));
+                });
+              } else {
+                // Replace entire list
+                renderMyHouses(data.houses);
+              }
+              // Update total count (if needed)
+              if (data.totalHouses !== undefined) {
+                document.getElementById('totalHouses').innerText = data.totalHouses;
+              }
+              // Enable/disable load more button
+              if (loadMoreBtn) {
+                if (data.houses.length < 6 || page * 6 >= data.totalHouses) {
+                  loadMoreBtn.style.display = 'none';
+                } else {
+                  loadMoreBtn.style.display = 'block';
+                }
+              }
+              currentPage = page;
+            } else {
+              console.error('Failed to load houses');
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        };
+        // Attach load more event
+        loadMoreBtn.onclick = () => {
+          window.loadHouses(currentPage + 1, true);
+        };
+        // Also override initial load (called from dashboard.js) to use pagination
+        // We'll patch the existing window.loadHouses call by redefining it.
+        // Also ensure initial load uses page 1.
+        setTimeout(() => {
+          if (typeof window.loadHouses === 'function' && !window._patched) {
+            window._patched = true;
+            window.loadHouses(1, false);
+          }
+        }, 500);
+      }
+
+      // --- Fix Edit Modal Map ---
+      let editMap = null;
+      window.openEditModal = async function(houseId) {
+        // Fetch house details and populate modal, then initialize map
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/houses/${houseId}`, {
+            headers: { Authorization: 'Bearer ' + token }
+          });
+          const house = await res.json();
+          if (res.ok) {
+            document.getElementById('editHouseId').value = house._id;
+            document.getElementById('editName').value = house.name;
+            document.getElementById('editDescription').value = house.description || '';
+            document.getElementById('editPrice').value = house.price;
+            document.getElementById('editType').value = house.type || 'House';
+            document.getElementById('editBedrooms').value = house.bedrooms || 0;
+            document.getElementById('editPhone').value = house.phone || '';
+            document.getElementById('editLocation').value = house.location;
+            document.getElementById('editLat').value = house.lat || '';
+            document.getElementById('editLng').value = house.lng || '';
+            document.getElementById('editCondition').value = house.condition || 'Good';
+            document.getElementById('editGender').value = house.gender || 'none';
+            document.getElementById('editSelfContained').checked = house.selfContained || false;
+            document.getElementById('editWifi').checked = house.amenities?.includes('wifi');
+            document.getElementById('editParking').checked = house.amenities?.includes('parking');
+            document.getElementById('editFurnished').checked = house.amenities?.includes('furnished');
+            document.getElementById('editPetFriendly').checked = house.amenities?.includes('petFriendly');
+            document.getElementById('editPool').checked = house.amenities?.includes('pool');
+            document.getElementById('editAC').checked = house.amenities?.includes('ac');
+            document.getElementById('editVirtualTourUrl').value = house.virtualTourUrl || '';
+            // Unavailable dates
+            if (house.unavailableDates && house.unavailableDates.length) {
+              const flatpickrInstance = document.getElementById('editUnavailableDates')._flatpickr;
+              if (flatpickrInstance) flatpickrInstance.setDate(house.unavailableDates.map(d => new Date(d)));
+            }
+            // Image preview for existing images (optional)
+            const previewContainer = document.getElementById('editImagePreview');
+            previewContainer.innerHTML = '';
+            if (house.images && house.images.length) {
+              house.images.forEach(img => {
+                const div = document.createElement('div');
+                div.className = 'image-preview-item';
+                div.innerHTML = `<img src="${img}" style="width:80px;height:80px;object-fit:cover;"><button type="button" class="image-preview-remove" data-img="${img}"><i class="fas fa-times"></i></button>`;
+                previewContainer.appendChild(div);
+              });
+              // Add remove functionality (optional)
+              previewContainer.querySelectorAll('.image-preview-remove').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                  const imgUrl = btn.dataset.img;
+                  // Implement image removal via API if needed (optional)
+                  showToast('Remove functionality not implemented in this demo', 'info');
+                });
+              });
+            }
+            // Initialize map in the location tab
+            const lat = parseFloat(house.lat) || -15.7861;
+            const lng = parseFloat(house.lng) || 35.0058;
+            if (editMap) editMap.remove();
+            editMap = L.map('editMap').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(editMap);
+            L.marker([lat, lng]).addTo(editMap).bindPopup(house.name);
+            editMap.on('click', async (e) => {
+              document.getElementById('editLat').value = e.latlng.lat;
+              document.getElementById('editLng').value = e.latlng.lng;
+              L.marker(e.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
+            });
+            // Show modal
+            document.getElementById('editModal').style.display = 'flex';
+          } else {
+            alert('Failed to load property details');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error loading property');
+        }
+      };
+      // Override the existing openEditModal from dashboard.js (if any)
+      window.openEditModal = window.openEditModal || openEditModal;
+
+      // Helper to create house card (for pagination)
+      function createHouseCard(house) {
+        const card = document.createElement('div');
+        card.className = 'house-card';
+        card.innerHTML = `
+          <img src="${house.images && house.images[0] ? house.images[0] : 'https://via.placeholder.com/300x200'}" alt="${house.name}">
+          <div class="house-content">
+            <div class="rental-badge ${house.rentalStatus === 'available' ? 'available' : 'rented'}">${house.rentalStatus === 'available' ? 'Available' : 'Rented'}</div>
+            <h3>${house.name}</h3>
+            <p><i class="fas fa-map-marker-alt"></i> ${house.location}</p>
+            <p><strong>MWK ${house.price.toLocaleString()}</strong> / month</p>
+            <div class="house-actions">
+              <button class="edit" onclick="openEditModal('${house._id}')"><i class="fas fa-edit"></i> Edit</button>
+              <button class="delete" onclick="deleteHouse('${house._id}')"><i class="fas fa-trash"></i> Delete</button>
+              ${house.rentalStatus === 'available' ? `<button class="mark-rented-btn" onclick="markRented('${house._id}')"><i class="fas fa-home"></i> Mark Rented</button>` : `<button class="mark-available-btn" onclick="markAvailable('${house._id}')"><i class="fas fa-check"></i> Mark Available</button>`}
+            </div>
+          </div>
+        `;
+        return card;
+      }
+      window.createHouseCard = createHouseCard;
+    })();
+
+    // --- Lease Tab: Add End Lease button and show correct status ---
+    async function loadLeaseNegotiations() {
+      const token = localStorage.getItem('token');
+      const container = document.getElementById('leaseList');
+      if (!container) return;
+      container.innerHTML = 'Loading...';
+      try {
+        const res = await fetch('/api/lease/my', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const leases = await res.json();
+        if (res.ok && leases.length) {
+          container.innerHTML = '';
+          for (const lease of leases) {
+            // Fetch associated contract to get status
+            let contractStatus = 'pending';
+            let contractId = null;
+            try {
+              const contractRes = await fetch(`/api/lease/contract/by-negotiation/${lease._id}`, {
+                headers: { Authorization: 'Bearer ' + token }
+              });
+              if (contractRes.ok) {
+                const contract = await contractRes.json();
+                contractStatus = contract.status;
+                contractId = contract._id;
+              }
+            } catch (e) {}
+            const leaseCard = document.createElement('div');
+            leaseCard.className = 'lease-card';
+            leaseCard.innerHTML = `
+              <div><strong>Property:</strong> ${lease.houseId?.name || 'N/A'}</div>
+              <div><strong>Tenant:</strong> ${lease.tenantId?.name || 'Not joined'}</div>
+              <div><strong>Rent:</strong> MWK ${lease.rentAmount?.toLocaleString()}</div>
+              <div><strong>Status:</strong> 
+                <span class="offer-status ${contractStatus === 'active' ? 'accepted' : (contractStatus === 'terminated' ? 'rejected' : 'pending')}">
+                  ${contractStatus === 'active' ? 'Signed & Active' : (contractStatus === 'terminated' ? 'Terminated' : 'Pending')}
+                </span>
+              </div>
+              ${contractStatus === 'active' && contractId ? `<button class="mark-rented-btn" onclick="endLease('${contractId}')" style="margin-top:0.5rem;"><i class="fas fa-ban"></i> End Lease</button>` : ''}
+            `;
+            container.appendChild(leaseCard);
+          }
+        } else {
+          container.innerHTML = '<p>No lease negotiations yet.</p>';
+        }
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<p>Error loading leases.</p>';
+      }
+    }
+    window.loadLeaseNegotiations = loadLeaseNegotiations;
+
+    async function endLease(contractId) {
+      if (!confirm('WARNING: Ending the lease will terminate the contract and mark the property as available. Are you sure?')) return;
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/lease/terminate/${contractId}`, {
+          method: 'PUT',
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Lease terminated successfully.');
+          loadLeaseNegotiations();
+          // Also refresh houses list
+          if (typeof window.loadHouses === 'function') window.loadHouses(1, false);
+        } else {
+          alert(data.message || 'Failed to terminate lease');
+        }
+      } catch (err) {
+        alert('Network error');
+      }
+    }
+    window.endLease = endLease;
+
+    // Override the tab click handler to refresh lease tab when selected
+    const originalTabHandler = window.initTabs;
+    window.initTabs = function() {
+      if (originalTabHandler) originalTabHandler();
+      document.querySelectorAll('.tab-btn-dash').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const tab = btn.dataset.tab;
+          if (tab === 'lease') {
+            loadLeaseNegotiations();
+          }
+        });
+      });
+    };
+    // Also call loadLeaseNegotiations after dashboard loads
+    setTimeout(() => {
+      if (document.querySelector('.tab-btn-dash[data-tab="lease"]')) {
+        loadLeaseNegotiations();
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
