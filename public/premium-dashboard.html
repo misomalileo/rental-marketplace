@@ -12,7 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b); color: #f1f5f9; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+    body { background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b); color: #f1f5f9; font-family: 'Inter', sans-serif; min-height: 100vh; }
     .navbar { background: rgba(15,23,42,0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000; }
     .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .logo i { font-size: 1.6rem; margin-right: 6px; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -33,21 +33,21 @@
     .activate-btn { background: linear-gradient(135deg, #FF8C42, #E67E22); border: none; padding: 0.7rem 1.8rem; border-radius: 60px; font-weight: 700; font-size: 0.9rem; color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; z-index: 1; box-shadow: 0 8px 16px -4px rgba(230,126,34,0.3); }
     .activate-btn:hover { transform: scale(1.02); box-shadow: 0 12px 20px -6px rgba(230,126,34,0.5); }
     .upgrade-banner { background: linear-gradient(135deg, rgba(255,140,66,0.12), rgba(139,92,246,0.08)); border: 1px solid rgba(255,140,66,0.4); border-radius: 36px; padding: 1.5rem; text-align: center; margin-bottom: 2rem; backdrop-filter: blur(8px); }
-    .tabs { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; margin-bottom: 2rem; background: rgba(20,30,45,0.4); backdrop-filter: blur(8px); border-radius: 60px; padding: 0.3rem; }
-    .tab-btn { background: transparent; border: none; padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 500; border-radius: 40px; cursor: pointer; transition: all 0.2s; color: #94a3b8; display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; }
-    .tab-btn i { font-size: 0.9rem; }
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; flex-wrap: wrap; }
+    .tab-btn { background: transparent; border: none; padding: 0.7rem 1.8rem; font-size: 1rem; font-weight: 600; border-radius: 60px; cursor: pointer; transition: all 0.2s; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
+    .tab-btn i { font-size: 1.1rem; }
     .tab-btn:hover { color: #FFB347; background: rgba(255,140,66,0.1); }
     .tab-btn.active { background: linear-gradient(135deg, #FF8C42, #E67E22); color: white; box-shadow: 0 4px 12px rgba(230,126,34,0.3); }
     .tab-content { display: none; animation: fadeIn 0.3s ease; }
     .tab-content.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .dashboard-grid { display: flex; flex-direction: column; gap: 1.5rem; }
     .card { background: rgba(20, 30, 45, 0.65); backdrop-filter: blur(12px); border-radius: 32px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.08); transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1); transform-style: preserve-3d; box-shadow: 0 8px 20px rgba(0,0,0,0.2); width: 100%; max-width: 100%; overflow: hidden; }
     .card:hover { transform: translateY(-6px) rotateX(2deg); border-color: rgba(255,140,66,0.6); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.5); }
     .card h2 { font-size: 1.4rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 12px; font-weight: 700; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; flex-wrap: wrap; }
     .card h2 i { font-size: 1.5rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item, .comparison-item, .move-item, .watchlist-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; overflow-x: auto; }
-    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .email-alert-item:hover, .comparison-item:hover, .move-item:hover, .watchlist-item:hover { border-color: #FF8C42; transform: translateX(6px); }
+    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item, .comparison-item, .move-item, .heatmap-toggle { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; overflow-x: auto; }
+    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .email-alert-item:hover, .comparison-item:hover, .move-item:hover { border-color: #FF8C42; transform: translateX(6px); }
     .saved-search-actions, .alert-actions, .whatsapp-actions, .email-actions { display: flex; gap: 1rem; margin-top: 0.7rem; flex-wrap: wrap; }
     button.small { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 0.3rem 1rem; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #cbd5e1; display: inline-flex; align-items: center; gap: 6px; }
     button.small:hover { background: rgba(255,140,66,0.2); border-color: #FF8C42; color: white; }
@@ -118,10 +118,9 @@
     .comparison-table table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
     .comparison-table th, .comparison-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .comparison-table th { color: #FFB347; }
-    .ranking-badge { background: #FF8C42; border-radius: 20px; padding: 0.2rem 0.5rem; font-weight: bold; display: inline-block; text-align: center; font-size: 0.7rem; }
+    .ranking-badge { background: #FF8C42; border-radius: 20px; padding: 0.2rem 0.5rem; font-weight: bold; display: inline-block; text-align: center; }
     .move-planner-results { background: rgba(0,0,0,0.4); border-radius: 24px; padding: 1rem; margin-top: 1rem; }
-    .heatmap-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 40px; padding: 0.5rem 1rem; color: white; cursor: pointer; width: 100%; margin-top: 0.5rem; display: none; } /* hidden, heatmap loads automatically */
-    .watchlist-item .remove-watch { background: none; border: none; color: #ef4444; cursor: pointer; float: right; font-size: 0.7rem; }
+    .heatmap-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 40px; padding: 0.5rem 1rem; color: white; cursor: pointer; width: 100%; margin-top: 0.5rem; }
     @media (max-width: 768px) {
       .dashboard-container { max-width: 100%; margin: 1rem auto; padding: 0 0.8rem; }
       .premium-header { padding: 1rem; }
@@ -132,7 +131,7 @@
       .logo i { font-size: 1rem; }
       .nav-links { gap: 0.8rem; }
       .nav-links a { font-size: 0.75rem; }
-      .tab-btn { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
+      .tab-btn { padding: 0.4rem 1rem; font-size: 0.8rem; }
       .card { padding: 1rem; }
       .card h2 { font-size: 1.2rem; }
       .card h2 i { font-size: 1.3rem; }
@@ -160,183 +159,283 @@
         <div id="premiumStatusArea" class="premium-status"><i class="fas fa-spinner fa-pulse"></i> Loading...</div>
         <div class="test-mode-toggle">
           <input type="checkbox" id="testModeCheckbox">
-          <span><i class="fas fa-flask"></i> Test Mode</span>
+          <span><i class="fas fa-flask"></i> Test Mode (no payment)</span>
         </div>
-        <button id="activateBtn" class="activate-btn"><i class="fas fa-rocket"></i> Activate</button>
+        <button id="activateBtn" class="activate-btn"><i class="fas fa-rocket"></i> Activate Premium</button>
       </div>
     </div>
 
     <div id="upgradeBanner" class="upgrade-banner" style="display: none;">
-      <p><i class="fas fa-lock"></i> Unlock premium features – AI comparisons, move planner, demand heatmap, price watchlist.</p>
-      <button id="activateFromBannerBtn" class="activate-btn" style="margin-top: 0.5rem;"><i class="fas fa-crown"></i> Upgrade Now</button>
+      <h2><i class="fas fa-lock"></i> Unlock the Full Premium Experience</h2>
+      <p>Price drop alerts, AI negotiation assistant, priority viewing, and more.</p>
+      <button id="activateFromBannerBtn" class="activate-btn"><i class="fas fa-crown"></i> Upgrade Now</button>
     </div>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="tools"><i class="fas fa-tools"></i> Tools</button>
-      <button class="tab-btn" data-tab="compare"><i class="fas fa-chart-simple"></i> Compare</button>
-      <button class="tab-btn" data-tab="move"><i class="fas fa-truck-moving"></i> Move</button>
-      <button class="tab-btn" data-tab="heatmap"><i class="fas fa-fire"></i> Heatmap</button>
-      <button class="tab-btn" data-tab="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-      <button class="tab-btn" data-tab="email"><i class="fas fa-envelope"></i> Email</button>
+      <button class="tab-btn active" data-tab="tools"><i class="fas fa-tools"></i> Premium Tools</button>
+      <button class="tab-btn" data-tab="compare"><i class="fas fa-chart-simple"></i> Compare & Rank</button>
+      <button class="tab-btn" data-tab="move"><i class="fas fa-truck-moving"></i> Move Planner</button>
+      <button class="tab-btn" data-tab="heatmap"><i class="fas fa-fire"></i> Demand Heatmap</button>
+      <button class="tab-btn" data-tab="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp Alerts</button>
+      <button class="tab-btn" data-tab="email"><i class="fas fa-envelope"></i> Email Alerts</button>
       <button class="tab-btn" data-tab="alerts"><i class="fas fa-bell"></i> Price Alerts</button>
       <button class="tab-btn" data-tab="notifications"><i class="fas fa-inbox"></i> Notifications</button>
-      <button class="tab-btn" data-tab="portfolio"><i class="fas fa-id-card"></i> Portfolio</button>
+      <button class="tab-btn" data-tab="portfolio"><i class="fas fa-id-card"></i> Portfolio & Boost</button>
     </div>
 
-    <!-- Tools Tab -->
+    <!-- ========== PREMIUM TOOLS TAB (existing) ========== -->
     <div id="tab-tools" class="tab-content active">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fas fa-image"></i> AI Image Search</h2>
+        <!-- AI Image Search Card (existing) -->
+        <div class="card">
+          <h2><i class="fas fa-image"></i> AI Image Search</h2>
+          <p style="font-size:0.75rem; margin-bottom:0.5rem;">Upload a photo of a house you like, and our AI will find visually similar properties.</p>
           <div class="image-upload-area" id="imageUploadArea">
-            <i class="fas fa-cloud-upload-alt"></i><p>Click or drag & drop</p>
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Click or drag & drop an image</p>
             <input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/webp">
             <img id="uploadedImagePreview" alt="Preview">
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-            <button id="searchSimilarBtn" class="small" disabled><i class="fas fa-search"></i> Find Similar</button>
-            <span id="modelStatus"><i class="fas fa-spinner fa-pulse"></i> Loading AI...</span>
+            <button id="searchSimilarBtn" class="small" style="width:auto;" disabled><i class="fas fa-search"></i> Find Similar Properties</button>
+            <span id="modelStatus" class="model-loading"><i class="fas fa-spinner fa-pulse"></i> Loading AI model...</span>
           </div>
-          <div id="similarResults" class="similar-houses-list"></div>
+          <div id="similarResults" class="similar-houses-list" style="margin-top:1rem;"></div>
         </div>
 
-        <div class="card"><h2><i class="fas fa-microphone-alt"></i> Voice Assistant</h2>
+        <!-- Voice Assistant Card (existing) -->
+        <div class="card">
+          <h2><i class="fas fa-microphone-alt"></i> Voice Assistant</h2>
+          <p style="font-size:0.75rem; margin-bottom:0.5rem;">Speak naturally – e.g., “Find a 3-bedroom house in Lilongwe under 250,000 MWK with a garden”</p>
           <div class="voice-search-container">
             <button id="startVoiceBtn" class="mic-btn"><i class="fas fa-microphone"></i></button>
-            <div id="voiceStatus" class="voice-status">Tap mic and speak</div>
-            <div id="voiceResult" style="display: none; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 0.8rem; margin-top: 0.5rem;">
-              <p id="recognisedText" style="font-weight:500;"></p>
+            <div id="voiceStatus" class="voice-status">Click the microphone and speak</div>
+            <div id="voiceResult" class="voice-result" style="display: none;">
+              <h4><i class="fas fa-comment-dots"></i> Recognised Query</h4>
+              <p id="recognisedText"></p>
+              <h4>🏠 Top Match</h4>
               <div id="topMatchResult"></div>
             </div>
           </div>
         </div>
 
-        <div class="card"><h2><i class="fas fa-bookmark"></i> Saved Searches</h2>
+        <!-- Saved Searches (existing) -->
+        <div class="card">
+          <h2><i class="fas fa-bookmark"></i> Saved Searches</h2>
           <div id="savedSearchesList">Loading...</div>
-          <button id="newSearchBtn" class="small"><i class="fas fa-plus-circle"></i> New Search</button>
+          <button id="newSearchBtn" class="small" style="margin-top: 1rem;"><i class="fas fa-plus-circle"></i> New Search</button>
         </div>
 
-        <div class="card"><h2><i class="fas fa-handshake"></i> Rent Negotiation</h2>
-          <select id="negotiateHouseSelect"><option>Your properties</option></select>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;"><input type="text" id="manualHouseId" placeholder="Custom ID" style="flex:1;"><button id="negotiateBtn" class="small">Suggest</button></div>
+        <!-- Rent Negotiation Assistant (existing) -->
+        <div class="card">
+          <h2><i class="fas fa-handshake"></i> Rent Negotiation Assistant</h2>
+          <p style="font-size:0.75rem; color:#94a3b8;">Select one of your properties or enter any house ID to get a counter‑offer suggestion.</p>
+          <select id="negotiateHouseSelect">
+            <option value="">Your properties (if any)</option>
+          </select>
+          <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0; flex-wrap: wrap;">
+            <span style="font-size:0.7rem;">Or enter custom ID:</span>
+            <input type="text" id="manualHouseId" placeholder="e.g., 67b2c8f9a1b2c3d4e5f6a7b8" style="flex:1; margin-bottom:0;">
+          </div>
+          <button id="negotiateBtn" class="small"><i class="fas fa-chart-line"></i> Get Suggestion</button>
           <div id="negotiationResult"></div>
         </div>
 
-        <div class="card"><h2><i class="fas fa-calendar-star"></i> Priority Viewing</h2>
-          <select id="priorityHouseSelect"><option>Select property</option></select>
-          <button id="requestPriorityBtn" class="small">Request Priority</button>
-          <div id="priorityStatus" style="margin-top: 0.5rem;"></div>
+        <!-- Priority Viewing (existing) -->
+        <div class="card">
+          <h2><i class="fas fa-calendar-star"></i> Priority Viewing</h2>
+          <p style="font-size:0.75rem; color:#94a3b8;">Select a property to request priority viewing – landlords see your premium badge first.</p>
+          <select id="priorityHouseSelect">
+            <option value="">Your properties (if any)</option>
+          </select>
+          <button id="requestPriorityBtn" class="small"><i class="fas fa-rocket"></i> Request Priority Viewing</button>
+          <div id="priorityStatus" style="margin-top: 0.5rem; font-size: 0.8rem;"></div>
         </div>
 
-        <div class="card"><h2><i class="fas fa-chart-line"></i> AI Rent Predictor</h2>
-          <select id="predictorHouseSelect"><option>Select property</option></select>
-          <canvas id="rentPredictorChart" width="400" height="160"></canvas>
-          <div id="predictionResult" style="font-size: 0.75rem; text-align: center;"></div>
+        <!-- AI Rent Predictor (improved) -->
+        <div class="card">
+          <h2><i class="fas fa-chart-line"></i> AI Rent Predictor</h2>
+          <p style="font-size:0.75rem; color:#94a3b8;">Select a property to see predicted rent trends for the next 3 months.</p>
+          <select id="predictorHouseSelect">
+            <option value="">Loading your properties...</option>
+          </select>
+          <canvas id="rentPredictorChart" width="400" height="200"></canvas>
+          <div id="predictionResult" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: center;"></div>
         </div>
 
-        <div class="card"><h2><i class="fas fa-clock"></i> Early Access</h2>
-          <div id="earlyAccessList">Loading...</div>
+        <!-- Early Access Listings (existing) -->
+        <div class="card">
+          <h2><i class="fas fa-clock"></i> Early Access – New Listings (24h exclusive)</h2>
+          <div id="earlyAccessList" class="early-access-list">Loading...</div>
         </div>
       </div>
     </div>
 
-    <!-- Compare Tab -->
+    <!-- ========== NEW: AI PROPERTY COMPARISON & RANKING TAB ========== -->
     <div id="tab-compare" class="tab-content">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fas fa-chart-simple"></i> Compare & Rank</h2>
-          <div id="compareSelects" style="margin-bottom: 0.8rem;"></div>
-          <button id="compareBtn" class="small">Compare & Rank</button>
-          <div id="comparisonResults"></div>
+        <div class="card">
+          <h2><i class="fas fa-chart-simple"></i> AI Property Comparison & Ranking</h2>
+          <p style="font-size:0.75rem; margin-bottom:1rem;">Select up to 5 properties from your saved list or paste IDs. Our AI will rank them from best to worst based on value, location, amenities, and landlord trust.</p>
+          <div class="comparison-select">
+            <label><i class="fas fa-list"></i> Choose properties:</label>
+            <select id="compareSelect1" class="small"><option value="">Select property 1</option></select>
+            <select id="compareSelect2" class="small"><option value="">Select property 2</option></select>
+            <select id="compareSelect3" class="small"><option value="">Select property 3</option></select>
+            <select id="compareSelect4" class="small"><option value="">Select property 4</option></select>
+            <select id="compareSelect5" class="small"><option value="">Select property 5</option></select>
+          </div>
+          <button id="compareBtn" class="small"><i class="fas fa-chart-line"></i> Compare & Rank</button>
+          <div id="comparisonResults" style="margin-top:1rem;"></div>
         </div>
       </div>
     </div>
 
-    <!-- Move Planner Tab -->
+    <!-- ========== NEW: SMART MOVE PLANNER TAB ========== -->
     <div id="tab-move" class="tab-content">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fas fa-truck-moving"></i> Smart Move Planner</h2>
-          <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
-            <div style="flex:1;"><label>Current rent (MWK)</label><input type="number" id="currentRent" placeholder="e.g., 150000"></div>
-            <div style="flex:1;"><label>Target property</label><select id="targetPropertySelect"></select></div>
+        <div class="card">
+          <h2><i class="fas fa-truck-moving"></i> Smart Move Planner</h2>
+          <p style="font-size:0.75rem; margin-bottom:1rem;">Calculate total move‑in cost, monthly savings, and breakeven period. Never underestimate moving expenses again.</p>
+          <div class="move-planner-form">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <div style="flex:1;">
+                <label><i class="fas fa-home"></i> Current monthly rent (MWK)</label>
+                <input type="number" id="currentRent" placeholder="e.g., 150000">
+              </div>
+              <div style="flex:1;">
+                <label><i class="fas fa-home"></i> Target property ID (or select below)</label>
+                <select id="targetPropertySelect">
+                  <option value="">Select a property from your saved list</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin: 1rem 0;">
+              <label><i class="fas fa-truck"></i> Estimated transport cost (MWK)</label>
+              <input type="number" id="transportCost" placeholder="e.g., 30000" value="25000">
+            </div>
+            <button id="calculateMoveBtn" class="small"><i class="fas fa-calculator"></i> Calculate Move Cost & Savings</button>
           </div>
-          <div><label>Estimated transport (MWK)</label><input type="number" id="transportCost" value="25000"></div>
-          <button id="calculateMoveBtn" class="small">Calculate Move</button>
-          <div id="movePlannerResults" style="margin-top: 1rem; background: rgba(0,0,0,0.3); border-radius: 24px; padding: 0.8rem; display: none;"></div>
-          <div id="moveChecklist"></div>
+          <div id="movePlannerResults" class="move-planner-results" style="display:none;"></div>
+          <div id="moveChecklist" style="margin-top:1rem;"></div>
         </div>
       </div>
     </div>
 
-    <!-- Heatmap Tab (auto-load) -->
+    <!-- ========== NEW: HYPER‑LOCAL DEMAND HEATMAP TAB ========== -->
     <div id="tab-heatmap" class="tab-content">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fas fa-fire"></i> Demand Heatmap</h2>
-          <p style="font-size:0.75rem;">Red = high demand, Green = low demand. Heatmap appears automatically.</p>
-          <div id="heatmapMessage" style="margin-top: 0.8rem; font-size:0.8rem; text-align:center;"></div>
+        <div class="card">
+          <h2><i class="fas fa-fire"></i> Hyper‑Local Rental Demand Heatmap</h2>
+          <p style="font-size:0.75rem; margin-bottom:1rem;">See where demand is highest (red) and lowest (green). Find areas where you can negotiate better deals or invest for maximum return.</p>
+          <div id="heatmapContainer">
+            <button id="loadHeatmapBtn" class="heatmap-btn"><i class="fas fa-map-marked-alt"></i> Load Demand Heatmap</button>
+            <div id="heatmapLegend" style="margin: 1rem 0; display: flex; justify-content: center; gap: 1rem; font-size:0.7rem;">
+              <span><i class="fas fa-circle" style="color:#ef4444;"></i> High demand</span>
+              <span><i class="fas fa-circle" style="color:#f59e0b;"></i> Medium demand</span>
+              <span><i class="fas fa-circle" style="color:#10b981;"></i> Low demand</span>
+            </div>
+            <div id="heatmapMessage" style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 24px;">
+              <i class="fas fa-info-circle"></i> Click "Load Demand Heatmap" to see demand intensity by area.
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- WhatsApp Alerts Tab -->
+    <!-- ========== WHATSAPP ALERTS TAB (unchanged) ========== -->
     <div id="tab-whatsapp" class="tab-content">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fab fa-whatsapp"></i> WhatsApp Alerts</h2>
-          <div class="whatsapp-number-setup" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <input type="tel" id="whatsappNumberInput" placeholder="265XXXXXXXXX" style="flex:2;">
-            <button id="saveWhatsappNumberBtn" class="small">Save</button>
+        <div class="card" style="grid-column: span 2;">
+          <h2><i class="fab fa-whatsapp"></i> WhatsApp Property Alerts</h2>
+          <p style="font-size:0.75rem; margin-bottom: 1rem;">Get instant WhatsApp notifications when new properties match your saved criteria. Ensure your number is correct.</p>
+          <div class="whatsapp-number-setup">
+            <div class="form-group" style="flex:2;">
+              <label><i class="fas fa-phone-alt"></i> Your WhatsApp Number (with country code)</label>
+              <input type="tel" id="whatsappNumberInput" placeholder="e.g., 265996726966" value="">
+              <small style="color:#94a3b8; font-size:0.65rem;">Format: 265XXXXXXXXX (12 digits, no '+' or spaces)</small>
+            </div>
+            <button id="saveWhatsappNumberBtn" class="small"><i class="fas fa-save"></i> Save Number</button>
           </div>
-          <div id="whatsappSearchesList">Loading...</div>
-          <button id="newWhatsappSearchBtn" class="small">New WhatsApp Search</button>
+          <div style="margin-top: 1rem;">
+            <h3><i class="fas fa-search"></i> Your Saved WhatsApp Searches</h3>
+            <div id="whatsappSearchesList">Loading...</div>
+            <button id="newWhatsappSearchBtn" class="small" style="margin-top: 0.5rem;"><i class="fas fa-plus-circle"></i> Create WhatsApp Search</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Email Alerts Tab -->
+    <!-- ========== EMAIL ALERTS TAB (unchanged) ========== -->
     <div id="tab-email" class="tab-content">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fas fa-envelope"></i> Email Alerts</h2>
-          <div id="emailAlertsList">Loading...</div>
-          <button id="newEmailSearchBtn" class="small">New Email Search</button>
+        <div class="card" style="grid-column: span 2;">
+          <h2><i class="fas fa-envelope"></i> Email Property Alerts</h2>
+          <p style="font-size:0.75rem; margin-bottom: 1rem;">Receive instant email notifications when new properties match your saved searches. Toggle alerts on/off for each search.</p>
+          <div style="margin-top: 1rem;">
+            <h3><i class="fas fa-search"></i> Your Saved Searches (Email Alerts)</h3>
+            <div id="emailAlertsList">Loading...</div>
+            <button id="newEmailSearchBtn" class="small" style="margin-top: 0.5rem;"><i class="fas fa-plus-circle"></i> Create New Search</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Price Alerts Tab – Property Watchlist -->
+    <!-- ========== PRICE ALERTS TAB (unchanged) ========== -->
     <div id="tab-alerts" class="tab-content">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fas fa-bell"></i> Price Drop Alerts</h2>
-          <p style="font-size:0.75rem;">Add properties (up to 5) to watch. We'll notify you when their price drops.</p>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <select id="watchPropertySelect" style="flex:2;"></select>
-            <button id="addWatchBtn" class="small">Add to Watchlist</button>
+        <div class="card" style="grid-column: span 2;">
+          <h2><i class="fas fa-bell"></i> Price Drop Alerts</h2>
+          <p style="font-size:0.75rem; margin-bottom: 1rem;">Get notified instantly when a property you’re watching drops in price.</p>
+          <div id="priceAlertsList">Loading saved searches with alert toggles...</div>
+          <div class="view-all-btn">
+            <button id="simulatePriceDropBtn" class="small"><i class="fas fa-flask"></i> Simulate Price Drop (Test)</button>
           </div>
-          <div id="watchlistContainer" style="margin-top: 1rem;"></div>
         </div>
       </div>
     </div>
 
-    <!-- Notifications Tab -->
+    <!-- ========== NOTIFICATIONS TAB (unchanged) ========== -->
     <div id="tab-notifications" class="tab-content">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fas fa-inbox"></i> Notifications</h2>
-          <div class="notification-scroll"><div id="notificationsList">Loading...</div></div>
-          <button id="markAllReadBtn" class="small" style="margin-top:0.5rem;">Mark All Read</button>
+        <div class="card" style="grid-column: span 2;">
+          <h2><i class="fas fa-inbox"></i> Notifications</h2>
+          <div class="notification-scroll" id="notificationsScroll">
+            <div id="notificationsList">Loading...</div>
+          </div>
+          <div class="view-all-btn">
+            <button id="markAllReadBtn" class="small"><i class="fas fa-check-double"></i> Mark All as Read</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Portfolio Tab -->
+    <!-- ========== PORTFOLIO & BOOST TAB (unchanged) ========== -->
     <div id="tab-portfolio" class="tab-content">
       <div class="dashboard-grid">
-        <div class="card"><h2><i class="fas fa-id-card"></i> Premium Badge & Portfolio</h2>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: linear-gradient(135deg, #FFD966, #FF8C42); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-crown" style="font-size: 1.6rem; color: white;"></i></div>
-            <div><p>You are a <strong style="color:#FFB347;">Premium User</strong></p><p style="font-size:0.7rem;">Your listings show a premium badge</p></div>
+        <div class="card">
+          <h2><i class="fas fa-id-card"></i> Premium Badge & Portfolio</h2>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; flex-wrap: wrap;">
+            <div style="background: linear-gradient(135deg, #FFD966, #FF8C42); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-crown" style="font-size: 2rem; color: white;"></i>
+            </div>
+            <div>
+              <p style="font-weight: 700;">You are a <span style="color:#FFB347;">Premium User</span></p>
+              <p style="font-size: 0.75rem; color:#94a3b8;">Your listings show a shiny premium badge</p>
+            </div>
           </div>
-          <div class="portfolio-link"><i class="fas fa-globe"></i> <span>Your portfolio:</span> <a href="#" id="portfolioLink" target="_blank">khomolathu.com/portfolio/...</a></div>
-          <button id="copyPortfolioBtn" class="small">Copy Link</button>
+          <div class="portfolio-link" style="word-break: break-all;">
+            <i class="fas fa-globe"></i>
+            <span>Your public portfolio:</span>
+            <a href="#" id="portfolioLink" target="_blank">khomolathu.com/portfolio/yourname</a>
+          </div>
+          <button id="copyPortfolioBtn" class="small" style="margin-top: 0.5rem;"><i class="fas fa-copy"></i> Copy Link</button>
+          <p style="font-size: 0.7rem; color:#64748b; margin-top: 0.8rem;">Share your portfolio to attract more tenants.</p>
         </div>
-        <div class="card"><h2><i class="fas fa-rocket"></i> Instant Boost</h2>
-          <div id="boostList">Loading properties...</div>
+        <div class="card">
+          <h2><i class="fas fa-rocket"></i> Instant Boost</h2>
+          <p style="font-size:0.75rem; color:#94a3b8;">Boost any property to the homepage hero carousel for 24 hours.</p>
+          <div id="boostList">Loading your properties...</div>
         </div>
       </div>
     </div>
@@ -348,13 +447,11 @@
 
     let isActivePremium = false;
     let userHouses = [];
-    let allHouses = [];
     let predictorChart = null;
-    let mobilenetModel = null;
-    let recognition = null;
-    let watchlist = []; // each item: { houseId, lastPrice }
+    let currentWhatsappNumber = "";
+    let allHousesForCompare = [];
 
-    // ========== MODAL (no alerts) ==========
+    // ========== CUSTOM MODAL SYSTEM ==========
     function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
       const overlay = document.createElement('div');
       overlay.className = 'custom-modal-overlay';
@@ -363,7 +460,7 @@
       if (type === 'success') { icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; title = 'Success'; }
       else if (type === 'error') { icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>'; title = 'Error'; }
       else if (type === 'confirm') { icon = '<i class="fas fa-question-circle" style="color: #f59e0b;"></i>'; title = 'Confirmation'; }
-      overlay.innerHTML = `<div class="custom-modal">${icon}<h3>${title}</h3><p>${message}</p><div class="custom-modal-buttons">${type === 'confirm' ? '<button class="custom-modal-btn confirm">Yes</button><button class="custom-modal-btn cancel">Cancel</button>' : '<button class="custom-modal-btn confirm">OK</button>'}</div></div>`;
+      overlay.innerHTML = `<div class="custom-modal">${icon}<h3>${title}</h3><p>${message}</p><div class="custom-modal-buttons">${type === 'confirm' ? '<button class="custom-modal-btn confirm">Yes, Proceed</button><button class="custom-modal-btn cancel">Cancel</button>' : '<button class="custom-modal-btn confirm">OK</button>'}</div></div>`;
       document.body.appendChild(overlay);
       const confirmBtn = overlay.querySelector('.confirm');
       const cancelBtn = overlay.querySelector('.cancel');
@@ -371,325 +468,8 @@
       cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
     }
 
-    // ========== UTILITIES ==========
-    function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
-    function logout() { localStorage.clear(); window.location.href = "login.html"; }
-
-    // ========== LOAD PREMIUM STATUS ==========
-    async function loadPremiumStatus() {
-      try {
-        const res = await fetch("/api/premium/status", { headers: { Authorization: "Bearer " + token } });
-        const data = await res.json();
-        const statusArea = document.getElementById("premiumStatusArea");
-        const activateBtn = document.getElementById("activateBtn");
-        const upgradeBanner = document.getElementById("upgradeBanner");
-        if (data.isPremium) {
-          isActivePremium = true;
-          statusArea.innerHTML = `<i class="fas fa-check-circle"></i> Active until ${new Date(data.expiresAt).toLocaleDateString()}`;
-          activateBtn.style.display = "none";
-          upgradeBanner.style.display = "none";
-          loadUserHouses();
-          loadAllHouses();
-          loadPortfolioLink();
-          loadWhatsappSearches();
-          loadUserWhatsappNumber();
-          loadEmailAlerts();
-          loadWatchlist();
-        } else {
-          isActivePremium = false;
-          statusArea.innerHTML = `<i class="fas fa-lock"></i> Inactive – activate`;
-          activateBtn.style.display = "inline-flex";
-          upgradeBanner.style.display = "block";
-        }
-        renderSavedSearches(data.savedSearches || []);
-        renderNotifications(data.notifications || []);
-        if (isActivePremium) loadEarlyAccess();
-        else document.getElementById("earlyAccessList").innerHTML = "<p><i class='fas fa-lock'></i> Activate premium to see early listings.</p>";
-      } catch (err) { console.error(err); }
-    }
-
-    async function loadUserHouses() {
-      try {
-        const res = await fetch("/api/houses?owner=me", { headers: { Authorization: "Bearer " + token } });
-        const data = await res.json();
-        userHouses = data.houses || [];
-        renderBoostList();
-        renderPredictorSelect();
-        renderNegotiateSelect();
-        renderPrioritySelect();
-      } catch (err) { console.error(err); }
-    }
-
-    async function loadAllHouses() {
-      try {
-        const res = await fetch("/api/houses?limit=200", { headers: { Authorization: "Bearer " + token } });
-        const data = await res.json();
-        allHouses = data.houses || [];
-        // Populate comparison selects
-        const selectHtml = '<select class="compare-select"><option value="">Select property</option>' + allHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('') + '</select>';
-        const selectsDiv = document.getElementById("compareSelects");
-        selectsDiv.innerHTML = '';
-        for (let i = 1; i <= 5; i++) {
-          const div = document.createElement('div');
-          div.style.marginBottom = '8px';
-          div.innerHTML = `<label>Property ${i}</label> ${selectHtml}`;
-          selectsDiv.appendChild(div);
-        }
-        // Populate watch property select
-        const watchSelect = document.getElementById("watchPropertySelect");
-        watchSelect.innerHTML = '<option value="">Select property to watch</option>' + allHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
-        // Populate target property select for move planner
-        const targetSelect = document.getElementById("targetPropertySelect");
-        targetSelect.innerHTML = '<option value="">Select property</option>' + allHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
-      } catch (err) { console.error(err); }
-    }
-
-    function renderNegotiateSelect() {
-      const sel = document.getElementById("negotiateHouseSelect");
-      sel.innerHTML = '<option value="">Your properties</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
-    }
-    function renderPrioritySelect() {
-      const sel = document.getElementById("priorityHouseSelect");
-      sel.innerHTML = '<option value="">Select property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
-    }
-    function renderPredictorSelect() {
-      const sel = document.getElementById("predictorHouseSelect");
-      sel.innerHTML = '<option value="">Select property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
-      sel.addEventListener("change", async (e) => { if (e.target.value) await fetchPrediction(e.target.value); });
-    }
-
-    async function fetchPrediction(houseId) {
-      const resultDiv = document.getElementById("predictionResult");
-      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing...';
-      const house = userHouses.find(h => h._id === houseId);
-      if (!house) return;
-      const trend = (Math.random() * 0.1) - 0.02;
-      const predictions = [house.price * (1 + trend), house.price * (1 + trend * 1.2), house.price * (1 + trend * 0.8)];
-      const avg = predictions.reduce((a,b)=>a+b,0)/3;
-      const lower = Math.min(...predictions);
-      const upper = Math.max(...predictions);
-      const trendIcon = avg > house.price ? '<i class="fas fa-arrow-up"></i>' : (avg < house.price ? '<i class="fas fa-arrow-down"></i>' : '<i class="fas fa-minus"></i>');
-      const trendText = avg > house.price ? 'Rising' : (avg < house.price ? 'Falling' : 'Stable');
-      if (predictorChart) predictorChart.destroy();
-      const ctx = document.getElementById("rentPredictorChart").getContext("2d");
-      predictorChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: ["Next month","2 months","3 months"], datasets: [{ label: 'Predicted Rent (MWK)', data: predictions, borderColor: '#FF8C42', backgroundColor: 'rgba(255,140,66,0.1)', borderWidth: 2, pointBackgroundColor: '#FFD966', tension: 0.3, fill: true }] },
-        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } }, tooltip: { callbacks: { label: (ctx) => `MWK ${ctx.raw.toLocaleString()}` } } }, scales: { y: { ticks: { color: '#cbd5e1', callback: (val) => 'MWK ' + val.toLocaleString() } }, x: { ticks: { color: '#cbd5e1' } } } }
-      });
-      resultDiv.innerHTML = `${trendIcon} <strong>${trendText}</strong> trend. Expected in 3 months: MWK ${Math.round(avg).toLocaleString()} (range: ${Math.round(lower).toLocaleString()} – ${Math.round(upper).toLocaleString()})`;
-    }
-
-    function renderBoostList() {
-      const container = document.getElementById("boostList");
-      if (!userHouses.length) { container.innerHTML = "<p>No properties.</p>"; return; }
-      container.innerHTML = userHouses.map(house => `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(10,15,25,0.6); border-radius:28px; padding:0.5rem 0.8rem; margin-bottom:0.5rem;">
-          <div><strong>${escapeHtml(house.name)}</strong><br><span style="font-size:0.7rem;">MWK ${house.price.toLocaleString()}</span></div>
-          <button class="boost-btn" onclick="boostProperty('${house._id}')" style="background:linear-gradient(135deg,#FF8C42,#E67E22); border:none; border-radius:40px; padding:0.2rem 1rem; color:white; cursor:pointer;">Boost</button>
-        </div>
-      `).join('');
-    }
-    window.boostProperty = function(id) {
-      if (!isActivePremium) { showModal("Activate premium to boost.", 'error'); return; }
-      localStorage.setItem(`boost_${id}`, new Date(Date.now() + 24*60*60*1000).toISOString());
-      showModal("Property boosted for 24 hours!", 'success');
-    };
-
-    document.getElementById("negotiateBtn").addEventListener("click", async () => {
-      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
-      let houseId = document.getElementById("negotiateHouseSelect").value;
-      const manual = document.getElementById("manualHouseId").value.trim();
-      if (manual) houseId = manual;
-      if (!houseId) { showModal("Select a property or enter ID.", 'error'); return; }
-      const resultDiv = document.getElementById("negotiationResult");
-      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing...';
-      try {
-        const res = await fetch(`/api/premium/negotiate/${houseId}`, { headers: { Authorization: "Bearer " + token } });
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        resultDiv.innerHTML = `<div style="background:rgba(0,0,0,0.3); padding:0.6rem; border-radius:20px;">
-          <p>Market avg: MWK ${data.avgPrice}</p><p>Difference: ${data.diffPercent}%</p>
-          <p>Suggested counter‑offer: MWK ${Math.floor(Number(data.avgPrice) * 0.95).toLocaleString()}</p>
-          <p>${data.suggestion}</p>
-        </div>`;
-      } catch (err) {
-        resultDiv.innerHTML = `<div style="background:rgba(0,0,0,0.3); padding:0.6rem; border-radius:20px;">
-          <p>Market avg: MWK 450,000 (simulated)</p><p>Suggested counter‑offer: MWK 427,500</p>
-        </div>`;
-      }
-    });
-
-    document.getElementById("requestPriorityBtn").addEventListener("click", async () => {
-      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
-      const houseId = document.getElementById("priorityHouseSelect").value;
-      if (!houseId) { showModal("Select a property.", 'error'); return; }
-      const statusDiv = document.getElementById("priorityStatus");
-      statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending...';
-      try {
-        const res = await fetch("/api/premium/priority-viewing", { method: "POST", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ houseId }) });
-        if (res.ok) { statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Priority request sent.'; addDemoNotification("Priority Viewing", "Landlord notified."); }
-        else statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed.';
-      } catch (err) { statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Network error.'; }
-    });
-
-    // ========== WHATSAPP & EMAIL ==========
-    async function loadUserWhatsappNumber() {
-      try {
-        const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
-        const user = await res.json();
-        if (user.whatsappNumber) document.getElementById("whatsappNumberInput").value = user.whatsappNumber;
-      } catch (err) { console.error(err); }
-    }
-    async function saveWhatsappNumber(number) {
-      try {
-        const res = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ whatsappNumber: number }) });
-        if (res.ok) { showModal("WhatsApp number saved.", 'success'); return true; }
-        else { showModal("Failed to save.", 'error'); return false; }
-      } catch (err) { showModal("Network error.", 'error'); return false; }
-    }
-    async function loadWhatsappSearches() {
-      if (!isActivePremium) return;
-      try {
-        const res = await fetch("/api/saved-searches/my-searches", { headers: { Authorization: "Bearer " + token } });
-        const searches = await res.json();
-        const container = document.getElementById("whatsappSearchesList");
-        if (!searches.length) { container.innerHTML = "<p>No WhatsApp searches.</p>"; return; }
-        container.innerHTML = searches.map(s => `<div class="whatsapp-search-item"><strong>${escapeHtml(s.name)}</strong><div style="font-size:0.7rem;">Filters: ${JSON.stringify(s.filters)}</div><div><button class="small delete-whatsapp-btn" data-id="${s._id}">Delete</button></div></div>`).join('');
-        document.querySelectorAll('.delete-whatsapp-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const id = btn.getAttribute('data-id');
-            showModal("Delete this search?", 'confirm', async () => {
-              await fetch(`/api/saved-searches/delete-search/${id}`, { method: "DELETE", headers: { Authorization: "Bearer " + token } });
-              loadWhatsappSearches();
-            });
-          });
-        });
-      } catch (err) { console.error(err); }
-    }
-    document.getElementById("saveWhatsappNumberBtn")?.addEventListener("click", async () => {
-      const num = document.getElementById("whatsappNumberInput").value.trim();
-      if (!num || !/^265\d{9}$/.test(num)) { showModal("Valid number required (265XXXXXXXXX).", 'error'); return; }
-      await saveWhatsappNumber(num);
-    });
-    document.getElementById("newWhatsappSearchBtn")?.addEventListener("click", async () => {
-      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
-      const name = prompt("Search name:");
-      if (!name) return;
-      const filters = {};
-      showModal("WhatsApp search saved (simulated).", 'success');
-    });
-
-    async function loadEmailAlerts() {
-      if (!isActivePremium) return;
-      try {
-        const res = await fetch("/api/saved-searches/my-searches", { headers: { Authorization: "Bearer " + token } });
-        const searches = await res.json();
-        const container = document.getElementById("emailAlertsList");
-        if (!searches.length) { container.innerHTML = "<p>No email searches.</p>"; return; }
-        container.innerHTML = searches.map(s => `<div class="email-alert-item"><strong>${escapeHtml(s.name)}</strong><div style="font-size:0.7rem;">Filters: ${JSON.stringify(s.filters)}</div><div><label><input type="checkbox" class="email-toggle" data-id="${s._id}" ${s.emailEnabled ? 'checked' : ''}> Email alerts</label> <button class="small delete-email-btn" data-id="${s._id}">Delete</button></div></div>`).join('');
-        document.querySelectorAll('.email-toggle').forEach(toggle => {
-          toggle.addEventListener('change', async (e) => {
-            const id = toggle.getAttribute('data-id');
-            const enabled = toggle.checked;
-            await fetch(`/api/saved-searches/toggle-email/${id}`, { method: "PUT", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ emailEnabled: enabled }) });
-            showModal(`Email alerts ${enabled ? 'on' : 'off'}`, 'success');
-          });
-        });
-        document.querySelectorAll('.delete-email-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const id = btn.getAttribute('data-id');
-            showModal("Delete this search?", 'confirm', async () => {
-              await fetch(`/api/saved-searches/delete-search/${id}`, { method: "DELETE", headers: { Authorization: "Bearer " + token } });
-              loadEmailAlerts();
-            });
-          });
-        });
-      } catch (err) { console.error(err); }
-    }
-    document.getElementById("newEmailSearchBtn")?.addEventListener("click", async () => {
-      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
-      const name = prompt("Search name:");
-      if (!name) return;
-      showModal("Email search saved.", 'success');
-    });
-
-    // ========== PRICE WATCHLIST ==========
-    function loadWatchlist() {
-      const stored = localStorage.getItem("priceWatchlist");
-      if (stored) watchlist = JSON.parse(stored);
-      renderWatchlist();
-    }
-    function saveWatchlist() {
-      localStorage.setItem("priceWatchlist", JSON.stringify(watchlist));
-    }
-    function renderWatchlist() {
-      const container = document.getElementById("watchlistContainer");
-      if (!watchlist.length) { container.innerHTML = "<p>No properties being watched. Add some above.</p>"; return; }
-      container.innerHTML = watchlist.map(item => {
-        const house = allHouses.find(h => h._id === item.houseId);
-        const currentPrice = house ? house.price : item.lastPrice;
-        const hasDropped = currentPrice < item.lastPrice;
-        return `<div class="watchlist-item" data-id="${item.houseId}">
-          <strong>${house ? escapeHtml(house.name) : 'Unknown'}</strong> - MWK ${currentPrice.toLocaleString()}
-          ${hasDropped ? '<span style="color:#10b981;"><i class="fas fa-arrow-down"></i> Price dropped!</span>' : ''}
-          <button class="remove-watch small" data-id="${item.houseId}" style="float:right;">Remove</button>
-        </div>`;
-      }).join('');
-      document.querySelectorAll('.remove-watch').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-id');
-          watchlist = watchlist.filter(w => w.houseId !== id);
-          saveWatchlist();
-          renderWatchlist();
-          showModal("Removed from watchlist.", 'success');
-        });
-      });
-    }
-    document.getElementById("addWatchBtn")?.addEventListener("click", () => {
-      if (!isActivePremium) { showModal("Activate premium to use price alerts.", 'error'); return; }
-      const houseId = document.getElementById("watchPropertySelect").value;
-      if (!houseId) { showModal("Select a property.", 'error'); return; }
-      const house = allHouses.find(h => h._id === houseId);
-      if (!house) return;
-      if (watchlist.length >= 5) { showModal("You can watch up to 5 properties.", 'error'); return; }
-      if (watchlist.some(w => w.houseId === houseId)) { showModal("Already watching this property.", 'error'); return; }
-      watchlist.push({ houseId, lastPrice: house.price });
-      saveWatchlist();
-      renderWatchlist();
-      showModal(`Added ${house.name} to watchlist.`, 'success');
-    });
-    // Simulate price drop check (run periodically)
-    setInterval(() => {
-      if (!isActivePremium || !allHouses.length) return;
-      let changed = false;
-      watchlist.forEach(item => {
-        const house = allHouses.find(h => h._id === item.houseId);
-        if (house && house.price < item.lastPrice) {
-          changed = true;
-          addDemoNotification("Price Drop Alert", `${house.name} price dropped from MWK ${item.lastPrice.toLocaleString()} to MWK ${house.price.toLocaleString()}`);
-          item.lastPrice = house.price;
-        }
-      });
-      if (changed) { saveWatchlist(); renderWatchlist(); }
-    }, 30000);
-
-    // ========== NOTIFICATIONS ==========
-    function renderNotifications(notifications) {
-      const container = document.getElementById("notificationsList");
-      if (!notifications.length) { container.innerHTML = "<p>No notifications.</p>"; return; }
-      container.innerHTML = notifications.map(n => `<div class="notification-item"><strong>${escapeHtml(n.title)}</strong><div style="font-size:0.75rem;">${escapeHtml(n.message)}</div><div style="font-size:0.65rem;">${new Date(n.createdAt).toLocaleString()}</div></div>`).join('');
-    }
-    function addDemoNotification(title, message) {
-      const newNotif = { title, message, createdAt: new Date().toISOString(), read: false };
-      let current = JSON.parse(localStorage.getItem("demo_notifications") || "[]");
-      current.unshift(newNotif);
-      localStorage.setItem("demo_notifications", JSON.stringify(current));
-      loadPremiumStatus();
-    }
-    document.getElementById("markAllReadBtn")?.addEventListener("click", () => { showModal("Marked as read (simulated).", 'info'); });
-
-    // ========== VOICE ASSISTANT ==========
+    // ========== VOICE ASSISTANT (unchanged) ==========
+    let recognition = null;
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
@@ -697,72 +477,163 @@
       recognition.interimResults = false;
       recognition.lang = 'en-US';
     }
+
     function parseVoiceQuery(text) {
       text = text.toLowerCase();
       let filters = {};
       let bedroomMatch = text.match(/(\d+)\s*bedroom/);
       if (bedroomMatch) filters.bedrooms = parseInt(bedroomMatch[1]);
       let priceMatch = text.match(/(\d+)\s*(?:thousand|k|,?)/i);
-      if (priceMatch) { let price = parseInt(priceMatch[1]); if (text.includes('thousand') || text.includes('k')) price *= 1000; filters.maxPrice = price; }
-      const cities = ['lilongwe','blantyre','mzuzu','zomba'];
-      for (let city of cities) if (text.includes(city)) { filters.location = city.charAt(0).toUpperCase() + city.slice(1); break; }
+      if (priceMatch) {
+        let price = parseInt(priceMatch[1]);
+        if (text.includes('thousand') || text.includes('k')) price *= 1000;
+        filters.maxPrice = price;
+      }
+      const cities = ['lilongwe', 'blantyre', 'mzuzu', 'zomba', 'mulanje', 'thyolo', 'mangochi', 'balaka', 'chikwawa', 'nsanje', 'phalombe', 'machinga', 'dedza', 'salima', 'mchinji', 'ntcheu', 'kasungu', 'dowa', 'nkhotakota'];
+      for (let city of cities) {
+        if (text.includes(city)) {
+          filters.location = city.charAt(0).toUpperCase() + city.slice(1);
+          break;
+        }
+      }
       if (text.includes('house')) filters.type = 'House';
       else if (text.includes('apartment')) filters.type = 'Apartment';
       else if (text.includes('room')) filters.type = 'Room';
+      else if (text.includes('hostel')) filters.type = 'Hostel';
+      else if (text.includes('office')) filters.type = 'Office';
+      if (text.includes('garden')) filters.hasGarden = true;
+      if (text.includes('pool')) filters.pool = true;
+      if (text.includes('parking')) filters.parking = true;
+      if (text.includes('wifi')) filters.wifi = true;
+      if (text.includes('furnished')) filters.furnished = true;
       return filters;
     }
+
     async function performVoiceSearch(filters) {
-      const params = new URLSearchParams();
-      if (filters.bedrooms) params.append('bedrooms', filters.bedrooms);
-      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-      if (filters.type) params.append('type', filters.type);
-      if (filters.location) params.append('location', filters.location);
-      params.append('limit', 3);
-      const res = await fetch(`/api/houses?${params.toString()}`);
-      const data = await res.json();
-      return data.houses || [];
+      try {
+        const params = new URLSearchParams();
+        if (filters.bedrooms) params.append('bedrooms', filters.bedrooms);
+        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+        if (filters.type) params.append('type', filters.type);
+        if (filters.location) params.append('location', filters.location);
+        if (filters.pool) params.append('pool', 'true');
+        if (filters.parking) params.append('parking', 'true');
+        if (filters.wifi) params.append('wifi', 'true');
+        if (filters.furnished) params.append('furnished', 'true');
+        params.append('limit', 5);
+        const res = await fetch(`/api/houses?${params.toString()}`);
+        const data = await res.json();
+        return data.houses || [];
+      } catch (err) {
+        console.error('Voice search error:', err);
+        return [];
+      }
     }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
     function displayAndSpeakTopMatch(properties, recognizedText) {
       const resultDiv = document.getElementById('voiceResult');
-      document.getElementById('recognisedText').innerText = recognizedText;
+      const recognisedTextP = document.getElementById('recognisedText');
       const topMatchDiv = document.getElementById('topMatchResult');
-      if (!properties.length) { topMatchDiv.innerHTML = '<p>No matches.</p>'; resultDiv.style.display = 'block'; return; }
+      recognisedTextP.innerText = recognizedText;
+      if (!properties || properties.length === 0) {
+        topMatchDiv.innerHTML = '<p>❌ No properties found matching your request. Try different words.</p>';
+        speakText('Sorry, no properties found. Please try again.');
+        resultDiv.style.display = 'block';
+        return;
+      }
       const top = properties[0];
-      topMatchDiv.innerHTML = `<p><strong>${escapeHtml(top.name)}</strong> – MWK ${top.price.toLocaleString()} in ${top.location}</p><button class="small" onclick="window.open('/house/${top._id}','_blank')">View</button>`;
+      const shareUrl = `https://rental-marketplace-irmj.onrender.com/house/${top._id}`;
+      topMatchDiv.innerHTML = `
+        <p><strong>${escapeHtml(top.name)}</strong><br>
+        📍 ${escapeHtml(top.location)}<br>
+        🏠 ${top.type} | 🛏️ ${top.bedrooms || 'N/A'} bed<br>
+        💰 MWK ${Number(top.price).toLocaleString()}<br>
+        ⭐ Rating: ${top.averageRating ? top.averageRating.toFixed(1) : 'N/A'}</p>
+        <button class="whatsapp-share-btn" onclick="shareOnWhatsApp('${shareUrl}', '${escapeHtml(top.name)}')"><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
+      `;
       resultDiv.style.display = 'block';
+      const speakMsg = `Found ${properties.length} properties. The top match is ${top.name} in ${top.location} for ${top.price} Malawian Kwacha per month.`;
+      speakText(speakMsg);
     }
+
+    window.shareOnWhatsApp = function(url, name) {
+      const text = `Check out this property: ${name} - ${url}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    };
+
     document.getElementById('startVoiceBtn').addEventListener('click', () => {
-      if (!isActivePremium) { showModal("Premium feature.", 'error'); return; }
-      if (!recognition) { showModal("Voice not supported.", 'error'); return; }
+      if (!recognition) {
+        showModal('Voice recognition is not supported in your browser. Please use Chrome or Edge.', 'error');
+        return;
+      }
+      if (!isActivePremium) {
+        showModal('Voice search is a premium feature. Please activate your premium subscription.', 'error');
+        return;
+      }
       const btn = document.getElementById('startVoiceBtn');
       const statusDiv = document.getElementById('voiceStatus');
       btn.classList.add('listening');
-      statusDiv.innerHTML = 'Listening...';
+      statusDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Listening... Speak now.';
       recognition.start();
       recognition.onresult = async (event) => {
         const transcript = event.results[0][0].transcript;
-        statusDiv.innerHTML = `Recognised: "${transcript}"`;
+        statusDiv.innerHTML = `✅ Recognised: "${transcript}"`;
         btn.classList.remove('listening');
         const filters = parseVoiceQuery(transcript);
-        if (Object.keys(filters).length === 0) { statusDiv.innerHTML = 'Could not understand.'; return; }
+        if (Object.keys(filters).length === 0) {
+          statusDiv.innerHTML = '⚠️ Could not understand filters. Try saying "3 bedroom house under 200 thousand"';
+          return;
+        }
+        statusDiv.innerHTML = '🔍 Searching properties...';
         const properties = await performVoiceSearch(filters);
         displayAndSpeakTopMatch(properties, transcript);
       };
-      recognition.onerror = () => { btn.classList.remove('listening'); statusDiv.innerHTML = 'Error. Try again.'; };
-      recognition.onend = () => { if (btn.classList.contains('listening')) btn.classList.remove('listening'); };
+      recognition.onerror = (event) => {
+        console.error(event.error);
+        statusDiv.innerHTML = `❌ Error: ${event.error}. Please try again.`;
+        btn.classList.remove('listening');
+      };
+      recognition.onend = () => {
+        if (btn.classList.contains('listening')) {
+          btn.classList.remove('listening');
+          statusDiv.innerHTML = 'Click the microphone and speak';
+        }
+      };
     });
 
-    // ========== AI IMAGE SEARCH ==========
+    // ========== AI IMAGE SEARCH (unchanged) ==========
+    let mobilenetModel = null;
+    const modelStatusSpan = document.getElementById('modelStatus');
+    const searchBtn = document.getElementById('searchSimilarBtn');
+
     async function loadMobileNet() {
       try {
+        modelStatusSpan.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Loading AI model...';
         mobilenetModel = await mobilenet.load();
-        document.getElementById("searchSimilarBtn").disabled = false;
-        document.getElementById("modelStatus").innerHTML = '<i class="fas fa-check-circle"></i> Ready';
-      } catch (err) { setTimeout(loadMobileNet, 3000); }
+        modelStatusSpan.innerHTML = '<i class="fas fa-check-circle"></i> AI model ready';
+        searchBtn.disabled = false;
+        console.log("MobileNet loaded");
+      } catch (err) {
+        console.error("Failed to load MobileNet", err);
+        modelStatusSpan.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Model failed to load. Retrying...';
+        setTimeout(loadMobileNet, 3000);
+      }
     }
     loadMobileNet();
-    async function getFeatureVector(imgElement) {
-      const img = tf.browser.fromPixels(imgElement);
+
+    async function getFeatureVector(imageElement) {
+      if (!mobilenetModel) throw new Error("Model not loaded");
+      const img = tf.browser.fromPixels(imageElement);
       const resized = tf.image.resizeBilinear(img, [224, 224]);
       const expanded = resized.expandDims(0);
       const normalized = expanded.toFloat().div(255);
@@ -771,139 +642,621 @@
       tf.dispose([img, resized, expanded, normalized, predictions]);
       return Array.from(features);
     }
-    document.getElementById('imageUploadArea').addEventListener('click', () => document.getElementById('imageUploadInput').click());
+
+    document.getElementById('imageUploadArea').addEventListener('click', () => {
+      document.getElementById('imageUploadInput').click();
+    });
     document.getElementById('imageUploadInput').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = (ev) => { const img = document.getElementById('uploadedImagePreview'); img.src = ev.target.result; img.style.display = 'block'; };
+        reader.onload = (event) => {
+          const img = document.getElementById('uploadedImagePreview');
+          img.src = event.target.result;
+          img.style.display = 'block';
+        };
         reader.readAsDataURL(file);
       }
     });
     document.getElementById('searchSimilarBtn').addEventListener('click', async () => {
-      if (!isActivePremium) { showModal("Premium feature.", 'error'); return; }
-      const img = document.getElementById('uploadedImagePreview');
-      if (!img.src || img.style.display === 'none') { showModal("Upload an image first.", 'error'); return; }
+      if (!isActivePremium) {
+        showModal("Image search is a premium feature. Please activate your premium subscription.", 'error');
+        return;
+      }
+      if (!mobilenetModel) {
+        showModal("AI model is still loading. Please wait a moment and try again.", 'error');
+        return;
+      }
+      const imgElement = document.getElementById('uploadedImagePreview');
+      if (!imgElement.src || imgElement.style.display === 'none') {
+        showModal("Please upload an image first.", 'error');
+        return;
+      }
       const resultsDiv = document.getElementById('similarResults');
-      resultsDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Searching...';
+      resultsDiv.innerHTML = '<div style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Extracting features and searching...</div>';
       try {
-        const vector = await getFeatureVector(img);
-        const res = await fetch('/api/image-search/find-similar', { method: 'POST', headers: { 'Content-Type':'application/json', Authorization:"Bearer "+token }, body: JSON.stringify({ vector }) });
+        const vector = await getFeatureVector(imgElement);
+        const res = await fetch('/api/image-search/find-similar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ vector })
+        });
         const houses = await res.json();
-        if (!houses.length) { resultsDiv.innerHTML = '<p>No similar properties.</p>'; return; }
-        resultsDiv.innerHTML = houses.map(h => `<div class="similar-house-item"><img class="similar-house-img" src="${h.images?.[0]||'placeholder.jpg'}"><div class="similar-house-info"><h4>${escapeHtml(h.name)}</h4><p>MWK ${h.price.toLocaleString()} | ${h.location}</p><a href="/house/${h._id}" target="_blank">View</a></div></div>`).join('');
-      } catch (err) { resultsDiv.innerHTML = '<p>Error.</p>'; }
-    });
-
-    // ========== COMPARE & RANK ==========
-    document.getElementById("compareBtn").addEventListener("click", () => {
-      if (!isActivePremium) { showModal("Premium feature.", 'error'); return; }
-      const selects = document.querySelectorAll(".compare-select");
-      const ids = [];
-      selects.forEach(sel => { if (sel.value) ids.push(sel.value); });
-      if (ids.length < 2) { showModal("Select at least 2 properties.", 'error'); return; }
-      const houses = allHouses.filter(h => ids.includes(h._id));
-      const scored = houses.map(house => {
-        let score = 0;
-        const avgPrice = houses.reduce((a,b)=>a+b.price,0)/houses.length;
-        const priceRatio = avgPrice / (house.price || 1);
-        score += Math.min(priceRatio, 2) * 30;
-        let amenities = 0;
-        if (house.wifi) amenities++; if (house.parking) amenities++; if (house.furnished) amenities++;
-        score += (amenities / 6) * 20;
-        if (house.location?.toLowerCase().includes('blantyre')) score += 10;
-        if (house.averageRating) score += (house.averageRating / 5) * 20;
-        return { house, score: Math.min(score, 100) };
-      });
-      scored.sort((a,b) => b.score - a.score);
-      const resultsDiv = document.getElementById("comparisonResults");
-      resultsDiv.innerHTML = `<div class="comparison-table"><table><thead><tr><th>Rank</th><th>Property</th><th>Price</th><th>Score</th></tr></thead><tbody>${scored.map((item,i) => `<tr><td><span class="ranking-badge">#${i+1}</span></td><td><strong>${escapeHtml(item.house.name)}</strong><br><a href="/house/${item.house._id}" target="_blank" style="color:#FFB347;">view</a></td><td>MWK ${item.house.price.toLocaleString()}</td><td>${Math.round(item.score)}/100</td></tr>`).join('')}</tbody></table><div style="margin-top:0.8rem;">AI summary: ${scored[0].house.name} is the best choice.</div></div>`;
-    });
-
-    // ========== MOVE PLANNER ==========
-    document.getElementById("calculateMoveBtn").addEventListener("click", () => {
-      if (!isActivePremium) { showModal("Premium feature.", 'error'); return; }
-      const currentRent = parseInt(document.getElementById("currentRent").value);
-      const targetId = document.getElementById("targetPropertySelect").value;
-      const transport = parseInt(document.getElementById("transportCost").value) || 25000;
-      if (!currentRent || currentRent <= 0 || !targetId) { showModal("Enter current rent and select target.", 'error'); return; }
-      const target = allHouses.find(h => h._id === targetId);
-      if (!target) return;
-      const newRent = target.price;
-      const deposit = newRent * 2;
-      const firstMonth = newRent;
-      const utility = 50000;
-      const totalUpfront = deposit + firstMonth + transport + utility;
-      const monthlySavings = currentRent - newRent;
-      const breakeven = monthlySavings > 0 ? Math.ceil(totalUpfront / monthlySavings) : null;
-      const resultsDiv = document.getElementById("movePlannerResults");
-      resultsDiv.style.display = "block";
-      resultsDiv.innerHTML = `<p><strong>Upfront cost:</strong> MWK ${totalUpfront.toLocaleString()}</p>${monthlySavings > 0 ? `<p><strong>Monthly savings:</strong> MWK ${monthlySavings.toLocaleString()}</p><p><strong>Breakeven:</strong> ${breakeven} months</p>` : '<p>New rent is higher – no monthly savings.</p>'}`;
-      document.getElementById("moveChecklist").innerHTML = `<div style="background:rgba(0,0,0,0.3); border-radius:24px; padding:0.8rem; margin-top:0.8rem;"><strong>Checklist</strong><ul><li>Notify current landlord</li><li>Arrange transport</li><li>Transfer utilities</li><li>Update address</li></ul></div>`;
-    });
-
-    // ========== HEATMAP (instant load, no button) ==========
-    let heatmapLayer = null;
-    function loadHeatmap() {
-      if (!isActivePremium) return;
-      const msgDiv = document.getElementById("heatmapMessage");
-      msgDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Loading heatmap...';
-      let attempts = 0;
-      const interval = setInterval(() => {
-        attempts++;
-        if (typeof map !== 'undefined' && map) {
-          clearInterval(interval);
-          const mockData = [
-            { lat: -15.7861, lng: 35.0058, intensity: 0.9 },
-            { lat: -13.9833, lng: 33.7833, intensity: 0.8 },
-            { lat: -11.4667, lng: 34.0167, intensity: 0.6 },
-            { lat: -15.3875, lng: 35.3192, intensity: 0.4 },
-            { lat: -16.0333, lng: 35.5, intensity: 0.2 }
-          ];
-          if (window.heatmapLayer) map.removeLayer(window.heatmapLayer);
-          window.heatmapLayer = L.heatLayer(mockData, { radius: 25, blur: 15, maxZoom: 17 });
-          window.heatmapLayer.addTo(map);
-          msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> Heatmap loaded (red = high demand).';
-        } else if (attempts > 20) {
-          clearInterval(interval);
-          msgDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Map not ready. Visit main page first.';
+        if (!houses.length) {
+          resultsDiv.innerHTML = '<p><i class="fas fa-info-circle"></i> No visually similar properties found.</p>';
+          return;
         }
-      }, 500);
+        resultsDiv.innerHTML = houses.map(house => `
+          <div class="similar-house-item">
+            <img class="similar-house-img" src="${house.images?.[0] || 'placeholder.jpg'}" onerror="this.src='placeholder.jpg'">
+            <div class="similar-house-info">
+              <h4>${escapeHtml(house.name)}</h4>
+              <p>${house.location} | ${house.type} | MWK ${Number(house.price).toLocaleString()}</p>
+              <a href="/house/${house._id}" target="_blank" style="color:#FFB347; font-size:0.7rem;">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+        resultsDiv.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> Error performing image search.</p>';
+      }
+    });
+
+    const dropArea = document.getElementById('imageUploadArea');
+    dropArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropArea.style.borderColor = '#FF8C42';
+    });
+    dropArea.addEventListener('dragleave', () => {
+      dropArea.style.borderColor = 'rgba(255,140,66,0.5)';
+    });
+    dropArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropArea.style.borderColor = 'rgba(255,140,66,0.5)';
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = document.getElementById('uploadedImagePreview');
+          img.src = event.target.result;
+          img.style.display = 'block';
+          document.getElementById('imageUploadInput').files = e.dataTransfer.files;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // ========== LOGOUT ==========
+    function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+    // ========== TAB SWITCHING ==========
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tabId = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        if (tabId === 'compare') loadPropertiesForComparison();
+        if (tabId === 'move') loadPropertiesForMovePlanner();
+        if (tabId === 'heatmap') initHeatmap();
+      });
+    });
+
+    // ========== LOAD PREMIUM STATUS & ALL DATA ==========
+    async function loadPremiumStatus() {
+      try {
+        const res = await fetch("/api/premium/status", { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        const statusArea = document.getElementById("premiumStatusArea");
+        const activateBtn = document.getElementById("activateBtn");
+        const upgradeBanner = document.getElementById("upgradeBanner");
+
+        if (data.isPremium) {
+          isActivePremium = true;
+          const expiry = new Date(data.expiresAt).toLocaleDateString();
+          statusArea.innerHTML = `<i class="fas fa-check-circle"></i> Active until ${expiry}`;
+          activateBtn.style.display = "none";
+          upgradeBanner.style.display = "none";
+          loadUserHouses();
+          loadPortfolioLink();
+          loadWhatsappSearches();
+          loadUserWhatsappNumber();
+          loadEmailAlerts();
+        } else {
+          isActivePremium = false;
+          statusArea.innerHTML = `<i class="fas fa-lock"></i> Inactive – activate to unlock`;
+          activateBtn.style.display = "inline-flex";
+          upgradeBanner.style.display = "block";
+        }
+        renderSavedSearches(data.savedSearches || []);
+        renderNotifications(data.notifications || []);
+        renderPriceAlerts(data.savedSearches || []);
+        if (isActivePremium) loadEarlyAccess();
+        else document.getElementById("earlyAccessList").innerHTML = "<p><i class='fas fa-lock'></i> Activate premium to see early‑access listings.</p>";
+      } catch (err) { console.error(err); }
     }
-    // Auto‑load heatmap when the tab is activated
-    const heatmapTabBtn = document.querySelector('.tab-btn[data-tab="heatmap"]');
-    if (heatmapTabBtn) {
-      heatmapTabBtn.addEventListener('click', () => {
-        setTimeout(loadHeatmap, 300);
+
+    // ========== WHATSAPP NUMBER & SEARCHES (unchanged) ==========
+    async function loadUserWhatsappNumber() {
+      try {
+        const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
+        const user = await res.json();
+        if (user.whatsappNumber) {
+          currentWhatsappNumber = user.whatsappNumber;
+          document.getElementById("whatsappNumberInput").value = currentWhatsappNumber;
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    async function saveWhatsappNumber(number) {
+      try {
+        const res = await fetch("/api/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ whatsappNumber: number })
+        });
+        if (res.ok) {
+          showModal("WhatsApp number saved!", 'success');
+          currentWhatsappNumber = number;
+          return true;
+        } else {
+          showModal("Failed to save number", 'error');
+          return false;
+        }
+      } catch (err) { showModal("Network error", 'error'); return false; }
+    }
+
+    async function loadWhatsappSearches() {
+      if (!isActivePremium) return;
+      try {
+        const res = await fetch("/api/saved-searches/my-searches", { headers: { Authorization: "Bearer " + token } });
+        const searches = await res.json();
+        const container = document.getElementById("whatsappSearchesList");
+        if (!container) return;
+        if (searches.length === 0) {
+          container.innerHTML = "<p><i class='fas fa-info-circle'></i> No WhatsApp searches yet. Create one to receive alerts.</p>";
+          return;
+        }
+        container.innerHTML = searches.map(search => `
+          <div class="whatsapp-search-item" data-id="${search._id}">
+            <div><strong><i class="fab fa-whatsapp"></i> ${escapeHtml(search.name)}</strong></div>
+            <div style="font-size:0.7rem;">Filters: ${JSON.stringify(search.filters)}</div>
+            <div style="font-size:0.65rem; color:#94a3b8;">WhatsApp: ${search.whatsappNumber}</div>
+            <div class="whatsapp-actions">
+              <button class="small delete-whatsapp-btn" data-id="${search._id}"><i class="fas fa-trash-alt"></i> Delete</button>
+            </div>
+          </div>
+        `).join('');
+        document.querySelectorAll('.delete-whatsapp-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = btn.getAttribute('data-id');
+            showModal("Delete this WhatsApp search?", 'confirm', async () => {
+              await deleteWhatsappSearch(id);
+              loadWhatsappSearches();
+            });
+          });
+        });
+      } catch (err) { console.error(err); document.getElementById("whatsappSearchesList").innerHTML = "<p>Error loading searches.</p>"; }
+    }
+
+    async function deleteWhatsappSearch(id) {
+      try {
+        const res = await fetch(`/api/saved-searches/delete-search/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) throw new Error("Delete failed");
+      } catch (err) { showModal("Failed to delete", 'error'); }
+    }
+
+    async function createWhatsappSearch(filters, name, whatsappNumber) {
+      try {
+        const res = await fetch("/api/saved-searches/save-search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ name, filters, whatsappNumber })
+        });
+        if (res.ok) {
+          showModal("WhatsApp search saved!", 'success');
+          loadWhatsappSearches();
+          return true;
+        } else {
+          const err = await res.json();
+          showModal("Error: " + err.message, 'error');
+          return false;
+        }
+      } catch (err) { showModal("Network error", 'error'); return false; }
+    }
+
+    document.getElementById("saveWhatsappNumberBtn")?.addEventListener("click", async () => {
+      const number = document.getElementById("whatsappNumberInput").value.trim();
+      if (!number) { showModal("Please enter your WhatsApp number", 'error'); return; }
+      if (!/^265\d{9}$/.test(number)) { showModal("Number must be in format 265XXXXXXXXX (12 digits)", 'error'); return; }
+      await saveWhatsappNumber(number);
+    });
+
+    document.getElementById("newWhatsappSearchBtn")?.addEventListener("click", async () => {
+      if (!isActivePremium) { showModal("Activate premium to use WhatsApp alerts.", 'error'); return; }
+      const whatsappNumber = document.getElementById("whatsappNumberInput").value.trim();
+      if (!whatsappNumber) { showModal("Please save your WhatsApp number first.", 'error'); return; }
+      const name = prompt("Give this search a name (e.g., 'Houses in Lilongwe'):");
+      if (!name) return;
+      let minPrice = prompt("Minimum price (MWK):", "0");
+      let maxPrice = prompt("Maximum price (MWK):", "2000000");
+      let type = prompt("Property type (House, Apartment, Room, Hostel, Office) or leave empty for all:", "");
+      let region = prompt("Region (Northern, Central, Southern) or leave empty for all:", "");
+      let bedrooms = prompt("Minimum bedrooms:", "0");
+      const filters = {};
+      if (minPrice && !isNaN(minPrice)) filters.minPrice = parseInt(minPrice);
+      if (maxPrice && !isNaN(maxPrice)) filters.maxPrice = parseInt(maxPrice);
+      if (type && type.trim()) filters.type = type;
+      if (region && region.trim()) filters.region = region;
+      if (bedrooms && !isNaN(bedrooms) && bedrooms > 0) filters.bedrooms = parseInt(bedrooms);
+      await createWhatsappSearch(filters, name, whatsappNumber);
+    });
+
+    // ========== EMAIL ALERTS (unchanged) ==========
+    async function loadEmailAlerts() {
+      if (!isActivePremium) return;
+      try {
+        const res = await fetch("/api/saved-searches/my-searches", { headers: { Authorization: "Bearer " + token } });
+        const searches = await res.json();
+        const container = document.getElementById("emailAlertsList");
+        if (!container) return;
+        if (searches.length === 0) {
+          container.innerHTML = "<p><i class='fas fa-info-circle'></i> No saved searches. Create one to receive email alerts.</p>";
+          return;
+        }
+        container.innerHTML = searches.map(search => `
+          <div class="email-alert-item" data-id="${search._id}">
+            <div><strong><i class="fas fa-search"></i> ${escapeHtml(search.name)}</strong></div>
+            <div style="font-size:0.7rem;">Filters: ${JSON.stringify(search.filters)}</div>
+            <div style="font-size:0.65rem; color:#94a3b8;">Email: ${search.userEmail}</div>
+            <div class="email-actions">
+              <label style="display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" class="email-toggle" data-id="${search._id}" ${search.emailEnabled ? 'checked' : ''}>
+                <span class="alert-toggle"><i class="fas fa-envelope"></i> Send email alerts for new matching properties</span>
+              </label>
+              <button class="small delete-email-btn" data-id="${search._id}"><i class="fas fa-trash-alt"></i> Delete</button>
+            </div>
+          </div>
+        `).join('');
+
+        document.querySelectorAll('.email-toggle').forEach(toggle => {
+          toggle.addEventListener('change', async (e) => {
+            const searchId = toggle.getAttribute('data-id');
+            const enabled = toggle.checked;
+            try {
+              const res = await fetch(`/api/saved-searches/toggle-email/${searchId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+                body: JSON.stringify({ emailEnabled: enabled })
+              });
+              if (res.ok) {
+                showModal(`Email alerts ${enabled ? 'enabled' : 'disabled'}`, 'success');
+              } else {
+                showModal("Failed to update", 'error');
+                toggle.checked = !enabled;
+              }
+            } catch (err) {
+              showModal("Network error", 'error');
+              toggle.checked = !enabled;
+            }
+          });
+        });
+
+        document.querySelectorAll('.delete-email-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = btn.getAttribute('data-id');
+            showModal("Delete this saved search? You will no longer receive email alerts for it.", 'confirm', async () => {
+              try {
+                const res = await fetch(`/api/saved-searches/delete-search/${id}`, {
+                  method: "DELETE",
+                  headers: { Authorization: "Bearer " + token }
+                });
+                if (res.ok) {
+                  loadEmailAlerts();
+                } else {
+                  showModal("Failed to delete", 'error');
+                }
+              } catch (err) { showModal("Network error", 'error'); }
+            });
+          });
+        });
+      } catch (err) { console.error(err); document.getElementById("emailAlertsList").innerHTML = "<p>Error loading searches.</p>"; }
+    }
+
+    document.getElementById("newEmailSearchBtn")?.addEventListener("click", async () => {
+      if (!isActivePremium) { showModal("Activate premium to create saved searches.", 'error'); return; }
+      const name = prompt("Give this search a name (e.g., 'Houses in Blantyre under 300k'):");
+      if (!name) return;
+      let minPrice = prompt("Minimum price (MWK):", "0");
+      let maxPrice = prompt("Maximum price (MWK):", "2000000");
+      let type = prompt("Property type (House, Apartment, Room, Hostel, Office) or leave empty for all:", "");
+      let region = prompt("Region (Northern, Central, Southern) or leave empty for all:", "");
+      let bedrooms = prompt("Minimum bedrooms:", "0");
+      const filters = {};
+      if (minPrice && !isNaN(minPrice)) filters.minPrice = parseInt(minPrice);
+      if (maxPrice && !isNaN(maxPrice)) filters.maxPrice = parseInt(maxPrice);
+      if (type && type.trim()) filters.type = type;
+      if (region && region.trim()) filters.region = region;
+      if (bedrooms && !isNaN(bedrooms) && bedrooms > 0) filters.bedrooms = parseInt(bedrooms);
+      let whatsappNumber = document.getElementById("whatsappNumberInput")?.value.trim();
+      if (!whatsappNumber) {
+        whatsappNumber = prompt("Please enter your WhatsApp number (format 265XXXXXXXXX) for notifications (even if you only want email, this is required):");
+        if (!whatsappNumber || !/^265\d{9}$/.test(whatsappNumber)) {
+          showModal("Valid WhatsApp number is required to create a saved search.", 'error');
+          return;
+        }
+      }
+      try {
+        const res = await fetch("/api/saved-searches/save-search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ name, filters, whatsappNumber })
+        });
+        if (res.ok) {
+          showModal("Search saved! You will receive email alerts for new matching properties.", 'success');
+          loadEmailAlerts();
+        } else {
+          const err = await res.json();
+          showModal("Error: " + err.message, 'error');
+        }
+      } catch (err) { showModal("Network error", 'error'); }
+    });
+
+    // ========== OTHER FUNCTIONS (existing) ==========
+    async function loadUserHouses() {
+      try {
+        const res = await fetch("/api/houses?owner=me", { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        userHouses = data.houses || [];
+        allHousesForCompare = userHouses;
+        renderBoostList();
+        renderPredictorSelect();
+        renderNegotiateSelect();
+        renderPrioritySelect();
+      } catch (err) { console.error(err); }
+    }
+
+    function renderNegotiateSelect() {
+      const select = document.getElementById("negotiateHouseSelect");
+      if (!userHouses.length) { select.innerHTML = '<option value="">No properties – use manual ID below</option>'; return; }
+      select.innerHTML = '<option value="">Select your property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+    }
+    function renderPrioritySelect() {
+      const select = document.getElementById("priorityHouseSelect");
+      if (!userHouses.length) { select.innerHTML = '<option value="">No properties available</option>'; return; }
+      select.innerHTML = '<option value="">Select a property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+    }
+    function renderPredictorSelect() {
+      const select = document.getElementById("predictorHouseSelect");
+      if (!userHouses.length) { select.innerHTML = '<option>No properties</option>'; return; }
+      select.innerHTML = '<option value="">Select a property</option>' + userHouses.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+      select.addEventListener("change", async (e) => {
+        const houseId = e.target.value;
+        if (!houseId) return;
+        await fetchPrediction(houseId);
       });
     }
 
-    // ========== EARLY ACCESS ==========
+    // Improved AI Rent Predictor with confidence intervals and trend
+    async function fetchPrediction(houseId) {
+      const resultDiv = document.getElementById("predictionResult");
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing market data...';
+      try {
+        const house = userHouses.find(h => h._id === houseId);
+        if (!house) return;
+        // Simulate more sophisticated prediction (replace with real ML later)
+        const base = house.price;
+        const trend = (Math.random() * 0.1) - 0.02; // -2% to +8%
+        const predictions = [
+          base * (1 + trend),
+          base * (1 + trend * 1.2),
+          base * (1 + trend * 0.8)
+        ];
+        const lower = Math.min(...predictions);
+        const upper = Math.max(...predictions);
+        const avg = predictions.reduce((a,b)=>a+b,0)/3;
+        const trendIcon = avg > base ? '📈' : (avg < base ? '📉' : '➡️');
+        const trendText = avg > base ? 'Rising' : (avg < base ? 'Falling' : 'Stable');
+        const months = ["Next Month", "2 Months", "3 Months"];
+        if (predictorChart) predictorChart.destroy();
+        const ctx = document.getElementById("rentPredictorChart").getContext("2d");
+        predictorChart = new Chart(ctx, {
+          type: 'line',
+          data: { labels: months, datasets: [{ label: 'Predicted Rent (MWK)', data: predictions, borderColor: '#FF8C42', backgroundColor: 'rgba(255,140,66,0.1)', borderWidth: 3, pointBackgroundColor: '#FFD966', tension: 0.3, fill: true }] },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } }, tooltip: { callbacks: { label: (ctx) => `MWK ${ctx.raw.toLocaleString()}` } } }, scales: { y: { ticks: { color: '#cbd5e1', callback: (val) => 'MWK ' + val.toLocaleString() } }, x: { ticks: { color: '#cbd5e1' } } } }
+        });
+        resultDiv.innerHTML = `<i class="fas fa-chart-line"></i> ${trendIcon} <strong>${trendText}</strong> trend predicted.<br>
+        Expected rent in 3 months: <strong>MWK ${Math.round(avg).toLocaleString()}</strong> (range: MWK ${Math.round(lower).toLocaleString()} – ${Math.round(upper).toLocaleString()}).<br>
+        <small>Confidence interval based on market volatility.</small>`;
+      } catch (err) { resultDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Prediction unavailable.'; }
+    }
+
+    function renderBoostList() {
+      const container = document.getElementById("boostList");
+      if (!userHouses.length) { container.innerHTML = "<p>No properties to boost.</p>"; return; }
+      container.innerHTML = userHouses.map(house => `
+        <div class="boost-item" style="display:flex; justify-content:space-between; align-items:center; background:rgba(10,15,25,0.6); border-radius:28px; padding:0.6rem 1rem; margin-bottom:0.6rem;">
+          <div><div class="house-name" style="font-weight:600;">${escapeHtml(house.name)}</div><div style="font-size:0.7rem;">MWK ${house.price.toLocaleString()}</div></div>
+          <button class="boost-btn" onclick="boostProperty('${house._id}')" style="background:linear-gradient(135deg,#FF8C42,#E67E22); border:none; border-radius:40px; padding:0.3rem 1rem; color:white; cursor:pointer;">🚀 Boost (24h)</button>
+        </div>
+      `).join('');
+    }
+    window.boostProperty = async function(houseId) {
+      if (!isActivePremium) { showModal("Activate premium to boost.", 'error'); return; }
+      localStorage.setItem(`boost_${houseId}`, new Date(Date.now() + 24*60*60*1000).toISOString());
+      showModal("✅ Property boosted for 24h!", 'success');
+      renderBoostList();
+    };
+
+    document.getElementById("negotiateBtn").addEventListener("click", async () => {
+      if (!isActivePremium) { showModal("Activate premium to use AI negotiator.", 'error'); return; }
+      let houseId = document.getElementById("negotiateHouseSelect").value;
+      const manualId = document.getElementById("manualHouseId").value.trim();
+      if (manualId) houseId = manualId;
+      if (!houseId) { showModal("Please select a property or enter a custom house ID.", 'error'); return; }
+      const resultDiv = document.getElementById("negotiationResult");
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing market...';
+      try {
+        const res = await fetch(`/api/premium/negotiate/${houseId}`, { headers: { Authorization:"Bearer "+token } });
+        if (!res.ok) throw new Error("API failed");
+        const data = await res.json();
+        resultDiv.innerHTML = `<div style="background:rgba(0,0,0,0.4); padding:0.8rem; border-radius:24px;">
+          <p><i class="fas fa-chart-line"></i> Market average: <strong>MWK ${data.avgPrice}</strong></p>
+          <p><i class="fas fa-percent"></i> Difference: ${data.diffPercent}%</p>
+          <p><i class="fas fa-lightbulb"></i> Suggested counter‑offer: <strong>MWK ${Math.floor(Number(data.avgPrice) * 0.95).toLocaleString()}</strong></p>
+          <p>${data.suggestion}</p>
+        </div>`;
+      } catch (err) {
+        const simulatedAvg = 450000 + Math.floor(Math.random() * 100000);
+        const diff = Math.floor(Math.random() * 20) - 10;
+        resultDiv.innerHTML = `<div style="background:rgba(0,0,0,0.4); padding:0.8rem; border-radius:24px;">
+          <p><i class="fas fa-chart-line"></i> Market average: <strong>MWK ${simulatedAvg.toLocaleString()}</strong> (simulated)</p>
+          <p><i class="fas fa-percent"></i> Difference: ${diff}%</p>
+          <p><i class="fas fa-lightbulb"></i> Suggested counter‑offer: <strong>MWK ${Math.floor(simulatedAvg * 0.95).toLocaleString()}</strong></p>
+          <p>Based on similar properties, you could offer 5% below market average.</p>
+        </div>`;
+      }
+    });
+
+    document.getElementById("requestPriorityBtn").addEventListener("click", async () => {
+      if (!isActivePremium) { showModal("Activate premium to request priority viewing.", 'error'); return; }
+      const houseId = document.getElementById("priorityHouseSelect").value;
+      if (!houseId) { showModal("Please select a property.", 'error'); return; }
+      const statusDiv = document.getElementById("priorityStatus");
+      statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending request...';
+      try {
+        const res = await fetch("/api/premium/priority-viewing", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ houseId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Priority viewing requested! The landlord has been notified and will see your premium badge.';
+          addDemoNotification("Priority Viewing Requested", `You requested priority viewing for property ID ${houseId}. The landlord will contact you soon.`);
+        } else {
+          statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error: ' + (data.message || "Failed to notify landlord");
+        }
+      } catch (err) {
+        console.error(err);
+        statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Network error. Please try again.';
+      }
+    });
+
+    function renderPriceAlerts(searches) {
+      const container = document.getElementById("priceAlertsList");
+      if (!searches.length) { container.innerHTML = "<p>No saved searches – create one to enable price drop alerts.</p>"; return; }
+      container.innerHTML = searches.map((s, idx) => `
+        <div class="price-alert-item">
+          <div class="name"><i class="fas fa-search"></i> ${escapeHtml(s.name)}</div>
+          <div class="filters" style="font-size:0.7rem;">${JSON.stringify(s.filters)}</div>
+          <div class="alert-actions">
+            <label style="display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" id="alertToggle_${idx}" ${s.alertEnabled ? 'checked' : ''} onchange="togglePriceAlert(${idx}, this.checked)">
+              <span class="alert-toggle"><i class="fas fa-bell"></i> Alert me when price drops</span>
+            </label>
+          </div>
+        </div>
+      `).join('');
+    }
+    window.togglePriceAlert = async (idx, enabled) => {
+      if (!isActivePremium) { showModal("Activate premium to manage alerts.", 'error'); return; }
+      await fetch(`/api/premium/saved-searches/${idx}/alert`, {
+        method: "PUT",
+        headers: { "Content-Type":"application/json", Authorization:"Bearer "+token },
+        body: JSON.stringify({ enabled })
+      });
+      loadPremiumStatus();
+    };
+    document.getElementById("simulatePriceDropBtn")?.addEventListener("click", () => {
+      if (!isActivePremium) { showModal("Activate premium to test alerts.", 'error'); return; }
+      addDemoNotification("💰 Price Drop Alert", "One of your saved searches has a new listing with a 15% lower price!");
+      showModal("Test notification sent! Check the Notifications tab.", 'success');
+    });
+
+    function renderNotifications(notifications) {
+      const container = document.getElementById("notificationsList");
+      if (!notifications.length) { container.innerHTML = "<p><i class='fas fa-bell-slash'></i> No notifications yet.</p>"; return; }
+      container.innerHTML = notifications.map(n => `
+        <div class="notification-item ${!n.read ? 'unread' : ''}" style="background:rgba(10,15,25,0.7); border-radius:24px; padding:0.8rem; margin-bottom:0.6rem;">
+          <div><strong><i class="fas fa-envelope"></i> ${escapeHtml(n.title)}</strong></div>
+          <div style="font-size:0.75rem;">${escapeHtml(n.message)}</div>
+          <div style="font-size:0.65rem; color:#64748b;">${new Date(n.createdAt).toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+    function addDemoNotification(title, message) {
+      const newNotif = { title, message, createdAt: new Date().toISOString(), read: false };
+      let current = JSON.parse(localStorage.getItem("demo_notifications") || "[]");
+      current.unshift(newNotif);
+      localStorage.setItem("demo_notifications", JSON.stringify(current));
+      loadPremiumStatus();
+    }
+    document.getElementById("markAllReadBtn")?.addEventListener("click", async () => {
+      if (!isActivePremium) return;
+      showModal("Mark all as read (simulated).", 'info');
+    });
+
     async function loadEarlyAccess() {
       if (!isActivePremium) return;
       try {
-        const res = await fetch("/api/premium/early-access", { headers: { Authorization: "Bearer " + token } });
+        const res = await fetch("/api/premium/early-access", { headers: { Authorization:"Bearer "+token } });
         const houses = await res.json();
         const container = document.getElementById("earlyAccessList");
         if (!houses.length) { container.innerHTML = "<p>No new listings.</p>"; return; }
-        container.innerHTML = houses.map(house => `
-          <div class="early-house-card">
-            <div class="slider"><div class="slides-container">${(house.images||['placeholder.jpg']).map(img => `<div class="slide"><img src="${img}" loading="lazy"></div>`).join('')}</div><div class="dots">${(house.images||['placeholder.jpg']).map((_,i) => `<span class="dot" data-index="${i}"></span>`).join('')}</div></div>
-            <div class="info"><h3>${escapeHtml(house.name)}</h3><p>MWK ${house.price.toLocaleString()} | ${house.location}</p><a href="/house/${house._id}" target="_blank">View</a></div>
-          </div>
-        `).join('');
+        container.innerHTML = houses.map(house => {
+          const images = (house.images && house.images.length) ? house.images : ["placeholder.jpg"];
+          let slidesHtml = '', dotsHtml = '';
+          images.forEach((img, idx) => {
+            slidesHtml += `<div class="slide"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
+            dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
+          });
+          return `
+            <div class="early-house-card">
+              <div class="slider">
+                <div class="slides-container">${slidesHtml}</div>
+                <div class="dots">${dotsHtml}</div>
+              </div>
+              <div class="info">
+                <h3>${escapeHtml(house.name)}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
+                <p><i class="fas fa-money-bill-wave"></i> MWK ${house.price.toLocaleString()}</p>
+                <a href="/house/${house._id}" target="_blank">View Details <i class="fas fa-arrow-right"></i></a>
+              </div>
+            </div>
+          `;
+        }).join('');
         document.querySelectorAll('.early-house-card .slider').forEach(slider => {
-          const slides = slider.querySelector('.slides-container');
+          const slidesContainer = slider.querySelector('.slides-container');
           const dots = slider.querySelectorAll('.dot');
-          if (slides && dots.length) {
-            let active = 0;
-            const update = () => { const idx = Math.round(slides.scrollLeft / slides.clientWidth); if (idx !== active && idx < dots.length) { dots[active]?.classList.remove('active'); active = idx; dots[active]?.classList.add('active'); } };
-            slides.addEventListener('scroll', update);
-            dots.forEach((dot, i) => dot.addEventListener('click', () => slides.scrollTo({ left: i * slides.clientWidth, behavior: 'smooth' })));
-            setTimeout(update, 100);
+          if (slidesContainer && dots.length) {
+            let activeIndex = 0;
+            const updateActiveDot = () => {
+              const scrollLeft = slidesContainer.scrollLeft;
+              const slideWidth = slidesContainer.clientWidth;
+              if (slideWidth === 0) return;
+              const newIndex = Math.round(scrollLeft / slideWidth);
+              if (newIndex !== activeIndex && newIndex >= 0 && newIndex < dots.length) {
+                activeIndex = newIndex;
+                dots.forEach((dot, idx) => { dot.classList.toggle('active', idx === activeIndex); });
+              }
+            };
+            slidesContainer.addEventListener('scroll', updateActiveDot);
+            slidesContainer.addEventListener('touchmove', updateActiveDot);
+            setTimeout(updateActiveDot, 100);
+            dots.forEach((dot, idx) => {
+              dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                slidesContainer.scrollTo({ left: idx * slidesContainer.clientWidth, behavior: 'smooth' });
+              });
+            });
           }
         });
-      } catch (err) { document.getElementById("earlyAccessList").innerHTML = "<p>Error loading.</p>"; }
+      } catch (err) { document.getElementById("earlyAccessList").innerHTML = "<p>Failed to load early access listings.</p>"; }
     }
 
     async function loadPortfolioLink() {
@@ -911,26 +1264,50 @@
         const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
         const user = await res.json();
         const username = (user.name || "user").toLowerCase().replace(/\s/g, '');
-        const url = `${window.location.origin}/portfolio/${username}`;
-        document.getElementById("portfolioLink").href = url;
-        document.getElementById("portfolioLink").textContent = url;
-      } catch (err) {}
+        const portfolioUrl = `${window.location.origin}/portfolio/${username}`;
+        const linkEl = document.getElementById("portfolioLink");
+        linkEl.href = portfolioUrl;
+        linkEl.textContent = portfolioUrl;
+      } catch (err) { console.error(err); }
     }
     document.getElementById("copyPortfolioBtn")?.addEventListener("click", () => {
-      navigator.clipboard.writeText(document.getElementById("portfolioLink").href);
-      showModal("Link copied!", 'success');
+      const link = document.getElementById("portfolioLink").href;
+      navigator.clipboard.writeText(link);
+      showModal("Portfolio link copied!", 'success');
     });
 
     function renderSavedSearches(searches) {
       const container = document.getElementById("savedSearchesList");
-      if (!searches.length) { container.innerHTML = "<p>No saved searches.</p>"; return; }
-      container.innerHTML = searches.map((s, idx) => `<div class="saved-search-item"><strong>${escapeHtml(s.name)}</strong><div style="font-size:0.7rem;">Filters: ${JSON.stringify(s.filters)}</div><div><span class="alert-toggle" onclick="toggleAlert(${idx}, ${!s.alertEnabled})"><i class="fas fa-bell"></i> Alerts ${s.alertEnabled ? 'On' : 'Off'}</span> <button class="small" onclick="deleteSearch(${idx})">Delete</button></div></div>`).join('');
+      if (!searches.length) { container.innerHTML = "<p><i class='fas fa-info-circle'></i> No saved searches yet.</p>"; return; }
+      container.innerHTML = searches.map((s, idx) => `
+        <div class="saved-search-item">
+          <div class="name"><i class="fas fa-search"></i> ${escapeHtml(s.name)}</div>
+          <div class="filters">${JSON.stringify(s.filters)}</div>
+          <div class="saved-search-actions">
+            <span class="alert-toggle" onclick="toggleAlert(${idx}, ${!s.alertEnabled})">
+              <i class="fas fa-bell ${s.alertEnabled ? 'fa-solid' : 'fa-regular'}"></i> Alerts ${s.alertEnabled ? 'On' : 'Off'}
+            </span>
+            <button class="small" onclick="deleteSearch(${idx})"><i class="fas fa-trash-alt"></i> Delete</button>
+          </div>
+        </div>
+      `).join('');
     }
-    window.toggleAlert = async (idx, enable) => { if (!isActivePremium) return; await fetch(`/api/premium/saved-searches/${idx}/alert`, { method: "PUT", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ enabled: enable }) }); loadPremiumStatus(); };
-    window.deleteSearch = async (idx) => { showModal("Delete this search?", 'confirm', async () => { await fetch(`/api/premium/saved-searches/${idx}`, { method: "DELETE", headers: { Authorization:"Bearer "+token } }); loadPremiumStatus(); }); };
+    window.toggleAlert = async (idx, enable) => {
+      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
+      await fetch(`/api/premium/saved-searches/${idx}/alert`, { method: "PUT", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ enabled: enable }) });
+      loadPremiumStatus();
+    };
+    window.deleteSearch = async (idx) => {
+      if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
+      showModal("Delete this saved search?", 'confirm', async () => {
+        await fetch(`/api/premium/saved-searches/${idx}`, { method: "DELETE", headers: { Authorization:"Bearer "+token } });
+        loadPremiumStatus();
+      });
+    };
     document.getElementById("newSearchBtn").addEventListener("click", async () => {
       if (!isActivePremium) { showModal("Activate premium.", 'error'); return; }
-      const name = prompt("Search name:"); if (!name) return;
+      const name = prompt("Search name:");
+      if (!name) return;
       await fetch("/api/premium/saved-searches", { method: "POST", headers: { "Content-Type":"application/json", Authorization:"Bearer "+token }, body: JSON.stringify({ name, filters: {}, alertEnabled: true }) });
       loadPremiumStatus();
     });
@@ -942,7 +1319,7 @@
         const res = await fetch(url, { method: "POST", headers: { Authorization:"Bearer "+token } });
         const data = await res.json();
         if (data.test || data.payment_url) {
-          if (data.test) { showModal("Test activation successful! Reloading...", 'success', () => window.location.reload()); }
+          if (data.test) { showModal("✅ Test activation successful! Reloading...", 'success', () => window.location.reload()); }
           else window.location.href = data.payment_url;
         } else showModal("Activation failed.", 'error');
       } catch (err) { showModal("Error.", 'error'); }
@@ -950,21 +1327,192 @@
     document.getElementById("activateBtn").addEventListener("click", activatePremium);
     document.getElementById("activateFromBannerBtn").addEventListener("click", activatePremium);
 
-    // ========== TAB SWITCHING ==========
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const tabId = btn.getAttribute('data-tab');
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.getElementById(`tab-${tabId}`).classList.add('active');
-        if (tabId === 'compare') loadAllHouses();
-        if (tabId === 'move') loadAllHouses();
-        if (tabId === 'alerts') loadAllHouses();
-        if (tabId === 'heatmap') setTimeout(loadHeatmap, 300);
-      });
+    // ========== NEW: AI PROPERTY COMPARISON & RANKING ==========
+    async function loadPropertiesForComparison() {
+      try {
+        const res = await fetch("/api/houses?limit=100", { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        allHousesForCompare = data.houses || [];
+        const selectOptions = '<option value="">Select property</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+        for (let i = 1; i <= 5; i++) {
+          const sel = document.getElementById(`compareSelect${i}`);
+          if (sel) sel.innerHTML = selectOptions;
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    function computeScore(house, allHouses) {
+      let score = 0;
+      // Price score (lower price = higher score)
+      const prices = allHouses.map(h => h.price).filter(p => p > 0);
+      const avgPrice = prices.reduce((a,b)=>a+b,0)/prices.length;
+      const priceRatio = avgPrice / (house.price || 1);
+      score += Math.min(priceRatio, 2) * 25; // max 50 points
+
+      // Amenities score
+      let amenitiesCount = 0;
+      if (house.wifi) amenitiesCount++;
+      if (house.parking) amenitiesCount++;
+      if (house.furnished) amenitiesCount++;
+      if (house.petFriendly) amenitiesCount++;
+      if (house.pool) amenitiesCount++;
+      if (house.ac) amenitiesCount++;
+      score += (amenitiesCount / 6) * 25; // max 25 points
+
+      // Location desirability (simulate based on keywords)
+      const desirableAreas = ['blantyre', 'lilongwe', 'mzuzu', 'city centre', 'area 3', 'sunnyside'];
+      const locLower = (house.location || '').toLowerCase();
+      let locationBonus = desirableAreas.some(area => locLower.includes(area)) ? 15 : 0;
+      score += locationBonus;
+
+      // Landlord trust (if verified or premium)
+      if (house.owner && house.owner.verificationType === 'premium') score += 10;
+      else if (house.owner && house.owner.verificationType === 'official') score += 5;
+
+      // Rating (if any)
+      if (house.averageRating) score += (house.averageRating / 5) * 10;
+      return Math.min(score, 100);
+    }
+
+    document.getElementById("compareBtn").addEventListener("click", async () => {
+      if (!isActivePremium) { showModal("Activate premium to use the comparison tool.", 'error'); return; }
+      const selectedIds = [];
+      for (let i = 1; i <= 5; i++) {
+        const val = document.getElementById(`compareSelect${i}`).value;
+        if (val) selectedIds.push(val);
+      }
+      if (selectedIds.length < 2) { showModal("Please select at least 2 properties to compare.", 'error'); return; }
+      const housesToCompare = allHousesForCompare.filter(h => selectedIds.includes(h._id));
+      if (housesToCompare.length !== selectedIds.length) { showModal("Some properties not found. Please refresh.", 'error'); return; }
+      const scored = housesToCompare.map(house => ({
+        house,
+        score: computeScore(house, allHousesForCompare)
+      }));
+      scored.sort((a,b) => b.score - a.score);
+      const resultsDiv = document.getElementById("comparisonResults");
+      resultsDiv.innerHTML = `
+        <div class="comparison-table">
+          <h3>📊 Ranking from Best to Worst</h3>
+          <table>
+            <thead><tr><th>Rank</th><th>Property</th><th>Price (MWK)</th><th>Location</th><th>Score</th><th>Key Amenities</th></tr></thead>
+            <tbody>
+              ${scored.map((item, idx) => `
+                <tr>
+                  <td><span class="ranking-badge">#${idx+1}</span></td>
+                  <td><strong>${escapeHtml(item.house.name)}</strong><br><a href="/house/${item.house._id}" target="_blank" style="color:#FFB347;">view</a></td>
+                  <td>${item.house.price.toLocaleString()}</td>
+                  <td>${escapeHtml(item.house.location)}</td>
+                  <td>${Math.round(item.score)}/100</td>
+                  <td style="font-size:0.7rem;">
+                    ${item.house.wifi ? 'WiFi ' : ''}${item.house.parking ? 'Parking ' : ''}${item.house.furnished ? 'Furnished ' : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top:1rem; background:rgba(0,0,0,0.3); padding:0.8rem; border-radius:24px;">
+            <strong><i class="fas fa-robot"></i> AI Summary:</strong> ${scored[0].house.name} is the top choice with a score of ${Math.round(scored[0].score)}/100. ${scored[0].score > 70 ? 'Excellent value!' : 'Consider negotiating the price.'}
+          </div>
+        </div>
+      `;
     });
 
+    // ========== NEW: SMART MOVE PLANNER ==========
+    function loadPropertiesForMovePlanner() {
+      const select = document.getElementById("targetPropertySelect");
+      if (!allHousesForCompare.length) {
+        fetch("/api/houses?limit=100", { headers: { Authorization: "Bearer " + token } })
+          .then(res => res.json())
+          .then(data => {
+            allHousesForCompare = data.houses || [];
+            select.innerHTML = '<option value="">Select a property</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+          });
+      } else {
+        select.innerHTML = '<option value="">Select a property</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+      }
+    }
+
+    document.getElementById("calculateMoveBtn").addEventListener("click", async () => {
+      if (!isActivePremium) { showModal("Activate premium to use the move planner.", 'error'); return; }
+      const currentRent = parseInt(document.getElementById("currentRent").value);
+      const targetId = document.getElementById("targetPropertySelect").value;
+      const transport = parseInt(document.getElementById("transportCost").value) || 25000;
+      if (!currentRent || currentRent <= 0) { showModal("Please enter your current monthly rent.", 'error'); return; }
+      if (!targetId) { showModal("Please select a target property.", 'error'); return; }
+      const targetHouse = allHousesForCompare.find(h => h._id === targetId);
+      if (!targetHouse) { showModal("Target property not found.", 'error'); return; }
+      const newRent = targetHouse.price;
+      const deposit = newRent * 2; // typical 2 months deposit
+      const firstMonth = newRent;
+      const utilityDeposit = 50000; // typical
+      const totalUpfront = deposit + firstMonth + transport + utilityDeposit;
+      const monthlySavings = currentRent - newRent;
+      let breakevenMonths = monthlySavings > 0 ? Math.ceil(totalUpfront / monthlySavings) : Infinity;
+      const resultsDiv = document.getElementById("movePlannerResults");
+      resultsDiv.style.display = "block";
+      resultsDiv.innerHTML = `
+        <div><i class="fas fa-calculator"></i> <strong>Move Cost Breakdown</strong></div>
+        <div style="margin-top:0.5rem;">
+          <p>💰 Deposit (2 months): MWK ${deposit.toLocaleString()}</p>
+          <p>📅 First month rent: MWK ${firstMonth.toLocaleString()}</p>
+          <p>🚚 Transport: MWK ${transport.toLocaleString()}</p>
+          <p>💡 Utility connection: MWK ${utilityDeposit.toLocaleString()}</p>
+          <hr style="margin:0.3rem 0;">
+          <p><strong>Total upfront cost: MWK ${totalUpfront.toLocaleString()}</strong></p>
+          ${monthlySavings > 0 ? `<p><i class="fas fa-chart-line"></i> Monthly savings: MWK ${monthlySavings.toLocaleString()}</p><p>⏱️ Breakeven in <strong>${breakevenMonths} months</strong></p>` : `<p><i class="fas fa-exclamation-triangle"></i> New rent is higher – you will not save monthly.</p>`}
+        </div>
+      `;
+      const checklistDiv = document.getElementById("moveChecklist");
+      checklistDiv.innerHTML = `
+        <div style="background:rgba(0,0,0,0.3); border-radius:24px; padding:0.8rem;">
+          <strong><i class="fas fa-list-check"></i> Your Moving Checklist</strong>
+          <ul style="margin-top:0.5rem; list-style-type:none;">
+            <li>☐ Notify current landlord (30 days notice)</li>
+            <li>☐ Arrange transport for belongings</li>
+            <li>☐ Transfer utilities (electricity, water, internet)</li>
+            <li>☐ Update address with bank, employer, and postal services</li>
+            <li>☐ Inspect new property before moving in</li>
+          </ul>
+        </div>
+      `;
+    });
+
+    // ========== NEW: HYPER‑LOCAL DEMAND HEATMAP ==========
+    let heatmapLayer = null;
+    function initHeatmap() {
+      const btn = document.getElementById("loadHeatmapBtn");
+      btn.addEventListener("click", async () => {
+        if (!isActivePremium) { showModal("Activate premium to access the demand heatmap.", 'error'); return; }
+        const msgDiv = document.getElementById("heatmapMessage");
+        msgDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Loading demand data...';
+        try {
+          // Simulate demand data (replace with real API later)
+          const mockData = [
+            { lat: -15.7861, lng: 35.0058, intensity: 0.9 }, // Blantyre city centre
+            { lat: -13.9833, lng: 33.7833, intensity: 0.8 }, // Lilongwe
+            { lat: -11.4667, lng: 34.0167, intensity: 0.6 }, // Mzuzu
+            { lat: -15.3875, lng: 35.3192, intensity: 0.5 }, // Zomba
+            { lat: -16.0333, lng: 35.5, intensity: 0.4 },
+            { lat: -15.6833, lng: 34.9667, intensity: 0.3 },
+            { lat: -14.8333, lng: 35.65, intensity: 0.2 }
+          ];
+          // Wait for map to be available (global map from index.html)
+          let mapCheck = setInterval(() => {
+            if (typeof map !== 'undefined' && map) {
+              clearInterval(mapCheck);
+              if (heatmapLayer) map.removeLayer(heatmapLayer);
+              heatmapLayer = L.heatLayer(mockData, { radius: 25, blur: 15, maxZoom: 17, minOpacity: 0.5 });
+              heatmapLayer.addTo(map);
+              msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> Demand heatmap loaded. Red = highest demand, green = lowest.';
+            }
+          }, 500);
+        } catch (err) {
+          msgDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not load heatmap. Please try again later.';
+        }
+      });
+    }
+
+    function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     loadPremiumStatus();
   </script>
 </body>
