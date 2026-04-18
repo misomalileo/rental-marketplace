@@ -12,7 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b); color: #f1f5f9; font-family: 'Inter', sans-serif; min-height: 100vh; }
+    body { background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b); color: #f1f5f9; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 14px; line-height: 1.5; min-height: 100vh; }
     .navbar { background: rgba(15,23,42,0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000; }
     .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .logo i { font-size: 1.6rem; margin-right: 6px; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -33,21 +33,21 @@
     .activate-btn { background: linear-gradient(135deg, #FF8C42, #E67E22); border: none; padding: 0.7rem 1.8rem; border-radius: 60px; font-weight: 700; font-size: 0.9rem; color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; z-index: 1; box-shadow: 0 8px 16px -4px rgba(230,126,34,0.3); }
     .activate-btn:hover { transform: scale(1.02); box-shadow: 0 12px 20px -6px rgba(230,126,34,0.5); }
     .upgrade-banner { background: linear-gradient(135deg, rgba(255,140,66,0.12), rgba(139,92,246,0.08)); border: 1px solid rgba(255,140,66,0.4); border-radius: 36px; padding: 1.5rem; text-align: center; margin-bottom: 2rem; backdrop-filter: blur(8px); }
-    .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; flex-wrap: wrap; }
-    .tab-btn { background: transparent; border: none; padding: 0.7rem 1.8rem; font-size: 1rem; font-weight: 600; border-radius: 60px; cursor: pointer; transition: all 0.2s; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
-    .tab-btn i { font-size: 1.1rem; }
+    .tabs { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; margin-bottom: 2rem; background: rgba(20,30,45,0.4); backdrop-filter: blur(8px); border-radius: 60px; padding: 0.3rem; }
+    .tab-btn { background: transparent; border: none; padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 500; border-radius: 40px; cursor: pointer; transition: all 0.2s; color: #94a3b8; display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; }
+    .tab-btn i { font-size: 0.9rem; }
     .tab-btn:hover { color: #FFB347; background: rgba(255,140,66,0.1); }
     .tab-btn.active { background: linear-gradient(135deg, #FF8C42, #E67E22); color: white; box-shadow: 0 4px 12px rgba(230,126,34,0.3); }
     .tab-content { display: none; animation: fadeIn 0.3s ease; }
     .tab-content.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .dashboard-grid { display: flex; flex-direction: column; gap: 1.5rem; }
     .card { background: rgba(20, 30, 45, 0.65); backdrop-filter: blur(12px); border-radius: 32px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.08); transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1); transform-style: preserve-3d; box-shadow: 0 8px 20px rgba(0,0,0,0.2); width: 100%; max-width: 100%; overflow: hidden; }
     .card:hover { transform: translateY(-6px) rotateX(2deg); border-color: rgba(255,140,66,0.6); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.5); }
     .card h2 { font-size: 1.4rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 12px; font-weight: 700; background: linear-gradient(135deg, #fff, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; flex-wrap: wrap; }
     .card h2 i { font-size: 1.5rem; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item, .comparison-item, .move-item, .heatmap-toggle { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; overflow-x: auto; }
-    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .email-alert-item:hover, .comparison-item:hover, .move-item:hover { border-color: #FF8C42; transform: translateX(6px); }
+    .saved-search-item, .notification-item, .price-alert-item, .whatsapp-search-item, .email-alert-item, .comparison-item, .move-item, .watchlist-item { background: rgba(10, 15, 25, 0.7); border-radius: 24px; padding: 0.9rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; overflow-x: auto; }
+    .saved-search-item:hover, .notification-item:hover, .price-alert-item:hover, .whatsapp-search-item:hover, .email-alert-item:hover, .comparison-item:hover, .move-item:hover, .watchlist-item:hover { border-color: #FF8C42; transform: translateX(6px); }
     .saved-search-actions, .alert-actions, .whatsapp-actions, .email-actions { display: flex; gap: 1rem; margin-top: 0.7rem; flex-wrap: wrap; }
     button.small { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 0.3rem 1rem; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #cbd5e1; display: inline-flex; align-items: center; gap: 6px; }
     button.small:hover { background: rgba(255,140,66,0.2); border-color: #FF8C42; color: white; }
@@ -118,9 +118,10 @@
     .comparison-table table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
     .comparison-table th, .comparison-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .comparison-table th { color: #FFB347; }
-    .ranking-badge { background: #FF8C42; border-radius: 20px; padding: 0.2rem 0.5rem; font-weight: bold; display: inline-block; text-align: center; }
+    .ranking-badge { background: #FF8C42; border-radius: 20px; padding: 0.2rem 0.5rem; font-weight: bold; display: inline-block; text-align: center; font-size: 0.7rem; }
     .move-planner-results { background: rgba(0,0,0,0.4); border-radius: 24px; padding: 1rem; margin-top: 1rem; }
-    .heatmap-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 40px; padding: 0.5rem 1rem; color: white; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .heatmap-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 40px; padding: 0.5rem 1rem; color: white; cursor: pointer; width: 100%; margin-top: 0.5rem; display: none; } /* hidden, heatmap loads automatically */
+    .watchlist-item .remove-watch { background: none; border: none; color: #ef4444; cursor: pointer; float: right; font-size: 0.7rem; }
     @media (max-width: 768px) {
       .dashboard-container { max-width: 100%; margin: 1rem auto; padding: 0 0.8rem; }
       .premium-header { padding: 1rem; }
@@ -131,7 +132,7 @@
       .logo i { font-size: 1rem; }
       .nav-links { gap: 0.8rem; }
       .nav-links a { font-size: 0.75rem; }
-      .tab-btn { padding: 0.4rem 1rem; font-size: 0.8rem; }
+      .tab-btn { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
       .card { padding: 1rem; }
       .card h2 { font-size: 1.2rem; }
       .card h2 i { font-size: 1.3rem; }
@@ -213,7 +214,7 @@
             <div id="voiceResult" class="voice-result" style="display: none;">
               <h4><i class="fas fa-comment-dots"></i> Recognised Query</h4>
               <p id="recognisedText"></p>
-              <h4>🏠 Top Match</h4>
+              <h4><i class="fas fa-home"></i> Top Match</h4>
               <div id="topMatchResult"></div>
             </div>
           </div>
@@ -322,21 +323,20 @@
       </div>
     </div>
 
-    <!-- ========== NEW: HYPER‑LOCAL DEMAND HEATMAP TAB ========== -->
+    <!-- ========== NEW: HYPER‑LOCAL DEMAND HEATMAP TAB (instant load) ========== -->
     <div id="tab-heatmap" class="tab-content">
       <div class="dashboard-grid">
         <div class="card">
           <h2><i class="fas fa-fire"></i> Hyper‑Local Rental Demand Heatmap</h2>
           <p style="font-size:0.75rem; margin-bottom:1rem;">See where demand is highest (red) and lowest (green). Find areas where you can negotiate better deals or invest for maximum return.</p>
           <div id="heatmapContainer">
-            <button id="loadHeatmapBtn" class="heatmap-btn"><i class="fas fa-map-marked-alt"></i> Load Demand Heatmap</button>
             <div id="heatmapLegend" style="margin: 1rem 0; display: flex; justify-content: center; gap: 1rem; font-size:0.7rem;">
               <span><i class="fas fa-circle" style="color:#ef4444;"></i> High demand</span>
               <span><i class="fas fa-circle" style="color:#f59e0b;"></i> Medium demand</span>
               <span><i class="fas fa-circle" style="color:#10b981;"></i> Low demand</span>
             </div>
             <div id="heatmapMessage" style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 24px;">
-              <i class="fas fa-info-circle"></i> Click "Load Demand Heatmap" to see demand intensity by area.
+              <i class="fas fa-info-circle"></i> Heatmap will appear automatically when you open this tab.
             </div>
           </div>
         </div>
@@ -381,16 +381,17 @@
       </div>
     </div>
 
-    <!-- ========== PRICE ALERTS TAB (unchanged) ========== -->
+    <!-- ========== PRICE ALERTS TAB (property watchlist) ========== -->
     <div id="tab-alerts" class="tab-content">
       <div class="dashboard-grid">
         <div class="card" style="grid-column: span 2;">
           <h2><i class="fas fa-bell"></i> Price Drop Alerts</h2>
-          <p style="font-size:0.75rem; margin-bottom: 1rem;">Get notified instantly when a property you’re watching drops in price.</p>
-          <div id="priceAlertsList">Loading saved searches with alert toggles...</div>
-          <div class="view-all-btn">
-            <button id="simulatePriceDropBtn" class="small"><i class="fas fa-flask"></i> Simulate Price Drop (Test)</button>
+          <p style="font-size:0.75rem; margin-bottom: 1rem;">Add properties (up to 5) to watch. We'll notify you when their price drops.</p>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <select id="watchPropertySelect" style="flex:2;"></select>
+            <button id="addWatchBtn" class="small"><i class="fas fa-plus-circle"></i> Add to Watchlist</button>
           </div>
+          <div id="watchlistContainer" style="margin-top: 1rem;"></div>
         </div>
       </div>
     </div>
@@ -450,6 +451,7 @@
     let predictorChart = null;
     let currentWhatsappNumber = "";
     let allHousesForCompare = [];
+    let watchlist = []; // { houseId, lastPrice }
 
     // ========== CUSTOM MODAL SYSTEM ==========
     function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
@@ -468,282 +470,11 @@
       cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
     }
 
-    // ========== VOICE ASSISTANT (unchanged) ==========
-    let recognition = null;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-    }
-
-    function parseVoiceQuery(text) {
-      text = text.toLowerCase();
-      let filters = {};
-      let bedroomMatch = text.match(/(\d+)\s*bedroom/);
-      if (bedroomMatch) filters.bedrooms = parseInt(bedroomMatch[1]);
-      let priceMatch = text.match(/(\d+)\s*(?:thousand|k|,?)/i);
-      if (priceMatch) {
-        let price = parseInt(priceMatch[1]);
-        if (text.includes('thousand') || text.includes('k')) price *= 1000;
-        filters.maxPrice = price;
-      }
-      const cities = ['lilongwe', 'blantyre', 'mzuzu', 'zomba', 'mulanje', 'thyolo', 'mangochi', 'balaka', 'chikwawa', 'nsanje', 'phalombe', 'machinga', 'dedza', 'salima', 'mchinji', 'ntcheu', 'kasungu', 'dowa', 'nkhotakota'];
-      for (let city of cities) {
-        if (text.includes(city)) {
-          filters.location = city.charAt(0).toUpperCase() + city.slice(1);
-          break;
-        }
-      }
-      if (text.includes('house')) filters.type = 'House';
-      else if (text.includes('apartment')) filters.type = 'Apartment';
-      else if (text.includes('room')) filters.type = 'Room';
-      else if (text.includes('hostel')) filters.type = 'Hostel';
-      else if (text.includes('office')) filters.type = 'Office';
-      if (text.includes('garden')) filters.hasGarden = true;
-      if (text.includes('pool')) filters.pool = true;
-      if (text.includes('parking')) filters.parking = true;
-      if (text.includes('wifi')) filters.wifi = true;
-      if (text.includes('furnished')) filters.furnished = true;
-      return filters;
-    }
-
-    async function performVoiceSearch(filters) {
-      try {
-        const params = new URLSearchParams();
-        if (filters.bedrooms) params.append('bedrooms', filters.bedrooms);
-        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-        if (filters.type) params.append('type', filters.type);
-        if (filters.location) params.append('location', filters.location);
-        if (filters.pool) params.append('pool', 'true');
-        if (filters.parking) params.append('parking', 'true');
-        if (filters.wifi) params.append('wifi', 'true');
-        if (filters.furnished) params.append('furnished', 'true');
-        params.append('limit', 5);
-        const res = await fetch(`/api/houses?${params.toString()}`);
-        const data = await res.json();
-        return data.houses || [];
-      } catch (err) {
-        console.error('Voice search error:', err);
-        return [];
-      }
-    }
-
-    function speakText(text) {
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.9;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-
-    function displayAndSpeakTopMatch(properties, recognizedText) {
-      const resultDiv = document.getElementById('voiceResult');
-      const recognisedTextP = document.getElementById('recognisedText');
-      const topMatchDiv = document.getElementById('topMatchResult');
-      recognisedTextP.innerText = recognizedText;
-      if (!properties || properties.length === 0) {
-        topMatchDiv.innerHTML = '<p>❌ No properties found matching your request. Try different words.</p>';
-        speakText('Sorry, no properties found. Please try again.');
-        resultDiv.style.display = 'block';
-        return;
-      }
-      const top = properties[0];
-      const shareUrl = `https://rental-marketplace-irmj.onrender.com/house/${top._id}`;
-      topMatchDiv.innerHTML = `
-        <p><strong>${escapeHtml(top.name)}</strong><br>
-        📍 ${escapeHtml(top.location)}<br>
-        🏠 ${top.type} | 🛏️ ${top.bedrooms || 'N/A'} bed<br>
-        💰 MWK ${Number(top.price).toLocaleString()}<br>
-        ⭐ Rating: ${top.averageRating ? top.averageRating.toFixed(1) : 'N/A'}</p>
-        <button class="whatsapp-share-btn" onclick="shareOnWhatsApp('${shareUrl}', '${escapeHtml(top.name)}')"><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
-      `;
-      resultDiv.style.display = 'block';
-      const speakMsg = `Found ${properties.length} properties. The top match is ${top.name} in ${top.location} for ${top.price} Malawian Kwacha per month.`;
-      speakText(speakMsg);
-    }
-
-    window.shareOnWhatsApp = function(url, name) {
-      const text = `Check out this property: ${name} - ${url}`;
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    };
-
-    document.getElementById('startVoiceBtn').addEventListener('click', () => {
-      if (!recognition) {
-        showModal('Voice recognition is not supported in your browser. Please use Chrome or Edge.', 'error');
-        return;
-      }
-      if (!isActivePremium) {
-        showModal('Voice search is a premium feature. Please activate your premium subscription.', 'error');
-        return;
-      }
-      const btn = document.getElementById('startVoiceBtn');
-      const statusDiv = document.getElementById('voiceStatus');
-      btn.classList.add('listening');
-      statusDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Listening... Speak now.';
-      recognition.start();
-      recognition.onresult = async (event) => {
-        const transcript = event.results[0][0].transcript;
-        statusDiv.innerHTML = `✅ Recognised: "${transcript}"`;
-        btn.classList.remove('listening');
-        const filters = parseVoiceQuery(transcript);
-        if (Object.keys(filters).length === 0) {
-          statusDiv.innerHTML = '⚠️ Could not understand filters. Try saying "3 bedroom house under 200 thousand"';
-          return;
-        }
-        statusDiv.innerHTML = '🔍 Searching properties...';
-        const properties = await performVoiceSearch(filters);
-        displayAndSpeakTopMatch(properties, transcript);
-      };
-      recognition.onerror = (event) => {
-        console.error(event.error);
-        statusDiv.innerHTML = `❌ Error: ${event.error}. Please try again.`;
-        btn.classList.remove('listening');
-      };
-      recognition.onend = () => {
-        if (btn.classList.contains('listening')) {
-          btn.classList.remove('listening');
-          statusDiv.innerHTML = 'Click the microphone and speak';
-        }
-      };
-    });
-
-    // ========== AI IMAGE SEARCH (unchanged) ==========
-    let mobilenetModel = null;
-    const modelStatusSpan = document.getElementById('modelStatus');
-    const searchBtn = document.getElementById('searchSimilarBtn');
-
-    async function loadMobileNet() {
-      try {
-        modelStatusSpan.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Loading AI model...';
-        mobilenetModel = await mobilenet.load();
-        modelStatusSpan.innerHTML = '<i class="fas fa-check-circle"></i> AI model ready';
-        searchBtn.disabled = false;
-        console.log("MobileNet loaded");
-      } catch (err) {
-        console.error("Failed to load MobileNet", err);
-        modelStatusSpan.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Model failed to load. Retrying...';
-        setTimeout(loadMobileNet, 3000);
-      }
-    }
-    loadMobileNet();
-
-    async function getFeatureVector(imageElement) {
-      if (!mobilenetModel) throw new Error("Model not loaded");
-      const img = tf.browser.fromPixels(imageElement);
-      const resized = tf.image.resizeBilinear(img, [224, 224]);
-      const expanded = resized.expandDims(0);
-      const normalized = expanded.toFloat().div(255);
-      const predictions = await mobilenetModel.infer(normalized, true);
-      const features = predictions.dataSync();
-      tf.dispose([img, resized, expanded, normalized, predictions]);
-      return Array.from(features);
-    }
-
-    document.getElementById('imageUploadArea').addEventListener('click', () => {
-      document.getElementById('imageUploadInput').click();
-    });
-    document.getElementById('imageUploadInput').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = document.getElementById('uploadedImagePreview');
-          img.src = event.target.result;
-          img.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    document.getElementById('searchSimilarBtn').addEventListener('click', async () => {
-      if (!isActivePremium) {
-        showModal("Image search is a premium feature. Please activate your premium subscription.", 'error');
-        return;
-      }
-      if (!mobilenetModel) {
-        showModal("AI model is still loading. Please wait a moment and try again.", 'error');
-        return;
-      }
-      const imgElement = document.getElementById('uploadedImagePreview');
-      if (!imgElement.src || imgElement.style.display === 'none') {
-        showModal("Please upload an image first.", 'error');
-        return;
-      }
-      const resultsDiv = document.getElementById('similarResults');
-      resultsDiv.innerHTML = '<div style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Extracting features and searching...</div>';
-      try {
-        const vector = await getFeatureVector(imgElement);
-        const res = await fetch('/api/image-search/find-similar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-          body: JSON.stringify({ vector })
-        });
-        const houses = await res.json();
-        if (!houses.length) {
-          resultsDiv.innerHTML = '<p><i class="fas fa-info-circle"></i> No visually similar properties found.</p>';
-          return;
-        }
-        resultsDiv.innerHTML = houses.map(house => `
-          <div class="similar-house-item">
-            <img class="similar-house-img" src="${house.images?.[0] || 'placeholder.jpg'}" onerror="this.src='placeholder.jpg'">
-            <div class="similar-house-info">
-              <h4>${escapeHtml(house.name)}</h4>
-              <p>${house.location} | ${house.type} | MWK ${Number(house.price).toLocaleString()}</p>
-              <a href="/house/${house._id}" target="_blank" style="color:#FFB347; font-size:0.7rem;">View Details <i class="fas fa-arrow-right"></i></a>
-            </div>
-          </div>
-        `).join('');
-      } catch (err) {
-        console.error(err);
-        resultsDiv.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> Error performing image search.</p>';
-      }
-    });
-
-    const dropArea = document.getElementById('imageUploadArea');
-    dropArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropArea.style.borderColor = '#FF8C42';
-    });
-    dropArea.addEventListener('dragleave', () => {
-      dropArea.style.borderColor = 'rgba(255,140,66,0.5)';
-    });
-    dropArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropArea.style.borderColor = 'rgba(255,140,66,0.5)';
-      const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = document.getElementById('uploadedImagePreview');
-          img.src = event.target.result;
-          img.style.display = 'block';
-          document.getElementById('imageUploadInput').files = e.dataTransfer.files;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // ========== LOGOUT ==========
+    // ========== UTILITIES ==========
+    function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     function logout() { localStorage.clear(); window.location.href = "login.html"; }
 
-    // ========== TAB SWITCHING ==========
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const tabId = btn.getAttribute('data-tab');
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.getElementById(`tab-${tabId}`).classList.add('active');
-        if (tabId === 'compare') loadPropertiesForComparison();
-        if (tabId === 'move') loadPropertiesForMovePlanner();
-        if (tabId === 'heatmap') initHeatmap();
-      });
-    });
-
-    // ========== LOAD PREMIUM STATUS & ALL DATA ==========
+    // ========== LOAD PREMIUM STATUS ==========
     async function loadPremiumStatus() {
       try {
         const res = await fetch("/api/premium/status", { headers: { Authorization: "Bearer " + token } });
@@ -1017,6 +748,35 @@
         renderPredictorSelect();
         renderNegotiateSelect();
         renderPrioritySelect();
+        loadAllHousesForCompare(); // also load full list for watchlist
+      } catch (err) { console.error(err); }
+    }
+
+    async function loadAllHousesForCompare() {
+      try {
+        const res = await fetch("/api/houses?limit=200", { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        allHousesForCompare = data.houses || [];
+        const watchSelect = document.getElementById("watchPropertySelect");
+        if (watchSelect) {
+          watchSelect.innerHTML = '<option value="">Select property to watch</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+        }
+        const targetSelect = document.getElementById("targetPropertySelect");
+        if (targetSelect) {
+          targetSelect.innerHTML = '<option value="">Select a property</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
+        }
+        // populate compare selects if not already
+        if (document.querySelectorAll('.compare-select').length === 0) {
+          const selectHtml = '<select class="compare-select"><option value="">Select property</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('') + '</select>';
+          const selectsDiv = document.getElementById("compareSelects");
+          selectsDiv.innerHTML = '';
+          for (let i = 1; i <= 5; i++) {
+            const div = document.createElement('div');
+            div.style.marginBottom = '8px';
+            div.innerHTML = `<label>Property ${i}</label> ${selectHtml}`;
+            selectsDiv.appendChild(div);
+          }
+        }
       } catch (err) { console.error(err); }
     }
 
@@ -1059,7 +819,7 @@
         const lower = Math.min(...predictions);
         const upper = Math.max(...predictions);
         const avg = predictions.reduce((a,b)=>a+b,0)/3;
-        const trendIcon = avg > base ? '📈' : (avg < base ? '📉' : '➡️');
+        const trendIcon = avg > base ? '<i class="fas fa-arrow-up"></i>' : (avg < base ? '<i class="fas fa-arrow-down"></i>' : '<i class="fas fa-minus"></i>');
         const trendText = avg > base ? 'Rising' : (avg < base ? 'Falling' : 'Stable');
         const months = ["Next Month", "2 Months", "3 Months"];
         if (predictorChart) predictorChart.destroy();
@@ -1069,7 +829,7 @@
           data: { labels: months, datasets: [{ label: 'Predicted Rent (MWK)', data: predictions, borderColor: '#FF8C42', backgroundColor: 'rgba(255,140,66,0.1)', borderWidth: 3, pointBackgroundColor: '#FFD966', tension: 0.3, fill: true }] },
           options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } }, tooltip: { callbacks: { label: (ctx) => `MWK ${ctx.raw.toLocaleString()}` } } }, scales: { y: { ticks: { color: '#cbd5e1', callback: (val) => 'MWK ' + val.toLocaleString() } }, x: { ticks: { color: '#cbd5e1' } } } }
         });
-        resultDiv.innerHTML = `<i class="fas fa-chart-line"></i> ${trendIcon} <strong>${trendText}</strong> trend predicted.<br>
+        resultDiv.innerHTML = `${trendIcon} <strong>${trendText}</strong> trend predicted.<br>
         Expected rent in 3 months: <strong>MWK ${Math.round(avg).toLocaleString()}</strong> (range: MWK ${Math.round(lower).toLocaleString()} – ${Math.round(upper).toLocaleString()}).<br>
         <small>Confidence interval based on market volatility.</small>`;
       } catch (err) { resultDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Prediction unavailable.'; }
@@ -1327,29 +1087,13 @@
     document.getElementById("activateBtn").addEventListener("click", activatePremium);
     document.getElementById("activateFromBannerBtn").addEventListener("click", activatePremium);
 
-    // ========== NEW: AI PROPERTY COMPARISON & RANKING ==========
-    async function loadPropertiesForComparison() {
-      try {
-        const res = await fetch("/api/houses?limit=100", { headers: { Authorization: "Bearer " + token } });
-        const data = await res.json();
-        allHousesForCompare = data.houses || [];
-        const selectOptions = '<option value="">Select property</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
-        for (let i = 1; i <= 5; i++) {
-          const sel = document.getElementById(`compareSelect${i}`);
-          if (sel) sel.innerHTML = selectOptions;
-        }
-      } catch (err) { console.error(err); }
-    }
-
+    // ========== AI PROPERTY COMPARISON & RANKING ==========
     function computeScore(house, allHouses) {
       let score = 0;
-      // Price score (lower price = higher score)
       const prices = allHouses.map(h => h.price).filter(p => p > 0);
       const avgPrice = prices.reduce((a,b)=>a+b,0)/prices.length;
       const priceRatio = avgPrice / (house.price || 1);
-      score += Math.min(priceRatio, 2) * 25; // max 50 points
-
-      // Amenities score
+      score += Math.min(priceRatio, 2) * 25;
       let amenitiesCount = 0;
       if (house.wifi) amenitiesCount++;
       if (house.parking) amenitiesCount++;
@@ -1357,42 +1101,31 @@
       if (house.petFriendly) amenitiesCount++;
       if (house.pool) amenitiesCount++;
       if (house.ac) amenitiesCount++;
-      score += (amenitiesCount / 6) * 25; // max 25 points
-
-      // Location desirability (simulate based on keywords)
+      score += (amenitiesCount / 6) * 25;
       const desirableAreas = ['blantyre', 'lilongwe', 'mzuzu', 'city centre', 'area 3', 'sunnyside'];
       const locLower = (house.location || '').toLowerCase();
       let locationBonus = desirableAreas.some(area => locLower.includes(area)) ? 15 : 0;
       score += locationBonus;
-
-      // Landlord trust (if verified or premium)
       if (house.owner && house.owner.verificationType === 'premium') score += 10;
       else if (house.owner && house.owner.verificationType === 'official') score += 5;
-
-      // Rating (if any)
       if (house.averageRating) score += (house.averageRating / 5) * 10;
       return Math.min(score, 100);
     }
 
     document.getElementById("compareBtn").addEventListener("click", async () => {
       if (!isActivePremium) { showModal("Activate premium to use the comparison tool.", 'error'); return; }
-      const selectedIds = [];
-      for (let i = 1; i <= 5; i++) {
-        const val = document.getElementById(`compareSelect${i}`).value;
-        if (val) selectedIds.push(val);
-      }
-      if (selectedIds.length < 2) { showModal("Please select at least 2 properties to compare.", 'error'); return; }
-      const housesToCompare = allHousesForCompare.filter(h => selectedIds.includes(h._id));
-      if (housesToCompare.length !== selectedIds.length) { showModal("Some properties not found. Please refresh.", 'error'); return; }
-      const scored = housesToCompare.map(house => ({
-        house,
-        score: computeScore(house, allHousesForCompare)
-      }));
+      const selects = document.querySelectorAll(".compare-select");
+      const ids = [];
+      selects.forEach(sel => { if (sel.value) ids.push(sel.value); });
+      if (ids.length < 2) { showModal("Please select at least 2 properties to compare.", 'error'); return; }
+      const housesToCompare = allHousesForCompare.filter(h => ids.includes(h._id));
+      if (housesToCompare.length !== ids.length) { showModal("Some properties not found. Please refresh.", 'error'); return; }
+      const scored = housesToCompare.map(house => ({ house, score: computeScore(house, allHousesForCompare) }));
       scored.sort((a,b) => b.score - a.score);
       const resultsDiv = document.getElementById("comparisonResults");
       resultsDiv.innerHTML = `
         <div class="comparison-table">
-          <h3>📊 Ranking from Best to Worst</h3>
+          <h3><i class="fas fa-chart-simple"></i> Ranking from Best to Worst</h3>
           <table>
             <thead><tr><th>Rank</th><th>Property</th><th>Price (MWK)</th><th>Location</th><th>Score</th><th>Key Amenities</th></tr></thead>
             <tbody>
@@ -1403,9 +1136,7 @@
                   <td>${item.house.price.toLocaleString()}</td>
                   <td>${escapeHtml(item.house.location)}</td>
                   <td>${Math.round(item.score)}/100</td>
-                  <td style="font-size:0.7rem;">
-                    ${item.house.wifi ? 'WiFi ' : ''}${item.house.parking ? 'Parking ' : ''}${item.house.furnished ? 'Furnished ' : ''}
-                  </td>
+                  <td style="font-size:0.7rem;">${item.house.wifi ? 'WiFi ' : ''}${item.house.parking ? 'Parking ' : ''}${item.house.furnished ? 'Furnished ' : ''}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -1417,21 +1148,7 @@
       `;
     });
 
-    // ========== NEW: SMART MOVE PLANNER ==========
-    function loadPropertiesForMovePlanner() {
-      const select = document.getElementById("targetPropertySelect");
-      if (!allHousesForCompare.length) {
-        fetch("/api/houses?limit=100", { headers: { Authorization: "Bearer " + token } })
-          .then(res => res.json())
-          .then(data => {
-            allHousesForCompare = data.houses || [];
-            select.innerHTML = '<option value="">Select a property</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
-          });
-      } else {
-        select.innerHTML = '<option value="">Select a property</option>' + allHousesForCompare.map(h => `<option value="${h._id}">${escapeHtml(h.name)} (MWK ${h.price.toLocaleString()})</option>`).join('');
-      }
-    }
-
+    // ========== SMART MOVE PLANNER ==========
     document.getElementById("calculateMoveBtn").addEventListener("click", async () => {
       if (!isActivePremium) { showModal("Activate premium to use the move planner.", 'error'); return; }
       const currentRent = parseInt(document.getElementById("currentRent").value);
@@ -1442,9 +1159,9 @@
       const targetHouse = allHousesForCompare.find(h => h._id === targetId);
       if (!targetHouse) { showModal("Target property not found.", 'error'); return; }
       const newRent = targetHouse.price;
-      const deposit = newRent * 2; // typical 2 months deposit
+      const deposit = newRent * 2;
       const firstMonth = newRent;
-      const utilityDeposit = 50000; // typical
+      const utilityDeposit = 50000;
       const totalUpfront = deposit + firstMonth + transport + utilityDeposit;
       const monthlySavings = currentRent - newRent;
       let breakevenMonths = monthlySavings > 0 ? Math.ceil(totalUpfront / monthlySavings) : Infinity;
@@ -1453,13 +1170,13 @@
       resultsDiv.innerHTML = `
         <div><i class="fas fa-calculator"></i> <strong>Move Cost Breakdown</strong></div>
         <div style="margin-top:0.5rem;">
-          <p>💰 Deposit (2 months): MWK ${deposit.toLocaleString()}</p>
-          <p>📅 First month rent: MWK ${firstMonth.toLocaleString()}</p>
-          <p>🚚 Transport: MWK ${transport.toLocaleString()}</p>
-          <p>💡 Utility connection: MWK ${utilityDeposit.toLocaleString()}</p>
+          <p><i class="fas fa-coins"></i> Deposit (2 months): MWK ${deposit.toLocaleString()}</p>
+          <p><i class="fas fa-calendar-alt"></i> First month rent: MWK ${firstMonth.toLocaleString()}</p>
+          <p><i class="fas fa-truck"></i> Transport: MWK ${transport.toLocaleString()}</p>
+          <p><i class="fas fa-bolt"></i> Utility connection: MWK ${utilityDeposit.toLocaleString()}</p>
           <hr style="margin:0.3rem 0;">
           <p><strong>Total upfront cost: MWK ${totalUpfront.toLocaleString()}</strong></p>
-          ${monthlySavings > 0 ? `<p><i class="fas fa-chart-line"></i> Monthly savings: MWK ${monthlySavings.toLocaleString()}</p><p>⏱️ Breakeven in <strong>${breakevenMonths} months</strong></p>` : `<p><i class="fas fa-exclamation-triangle"></i> New rent is higher – you will not save monthly.</p>`}
+          ${monthlySavings > 0 ? `<p><i class="fas fa-chart-line"></i> Monthly savings: MWK ${monthlySavings.toLocaleString()}</p><p><i class="fas fa-hourglass-half"></i> Breakeven in <strong>${breakevenMonths} months</strong></p>` : `<p><i class="fas fa-exclamation-triangle"></i> New rent is higher – you will not save monthly.</p>`}
         </div>
       `;
       const checklistDiv = document.getElementById("moveChecklist");
@@ -1467,53 +1184,232 @@
         <div style="background:rgba(0,0,0,0.3); border-radius:24px; padding:0.8rem;">
           <strong><i class="fas fa-list-check"></i> Your Moving Checklist</strong>
           <ul style="margin-top:0.5rem; list-style-type:none;">
-            <li>☐ Notify current landlord (30 days notice)</li>
-            <li>☐ Arrange transport for belongings</li>
-            <li>☐ Transfer utilities (electricity, water, internet)</li>
-            <li>☐ Update address with bank, employer, and postal services</li>
-            <li>☐ Inspect new property before moving in</li>
+            <li><i class="fas fa-check-circle"></i> Notify current landlord (30 days notice)</li>
+            <li><i class="fas fa-check-circle"></i> Arrange transport for belongings</li>
+            <li><i class="fas fa-check-circle"></i> Transfer utilities (electricity, water, internet)</li>
+            <li><i class="fas fa-check-circle"></i> Update address with bank, employer, and postal services</li>
+            <li><i class="fas fa-check-circle"></i> Inspect new property before moving in</li>
           </ul>
         </div>
       `;
     });
 
-    // ========== NEW: HYPER‑LOCAL DEMAND HEATMAP ==========
+    // ========== HYPER‑LOCAL DEMAND HEATMAP (instant load) ==========
     let heatmapLayer = null;
-    function initHeatmap() {
-      const btn = document.getElementById("loadHeatmapBtn");
-      btn.addEventListener("click", async () => {
-        if (!isActivePremium) { showModal("Activate premium to access the demand heatmap.", 'error'); return; }
-        const msgDiv = document.getElementById("heatmapMessage");
-        msgDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Loading demand data...';
-        try {
-          // Simulate demand data (replace with real API later)
+    function loadHeatmap() {
+      if (!isActivePremium) return;
+      const msgDiv = document.getElementById("heatmapMessage");
+      msgDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Loading heatmap...';
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (typeof map !== 'undefined' && map) {
+          clearInterval(interval);
           const mockData = [
-            { lat: -15.7861, lng: 35.0058, intensity: 0.9 }, // Blantyre city centre
-            { lat: -13.9833, lng: 33.7833, intensity: 0.8 }, // Lilongwe
-            { lat: -11.4667, lng: 34.0167, intensity: 0.6 }, // Mzuzu
-            { lat: -15.3875, lng: 35.3192, intensity: 0.5 }, // Zomba
-            { lat: -16.0333, lng: 35.5, intensity: 0.4 },
-            { lat: -15.6833, lng: 34.9667, intensity: 0.3 },
-            { lat: -14.8333, lng: 35.65, intensity: 0.2 }
+            { lat: -15.7861, lng: 35.0058, intensity: 0.9 },
+            { lat: -13.9833, lng: 33.7833, intensity: 0.8 },
+            { lat: -11.4667, lng: 34.0167, intensity: 0.6 },
+            { lat: -15.3875, lng: 35.3192, intensity: 0.4 },
+            { lat: -16.0333, lng: 35.5, intensity: 0.2 }
           ];
-          // Wait for map to be available (global map from index.html)
-          let mapCheck = setInterval(() => {
-            if (typeof map !== 'undefined' && map) {
-              clearInterval(mapCheck);
-              if (heatmapLayer) map.removeLayer(heatmapLayer);
-              heatmapLayer = L.heatLayer(mockData, { radius: 25, blur: 15, maxZoom: 17, minOpacity: 0.5 });
-              heatmapLayer.addTo(map);
-              msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> Demand heatmap loaded. Red = highest demand, green = lowest.';
-            }
-          }, 500);
-        } catch (err) {
-          msgDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not load heatmap. Please try again later.';
+          if (window.heatmapLayer) map.removeLayer(window.heatmapLayer);
+          window.heatmapLayer = L.heatLayer(mockData, { radius: 25, blur: 15, maxZoom: 17 });
+          window.heatmapLayer.addTo(map);
+          msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> Demand heatmap loaded. Red = highest demand, green = lowest.';
+        } else if (attempts > 20) {
+          clearInterval(interval);
+          msgDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Map not ready. Visit main page first.';
         }
-      });
+      }, 500);
     }
 
-    function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+    // ========== PRICE WATCHLIST ==========
+    function loadWatchlist() {
+      const stored = localStorage.getItem("priceWatchlist");
+      if (stored) watchlist = JSON.parse(stored);
+      renderWatchlist();
+    }
+    function saveWatchlist() {
+      localStorage.setItem("priceWatchlist", JSON.stringify(watchlist));
+    }
+    function renderWatchlist() {
+      const container = document.getElementById("watchlistContainer");
+      if (!watchlist.length) { container.innerHTML = "<p>No properties being watched. Add some above.</p>"; return; }
+      container.innerHTML = watchlist.map(item => {
+        const house = allHousesForCompare.find(h => h._id === item.houseId);
+        const currentPrice = house ? house.price : item.lastPrice;
+        const hasDropped = currentPrice < item.lastPrice;
+        return `<div class="watchlist-item" data-id="${item.houseId}">
+          <strong>${house ? escapeHtml(house.name) : 'Unknown'}</strong> - MWK ${currentPrice.toLocaleString()}
+          ${hasDropped ? '<span style="color:#10b981;"><i class="fas fa-arrow-down"></i> Price dropped!</span>' : ''}
+          <button class="remove-watch small" data-id="${item.houseId}" style="float:right;">Remove</button>
+        </div>`;
+      }).join('');
+      document.querySelectorAll('.remove-watch').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          watchlist = watchlist.filter(w => w.houseId !== id);
+          saveWatchlist();
+          renderWatchlist();
+          showModal("Removed from watchlist.", 'success');
+        });
+      });
+    }
+    document.getElementById("addWatchBtn")?.addEventListener("click", () => {
+      if (!isActivePremium) { showModal("Activate premium to use price alerts.", 'error'); return; }
+      const houseId = document.getElementById("watchPropertySelect").value;
+      if (!houseId) { showModal("Select a property.", 'error'); return; }
+      const house = allHousesForCompare.find(h => h._id === houseId);
+      if (!house) return;
+      if (watchlist.length >= 5) { showModal("You can watch up to 5 properties.", 'error'); return; }
+      if (watchlist.some(w => w.houseId === houseId)) { showModal("Already watching this property.", 'error'); return; }
+      watchlist.push({ houseId, lastPrice: house.price });
+      saveWatchlist();
+      renderWatchlist();
+      showModal(`Added ${house.name} to watchlist.`, 'success');
+    });
+    // Price drop detection every 30 seconds
+    setInterval(() => {
+      if (!isActivePremium || !allHousesForCompare.length) return;
+      let changed = false;
+      watchlist.forEach(item => {
+        const house = allHousesForCompare.find(h => h._id === item.houseId);
+        if (house && house.price < item.lastPrice) {
+          changed = true;
+          addDemoNotification("Price Drop Alert", `${house.name} price dropped from MWK ${item.lastPrice.toLocaleString()} to MWK ${house.price.toLocaleString()}`);
+          item.lastPrice = house.price;
+        }
+      });
+      if (changed) { saveWatchlist(); renderWatchlist(); }
+    }, 30000);
+
+    // ========== VOICE ASSISTANT ==========
+    let recognition = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+    }
+    function parseVoiceQuery(text) {
+      text = text.toLowerCase();
+      let filters = {};
+      let bedroomMatch = text.match(/(\d+)\s*bedroom/);
+      if (bedroomMatch) filters.bedrooms = parseInt(bedroomMatch[1]);
+      let priceMatch = text.match(/(\d+)\s*(?:thousand|k|,?)/i);
+      if (priceMatch) { let price = parseInt(priceMatch[1]); if (text.includes('thousand') || text.includes('k')) price *= 1000; filters.maxPrice = price; }
+      const cities = ['lilongwe', 'blantyre', 'mzuzu', 'zomba'];
+      for (let city of cities) if (text.includes(city)) { filters.location = city.charAt(0).toUpperCase() + city.slice(1); break; }
+      if (text.includes('house')) filters.type = 'House';
+      else if (text.includes('apartment')) filters.type = 'Apartment';
+      else if (text.includes('room')) filters.type = 'Room';
+      return filters;
+    }
+    async function performVoiceSearch(filters) {
+      const params = new URLSearchParams();
+      if (filters.bedrooms) params.append('bedrooms', filters.bedrooms);
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+      if (filters.type) params.append('type', filters.type);
+      if (filters.location) params.append('location', filters.location);
+      params.append('limit', 5);
+      const res = await fetch(`/api/houses?${params.toString()}`);
+      const data = await res.json();
+      return data.houses || [];
+    }
+    function displayAndSpeakTopMatch(properties, recognizedText) {
+      const resultDiv = document.getElementById('voiceResult');
+      document.getElementById('recognisedText').innerText = recognizedText;
+      const topMatchDiv = document.getElementById('topMatchResult');
+      if (!properties.length) { topMatchDiv.innerHTML = '<p>No matches.</p>'; resultDiv.style.display = 'block'; return; }
+      const top = properties[0];
+      topMatchDiv.innerHTML = `<p><strong>${escapeHtml(top.name)}</strong> – MWK ${top.price.toLocaleString()} in ${top.location}</p><button class="small" onclick="window.open('/house/${top._id}','_blank')">View</button>`;
+      resultDiv.style.display = 'block';
+    }
+    document.getElementById('startVoiceBtn').addEventListener('click', () => {
+      if (!recognition) { showModal('Voice recognition not supported.', 'error'); return; }
+      if (!isActivePremium) { showModal('Voice search is a premium feature.', 'error'); return; }
+      const btn = document.getElementById('startVoiceBtn');
+      const statusDiv = document.getElementById('voiceStatus');
+      btn.classList.add('listening');
+      statusDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Listening...';
+      recognition.start();
+      recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
+        statusDiv.innerHTML = `Recognised: "${transcript}"`;
+        btn.classList.remove('listening');
+        const filters = parseVoiceQuery(transcript);
+        if (Object.keys(filters).length === 0) { statusDiv.innerHTML = 'Could not understand. Try "3 bedroom house under 200 thousand"'; return; }
+        statusDiv.innerHTML = 'Searching...';
+        const properties = await performVoiceSearch(filters);
+        displayAndSpeakTopMatch(properties, transcript);
+      };
+      recognition.onerror = () => { btn.classList.remove('listening'); statusDiv.innerHTML = 'Error. Try again.'; };
+      recognition.onend = () => { if (btn.classList.contains('listening')) btn.classList.remove('listening'); };
+    });
+
+    // ========== AI IMAGE SEARCH ==========
+    let mobilenetModel = null;
+    async function loadMobileNet() {
+      try {
+        mobilenetModel = await mobilenet.load();
+        document.getElementById("searchSimilarBtn").disabled = false;
+        document.getElementById("modelStatus").innerHTML = '<i class="fas fa-check-circle"></i> Ready';
+      } catch (err) { setTimeout(loadMobileNet, 3000); }
+    }
+    loadMobileNet();
+    async function getFeatureVector(imgElement) {
+      const img = tf.browser.fromPixels(imgElement);
+      const resized = tf.image.resizeBilinear(img, [224, 224]);
+      const expanded = resized.expandDims(0);
+      const normalized = expanded.toFloat().div(255);
+      const predictions = await mobilenetModel.infer(normalized, true);
+      const features = predictions.dataSync();
+      tf.dispose([img, resized, expanded, normalized, predictions]);
+      return Array.from(features);
+    }
+    document.getElementById('imageUploadArea').addEventListener('click', () => document.getElementById('imageUploadInput').click());
+    document.getElementById('imageUploadInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => { const img = document.getElementById('uploadedImagePreview'); img.src = ev.target.result; img.style.display = 'block'; };
+        reader.readAsDataURL(file);
+      }
+    });
+    document.getElementById('searchSimilarBtn').addEventListener('click', async () => {
+      if (!isActivePremium) { showModal("Image search is a premium feature.", 'error'); return; }
+      const img = document.getElementById('uploadedImagePreview');
+      if (!img.src || img.style.display === 'none') { showModal("Upload an image first.", 'error'); return; }
+      const resultsDiv = document.getElementById('similarResults');
+      resultsDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Searching...';
+      try {
+        const vector = await getFeatureVector(img);
+        const res = await fetch('/api/image-search/find-similar', { method: 'POST', headers: { 'Content-Type':'application/json', Authorization:"Bearer "+token }, body: JSON.stringify({ vector }) });
+        const houses = await res.json();
+        if (!houses.length) { resultsDiv.innerHTML = '<p>No similar properties.</p>'; return; }
+        resultsDiv.innerHTML = houses.map(h => `<div class="similar-house-item"><img class="similar-house-img" src="${h.images?.[0]||'placeholder.jpg'}"><div class="similar-house-info"><h4>${escapeHtml(h.name)}</h4><p>MWK ${h.price.toLocaleString()} | ${h.location}</p><a href="/house/${h._id}" target="_blank">View</a></div></div>`).join('');
+      } catch (err) { resultsDiv.innerHTML = '<p>Error.</p>'; }
+    });
+
+    // ========== TAB SWITCHING (heatmap auto-load) ==========
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tabId = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        if (tabId === 'compare') loadAllHousesForCompare();
+        if (tabId === 'move') loadAllHousesForCompare();
+        if (tabId === 'alerts') loadAllHousesForCompare();
+        if (tabId === 'heatmap') setTimeout(loadHeatmap, 300);
+      });
+    });
+
     loadPremiumStatus();
+    loadAllHousesForCompare();
+    loadWatchlist();
   </script>
 </body>
 </html>
