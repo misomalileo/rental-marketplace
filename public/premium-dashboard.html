@@ -12,7 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b); color: #f1f5f9; font-family: 'Inter', sans-serif; min-height: 100vh; }
+    body { background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b); color: #f1f5f9; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 14px; line-height: 1.5; min-height: 100vh; }
     .navbar { background: rgba(15,23,42,0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000; }
     .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .logo i { font-size: 1.6rem; margin-right: 6px; background: linear-gradient(135deg, #FFD966, #FF8C42); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -118,9 +118,9 @@
     .comparison-table table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
     .comparison-table th, .comparison-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .comparison-table th { color: #FFB347; }
-    .ranking-badge { background: #FF8C42; border-radius: 20px; padding: 0.2rem 0.5rem; font-weight: bold; display: inline-block; text-align: center; }
+    .ranking-badge { background: #FF8C42; border-radius: 20px; padding: 0.2rem 0.5rem; font-weight: bold; display: inline-block; text-align: center; font-size: 0.7rem; }
     .move-planner-results { background: rgba(0,0,0,0.4); border-radius: 24px; padding: 1rem; margin-top: 1rem; }
-    .heatmap-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 40px; padding: 0.5rem 1rem; color: white; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .heatmap-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 40px; padding: 0.5rem 1rem; color: white; cursor: pointer; width: 100%; margin-top: 0.5rem; display: none; } /* hidden, heatmap loads automatically */
     .watchlist-item .remove-watch { background: none; border: none; color: #ef4444; cursor: pointer; float: right; font-size: 0.7rem; }
     @media (max-width: 768px) {
       .dashboard-container { max-width: 100%; margin: 1rem auto; padding: 0 0.8rem; }
@@ -266,11 +266,11 @@
       </div>
     </div>
 
-    <!-- Heatmap Tab (instant load) -->
+    <!-- Heatmap Tab (auto-load) -->
     <div id="tab-heatmap" class="tab-content">
       <div class="dashboard-grid">
         <div class="card"><h2><i class="fas fa-fire"></i> Demand Heatmap</h2>
-          <p style="font-size:0.75rem;">Red = high demand, Green = low demand. Loads automatically.</p>
+          <p style="font-size:0.75rem;">Red = high demand, Green = low demand. Heatmap appears automatically.</p>
           <div id="heatmapMessage" style="margin-top: 0.8rem; font-size:0.8rem; text-align:center;"></div>
         </div>
       </div>
@@ -468,7 +468,7 @@
       const avg = predictions.reduce((a,b)=>a+b,0)/3;
       const lower = Math.min(...predictions);
       const upper = Math.max(...predictions);
-      const trendIcon = avg > house.price ? '📈' : (avg < house.price ? '📉' : '➡️');
+      const trendIcon = avg > house.price ? '<i class="fas fa-arrow-up"></i>' : (avg < house.price ? '<i class="fas fa-arrow-down"></i>' : '<i class="fas fa-minus"></i>');
       const trendText = avg > house.price ? 'Rising' : (avg < house.price ? 'Falling' : 'Stable');
       if (predictorChart) predictorChart.destroy();
       const ctx = document.getElementById("rentPredictorChart").getContext("2d");
@@ -842,12 +842,12 @@
       document.getElementById("moveChecklist").innerHTML = `<div style="background:rgba(0,0,0,0.3); border-radius:24px; padding:0.8rem; margin-top:0.8rem;"><strong>Checklist</strong><ul><li>Notify current landlord</li><li>Arrange transport</li><li>Transfer utilities</li><li>Update address</li></ul></div>`;
     });
 
-    // ========== HEATMAP (instant load) ==========
+    // ========== HEATMAP (instant load, no button) ==========
+    let heatmapLayer = null;
     function loadHeatmap() {
       if (!isActivePremium) return;
       const msgDiv = document.getElementById("heatmapMessage");
       msgDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Loading heatmap...';
-      // Wait for the global map to be ready (from index.html)
       let attempts = 0;
       const interval = setInterval(() => {
         attempts++;
@@ -870,7 +870,7 @@
         }
       }, 500);
     }
-    // When heatmap tab becomes active, load heatmap automatically
+    // Auto‑load heatmap when the tab is activated
     const heatmapTabBtn = document.querySelector('.tab-btn[data-tab="heatmap"]');
     if (heatmapTabBtn) {
       heatmapTabBtn.addEventListener('click', () => {
