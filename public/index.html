@@ -897,7 +897,123 @@
       color: var(--primary);
     }
     @media (max-width: 768px) {
-      .house-preview-tooltip { display: none; } /* disable on mobile to avoid clutter */
+      .house-preview-tooltip { display: none; }
+    }
+
+    /* ========== LIGHTBOX GALLERY (full screen, swipe) ========== */
+    .lightbox-gallery {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      z-index: 20000;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(10px);
+    }
+    .lightbox-gallery.active {
+      display: flex;
+    }
+    .lightbox-gallery .gallery-container {
+      position: relative;
+      width: 100%;
+      height: 80%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .lightbox-gallery .gallery-slider {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      width: 100%;
+      height: 100%;
+      scrollbar-width: none;
+    }
+    .lightbox-gallery .gallery-slider::-webkit-scrollbar {
+      display: none;
+    }
+    .lightbox-gallery .gallery-slide {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+    .lightbox-gallery .gallery-slide img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .lightbox-gallery .gallery-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+    .lightbox-gallery .gallery-nav button {
+      background: rgba(0,0,0,0.6);
+      border: none;
+      color: white;
+      font-size: 2rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: all 0.2s;
+    }
+    .lightbox-gallery .gallery-nav button:hover {
+      background: rgba(0,0,0,0.9);
+      transform: scale(1.05);
+    }
+    .lightbox-gallery .close-gallery {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      z-index: 20001;
+      background: rgba(0,0,0,0.5);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox-gallery .close-gallery:hover {
+      background: rgba(0,0,0,0.8);
+    }
+    .lightbox-gallery .gallery-counter {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+      font-size: 0.9rem;
+      background: rgba(0,0,0,0.5);
+      display: inline-block;
+      width: auto;
+      margin: 0 auto;
+      padding: 5px 12px;
+      border-radius: 30px;
+      backdrop-filter: blur(4px);
     }
 
     /* Pagination hidden (infinite scroll replaces it) */
@@ -905,7 +1021,7 @@
       display: none;
     }
 
-    /* ========== MAP & AMENITY TOGGLE PANEL ========== */
+    /* ========== MAP & AMENITY TOGGLE PANEL (unchanged) ========== */
     .map-section { margin: 1.5rem 0; }
     #map { height: 380px; width: 100%; border-radius: 28px; overflow: hidden; border: 1px solid var(--input-border); }
     .map-controls {
@@ -2488,7 +2604,7 @@
     window.escapeHtml = function(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); };
   </script>
 
-  <!-- ========== CORE ENHANCEMENT SCRIPT (infinite scroll, preview, new badge, recently viewed, clear filters) ========== -->
+  <!-- ========== CORE ENHANCEMENT SCRIPT (infinite scroll, preview, new badge, recently viewed, clear filters, LIGHTBOX) ========== -->
   <script>
     // Global state for infinite scroll
     let currentPage = 1;
@@ -2569,7 +2685,102 @@
       }
     }
 
-    // Override the original loadHouses function to support infinite scroll, new badge, lazy loading, and preview
+    // LIGHTBOX GALLERY
+    let currentGalleryImages = [];
+    let currentGalleryIndex = 0;
+    let gallerySlider = null;
+    let galleryContainer = null;
+
+    function openGallery(images, startIndex = 0) {
+      if (!images || images.length === 0) return;
+      currentGalleryImages = images;
+      currentGalleryIndex = startIndex;
+
+      // Create lightbox if not exists
+      let lightbox = document.getElementById('globalLightbox');
+      if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'globalLightbox';
+        lightbox.className = 'lightbox-gallery';
+        lightbox.innerHTML = `
+          <div class="close-gallery"><i class="fas fa-times"></i></div>
+          <div class="gallery-container">
+            <div class="gallery-slider"></div>
+            <div class="gallery-nav">
+              <button class="gallery-prev"><i class="fas fa-chevron-left"></i></button>
+              <button class="gallery-next"><i class="fas fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="gallery-counter"></div>
+        `;
+        document.body.appendChild(lightbox);
+
+        const closeBtn = lightbox.querySelector('.close-gallery');
+        const prevBtn = lightbox.querySelector('.gallery-prev');
+        const nextBtn = lightbox.querySelector('.gallery-next');
+        closeBtn.addEventListener('click', () => lightbox.classList.remove('active'));
+        prevBtn.addEventListener('click', () => {
+          if (currentGalleryImages.length) {
+            currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+            updateGallerySlider();
+          }
+        });
+        nextBtn.addEventListener('click', () => {
+          if (currentGalleryImages.length) {
+            currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
+            updateGallerySlider();
+          }
+        });
+        // Touch swipe support
+        let touchStartX = 0;
+        lightbox.addEventListener('touchstart', (e) => {
+          touchStartX = e.touches[0].clientX;
+        });
+        lightbox.addEventListener('touchend', (e) => {
+          const endX = e.changedTouches[0].clientX;
+          const diff = endX - touchStartX;
+          if (Math.abs(diff) > 50) {
+            if (diff > 0) prevBtn.click();
+            else nextBtn.click();
+          }
+        });
+      }
+      gallerySlider = lightbox.querySelector('.gallery-slider');
+      updateGallerySlider();
+      lightbox.classList.add('active');
+    }
+
+    function updateGallerySlider() {
+      if (!gallerySlider) return;
+      gallerySlider.innerHTML = '';
+      currentGalleryImages.forEach((imgSrc, idx) => {
+        const slide = document.createElement('div');
+        slide.className = 'gallery-slide';
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.alt = 'Property image';
+        slide.appendChild(img);
+        gallerySlider.appendChild(slide);
+      });
+      // Scroll to current index
+      const slideWidth = gallerySlider.clientWidth;
+      gallerySlider.scrollTo({ left: currentGalleryIndex * slideWidth, behavior: 'smooth' });
+      const counter = document.querySelector('#globalLightbox .gallery-counter');
+      if (counter) {
+        counter.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
+      }
+      // Update counter on scroll
+      gallerySlider.onscroll = () => {
+        const newIndex = Math.round(gallerySlider.scrollLeft / gallerySlider.clientWidth);
+        if (newIndex !== currentGalleryIndex && newIndex >= 0 && newIndex < currentGalleryImages.length) {
+          currentGalleryIndex = newIndex;
+          const counterDiv = document.querySelector('#globalLightbox .gallery-counter');
+          if (counterDiv) counterDiv.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
+        }
+      };
+    }
+
+    // Override the original loadHouses function to support infinite scroll, new badge, lazy loading, preview, and lightbox on image click
     const originalLoadHouses = window.loadHouses;
     window.loadHouses = async function(page = 1, append = false) {
       if (isLoading) return;
@@ -2641,11 +2852,11 @@
       const images = house.images && house.images.length ? house.images : ['placeholder.jpg'];
       let slidesHtml = '', dotsHtml = '';
       images.forEach((img, idx) => {
-        slidesHtml += `<div class="slide"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
+        slidesHtml += `<div class="slide" data-img-index="${idx}"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
         dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
       });
       card.innerHTML = `
-        <div class="slider">
+        <div class="slider" data-house-id="${house._id}">
           <div class="slides-container">${slidesHtml}</div>
           <div class="dots">${dotsHtml}</div>
         </div>
@@ -2689,6 +2900,14 @@
             slidesContainer.scrollTo({ left: idx * slidesContainer.clientWidth, behavior: 'smooth' });
           });
         });
+        // Add click event on each slide image to open lightbox
+        const slides = slidesContainer.querySelectorAll('.slide');
+        slides.forEach((slide, idx) => {
+          slide.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openGallery(images, idx);
+          });
+        });
       }
       // Preview on hover
       card.addEventListener('mouseenter', (e) => showPreview(house, e));
@@ -2714,16 +2933,17 @@
       });
     }
 
-    // Infinite scroll observer
+    // Infinite scroll observer (placed after houses container)
+    const sentinel = document.createElement('div');
+    sentinel.style.height = '20px';
+    sentinel.style.width = '100%';
+    const housesContainer = document.getElementById('houses-container');
+    housesContainer.parentNode.insertBefore(sentinel, housesContainer.nextSibling);
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && !isLoading && hasMore) {
         window.loadHouses(currentPage + 1, true);
       }
     }, { threshold: 0.5, rootMargin: '200px' });
-    const sentinel = document.createElement('div');
-    sentinel.style.height = '20px';
-    sentinel.style.width = '100%';
-    document.getElementById('houses-container').parentNode.insertBefore(sentinel, document.getElementById('houses-container').nextSibling);
     observer.observe(sentinel);
 
     // Clear filters button
