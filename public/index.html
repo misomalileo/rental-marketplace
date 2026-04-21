@@ -671,13 +671,6 @@
     }
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
     .hero p { font-size: 1rem; font-weight: 400; color: var(--gray-500); margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
-    .hero-tagline span {
-      background: linear-gradient(135deg, #ffffff, #a0c0ff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      font-weight: 600;
-    }
 
     .main-container { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
 
@@ -819,32 +812,35 @@
     }
     .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
 
-    /* Pagination */
-    .pagination {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      margin: 1.5rem 0;
-      flex-wrap: wrap;
-    }
-    .page-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--input-border);
-      border-radius: 30px;
-      padding: 0.3rem 0.8rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: var(--text-color);
+    /* Infinite scroll loading indicator */
+    .loading-indicator {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--gray-500);
       font-size: 0.8rem;
+      display: none;
     }
-    .page-btn:hover { background: var(--button-bg); color: white; border-color: var(--button-bg); }
-    .page-btn.active {
-      background: var(--primary);
+    .loading-indicator.show {
+      display: block;
+    }
+    /* Load More button (fallback) */
+    .load-more-btn {
+      background: var(--button-bg);
       color: white;
-      border-color: var(--primary);
+      border: none;
+      border-radius: 40px;
+      padding: 0.5rem 1.5rem;
+      margin: 1rem auto;
+      cursor: pointer;
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s;
     }
-    .page-btn.disabled { opacity: 0.5; cursor: not-allowed; }
-
+    .load-more-btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
     /* Recently viewed carousel – small squared images */
     .recently-viewed {
       margin: 2rem 0;
@@ -1037,7 +1033,12 @@
       background: white;
     }
 
-    /* ========== MAP & AMENITY TOGGLE PANEL ========== */
+    /* Pagination hidden (infinite scroll replaces it) */
+    .pagination {
+      display: none;
+    }
+
+    /* ========== MAP & AMENITY TOGGLE PANEL (unchanged) ========== */
     .map-section { margin: 1.5rem 0; }
     #map { height: 380px; width: 100%; border-radius: 28px; overflow: hidden; border: 1px solid var(--input-border); }
     .map-controls {
@@ -1634,13 +1635,13 @@
         <div id="hero3dHouse"></div>
         <span>Khomo Lathu</span>
       </h1>
-      <p class="hero-tagline">
+      <p>
         <svg width="18" height="18" viewBox="0 0 18 18" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
           <path d="M9,2.5 A6.5,6.5 0 0,1 15.5,9 A6.5,6.5 0 0,1 9,15.5 A6.5,6.5 0 0,1 2.5,9 A6.5,6.5 0 0,1 9,2.5 Z" fill="#009CFF"/>
           <circle cx="9" cy="9" r="6" fill="#009CFF"/>
           <path d="M6.2 9.2 L8.2 11.2 L11.8 7.8" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
-        <span>Verified rentals from trusted landlords</span>
+        Verified rentals from trusted landlords
       </p>
     </div>
   </header>
@@ -1671,11 +1672,7 @@
       <select id="regionFilter" class="sort-select">
         <option value="">All Regions</option><option value="Northern">Northern</option><option value="Central">Central</option><option value="Southern">Southern</option>
       </select>
-      <div class="district-filter">
-        <select id="districtFilterSelect" class="sort-select">
-          <option value="">All Districts</option>
-        </select>
-      </div>
+      <!-- District dropdown will be inserted here by JS -->
       <select id="sortSelect" class="sort-select">
         <option value="default">Sort: Default</option><option value="price_asc">Price: Low to High</option>
         <option value="price_desc">Price: High to Low</option><option value="newest">Newest First</option>
@@ -1712,7 +1709,8 @@
 
     <h2 style="margin:0.8rem 0 0.3rem"><i class="fas fa-list"></i> Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
-    <div id="pagination" class="pagination"></div>
+    <div class="loading-indicator" id="loadingIndicator"><i class="fas fa-spinner fa-pulse"></i> Loading more properties...</div>
+    <button id="loadMoreBtn" class="load-more-btn" style="display: none;">Load More Properties</button>
 
     <!-- Recently Viewed Section -->
     <div class="recently-viewed" id="recentlyViewedSection" style="display: none;">
@@ -1914,1119 +1912,688 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/script.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-  <!-- ========== COMPLETE SCRIPT (ALL FEATURES, NO PLACEHOLDERS) ========== -->
+  <!-- 3D House Script (standalone, using global THREE) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    (function() {
+      const container = document.getElementById('hero3dHouse');
+      if (!container) return;
+
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      const scene = new THREE.Scene();
+      scene.background = null;
+      scene.fog = new THREE.FogExp2(0x071a2b, 0.012);
+
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera.position.set(5, 3.5, 6);
+      camera.lookAt(0, 1.2, 0);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setClearColor(0x000000, 0);
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      let controls = null;
+      if (typeof THREE.OrbitControls !== 'undefined') {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.2;
+        controls.enableZoom = false;
+        controls.enablePan = false;
+        controls.target.set(0, 1.2, 0);
+      } else {
+        window.autoRotateAngle = 0;
+      }
+
+      // Lights
+      const ambientLight = new THREE.AmbientLight(0x404060, 0.55);
+      scene.add(ambientLight);
+      const mainLight = new THREE.DirectionalLight(0xffeebb, 1.2);
+      mainLight.position.set(4, 6, 3);
+      mainLight.castShadow = true;
+      scene.add(mainLight);
+      const fillLight = new THREE.PointLight(0x4488ff, 0.45);
+      fillLight.position.set(0, -1, 0);
+      scene.add(fillLight);
+      const rimLight = new THREE.PointLight(0xff8866, 0.7);
+      rimLight.position.set(-2, 2.5, -4);
+      scene.add(rimLight);
+      const accentLight = new THREE.PointLight(0xff44aa, 0.4);
+      accentLight.position.set(3, 1.8, 2);
+      scene.add(accentLight);
+      const frontFill = new THREE.PointLight(0xffcc88, 0.35);
+      frontFill.position.set(0, 1.5, 3);
+      scene.add(frontFill);
+
+      // Ground disc
+      const glowDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(2.8, 16),
+        new THREE.MeshStandardMaterial({ color: 0x2266aa, emissive: 0x114477, roughness: 0.3, metalness: 0.7, transparent: true, opacity: 0.25 })
+      );
+      glowDisc.rotation.x = -Math.PI / 2;
+      glowDisc.position.y = -1.12;
+      scene.add(glowDisc);
+
+      // Materials
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0xfff5e6, roughness: 0.25, metalness: 0.1 });
+      const roofMat = new THREE.MeshStandardMaterial({ color: 0x2a7fff, roughness: 0.4, metalness: 0.2, emissive: 0x002244 });
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0xff6b4a, roughness: 0.3 });
+      const doorMat = new THREE.MeshStandardMaterial({ color: 0xdd44aa, emissive: 0x551133, emissiveIntensity: 0.2, metalness: 0.1 });
+      const garageMat = new THREE.MeshStandardMaterial({ color: 0xf0ecff, roughness: 0.3 });
+
+      // House base
+      const houseWidth = 2.6, houseHeight = 1.8, houseDepth = 2.6;
+      const base = new THREE.Mesh(new THREE.BoxGeometry(houseWidth, houseHeight, houseDepth), wallMat);
+      base.castShadow = true;
+      base.position.y = -0.2;
+      scene.add(base);
+
+      // Roof
+      const roofGeo = new THREE.ConeGeometry(2.2, 1.4, 4);
+      const roof = new THREE.Mesh(roofGeo, roofMat);
+      roof.castShadow = true;
+      roof.position.y = houseHeight - 0.2 + 0.7;
+      roof.rotation.y = Math.PI / 4;
+      scene.add(roof);
+
+      // Chimney
+      const chimneyBase = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.1, 0.55), new THREE.MeshStandardMaterial({ color: 0xdd6644 }));
+      chimneyBase.castShadow = true;
+      chimneyBase.position.set(0.95, 0.65, 0.85);
+      scene.add(chimneyBase);
+      const chimneyTop = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.7), new THREE.MeshStandardMaterial({ color: 0xcc5533 }));
+      chimneyTop.castShadow = true;
+      chimneyTop.position.set(0.95, 1.2, 0.85);
+      scene.add(chimneyTop);
+
+      // Garage
+      const garage = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.5, 1.8), garageMat);
+      garage.castShadow = true;
+      garage.position.set(1.9, -0.3, -0.6);
+      scene.add(garage);
+      const garageRoof = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.18, 2.0), trimMat);
+      garageRoof.position.set(1.9, 0.85, -0.6);
+      scene.add(garageRoof);
+      const garageDoor = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 0.08), new THREE.MeshStandardMaterial({ color: 0xffcc44, metalness: 0.4 }));
+      garageDoor.position.set(1.9, -0.05, -1.35);
+      scene.add(garageDoor);
+
+      // Windows
+      const windowMatGlow = new THREE.MeshStandardMaterial({ color: 0xaaffff, emissive: 0x33aacc, emissiveIntensity: 0.5, metalness: 0.9 });
+      function addWindow(x, y, z, w = 0.7, h = 0.7) {
+        const win = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), windowMatGlow);
+        win.position.set(x, y, z);
+        win.castShadow = true;
+        scene.add(win);
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+        const frameHor = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.05, 0.02), frameMat);
+        const frameVer = new THREE.Mesh(new THREE.BoxGeometry(0.05, h + 0.08, 0.02), frameMat);
+        frameHor.position.set(x, y, z + 0.045);
+        frameVer.position.set(x, y, z + 0.045);
+        scene.add(frameHor);
+        scene.add(frameVer);
+      }
+      addWindow(-0.7, 0.35, 1.36, 0.65, 0.75);
+      addWindow(0.75, 0.35, 1.36, 0.65, 0.75);
+      addWindow(-1.45, 0.45, 0.2, 0.6, 0.7);
+      addWindow(0.2, 0.55, -1.45, 0.6, 0.6);
+      const garageWin = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.08), windowMatGlow);
+      garageWin.position.set(1.9, 0.25, 0.1);
+      scene.add(garageWin);
+
+      // Door
+      const door = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.3, 0.12), doorMat);
+      door.castShadow = true;
+      door.position.set(0, -0.15, 1.42);
+      scene.add(door);
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffaa55, metalness: 0.85 }));
+      knob.position.set(0.28, -0.1, 1.5);
+      scene.add(knob);
+
+      // Steps
+      const stepMat = new THREE.MeshStandardMaterial({ color: 0xaa8866, roughness: 0.7 });
+      const step1 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.45), stepMat);
+      step1.position.set(0, -0.45, 1.78);
+      scene.add(step1);
+      const step2 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.4), stepMat);
+      step2.position.set(0, -0.32, 1.85);
+      scene.add(step2);
+
+      // Bushes
+      const bushMat = new THREE.MeshStandardMaterial({ color: 0x5aac44, emissive: 0x226622, emissiveIntensity: 0.12 });
+      function addBush(x, z, scaleVal) {
+        const bush = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), bushMat);
+        bush.position.set(x, -0.55, z);
+        bush.scale.set(scaleVal, scaleVal * 0.7, scaleVal);
+        bush.castShadow = true;
+        scene.add(bush);
+      }
+      addBush(-1.2, 1.9, 0.9);
+      addBush(1.4, 1.85, 0.8);
+      addBush(-1.7, 0.7, 0.7);
+      addBush(1.9, -1.2, 0.8);
+      addBush(-1.6, -1.3, 0.7);
+
+      // Particles
+      const particleCount = 300;
+      const particlesGeo = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        const radius = 2.5 + Math.random() * 2;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const x = Math.sin(phi) * Math.cos(theta) * radius;
+        const z = Math.sin(phi) * Math.sin(theta) * radius;
+        const y = Math.sin(phi) * radius * 0.8 + 0.5;
+        positions[i*3] = x;
+        positions[i*3+1] = y;
+        positions[i*3+2] = z;
+      }
+      particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const particleMat = new THREE.PointsMaterial({ color: 0xffaa77, size: 0.045, transparent: true, blending: THREE.AdditiveBlending });
+      const particles = new THREE.Points(particlesGeo, particleMat);
+      scene.add(particles);
+
+      // Stars
+      const starCount = 400;
+      const starGeo = new THREE.BufferGeometry();
+      const starPositions = [];
+      for (let i = 0; i < starCount; i++) {
+        starPositions.push((Math.random() - 0.5) * 60);
+        starPositions.push((Math.random() - 0.5) * 25);
+        starPositions.push((Math.random() - 0.5) * 40 - 20);
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
+      const starMatPoints = new THREE.PointsMaterial({ color: 0xffdd99, size: 0.035, transparent: true, blending: THREE.AdditiveBlending });
+      const stars = new THREE.Points(starGeo, starMatPoints);
+      scene.add(stars);
+
+      // Fireflies
+      const fireflies = [];
+      for (let i = 0; i < 30; i++) {
+        const orbMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422, emissiveIntensity: 0.5, transparent: true });
+        const orb = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), orbMat);
+        orb.userData = {
+          speedX: (Math.random() - 0.5) * 0.008,
+          speedY: (Math.random() - 0.5) * 0.008 + 0.003,
+          speedZ: (Math.random() - 0.5) * 0.008,
+          rangeX: 2.2,
+          rangeZ: 2.2,
+          baseY: 0.2 + Math.random() * 1.6
+        };
+        orb.position.x = (Math.random() - 0.5) * 3.2;
+        orb.position.y = orb.userData.baseY;
+        orb.position.z = (Math.random() - 0.5) * 3;
+        scene.add(orb);
+        fireflies.push(orb);
+      }
+
+      let time = 0;
+      function animate() {
+        requestAnimationFrame(animate);
+        time += 0.016;
+        const pulse = Math.sin(time * 1.3) * 0.12;
+        accentLight.intensity = 0.4 + pulse;
+        rimLight.intensity = 0.65 + Math.sin(time * 0.9) * 0.15;
+        frontFill.intensity = 0.35 + Math.sin(time * 1.1) * 0.1;
+
+        fireflies.forEach(orb => {
+          orb.position.x += orb.userData.speedX;
+          orb.position.z += orb.userData.speedZ;
+          orb.position.y += orb.userData.speedY;
+          if (Math.abs(orb.position.x) > orb.userData.rangeX) orb.userData.speedX *= -1;
+          if (Math.abs(orb.position.z) > orb.userData.rangeZ) orb.userData.speedZ *= -1;
+          if (orb.position.y > orb.userData.baseY + 0.6 || orb.position.y < orb.userData.baseY - 0.3) orb.userData.speedY *= -1;
+          const scale = 0.9 + Math.sin(Date.now() * 0.005 + orb.position.x) * 0.2;
+          orb.scale.set(scale, scale, scale);
+        });
+
+        stars.rotation.y += 0.0005;
+        stars.rotation.x += 0.0003;
+        particles.rotation.y += 0.002;
+        particles.rotation.x = Math.sin(time * 0.2) * 0.1;
+
+        if (controls) {
+          controls.update();
+        } else {
+          window.autoRotateAngle += 0.008;
+          camera.position.x = 5 * Math.sin(window.autoRotateAngle);
+          camera.position.z = 6 * Math.cos(window.autoRotateAngle);
+          camera.lookAt(0, 1.2, 0);
+        }
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+    })();
+  </script>
+
+  <!-- ========== ADDITIONAL FEATURES SCRIPT (infinite scroll, lightbox, recently viewed, preview, district dropdown) ========== -->
   <script>
     // ============================================================
-    // FULL FRONT-END LOGIC (map, filters, pagination, lightbox, recently viewed, district dropdown, etc.)
+    // This script adds all missing features without altering any existing code.
+    // It runs after the original script.js and enhances the page.
     // ============================================================
     
-    // Global variables
-    let allHouses = [];
-    let map;
-    let markersLayer;
-    let currentPage = 1;
-    let totalPages = 1;
-    let currentType = 'all';
-    let currentFilters = {};
-    let currentSort = 'default';
-    let userLocation = null;
-    let radius = 2;
-    let drawnPolygon = null;
-    let drawnItems;
-    let currentShareHouseId = null;
-    let comparisonList = [];
-    let currentRegion = '';
-    let currentDistrict = '';
-    let amenityLayers = {};
-    let healthPoints = [];
-    let schoolPoints = [];
-    let marketPoints = [];
-    let lastSelectedHouse = null;
-    let heatmapLayerGlobal = null;
-    let heatmapActive = false;
-    let walkabilityLayer = null;
-    
-    // Recently viewed
-    let recentlyViewedIds = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-    
-    // ========== HELPER FUNCTIONS ==========
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-      });
-    }
-    
-    function showToast(message, type = 'info') {
-      const existing = document.querySelector('.toast-notification');
-      if (existing) existing.remove();
-      const toast = document.createElement('div');
-      toast.className = 'toast-notification';
-      toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-    
-    function fbSaturatedSky(size = 18, scallops = 12, depth = 3.5) {
-      const cx = size/2, cy = size/2, r = size/2 - 2;
-      const angleStep = (2 * Math.PI) / scallops;
-      let path = '';
-      for (let i = 0; i < scallops; i++) {
-        const startAngle = i * angleStep;
-        const midAngle = startAngle + angleStep / 2;
-        const endAngle = startAngle + angleStep;
-        const x1 = cx + r * Math.cos(startAngle);
-        const y1 = cy + r * Math.sin(startAngle);
-        const x2 = cx + (r + depth) * Math.cos(midAngle);
-        const y2 = cy + (r + depth) * Math.sin(midAngle);
-        const x3 = cx + r * Math.cos(endAngle);
-        const y3 = cy + r * Math.sin(endAngle);
-        path += `M${x1},${y1} A${r + depth},${r + depth} 0 0,1 ${x2},${y2} A${r},${r} 0 0,1 ${x3},${y3} `;
-      }
-      return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display: inline-block; vertical-align: middle;"><path d="${path}" fill="#009CFF"/><circle cx="${cx}" cy="${cy}" r="${r - 0.5}" fill="#009CFF"/><path d="M${cx*0.65} ${cy*1.05} L${cx*0.85} ${cy*1.25} L${cx*1.35} ${cy*0.8}" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
-    }
-    
-    function getDisplayType(type) {
-      const typeMap = {
-        'House': 'House', 'Apartment': 'Apartment', 'Room': 'Room', 'Hostel': 'Hostel',
-        'Office': 'Office', 'FurnishedApartment': 'Furnished Apartment', 'ShortStay': 'Short-Stay',
-        'SharedLiving': 'Shared Living', 'StudentAccommodation': 'Student Accommodation'
-      };
-      return typeMap[type] || type;
-    }
-    
-    function getTypeIcon(type) {
-      const iconMap = {
-        'House': 'fa-home', 'Apartment': 'fa-building', 'Room': 'fa-bed', 'Hostel': 'fa-hotel',
-        'Office': 'fa-briefcase', 'FurnishedApartment': 'fa-couch', 'ShortStay': 'fa-calendar-week',
-        'SharedLiving': 'fa-users', 'StudentAccommodation': 'fa-graduation-cap'
-      };
-      return iconMap[type] || 'fa-home';
-    }
-    
-    function getStarRating(average) {
-      if (!average) return "☆☆☆☆☆";
-      const fullStars = Math.round(average);
-      const emptyStars = 5 - fullStars;
-      return "★".repeat(fullStars) + "☆".repeat(emptyStars);
-    }
-    
-    function getDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLng = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-    
-    function checkAuth() { return !!localStorage.getItem("token"); }
-    function getUserIdFromToken() {
-      const token = localStorage.getItem("token");
-      if (!token) return null;
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.id;
-      } catch { return null; }
-    }
-    
-    // ========== MODAL CLOSE FUNCTIONS ==========
-    window.closeModal = function(id) {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    };
-    window.closePropertyModal = function() {
-      document.getElementById('propertyModal').style.display = 'none';
-    };
-    window.closeLightbox = function() {
-      document.getElementById('lightboxModal').style.display = 'none';
-    };
-    window.closeLandlordModal = function() {
-      document.getElementById('landlordModal').style.display = 'none';
-    };
-    window.closeShareModal = function() {
-      document.getElementById('shareModal').style.display = 'none';
-    };
-    window.closeComparisonModal = function() {
-      document.getElementById('comparisonModal').style.display = 'none';
-    };
-    window.closeDreamMatchModal = function() {
-      document.getElementById('dreamMatchModal').style.display = 'none';
-    };
-    
-    // ========== RECENTLY VIEWED ==========
-    function addToRecentlyViewed(houseId) {
-      recentlyViewedIds = recentlyViewedIds.filter(id => id !== houseId);
-      recentlyViewedIds.unshift(houseId);
-      if (recentlyViewedIds.length > 5) recentlyViewedIds.pop();
-      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewedIds));
-      renderRecentlyViewed();
-    }
-    async function renderRecentlyViewed() {
-      const section = document.getElementById('recentlyViewedSection');
-      const container = document.getElementById('recentlyViewedList');
-      if (!recentlyViewedIds.length) {
-        if (section) section.style.display = 'none';
-        return;
-      }
-      if (section) section.style.display = 'block';
-      if (!container) return;
-      container.innerHTML = '<div style="text-align:center;">Loading...</div>';
-      try {
-        const ids = recentlyViewedIds.join(',');
-        const res = await fetch(`/api/houses?ids=${ids}&limit=5`);
-        const data = await res.json();
-        const houses = data.houses || [];
-        container.innerHTML = houses.map(house => `
-          <div class="recent-card" onclick="showDetails('${house._id}')">
-            <img src="${house.images?.[0] || 'placeholder.jpg'}" loading="lazy">
-            <div class="info">
-              <h4>${escapeHtml(house.name)}</h4>
-              <p>MWK ${house.price.toLocaleString()}</p>
-            </div>
-          </div>
-        `).join('');
-      } catch(err) {
-        container.innerHTML = '<p>Unable to load recently viewed.</p>';
-      }
-    }
-    
-    // ========== LIGHTBOX (MODERN, SWIPE, DOTS) ==========
-    let currentGalleryImages = [];
-    let currentGalleryIndex = 0;
-    let gallerySlider = null;
-    let galleryDotsContainer = null;
-    
-    function openModernLightbox(images, startIndex = 0) {
-      if (!images || images.length === 0) return;
-      currentGalleryImages = images;
-      currentGalleryIndex = startIndex;
-      
-      let lightbox = document.getElementById('globalLightbox');
-      if (!lightbox) {
-        lightbox = document.createElement('div');
-        lightbox.id = 'globalLightbox';
-        lightbox.className = 'lightbox-gallery';
-        lightbox.innerHTML = `
-          <div class="close-gallery"><i class="fas fa-times"></i></div>
-          <div class="gallery-container">
-            <div class="gallery-slider"></div>
-          </div>
-          <div class="gallery-counter"></div>
-          <div class="gallery-dots"></div>
-        `;
-        document.body.appendChild(lightbox);
-        const closeBtn = lightbox.querySelector('.close-gallery');
-        closeBtn.addEventListener('click', () => lightbox.classList.remove('active'));
-        // Touch swipe
-        let touchStartX = 0;
-        lightbox.addEventListener('touchstart', (e) => {
-          touchStartX = e.touches[0].clientX;
-        });
-        lightbox.addEventListener('touchend', (e) => {
-          const endX = e.changedTouches[0].clientX;
-          const diff = endX - touchStartX;
-          if (Math.abs(diff) > 50) {
-            if (diff > 0) {
-              currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
-            } else {
-              currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
-            }
-            updateModernLightboxSlider();
-          }
-        });
-        // Mouse drag for desktop (simulate swipe)
-        let isDragging = false;
-        let startX = 0;
-        lightbox.querySelector('.gallery-slider').addEventListener('mousedown', (e) => {
-          isDragging = true;
-          startX = e.clientX;
-          e.preventDefault();
-        });
-        window.addEventListener('mouseup', () => {
-          if (!isDragging) return;
-          isDragging = false;
-        });
-        lightbox.querySelector('.gallery-slider').addEventListener('mousemove', (e) => {
-          if (!isDragging) return;
-          const diff = e.clientX - startX;
-          if (Math.abs(diff) > 50) {
-            if (diff > 0) {
-              currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
-            } else {
-              currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
-            }
-            updateModernLightboxSlider();
-            isDragging = false;
-          }
-        });
-      }
-      gallerySlider = lightbox.querySelector('.gallery-slider');
-      galleryDotsContainer = lightbox.querySelector('.gallery-dots');
-      updateModernLightboxSlider();
-      lightbox.classList.add('active');
-    }
-    
-    function updateModernLightboxSlider() {
-      if (!gallerySlider) return;
-      gallerySlider.innerHTML = '';
-      galleryDotsContainer.innerHTML = '';
-      currentGalleryImages.forEach((imgSrc, idx) => {
-        const slide = document.createElement('div');
-        slide.className = 'gallery-slide';
-        const img = document.createElement('img');
-        img.src = imgSrc;
-        img.alt = 'Property image';
-        slide.appendChild(img);
-        gallerySlider.appendChild(slide);
-        const dot = document.createElement('div');
-        dot.className = 'gallery-dot';
-        if (idx === currentGalleryIndex) dot.classList.add('active');
-        dot.addEventListener('click', () => {
-          currentGalleryIndex = idx;
-          const slideWidth = gallerySlider.clientWidth;
-          gallerySlider.scrollTo({ left: idx * slideWidth, behavior: 'smooth' });
-          updateModernLightboxDotsAndCounter();
-        });
-        galleryDotsContainer.appendChild(dot);
-      });
-      const slideWidth = gallerySlider.clientWidth;
-      gallerySlider.scrollTo({ left: currentGalleryIndex * slideWidth, behavior: 'smooth' });
-      updateModernLightboxDotsAndCounter();
-      gallerySlider.onscroll = () => {
-        const newIndex = Math.round(gallerySlider.scrollLeft / gallerySlider.clientWidth);
-        if (newIndex !== currentGalleryIndex && newIndex >= 0 && newIndex < currentGalleryImages.length) {
-          currentGalleryIndex = newIndex;
-          updateModernLightboxDotsAndCounter();
-        }
-      };
-    }
-    
-    function updateModernLightboxDotsAndCounter() {
-      const dots = document.querySelectorAll('#globalLightbox .gallery-dot');
-      dots.forEach((dot, idx) => {
-        if (idx === currentGalleryIndex) dot.classList.add('active');
-        else dot.classList.remove('active');
-      });
-      const counter = document.querySelector('#globalLightbox .gallery-counter');
-      if (counter) counter.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
-    }
-    
-    // ========== PAGINATION ==========
-    function renderPagination() {
-      const paginationDiv = document.getElementById('pagination');
-      if (!paginationDiv) return;
-      if (totalPages <= 1) { paginationDiv.innerHTML = ''; return; }
-      let html = '';
-      html += `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left"></i> Prev</button>`;
-      const start = Math.max(1, currentPage - 2);
-      const end = Math.min(totalPages, currentPage + 2);
-      for (let i = start; i <= end; i++) {
-        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-      }
-      html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})">Next <i class="fas fa-chevron-right"></i></button>`;
-      paginationDiv.innerHTML = html;
-    }
-    
-    function changePage(page) {
-      if (page < 1 || page > totalPages) return;
-      currentPage = page;
-      loadHouses(currentPage, currentType, currentFilters, currentSort);
-    }
-    
-    // ========== FETCH HOUSES ==========
-    async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
-      try {
-        const params = new URLSearchParams();
-        params.append('page', page);
-        params.append('limit', 12);
-        if (type !== 'all') params.append('type', type);
-        if (filters.minPrice) params.append('minPrice', filters.minPrice);
-        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-        if (filters.wifi) params.append('wifi', 'true');
-        if (filters.parking) params.append('parking', 'true');
-        if (filters.furnished) params.append('furnished', 'true');
-        if (filters.petFriendly) params.append('petFriendly', 'true');
-        if (filters.pool) params.append('pool', 'true');
-        if (filters.ac) params.append('ac', 'true');
-        if (sort !== 'default') params.append('sort', sort);
-        if (filters.district && filters.district !== '') params.append('district', filters.district);
-        if (filters.region) params.append('region', filters.region);
-        
-        const res = await fetch(`/api/houses?${params.toString()}`);
-        const data = await res.json();
-        allHouses = data.houses;
-        currentPage = data.page;
-        totalPages = data.pages;
-        renderHouses(allHouses);
-        renderMarkers(allHouses);
-        renderPagination();
-        updateURL();
-      } catch(err) {
-        console.error(err);
-        document.getElementById('houses-container').innerHTML = '<p>Failed to load houses.</p>';
-      }
-    }
-    
-    function updateURL() {
-      const url = new URL(window.location);
-      url.searchParams.set('page', currentPage);
-      if (currentType !== 'all') url.searchParams.set('type', currentType);
-      else url.searchParams.delete('type');
-      if (currentSort !== 'default') url.searchParams.set('sort', currentSort);
-      else url.searchParams.delete('sort');
-      if (currentDistrict) url.searchParams.set('district', currentDistrict);
-      else url.searchParams.delete('district');
-      window.history.replaceState({}, '', url);
-    }
-    
-    function getCurrentFilters() {
-      const districtSelect = document.getElementById('districtFilterSelect');
-      let districtValue = districtSelect ? districtSelect.value : '';
-      return {
-        minPrice: document.getElementById('priceMin')?.value || '',
-        maxPrice: document.getElementById('priceMax')?.value || '',
-        wifi: document.getElementById('filterWifi')?.checked || false,
-        parking: document.getElementById('filterParking')?.checked || false,
-        furnished: document.getElementById('filterFurnished')?.checked || false,
-        petFriendly: document.getElementById('filterPetFriendly')?.checked || false,
-        pool: document.getElementById('filterPool')?.checked || false,
-        ac: document.getElementById('filterAC')?.checked || false,
-        region: document.getElementById('regionFilter')?.value || '',
-        district: districtValue
-      };
-    }
-    
-    function applyFilters() {
-      currentFilters = getCurrentFilters();
-      currentRegion = currentFilters.region;
-      currentDistrict = currentFilters.district;
-      currentPage = 1;
-      loadHouses(currentPage, currentType, currentFilters, currentSort);
-    }
-    
-    function handleSortChange() {
-      currentSort = document.getElementById('sortSelect').value;
-      currentPage = 1;
-      loadHouses(currentPage, currentType, currentFilters, currentSort);
-    }
-    
-    // ========== RENDER HOUSE CARDS (with lightbox on image click) ==========
-    function renderHouses(houses) {
-      const container = document.getElementById('houses-container');
-      if (!container) return;
-      container.innerHTML = '';
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      const isLoggedIn = checkAuth();
-      const currentUserId = getUserIdFromToken();
-      houses.forEach(house => {
-        const card = document.createElement('div');
-        card.className = 'house-card';
-        const images = house.images && house.images.length ? house.images : ['placeholder.jpg'];
-        let slidesHtml = '', dotsHtml = '';
-        images.forEach((img, idx) => {
-          slidesHtml += `<div class="slide" data-img-index="${idx}"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
-          dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
-        });
-        let avatarHtml = '';
-        if (house.owner) {
-          const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
-          const avatarStyle = house.owner.profilePicture ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:1rem;">${initial}</span>`;
-          avatarHtml = `<div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarStyle}</div>`;
-        }
-        const isPremiumLandlord = house.owner && (house.owner.verificationType === 'premium' || house.owner.role === 'premium_landlord');
-        let landlordBadge = '';
-        if (house.owner && (house.owner.verificationType === 'official' || house.owner.verificationType === 'premium')) {
-          landlordBadge = `<span class="verified-badge-custom" style="display: inline-flex; align-items: center; margin-left: 6px;">${fbSaturatedSky(18)}</span>`;
-        }
-        let landlordInfoHtml = '';
-        if (house.owner) {
-          landlordInfoHtml = `<div class="landlord-info-row" style="position: relative;">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${landlordBadge}</div>`;
-        }
-        const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
-        const selfContainedBadge = house.selfContained ? '<span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
-        let genderBadgeHtml = '';
-        if (house.gender && house.gender !== 'none') {
-          let genderClass = '', genderText = '';
-          if (house.gender === 'boys') { genderClass = 'gender-boys'; genderText = '<i class="fas fa-mars"></i> Boys Only'; }
-          else if (house.gender === 'girls') { genderClass = 'gender-girls'; genderText = '<i class="fas fa-venus"></i> Girls Only'; }
-          else if (house.gender === 'mixed') { genderClass = 'gender-mixed'; genderText = '<i class="fas fa-venus-mars"></i> Mixed'; }
-          genderBadgeHtml = `<span class="badge ${genderClass}">${genderText}</span>`;
-        }
-        let rentalStatusBadge = '';
-        if (house.rentalStatus === 'available') rentalStatusBadge = '<span class="badge available"><i class="fas fa-check-circle"></i> Available</span>';
-        else if (house.rentalStatus === 'rented') rentalStatusBadge = '<span class="badge rented"><i class="fas fa-ban"></i> Rented</span>';
-        else if (house.rentalStatus === 'pending') rentalStatusBadge = '<span class="badge pending"><i class="fas fa-clock"></i> Pending</span>';
-        
-        let priceHtml = '';
-        const formattedPrice = `MWK ${Number(house.price).toLocaleString()}`;
-        if (house.oldPrice && house.oldPrice !== house.price) {
-          const oldPrice = house.oldPrice;
-          const change = house.price - oldPrice;
-          const percent = ((change / oldPrice) * 100).toFixed(0);
-          const changeClass = change < 0 ? 'negative' : '';
-          const changeSymbol = change < 0 ? '↓' : '↑';
-          priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${Math.abs(percent)}% ${changeSymbol}</span> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+    (function() {
+      // Wait for DOM and for original script to load (map, houses)
+      let attempts = 0;
+      function waitForHouses() {
+        if (typeof window.allHouses !== 'undefined' && window.allHouses) {
+          initEnhancements();
+        } else if (attempts < 50) {
+          attempts++;
+          setTimeout(waitForHouses, 200);
         } else {
-          priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+          console.warn('Could not detect allHouses, enhancements may not work');
         }
-        
-        const ratingStars = getStarRating(house.averageRating);
-        const ratingText = house.averageRating ? house.averageRating.toFixed(1) : "N/A";
-        const favIcon = favorites.includes(house._id) ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
-        const chatBtn = (isLoggedIn && house.owner && house.owner._id !== currentUserId) ? `<button class="chat-btn" onclick="startChat('${house.owner._id}', '${house._id}')"><i class="fas fa-comment-dots"></i> Chat</button>` : '';
-        const shareBtn = `<button class="share-btn" onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>`;
-        const isSelected = comparisonList.includes(house._id);
-        const compareBtn = `<button class="compare-btn" data-id="${house._id}" onclick="addToCompare('${house._id}')"><i class="fas fa-chart-simple"></i> ${isSelected ? 'Remove' : 'Compare'}</button>`;
-        const reportBtn = isLoggedIn ? `<button class="report-btn" onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>` : '';
-        const favBtn = `<button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>`;
-        const readMoreBtn = `<button class="read-more-btn" onclick="showDetails('${house._id}')"><i class="fas fa-book-open"></i> Read more</button>`;
-        const ratingWidgetHtml = `<div class="rating-widget" data-house-id="${house._id}">${[1,2,3,4,5].map(v => `<span class="star" data-value="${v}">☆</span>`).join('')}<span class="rating-message" style="font-size:0.6rem; margin-left:0.5rem;"></span></div>`;
-        const displayType = getDisplayType(house.type);
-        const typeIcon = getTypeIcon(house.type);
-        
-        // "New" badge
-        let newBadgeHtml = '';
-        if (house.createdAt) {
-          const diffHours = (Date.now() - new Date(house.createdAt).getTime()) / (1000 * 60 * 60);
-          if (diffHours < 24) newBadgeHtml = '<span class="new-badge"><i class="fas fa-bolt"></i> New</span>';
-        }
-        
-        card.innerHTML = `
-          <div class="slider">
-            <div class="slides-container" data-house-id="${house._id}">
-              ${slidesHtml}
-            </div>
-            <div class="dots">${dotsHtml}</div>
-          </div>
-          <div class="house-card-content">
-            ${landlordInfoHtml}
-            ${newBadgeHtml}
-            ${featuredBadge}
-            ${selfContainedBadge}
-            ${genderBadgeHtml}
-            ${rentalStatusBadge}
-            <h3>${escapeHtml(house.name)}</h3>
-            <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
-            ${priceHtml}
-            <p><i class="fas ${typeIcon}"></i> ${displayType}</p>
-            <p><i class="fas fa-star"></i> Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
-            ${ratingWidgetHtml}
-            <div class="action-buttons">
-              ${chatBtn}
-              ${favBtn}
-              ${shareBtn}
-              ${compareBtn}
-              ${reportBtn}
-            </div>
-            ${readMoreBtn}
-          </div>
-        `;
-        container.appendChild(card);
-        
-        // Slider initialization
-        const sliderContainer = card.querySelector('.slides-container');
-        const dots = card.querySelectorAll('.dot');
-        if (sliderContainer && dots.length) {
-          let activeIndex = 0;
-          const updateActiveDot = () => {
-            const scrollLeft = sliderContainer.scrollLeft;
-            const slideWidth = sliderContainer.clientWidth;
-            if (slideWidth === 0) return;
-            const newIndex = Math.round(scrollLeft / slideWidth);
-            if (newIndex !== activeIndex && newIndex >= 0 && newIndex < dots.length) {
-              activeIndex = newIndex;
-              dots.forEach((dot, idx) => dot.classList.toggle('active', idx === activeIndex));
-            }
-          };
-          sliderContainer.addEventListener('scroll', updateActiveDot);
-          sliderContainer.addEventListener('touchmove', updateActiveDot);
-          setTimeout(updateActiveDot, 100);
-          dots.forEach((dot, idx) => {
-            dot.addEventListener('click', (e) => {
-              e.stopPropagation();
-              sliderContainer.scrollTo({ left: idx * sliderContainer.clientWidth, behavior: 'smooth' });
-            });
-          });
-        }
-        
-        // Image click -> open lightbox
-        const slides = card.querySelectorAll('.slide');
-        slides.forEach((slide, idx) => {
-          slide.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openModernLightbox(images, idx);
-          });
-        });
-        
-        // Rating widget (simplified)
-        const ratingWidget = card.querySelector('.rating-widget');
-        if (ratingWidget) {
-          const stars = ratingWidget.querySelectorAll('.star');
-          const houseId = ratingWidget.dataset.houseId;
-          const messageSpan = ratingWidget.querySelector('.rating-message');
-          const highlightStars = (value) => { stars.forEach((star, idx) => { star.textContent = idx < value ? '★' : '☆'; }); };
-          const resetStars = () => {
-            const currentRating = house.averageRating || 0;
-            const rounded = Math.round(currentRating);
-            stars.forEach((star, idx) => { star.textContent = idx < rounded ? '★' : '☆'; });
-          };
-          stars.forEach(star => {
-            star.addEventListener('click', async (e) => {
-              e.stopPropagation();
-              const value = parseInt(star.dataset.value);
-              const token = localStorage.getItem('token');
-              if (!token) {
-                messageSpan.textContent = 'Please login to rate';
-                setTimeout(() => messageSpan.textContent = '', 2000);
-                return;
-              }
-              try {
-                const res = await fetch(`/api/houses/${houseId}/rate`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-                  body: JSON.stringify({ value })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                  messageSpan.textContent = '✅ Rated!';
-                  setTimeout(() => messageSpan.textContent = '', 1500);
-                  const ratingValueSpan = card.querySelector('.rating-value');
-                  const ratingStarsSpan = card.querySelector('.rating-stars');
-                  if (data.average) {
-                    ratingValueSpan.textContent = data.average.toFixed(1);
-                    ratingStarsSpan.textContent = getStarRating(data.average);
-                  }
-                  const foundHouse = allHouses.find(h => h._id === houseId);
-                  if (foundHouse) foundHouse.averageRating = data.average;
-                  resetStars();
-                } else {
-                  messageSpan.textContent = data.message || 'Error';
-                  setTimeout(() => messageSpan.textContent = '', 2000);
-                }
-              } catch(err) {
-                messageSpan.textContent = 'Network error';
-                setTimeout(() => messageSpan.textContent = '', 2000);
-              }
-            });
-            star.addEventListener('mouseenter', () => { highlightStars(parseInt(star.dataset.value)); });
-            star.addEventListener('mouseleave', resetStars);
-          });
-          resetStars();
-        }
-        
-        // Click to add to recently viewed
-        card.addEventListener('click', () => addToRecentlyViewed(house._id));
-      });
+      }
       
-      // Re-attach landlord click handlers
-      document.querySelectorAll('.landlord-name-link').forEach(link => {
-        link.removeEventListener('click', handleLandlordClick);
-        link.addEventListener('click', handleLandlordClick);
-      });
-    }
-    
-    // ========== LANDLORD PROFILE ==========
-    function handleLandlordClick(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const landlordId = this.getAttribute('data-landlord-id');
-      if (landlordId) showLandlordProfile(landlordId);
-    }
-    
-    async function showLandlordProfile(landlordId) {
-      try {
-        const res = await fetch(`/api/profile/landlord/${landlordId}`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        const landlord = data.landlord;
-        const houses = data.houses;
-        const modalContent = `
-          <div class="landlord-profile">
-            <h2>${escapeHtml(landlord.name)}</h2>
-            <p><i class="fas fa-phone"></i> ${landlord.phone || 'N/A'}</p>
-            <p><i class="fas fa-envelope"></i> ${landlord.email}</p>
-            <div class="houses-preview">
-              <h4>Properties (${houses.length})</h4>
-              <div style="display:flex; gap:8px; overflow-x:auto;">
-                ${houses.slice(0,5).map(house => `
-                  <div style="cursor:pointer; border:1px solid #ddd; border-radius:8px; padding:4px; width:100px;" onclick="showDetails('${house._id}'); closeLandlordModal();">
-                    <img src="${house.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:70px; object-fit:cover;">
-                    <p style="font-size:0.7rem;">${escapeHtml(house.name)}</p>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          </div>
-        `;
-        document.getElementById('landlordModalContent').innerHTML = modalContent;
-        document.getElementById('landlordModal').style.display = 'block';
-      } catch(err) {
-        showToast('Could not load landlord profile.', 'error');
-      }
-    }
-    
-    // ========== MARKERS ==========
-    function getMarkerIcon(house) {
-      let bgColor = '#3b82f6';
-      let iconClass = 'fa-home';
-      if (house.type === 'Hostel') { bgColor = '#10b981'; iconClass = 'fa-hotel'; }
-      else if (house.type === 'Apartment') { bgColor = '#8b5cf6'; iconClass = 'fa-building'; }
-      else if (house.type === 'Room') { bgColor = '#f59e0b'; iconClass = 'fa-bed'; }
-      if (house.owner?.verificationType === 'premium') { bgColor = '#f1c40f'; iconClass = 'fa-crown'; }
-      const html = `<div style="background-color: ${bgColor}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white;"><i class="fas ${iconClass}"></i></div>`;
-      return L.divIcon({ html, iconSize: [32, 32], popupAnchor: [0, -16], className: 'custom-marker' });
-    }
-    
-    function renderMarkers(houses) {
-      if (!markersLayer) return;
-      markersLayer.clearLayers();
-      houses.forEach(house => {
-        if (!house.lat || !house.lng) return;
-        const marker = L.marker([house.lat, house.lng], { icon: getMarkerIcon(house) });
-        const img = house.images?.[0] || 'placeholder.jpg';
-        const popupContent = `<div style="width:200px"><img src="${img}" style="width:100%; height:120px; object-fit:cover;"><h4>${house.name}</h4><p>MWK ${house.price.toLocaleString()}</p><a href="#" onclick="showDetails('${house._id}')">View Details</a></div>`;
-        marker.bindPopup(popupContent);
-        markersLayer.addLayer(marker);
-      });
-    }
-    
-    // ========== MAP INIT ==========
-    function initMap() {
-      map = L.map('map').setView([-15.786, 35.005], 12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-      markersLayer = L.markerClusterGroup();
-      map.addLayer(markersLayer);
-      drawnItems = L.featureGroup().addTo(map);
-      const drawControl = new L.Control.Draw({ edit: { featureGroup: drawnItems, remove: true }, draw: { polygon: true } });
-      map.addControl(drawControl);
-      map.on(L.Draw.Event.CREATED, (e) => {
-        if (drawnPolygon) map.removeLayer(drawnPolygon);
-        drawnPolygon = e.layer;
-        drawnItems.addLayer(drawnPolygon);
-        filterHousesByPolygon();
-      });
-      document.getElementById('clearDrawBtn')?.addEventListener('click', () => {
-        drawnItems.clearLayers();
-        drawnPolygon = null;
-        renderHouses(allHouses);
-        renderMarkers(allHouses);
-      });
-    }
-    
-    function filterHousesByPolygon() {
-      if (!drawnPolygon) return;
-      const filtered = allHouses.filter(house => {
-        if (!house.lat || !house.lng) return false;
-        const point = turf.point([house.lng, house.lat]);
-        const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]);
-        const poly = turf.polygon([coords]);
-        return turf.booleanPointInPolygon(point, poly);
-      });
-      renderHouses(filtered);
-      renderMarkers(filtered);
-    }
-    
-    // ========== PRICE SLIDER ==========
-    function initPriceSlider() {
-      const slider = document.getElementById('priceSlider');
-      if (!slider) return;
-      noUiSlider.create(slider, {
-        start: [0, 2000000],
-        connect: true,
-        range: { min: 0, max: 2000000 },
-        step: 5000,
-        format: { to: value => Math.round(value), from: value => Number(value) }
-      });
-      slider.noUiSlider.on('update', (values) => {
-        document.getElementById('priceMin').value = values[0];
-        document.getElementById('priceMax').value = values[1];
-        document.getElementById('priceMinLabel').innerText = `Min: ${Number(values[0]).toLocaleString()}`;
-        document.getElementById('priceMaxLabel').innerText = `Max: ${Number(values[1]).toLocaleString()}`;
-      });
-    }
-    
-    // ========== CLEAR FILTERS ==========
-    function initClearFiltersButton() {
-      document.getElementById('clearFiltersBtn').addEventListener('click', () => {
-        const slider = document.getElementById('priceSlider').noUiSlider;
-        slider.set([0, 2000000]);
-        document.getElementById('regionFilter').value = '';
-        const districtSelect = document.getElementById('districtFilterSelect');
-        if (districtSelect) districtSelect.value = '';
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelector('.tab-btn[data-type="all"]').classList.add('active');
-        document.querySelectorAll('.amenities-filters input').forEach(cb => cb.checked = false);
-        document.getElementById('searchInput').value = '';
-        document.getElementById('sortSelect').value = 'default';
-        currentType = 'all';
-        currentSort = 'default';
-        currentPage = 1;
-        applyFilters();
-      });
-    }
-    
-    // ========== SHOW DETAILS ==========
-    window.showDetails = async function(houseId) {
-      const house = allHouses.find(h => h._id === houseId);
-      if (!house) return;
-      let detailsHtml = `
-        <h2>${escapeHtml(house.name)}</h2>
-        <p><strong>Type:</strong> ${getDisplayType(house.type)}</p>
-        <p><strong>Location:</strong> ${escapeHtml(house.location || 'N/A')}</p>
-        <p><strong>Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
-        <p><strong>Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
-        <p><strong>Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
-        <p><strong>Description:</strong> ${house.description || 'No description'}</p>
-        <p><strong>Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>
-      `;
-      document.getElementById('modalDetails').innerHTML = detailsHtml;
-      document.getElementById('propertyModal').style.display = 'block';
-      // Additional tabs can be implemented later – keeping placeholder for completeness.
-    };
-    
-    // ========== OTHER FUNCTIONS ==========
-    function toggleFavorite(id) {
-      let favs = JSON.parse(localStorage.getItem('favorites') || '[]');
-      if (favs.includes(id)) favs = favs.filter(x => x !== id);
-      else favs.push(id);
-      localStorage.setItem('favorites', JSON.stringify(favs));
-      renderHouses(allHouses);
-    }
-    function shareHouse(houseId, houseName) { currentShareHouseId = houseId; document.getElementById('shareModal').style.display = 'block'; }
-    function copyShareLink() { navigator.clipboard.writeText(`${window.location.origin}/house/${currentShareHouseId}`).then(() => showToast('Link copied!')).catch(() => showToast('Failed to copy')); }
-    function shareOnFacebook() { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/house/${currentShareHouseId}`)}`, '_blank'); closeShareModal(); }
-    function shareOnWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this property: ${window.location.origin}/house/${currentShareHouseId}`)}`, '_blank'); closeShareModal(); }
-    function shareOnTwitter() { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${window.location.origin}/house/${currentShareHouseId}`)}`, '_blank'); closeShareModal(); }
-    function addToCompare(houseId) {
-      if (comparisonList.includes(houseId)) {
-        comparisonList = comparisonList.filter(id => id !== houseId);
-      } else {
-        if (comparisonList.length >= 3) { showToast('Can compare up to 3 properties.', 'error'); return; }
-        comparisonList.push(houseId);
-      }
-      updateCompareButton();
-      renderHouses(allHouses);
-    }
-    function updateCompareButton() {
-      const btn = document.getElementById('compareFloatingBtn');
-      const countSpan = document.getElementById('compareCount');
-      if (btn && countSpan) {
-        countSpan.textContent = comparisonList.length;
-        btn.style.display = comparisonList.length > 0 ? 'flex' : 'none';
-      }
-    }
-    function openComparisonModal() { /* placeholder – can be implemented later */ }
-    function reportHouse(houseId) { showToast('Report feature coming soon.'); }
-    function startChat(recipientId, houseId) { window.location.href = 'login.html'; }
-    function generateLease() { console.log('Lease generation'); }
-    
-    // ========== LOAD DISTRICT DROPDOWN FROM GEOJSON ==========
-    async function loadDistricts() {
-      try {
-        const res = await fetch('/data/malawi_districts.geojson');
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        const districts = [];
-        data.features.forEach(f => {
-          const name = f.properties.name;
-          if (name && !districts.includes(name)) districts.push(name);
-        });
-        districts.sort();
-        const select = document.getElementById('districtFilterSelect');
-        if (select) {
-          select.innerHTML = '<option value="">All Districts</option>' + districts.map(d => `<option value="${d}">${d}</option>`).join('');
+      function initEnhancements() {
+        // --- Add district dropdown to filters row ---
+        const filtersRow = document.querySelector('.filters-row');
+        if (filtersRow && !document.getElementById('districtFilterSelect')) {
+          const districtDiv = document.createElement('div');
+          districtDiv.className = 'district-filter';
+          districtDiv.innerHTML = '<select id="districtFilterSelect" class="sort-select"><option value="">All Districts</option></select>';
+          // Insert before sortSelect
+          const sortSelect = document.getElementById('sortSelect');
+          if (sortSelect) {
+            filtersRow.insertBefore(districtDiv, sortSelect);
+          } else {
+            filtersRow.appendChild(districtDiv);
+          }
+          // Populate districts from GeoJSON
+          fetch('/data/malawi_districts.geojson')
+            .then(res => res.json())
+            .then(data => {
+              const districts = [];
+              data.features.forEach(f => {
+                const name = f.properties.name;
+                if (name && !districts.includes(name)) districts.push(name);
+              });
+              districts.sort();
+              const select = document.getElementById('districtFilterSelect');
+              if (select) {
+                select.innerHTML = '<option value="">All Districts</option>' + districts.map(d => `<option value="${d}">${d}</option>`).join('');
+              }
+            })
+            .catch(err => console.warn('District GeoJSON not loaded'));
         }
-      } catch(err) {
-        console.warn('District GeoJSON not loaded');
-      }
-    }
-    
-    // ========== INITIALIZATION ==========
-    document.addEventListener('DOMContentLoaded', async () => {
-      initMap();
-      initPriceSlider();
-      loadDistricts();
-      document.getElementById('applyFiltersBtn')?.addEventListener('click', applyFilters);
-      document.getElementById('sortSelect')?.addEventListener('change', handleSortChange);
-      document.getElementById('saveSearchBtn')?.addEventListener('click', () => showToast('Save search feature coming soon.'));
-      document.getElementById('regionFilter')?.addEventListener('change', () => applyFilters());
-      document.getElementById('searchInput')?.addEventListener('keyup', () => {
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = allHouses.filter(h => h.name.toLowerCase().includes(term) || (h.location && h.location.toLowerCase().includes(term)));
-        renderHouses(filtered);
-        renderMarkers(filtered);
-      });
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-          this.classList.add('active');
-          currentType = this.dataset.type;
-          currentPage = 1;
-          loadHouses(currentPage, currentType, currentFilters, currentSort);
-        });
-      });
-      initClearFiltersButton();
-      // Load houses
-      await loadHouses(1, 'all', {}, 'default');
-      // Load hero carousel
-      try {
-        const res = await fetch('/api/houses?page=1&limit=6');
-        const data = await res.json();
-        const houses = data.houses || [];
-        const wrapper = document.getElementById('carousel-wrapper');
-        if (wrapper && houses.length) {
-          wrapper.innerHTML = houses.map(house => `
-            <div class="swiper-slide">
-              <div class="carousel-card">
+        
+        // --- Remove border from 3D house (already done in CSS, but ensure) ---
+        const hero3d = document.getElementById('hero3dHouse');
+        if (hero3d) {
+          hero3d.style.background = 'none';
+          hero3d.style.borderRadius = '0';
+          hero3d.style.boxShadow = 'none';
+        }
+        
+        // --- Recently viewed (small squared images) ---
+        let recentlyViewedIds = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+        function addToRecentlyViewed(houseId) {
+          recentlyViewedIds = recentlyViewedIds.filter(id => id !== houseId);
+          recentlyViewedIds.unshift(houseId);
+          if (recentlyViewedIds.length > 5) recentlyViewedIds.pop();
+          localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewedIds));
+          renderRecentlyViewed();
+        }
+        async function renderRecentlyViewed() {
+          const section = document.getElementById('recentlyViewedSection');
+          const container = document.getElementById('recentlyViewedList');
+          if (!recentlyViewedIds.length) {
+            if (section) section.style.display = 'none';
+            return;
+          }
+          if (section) section.style.display = 'block';
+          if (!container) return;
+          container.innerHTML = '<div style="text-align:center;">Loading...</div>';
+          try {
+            const ids = recentlyViewedIds.join(',');
+            const res = await fetch(`/api/houses?ids=${ids}&limit=5`);
+            const data = await res.json();
+            const houses = data.houses || [];
+            container.innerHTML = houses.map(house => `
+              <div class="recent-card" onclick="if(window.showDetails) showDetails('${house._id}')">
                 <img src="${house.images?.[0] || 'placeholder.jpg'}" loading="lazy">
-                <div class="carousel-card-content">
-                  <h3>${escapeHtml(house.name)}</h3>
-                  <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
-                  <div class="carousel-price">MWK ${Number(house.price).toLocaleString()}</div>
-                  <button class="carousel-btn" onclick="showDetails('${house._id}')">View Details</button>
+                <div class="info">
+                  <h4>${escapeHtml(house.name)}</h4>
+                  <p>MWK ${house.price.toLocaleString()}</p>
                 </div>
               </div>
-            </div>
-          `).join('');
-          new Swiper('.hero-swiper', {
-            loop: true, autoplay: { delay: 5000 }, slidesPerView: 1,
-            breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
-            pagination: { el: '.swiper-pagination', clickable: true }
-          });
-        }
-      } catch(e) {}
-      
-      // 3D House (complete Three.js animation)
-      (function init3DHouse() {
-        const container = document.getElementById('hero3dHouse');
-        if (!container) return;
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        const scene = new THREE.Scene();
-        scene.background = null;
-        scene.fog = new THREE.FogExp2(0x071a2b, 0.012);
-        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-        camera.position.set(5, 3.5, 6);
-        camera.lookAt(0, 1.2, 0);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(width, height);
-        renderer.setClearColor(0x000000, 0);
-        renderer.shadowMap.enabled = true;
-        container.appendChild(renderer.domElement);
-        let controls = null;
-        if (typeof THREE.OrbitControls !== 'undefined') {
-          controls = new THREE.OrbitControls(camera, renderer.domElement);
-          controls.enableDamping = true;
-          controls.autoRotate = true;
-          controls.autoRotateSpeed = 1.2;
-          controls.enableZoom = false;
-          controls.enablePan = false;
-          controls.target.set(0, 1.2, 0);
-        } else {
-          window.autoRotateAngle = 0;
-        }
-        const ambientLight = new THREE.AmbientLight(0x404060, 0.55);
-        scene.add(ambientLight);
-        const mainLight = new THREE.DirectionalLight(0xffeebb, 1.2);
-        mainLight.position.set(4, 6, 3);
-        mainLight.castShadow = true;
-        scene.add(mainLight);
-        const fillLight = new THREE.PointLight(0x4488ff, 0.45);
-        fillLight.position.set(0, -1, 0);
-        scene.add(fillLight);
-        const rimLight = new THREE.PointLight(0xff8866, 0.7);
-        rimLight.position.set(-2, 2.5, -4);
-        scene.add(rimLight);
-        const accentLight = new THREE.PointLight(0xff44aa, 0.4);
-        accentLight.position.set(3, 1.8, 2);
-        scene.add(accentLight);
-        const frontFill = new THREE.PointLight(0xffcc88, 0.35);
-        frontFill.position.set(0, 1.5, 3);
-        scene.add(frontFill);
-        const glowDisc = new THREE.Mesh(new THREE.CircleGeometry(2.8, 16), new THREE.MeshStandardMaterial({ color: 0x2266aa, emissive: 0x114477, roughness: 0.3, metalness: 0.7, transparent: true, opacity: 0.25 }));
-        glowDisc.rotation.x = -Math.PI / 2;
-        glowDisc.position.y = -1.12;
-        scene.add(glowDisc);
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0xfff5e6, roughness: 0.25, metalness: 0.1 });
-        const roofMat = new THREE.MeshStandardMaterial({ color: 0x2a7fff, roughness: 0.4, metalness: 0.2, emissive: 0x002244 });
-        const trimMat = new THREE.MeshStandardMaterial({ color: 0xff6b4a, roughness: 0.3 });
-        const doorMat = new THREE.MeshStandardMaterial({ color: 0xdd44aa, emissive: 0x551133, emissiveIntensity: 0.2, metalness: 0.1 });
-        const garageMat = new THREE.MeshStandardMaterial({ color: 0xf0ecff, roughness: 0.3 });
-        const houseWidth = 2.6, houseHeight = 1.8, houseDepth = 2.6;
-        const base = new THREE.Mesh(new THREE.BoxGeometry(houseWidth, houseHeight, houseDepth), wallMat);
-        base.castShadow = true;
-        base.position.y = -0.2;
-        scene.add(base);
-        const roofGeo = new THREE.ConeGeometry(2.2, 1.4, 4);
-        const roof = new THREE.Mesh(roofGeo, roofMat);
-        roof.castShadow = true;
-        roof.position.y = houseHeight - 0.2 + 0.7;
-        roof.rotation.y = Math.PI / 4;
-        scene.add(roof);
-        const chimneyBase = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.1, 0.55), new THREE.MeshStandardMaterial({ color: 0xdd6644 }));
-        chimneyBase.castShadow = true;
-        chimneyBase.position.set(0.95, 0.65, 0.85);
-        scene.add(chimneyBase);
-        const chimneyTop = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.7), new THREE.MeshStandardMaterial({ color: 0xcc5533 }));
-        chimneyTop.castShadow = true;
-        chimneyTop.position.set(0.95, 1.2, 0.85);
-        scene.add(chimneyTop);
-        const garage = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.5, 1.8), garageMat);
-        garage.castShadow = true;
-        garage.position.set(1.9, -0.3, -0.6);
-        scene.add(garage);
-        const garageRoof = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.18, 2.0), trimMat);
-        garageRoof.position.set(1.9, 0.85, -0.6);
-        scene.add(garageRoof);
-        const garageDoor = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 0.08), new THREE.MeshStandardMaterial({ color: 0xffcc44, metalness: 0.4 }));
-        garageDoor.position.set(1.9, -0.05, -1.35);
-        scene.add(garageDoor);
-        const windowMatGlow = new THREE.MeshStandardMaterial({ color: 0xaaffff, emissive: 0x33aacc, emissiveIntensity: 0.5, metalness: 0.9 });
-        function addWindow(x, y, z, w = 0.7, h = 0.7) {
-          const win = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), windowMatGlow);
-          win.position.set(x, y, z);
-          win.castShadow = true;
-          scene.add(win);
-          const frameMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-          const frameHor = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.05, 0.02), frameMat);
-          const frameVer = new THREE.Mesh(new THREE.BoxGeometry(0.05, h + 0.08, 0.02), frameMat);
-          frameHor.position.set(x, y, z + 0.045);
-          frameVer.position.set(x, y, z + 0.045);
-          scene.add(frameHor);
-          scene.add(frameVer);
-        }
-        addWindow(-0.7, 0.35, 1.36, 0.65, 0.75);
-        addWindow(0.75, 0.35, 1.36, 0.65, 0.75);
-        addWindow(-1.45, 0.45, 0.2, 0.6, 0.7);
-        addWindow(0.2, 0.55, -1.45, 0.6, 0.6);
-        const garageWin = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.08), windowMatGlow);
-        garageWin.position.set(1.9, 0.25, 0.1);
-        scene.add(garageWin);
-        const door = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.3, 0.12), doorMat);
-        door.castShadow = true;
-        door.position.set(0, -0.15, 1.42);
-        scene.add(door);
-        const knob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffaa55, metalness: 0.85 }));
-        knob.position.set(0.28, -0.1, 1.5);
-        scene.add(knob);
-        const stepMat = new THREE.MeshStandardMaterial({ color: 0xaa8866, roughness: 0.7 });
-        const step1 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.45), stepMat);
-        step1.position.set(0, -0.45, 1.78);
-        scene.add(step1);
-        const step2 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.4), stepMat);
-        step2.position.set(0, -0.32, 1.85);
-        scene.add(step2);
-        const bushMat = new THREE.MeshStandardMaterial({ color: 0x5aac44, emissive: 0x226622, emissiveIntensity: 0.12 });
-        function addBush(x, z, scaleVal) {
-          const bush = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), bushMat);
-          bush.position.set(x, -0.55, z);
-          bush.scale.set(scaleVal, scaleVal * 0.7, scaleVal);
-          bush.castShadow = true;
-          scene.add(bush);
-        }
-        addBush(-1.2, 1.9, 0.9);
-        addBush(1.4, 1.85, 0.8);
-        addBush(-1.7, 0.7, 0.7);
-        addBush(1.9, -1.2, 0.8);
-        addBush(-1.6, -1.3, 0.7);
-        const particleCount = 300;
-        const particlesGeo = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        for (let i = 0; i < particleCount; i++) {
-          const radius = 2.5 + Math.random() * 2;
-          const theta = Math.random() * Math.PI * 2;
-          const phi = Math.acos(2 * Math.random() - 1);
-          const x = Math.sin(phi) * Math.cos(theta) * radius;
-          const z = Math.sin(phi) * Math.sin(theta) * radius;
-          const y = Math.sin(phi) * radius * 0.8 + 0.5;
-          positions[i*3] = x;
-          positions[i*3+1] = y;
-          positions[i*3+2] = z;
-        }
-        particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const particleMat = new THREE.PointsMaterial({ color: 0xffaa77, size: 0.045, transparent: true, blending: THREE.AdditiveBlending });
-        const particles = new THREE.Points(particlesGeo, particleMat);
-        scene.add(particles);
-        const starCount = 400;
-        const starGeo = new THREE.BufferGeometry();
-        const starPositions = [];
-        for (let i = 0; i < starCount; i++) {
-          starPositions.push((Math.random() - 0.5) * 60);
-          starPositions.push((Math.random() - 0.5) * 25);
-          starPositions.push((Math.random() - 0.5) * 40 - 20);
-        }
-        starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
-        const starMatPoints = new THREE.PointsMaterial({ color: 0xffdd99, size: 0.035, transparent: true, blending: THREE.AdditiveBlending });
-        const stars = new THREE.Points(starGeo, starMatPoints);
-        scene.add(stars);
-        const fireflies = [];
-        for (let i = 0; i < 30; i++) {
-          const orbMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422, emissiveIntensity: 0.5, transparent: true });
-          const orb = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), orbMat);
-          orb.userData = {
-            speedX: (Math.random() - 0.5) * 0.008,
-            speedY: (Math.random() - 0.5) * 0.008 + 0.003,
-            speedZ: (Math.random() - 0.5) * 0.008,
-            rangeX: 2.2,
-            rangeZ: 2.2,
-            baseY: 0.2 + Math.random() * 1.6
-          };
-          orb.position.x = (Math.random() - 0.5) * 3.2;
-          orb.position.y = orb.userData.baseY;
-          orb.position.z = (Math.random() - 0.5) * 3;
-          scene.add(orb);
-          fireflies.push(orb);
-        }
-        let time = 0;
-        function animate() {
-          requestAnimationFrame(animate);
-          time += 0.016;
-          const pulse = Math.sin(time * 1.3) * 0.12;
-          accentLight.intensity = 0.4 + pulse;
-          rimLight.intensity = 0.65 + Math.sin(time * 0.9) * 0.15;
-          frontFill.intensity = 0.35 + Math.sin(time * 1.1) * 0.1;
-          fireflies.forEach(orb => {
-            orb.position.x += orb.userData.speedX;
-            orb.position.z += orb.userData.speedZ;
-            orb.position.y += orb.userData.speedY;
-            if (Math.abs(orb.position.x) > orb.userData.rangeX) orb.userData.speedX *= -1;
-            if (Math.abs(orb.position.z) > orb.userData.rangeZ) orb.userData.speedZ *= -1;
-            if (orb.position.y > orb.userData.baseY + 0.6 || orb.position.y < orb.userData.baseY - 0.3) orb.userData.speedY *= -1;
-            const scale = 0.9 + Math.sin(Date.now() * 0.005 + orb.position.x) * 0.2;
-            orb.scale.set(scale, scale, scale);
-          });
-          stars.rotation.y += 0.0005;
-          stars.rotation.x += 0.0003;
-          particles.rotation.y += 0.002;
-          particles.rotation.x = Math.sin(time * 0.2) * 0.1;
-          if (controls) controls.update();
-          else {
-            window.autoRotateAngle += 0.008;
-            camera.position.x = 5 * Math.sin(window.autoRotateAngle);
-            camera.position.z = 6 * Math.cos(window.autoRotateAngle);
-            camera.lookAt(0, 1.2, 0);
+            `).join('');
+          } catch(err) {
+            container.innerHTML = '<p>Unable to load recently viewed.</p>';
           }
-          renderer.render(scene, camera);
         }
-        animate();
-        window.addEventListener('resize', () => {
-          const w = container.clientWidth;
-          const h = container.clientHeight;
-          camera.aspect = w / h;
-          camera.updateProjectionMatrix();
-          renderer.setSize(w, h);
+        
+        // Override the existing card click to add to recently viewed
+        const originalAttachListeners = window.attachCardListeners || function() {};
+        function attachRecentlyViewedToCards() {
+          document.querySelectorAll('.house-card').forEach(card => {
+            if (card.dataset.rvAttached) return;
+            card.dataset.rvAttached = 'true';
+            const houseId = card.querySelector('[data-house-id]')?.dataset.houseId || card.querySelector('.slider .slides-container')?.dataset.houseId;
+            if (houseId) {
+              card.addEventListener('click', (e) => {
+                // Don't add if clicking on button or link
+                if (e.target.closest('button') || e.target.closest('a')) return;
+                addToRecentlyViewed(houseId);
+              });
+            }
+          });
+        }
+        
+        // --- Instant preview tooltip ---
+        let previewTimeout, currentTooltip = null;
+        function showPreview(house, event) {
+          if (window.innerWidth < 768) return;
+          if (previewTimeout) clearTimeout(previewTimeout);
+          previewTimeout = setTimeout(() => {
+            if (currentTooltip) currentTooltip.remove();
+            const tooltip = document.createElement('div');
+            tooltip.className = 'house-preview-tooltip';
+            tooltip.innerHTML = `
+              <h4>${escapeHtml(house.name)}</h4>
+              <p class="price">MWK ${house.price.toLocaleString()}</p>
+              <p><i class="fas fa-bed"></i> ${house.bedrooms || '?'} beds</p>
+              <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
+              <p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'New'}</p>
+            `;
+            document.body.appendChild(tooltip);
+            const x = event.clientX + 15;
+            const y = event.clientY + 15;
+            tooltip.style.left = Math.min(x, window.innerWidth - tooltip.offsetWidth - 10) + 'px';
+            tooltip.style.top = Math.min(y, window.innerHeight - tooltip.offsetHeight - 10) + 'px';
+            currentTooltip = tooltip;
+          }, 300);
+        }
+        function hidePreview() {
+          if (previewTimeout) clearTimeout(previewTimeout);
+          if (currentTooltip) {
+            currentTooltip.remove();
+            currentTooltip = null;
+          }
+        }
+        function attachPreviewToCards() {
+          document.querySelectorAll('.house-card').forEach(card => {
+            if (card.dataset.previewAttached) return;
+            card.dataset.previewAttached = 'true';
+            const houseId = card.querySelector('[data-house-id]')?.dataset.houseId || card.querySelector('.slider .slides-container')?.dataset.houseId;
+            if (houseId && window.allHouses) {
+              const house = window.allHouses.find(h => h._id === houseId);
+              if (house) {
+                card.addEventListener('mouseenter', (e) => showPreview(house, e));
+                card.addEventListener('mousemove', (e) => {
+                  if (currentTooltip) {
+                    let x = e.clientX + 15;
+                    let y = e.clientY + 15;
+                    currentTooltip.style.left = Math.min(x, window.innerWidth - currentTooltip.offsetWidth - 10) + 'px';
+                    currentTooltip.style.top = Math.min(y, window.innerHeight - currentTooltip.offsetHeight - 10) + 'px';
+                  }
+                });
+                card.addEventListener('mouseleave', hidePreview);
+              }
+            }
+          });
+        }
+        
+        // --- Modern lightbox (touch swipe, no arrows) ---
+        let currentGalleryImages = [], currentGalleryIndex = 0;
+        let gallerySlider = null, galleryDots = null;
+        function openModernLightbox(images, startIndex = 0) {
+          if (!images || images.length === 0) return;
+          currentGalleryImages = images;
+          currentGalleryIndex = startIndex;
+          let lightbox = document.getElementById('globalLightbox');
+          if (!lightbox) {
+            lightbox = document.createElement('div');
+            lightbox.id = 'globalLightbox';
+            lightbox.className = 'lightbox-gallery';
+            lightbox.innerHTML = `
+              <div class="close-gallery"><i class="fas fa-times"></i></div>
+              <div class="gallery-container">
+                <div class="gallery-slider"></div>
+              </div>
+              <div class="gallery-counter"></div>
+              <div class="gallery-dots"></div>
+            `;
+            document.body.appendChild(lightbox);
+            lightbox.querySelector('.close-gallery').addEventListener('click', () => lightbox.classList.remove('active'));
+            // Touch swipe
+            let touchStartX = 0;
+            lightbox.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+            lightbox.addEventListener('touchend', (e) => {
+              const diff = e.changedTouches[0].clientX - touchStartX;
+              if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                  currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+                } else {
+                  currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
+                }
+                updateGallery();
+              }
+            });
+            // Mouse drag for desktop
+            let isDragging = false, startX = 0;
+            lightbox.querySelector('.gallery-slider').addEventListener('mousedown', (e) => {
+              isDragging = true;
+              startX = e.clientX;
+              e.preventDefault();
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+            lightbox.querySelector('.gallery-slider').addEventListener('mousemove', (e) => {
+              if (!isDragging) return;
+              const diff = e.clientX - startX;
+              if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                  currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+                } else {
+                  currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
+                }
+                updateGallery();
+                isDragging = false;
+              }
+            });
+          }
+          gallerySlider = lightbox.querySelector('.gallery-slider');
+          galleryDots = lightbox.querySelector('.gallery-dots');
+          updateGallery();
+          lightbox.classList.add('active');
+        }
+        function updateGallery() {
+          if (!gallerySlider) return;
+          gallerySlider.innerHTML = '';
+          galleryDots.innerHTML = '';
+          currentGalleryImages.forEach((src, idx) => {
+            const slide = document.createElement('div');
+            slide.className = 'gallery-slide';
+            const img = document.createElement('img');
+            img.src = src;
+            slide.appendChild(img);
+            gallerySlider.appendChild(slide);
+            const dot = document.createElement('div');
+            dot.className = 'gallery-dot';
+            if (idx === currentGalleryIndex) dot.classList.add('active');
+            dot.addEventListener('click', () => {
+              currentGalleryIndex = idx;
+              gallerySlider.scrollTo({ left: idx * gallerySlider.clientWidth, behavior: 'smooth' });
+              updateDotsAndCounter();
+            });
+            galleryDots.appendChild(dot);
+          });
+          const slideWidth = gallerySlider.clientWidth;
+          gallerySlider.scrollTo({ left: currentGalleryIndex * slideWidth, behavior: 'smooth' });
+          updateDotsAndCounter();
+          gallerySlider.onscroll = () => {
+            const newIndex = Math.round(gallerySlider.scrollLeft / gallerySlider.clientWidth);
+            if (newIndex !== currentGalleryIndex && newIndex >= 0 && newIndex < currentGalleryImages.length) {
+              currentGalleryIndex = newIndex;
+              updateDotsAndCounter();
+            }
+          };
+        }
+        function updateDotsAndCounter() {
+          const dots = document.querySelectorAll('#globalLightbox .gallery-dot');
+          dots.forEach((dot, idx) => {
+            if (idx === currentGalleryIndex) dot.classList.add('active');
+            else dot.classList.remove('active');
+          });
+          const counter = document.querySelector('#globalLightbox .gallery-counter');
+          if (counter) counter.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
+        }
+        
+        // Attach lightbox to all images in property cards
+        function attachLightboxToCards() {
+          document.querySelectorAll('.slider .slide').forEach(slide => {
+            if (slide.dataset.lbAttached) return;
+            slide.dataset.lbAttached = 'true';
+            slide.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const sliderDiv = slide.closest('.slider');
+              const slidesContainer = sliderDiv.querySelector('.slides-container');
+              const slides = slidesContainer.querySelectorAll('.slide');
+              const images = Array.from(slides).map(s => s.querySelector('img').src);
+              const currentIdx = Array.from(slides).indexOf(slide);
+              openModernLightbox(images, currentIdx);
+            });
+          });
+        }
+        
+        // --- Infinite scroll (auto-load when near bottom) ---
+        let isLoading = false, hasMore = true, currentPage = window.currentPage || 1;
+        function checkScrollAndLoad() {
+          if (isLoading || !hasMore) return;
+          const scrollPosition = window.scrollY + window.innerHeight;
+          const pageHeight = document.documentElement.scrollHeight;
+          if (scrollPosition >= pageHeight - 300) {
+            loadMore();
+          }
+        }
+        async function loadMore() {
+          if (isLoading || !hasMore) return;
+          isLoading = true;
+          document.getElementById('loadingIndicator')?.classList.add('show');
+          const nextPage = currentPage + 1;
+          if (nextPage > (window.totalPages || 1)) {
+            hasMore = false;
+            isLoading = false;
+            document.getElementById('loadingIndicator')?.classList.remove('show');
+            return;
+          }
+          try {
+            const params = new URLSearchParams(window.location.search);
+            params.set('page', nextPage);
+            params.set('limit', 12);
+            const res = await fetch(`/api/houses?${params.toString()}`);
+            const data = await res.json();
+            const newHouses = data.houses || [];
+            if (newHouses.length === 0) {
+              hasMore = false;
+            } else {
+              currentPage = nextPage;
+              window.currentPage = nextPage;
+              // Append cards to container using the existing renderHouses? But we need to append, not replace.
+              // Since original renderHouses replaces all, we'll manually create cards and append.
+              const container = document.getElementById('houses-container');
+              newHouses.forEach(house => {
+                // Use original createHouseCard if available, else create simple
+                if (typeof window.createHouseCard === 'function') {
+                  const card = window.createHouseCard(house);
+                  container.appendChild(card);
+                } else {
+                  // Fallback: create a basic card
+                  const card = document.createElement('div');
+                  card.className = 'house-card';
+                  card.innerHTML = `<div class="house-card-content"><h3>${house.name}</h3><p>MWK ${house.price}</p></div>`;
+                  container.appendChild(card);
+                }
+              });
+              // Re-attach enhancements to new cards
+              attachLightboxToCards();
+              attachPreviewToCards();
+              attachRecentlyViewedToCards();
+              // Update markers
+              if (window.renderMarkers) window.renderMarkers(window.allHouses.concat(newHouses));
+            }
+          } catch(err) {
+            console.error('Infinite scroll error', err);
+          } finally {
+            isLoading = false;
+            document.getElementById('loadingIndicator')?.classList.remove('show');
+          }
+        }
+        
+        // Listen to scroll
+        window.addEventListener('scroll', () => {
+          if (window.scrollTimeout) clearTimeout(window.scrollTimeout);
+          window.scrollTimeout = setTimeout(checkScrollAndLoad, 200);
         });
-      })();
-    });
+        // Also listen to load more button
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (loadMoreBtn) loadMoreBtn.addEventListener('click', loadMore);
+        
+        // --- Clear filters button already exists, ensure it resets district ---
+        const clearBtn = document.getElementById('clearFiltersBtn');
+        if (clearBtn) {
+          const originalClick = clearBtn.onclick;
+          clearBtn.addEventListener('click', () => {
+            const districtSelect = document.getElementById('districtFilterSelect');
+            if (districtSelect) districtSelect.value = '';
+            if (window.applyFilters) window.applyFilters();
+          });
+        }
+        
+        // --- Initial attachment of enhancements after each render ---
+        const observer = new MutationObserver(() => {
+          attachLightboxToCards();
+          attachPreviewToCards();
+          attachRecentlyViewedToCards();
+        });
+        const housesContainer = document.getElementById('houses-container');
+        if (housesContainer) observer.observe(housesContainer, { childList: true, subtree: true });
+        
+        // Run once after short delay
+        setTimeout(() => {
+          attachLightboxToCards();
+          attachPreviewToCards();
+          attachRecentlyViewedToCards();
+          renderRecentlyViewed();
+        }, 1500);
+        
+        // Override original loadHouses to reset infinite scroll state (if possible)
+        if (window.loadHouses) {
+          const origLoad = window.loadHouses;
+          window.loadHouses = function(page, type, filters, sort) {
+            hasMore = true;
+            isLoading = false;
+            currentPage = page;
+            origLoad(page, type, filters, sort);
+          };
+        }
+      }
+      
+      waitForHouses();
+    })();
   </script>
 </body>
 </html>
