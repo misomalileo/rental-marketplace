@@ -814,7 +814,7 @@
     }
     .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
 
-    /* Loading indicator */
+    /* Infinite scroll loading indicator */
     .loading-indicator {
       text-align: center;
       padding: 1.5rem;
@@ -825,32 +825,24 @@
     .loading-indicator.show {
       display: block;
     }
-    
-    /* Load More button */
+    /* Load More button (fallback) */
     .load-more-btn {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background: var(--button-bg);
       color: white;
       border: none;
       border-radius: 40px;
-      padding: 0.75rem 2rem;
-      margin: 1rem auto 2rem;
+      padding: 0.5rem 1.5rem;
+      margin: 1rem auto;
       cursor: pointer;
       display: block;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       font-weight: 600;
       transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     .load-more-btn:hover {
+      background: var(--button-hover);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(37,99,235,0.3);
     }
-    .load-more-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
     /* Recently viewed carousel */
     .recently-viewed {
       margin: 2rem 0;
@@ -927,7 +919,7 @@
       .house-preview-tooltip { display: none; }
     }
 
-    /* ========== LIGHTBOX GALLERY (full screen, swipe, with dots) ========== */
+    /* ========== LIGHTBOX GALLERY (full screen, swipe, dots) ========== */
     .lightbox-gallery {
       position: fixed;
       top: 0;
@@ -1049,14 +1041,14 @@
       right: 0;
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       z-index: 20002;
     }
     .lightbox-gallery .gallery-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.5);
       transition: all 0.2s;
       cursor: pointer;
     }
@@ -1066,7 +1058,7 @@
       background: white;
     }
 
-    /* Pagination hidden - using Load More */
+    /* Pagination hidden (infinite scroll replaces it) */
     .pagination {
       display: none;
     }
@@ -1742,9 +1734,8 @@
     <h2 style="margin:0.8rem 0 0.3rem"><i class="fas fa-list"></i> Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
     <div class="loading-indicator" id="loadingIndicator"><i class="fas fa-spinner fa-pulse"></i> Loading more properties...</div>
-    
-    <!-- Load More Button - This replaces infinite scroll and works reliably -->
-    <button id="loadMoreBtn" class="load-more-btn" style="display: none;">Load More Properties <i class="fas fa-arrow-down"></i></button>
+    <!-- Load More button as fallback -->
+    <button id="loadMoreBtn" class="load-more-btn" style="display: none;">Load More Properties</button>
 
     <!-- Recently Viewed Section -->
     <div class="recently-viewed" id="recentlyViewedSection" style="display: none;">
@@ -2221,604 +2212,170 @@
     })();
   </script>
 
-  <!-- ========== DISTRICT BOUNDARIES & AMENITY LAYERS (original, untouched) ========== -->
-  <script>
-    function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
-      const overlay = document.createElement('div');
-      overlay.className = 'custom-modal-overlay';
-      let icon = '<i class="fas fa-info-circle"></i>';
-      let title = 'Information';
-      if (type === 'success') { icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; title = 'Success'; }
-      else if (type === 'error') { icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>'; title = 'Error'; }
-      else if (type === 'confirm') { icon = '<i class="fas fa-question-circle" style="color: #f59e0b;"></i>'; title = 'Confirmation'; }
-      overlay.innerHTML = `<div class="custom-modal">${icon}<h3>${title}</h3><p>${message}</p><div class="custom-modal-buttons">${type === 'confirm' ? '<button class="custom-modal-btn confirm">Yes, Proceed</button><button class="custom-modal-btn cancel">Cancel</button>' : '<button class="custom-modal-btn confirm">OK</button>'}</div></div>`;
-      document.body.appendChild(overlay);
-      const confirmBtn = overlay.querySelector('.confirm');
-      const cancelBtn = overlay.querySelector('.cancel');
-      confirmBtn?.addEventListener('click', () => { overlay.remove(); if (onConfirm) onConfirm(); });
-      cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
-    }
-
-    let mapCheckInterval = setInterval(function() {
-      if (typeof map !== 'undefined' && map) {
-        clearInterval(mapCheckInterval);
-        console.log("Map detected, loading district boundaries from local file...");
-        initDistrictBoundaries();
-      }
-    }, 500);
-
-    let districtLayer = null;
-    let currentHighlight = null;
-
-    function initDistrictBoundaries() {
-      const mapContainer = document.getElementById('map');
-      if (mapContainer) mapContainer.style.opacity = '0.7';
-
-      fetch('/data/malawi_districts.geojson')
-        .then(response => {
-          if (!response.ok) throw new Error('GeoJSON file not found. Please ensure it is saved at public/data/malawi_districts.geojson');
-          return response.json();
-        })
-        .then(geojson => {
-          districtLayer = L.geoJSON(geojson, {
-            style: function() {
-              return {
-                color: '#3b82f6',
-                weight: 1.8,
-                fillColor: '#60a5fa',
-                fillOpacity: 0.2,
-                className: 'district-boundary'
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              const districtName = feature.properties.name;
-              if (!districtName) return;
-              layer.bindPopup(`<strong>${districtName}</strong><br>Click to view properties`);
-
-              layer.on('click', function() {
-                map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-                if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                currentHighlight = layer;
-                layer.setStyle({
-                  fillColor: '#f59e0b',
-                  fillOpacity: 0.5,
-                  weight: 3.5,
-                  color: '#d97706'
-                });
-                filterPropertiesByDistrict(districtName);
-                const districtSelect = document.getElementById('districtFilterSelect');
-                if (districtSelect) districtSelect.value = districtName;
-              });
-
-              layer.on('mouseover', function() {
-                if (currentHighlight !== layer) {
-                  layer.setStyle({ fillOpacity: 0.4, weight: 2.8 });
-                }
-              });
-              layer.on('mouseout', function() {
-                if (currentHighlight !== layer) districtLayer.resetStyle(layer);
-                else {
-                  layer.setStyle({
-                    fillColor: '#f59e0b',
-                    fillOpacity: 0.5,
-                    weight: 3.5,
-                    color: '#d97706'
-                  });
-                }
-              });
-            }
-          }).addTo(map);
-
-          const districts = [];
-          L.geoJSON(geojson, {
-            onEachFeature: function(feature, layer) {
-              const name = feature.properties.name;
-              if (name && !districts.includes(name)) districts.push(name);
-            }
-          });
-          districts.sort();
-
-          const filterRow = document.querySelector('.filters-row');
-          if (filterRow && !document.getElementById('districtFilterSelect')) {
-            const districtDiv = document.createElement('div');
-            districtDiv.className = 'district-filter';
-            districtDiv.innerHTML = `
-              <select id="districtFilterSelect" class="sort-select" style="min-width: 160px;">
-                <option value="">All Districts</option>
-                ${districts.map(d => `<option value="${d}">${d}</option>`).join('')}
-              </select>
-            `;
-            filterRow.appendChild(districtDiv);
-
-            document.getElementById('districtFilterSelect').addEventListener('change', function(e) {
-              const selected = e.target.value;
-              if (selected) {
-                districtLayer.eachLayer(layer => {
-                  const name = layer.feature?.properties?.name;
-                  if (name === selected) {
-                    map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-                    if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                    currentHighlight = layer;
-                    layer.setStyle({
-                      fillColor: '#f59e0b',
-                      fillOpacity: 0.5,
-                      weight: 3.5,
-                      color: '#d97706'
-                    });
-                    filterPropertiesByDistrict(selected);
-                  }
-                });
-              } else {
-                if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                currentHighlight = null;
-                filterPropertiesByDistrict(null);
-                map.flyToBounds([[-17.2, 33.2], [-9.2, 36.2]], { duration: 1.2 });
-              }
-            });
-          }
-
-          mapContainer.style.opacity = '1';
-          console.log("District boundaries loaded successfully!");
-          map.attributionControl.addAttribution('District boundaries: <a href="https://simplemaps.com" target="_blank">SimpleMaps</a>');
-        })
-        .catch(error => {
-          console.error("Failed to load district boundaries:", error);
-          if (mapContainer) mapContainer.style.opacity = '1';
-        });
-    }
-
-    window.selectedDistrict = null;
-    function filterPropertiesByDistrict(district) {
-      window.selectedDistrict = district;
-      const applyBtn = document.getElementById('applyFiltersBtn');
-      if (applyBtn) applyBtn.click();
-      else console.log("District filter selected:", district);
-    }
-  </script>
-
-  <script>
-    let amenityLoadInterval = setInterval(function() {
-      if (typeof map !== 'undefined' && map && districtLayer) {
-        clearInterval(amenityLoadInterval);
-        console.log("Loading amenity layers...");
-        loadAllAmenityLayers();
-        loadSubDistricts();
-      }
-    }, 1000);
-
-    let amenityLayers = {};
-    let subDistrictLayer = null;
-    let healthPoints = [];
-    let schoolPoints = [];
-    let marketPoints = [];
-
-    function getAmenityName(feature) {
-      if (feature.properties.name) return feature.properties.name;
-      if (feature.properties.other_tags) {
-        const match = feature.properties.other_tags.match(/"name"=>"([^"]+)"/);
-        if (match) return match[1];
-      }
-      return "Amenity";
-    }
-
-    function createMarker(latlng, iconClass, color) {
-      return L.marker(latlng, {
-        icon: L.divIcon({
-          html: `<i class="${iconClass}" style="color:${color}; font-size:20px; text-shadow: 0 0 2px white;"></i>`,
-          iconSize: [24, 24],
-          className: 'custom-amenity-icon'
-        })
-      });
-    }
-
-    async function loadLayer(url, layerName, iconClass, color, storeArray = null, layerKey = null) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          console.warn(`Skipping ${layerName} – file not found (404)`);
-          return null;
-        }
-        const data = await response.json();
-        const layer = L.geoJSON(data, {
-          pointToLayer: (feature, latlng) => createMarker(latlng, iconClass, color),
-          onEachFeature: (feature, layer) => {
-            const name = getAmenityName(feature);
-            layer.bindPopup(`<strong>${name}</strong><br>${layerName}`);
-          }
-        });
-        layer.addTo(map);
-        amenityLayers[layerName] = layer;
-        if (storeArray && data.features) {
-          data.features.forEach(f => {
-            if (f.geometry && f.geometry.coordinates) {
-              storeArray.push({
-                lat: f.geometry.coordinates[1],
-                lng: f.geometry.coordinates[0],
-                name: getAmenityName(f)
-              });
-            }
-          });
-          console.log(`Loaded ${layerName}: ${data.features.length} features, stored ${storeArray.length} points`);
-        } else {
-          console.log(`Loaded ${layerName}: ${data.features?.length || 0} features`);
-        }
-        return layer;
-      } catch (err) {
-        console.warn(`Failed to load ${layerName}:`, err.message);
-        return null;
-      }
-    }
-
-    async function loadAllAmenityLayers() {
-      const layers = [
-        { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints, key: 'hospitals' },
-        { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6', store: schoolPoints, key: 'schools' },
-        { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b', store: marketPoints, key: 'markets' },
-        { url: '/data/malawi_banks.geojson', name: 'Banks & ATMs', icon: 'fas fa-university', color: '#8b5cf6', store: null, key: 'banks' },
-        { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b', store: null, key: 'police' },
-        { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981', store: null, key: 'fuel' },
-        { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899', store: null, key: 'restaurants' },
-        { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280', store: null, key: 'hotels' },
-        { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316', store: null, key: 'transport' },
-        { url: '/data/malawi_worship.geojson', name: 'Places of Worship', icon: 'fas fa-church', color: '#a855f7', store: null, key: 'worship' }
-      ];
-      for (const l of layers) {
-        await loadLayer(l.url, l.name, l.icon, l.color, l.store, l.key);
-      }
-
-      const overlayControl = {};
-      for (const [name, layer] of Object.entries(amenityLayers)) {
-        overlayControl[name] = layer;
-      }
-      if (Object.keys(overlayControl).length > 0) {
-        L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
-      }
-      if (districtLayer) {
-        L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
-      }
-    }
-
-    async function loadSubDistricts() {
-      try {
-        const response = await fetch('/data/malawi_subdistricts.geojson');
-        if (!response.ok) throw new Error('Not found');
-        const data = await response.json();
-        subDistrictLayer = L.geoJSON(data, {
-          style: {
-            color: '#a855f7',
-            weight: 1.5,
-            fillColor: '#c084fc',
-            fillOpacity: 0.15,
-            dashArray: '5,5',
-            className: 'subdistrict-boundary'
-          },
-          onEachFeature: function(feature, layer) {
-            const name = feature.properties.name || 'Sub‑district';
-            layer.bindPopup(`<strong>${name}</strong><br>Click to view properties`);
-            layer.on('click', function() {
-              map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-              if (window.currentHighlightSub) subDistrictLayer.resetStyle(window.currentHighlightSub);
-              window.currentHighlightSub = layer;
-              layer.setStyle({
-                fillColor: '#f59e0b',
-                fillOpacity: 0.5,
-                weight: 2.5,
-                color: '#d97706'
-              });
-              filterPropertiesBySubDistrict(name);
-            });
-            layer.on('mouseover', function() {
-              if (window.currentHighlightSub !== layer) layer.setStyle({ fillOpacity: 0.3, weight: 2 });
-            });
-            layer.on('mouseout', function() {
-              if (window.currentHighlightSub !== layer) subDistrictLayer.resetStyle(layer);
-            });
-          }
-        }).addTo(map);
-        const overlayControl = {};
-        for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
-        overlayControl['Sub‑districts'] = subDistrictLayer;
-        if (districtLayer) overlayControl['Districts'] = districtLayer;
-        const existingControl = document.querySelector('.leaflet-control-layers');
-        if (existingControl) existingControl.remove();
-        L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
-        console.log("Sub‑districts loaded");
-      } catch (err) {
-        console.warn("Sub‑districts not loaded (file missing)");
-      }
-    }
-
-    function filterPropertiesBySubDistrict(subDistrictName) {
-      window.selectedSubDistrict = subDistrictName;
-      const applyBtn = document.getElementById('applyFiltersBtn');
-      if (applyBtn) applyBtn.click();
-    }
-  </script>
-
+  <!-- ========== ENHANCEMENT SCRIPT (infinite scroll + lightbox, no conflicts) ========== -->
   <script>
     (function() {
-      const originalLoadHeroCarousel = window.loadHeroCarousel;
-      if (originalLoadHeroCarousel) {
-        window.loadHeroCarousel = async function() {
-          try {
-            const res = await fetch('/api/houses?page=1&limit=20');
-            const data = await res.json();
-            let houses = data.houses || [];
-            const wrapper = document.getElementById('carousel-wrapper');
-            if (!wrapper) return;
-            
-            const getDisplayType = (type) => {
-              const typeMap = {
-                'House': 'House', 'Apartment': 'Apartment', 'Room': 'Room', 'Hostel': 'Hostel',
-                'Office': 'Office', 'FurnishedApartment': 'Furnished Apt', 'ShortStay': 'Short-Stay',
-                'SharedLiving': 'Shared Living', 'StudentAccommodation': 'Student Acc'
-              };
-              return typeMap[type] || type;
-            };
-            
-            let slidesHtml = houses.map(house => `
-              <div class="swiper-slide">
-                <div class="carousel-card">
-                  <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}" loading="lazy">
-                  <div class="carousel-card-content">
-                    <h3>${escapeHtml(house.name)}</h3>
-                    <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
-                    <div class="carousel-price">MWK ${Number(house.price).toLocaleString()}</div>
-                    <div class="property-type-badge"><i class="fas ${getTypeIcon(house.type)}"></i> ${getDisplayType(house.type)}</div>
-                    <button class="carousel-btn" onclick="showDetails('${house._id}')">View Details</button>
-                  </div>
-                </div>
-              </div>
-            `).join('');
-            
-            const adSlide = `
-              <div class="swiper-slide ad-slide" onclick="window.location.href='premium-dashboard.html'">
-                <div class="ad-content">
-                  <i class="fas fa-crown"></i>
-                  <h4>Go Premium</h4>
-                  <p>Unlock early access, price drops & AI insights</p>
-                  <div class="ad-btn">Upgrade Now →</div>
-                </div>
-              </div>
-            `;
-            slidesHtml += adSlide;
-            
-            wrapper.innerHTML = slidesHtml;
-            
-            if (window.heroSwiper) window.heroSwiper.destroy(true, true);
-            window.heroSwiper = new Swiper('.hero-swiper', {
-              loop: true,
-              autoplay: { delay: 5000, disableOnInteraction: false },
-              effect: 'slide',
-              grabCursor: true,
-              slidesPerView: 1,
-              spaceBetween: 20,
-              breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
-              pagination: { el: '.swiper-pagination', clickable: true },
-              navigation: false
-            });
-          } catch (err) {
-            console.error('Failed to load carousel:', err);
-          }
-        };
-      }
-      function getTypeIcon(type) {
-        const iconMap = {
-          'House': 'fa-home', 'Apartment': 'fa-building', 'Room': 'fa-bed', 'Hostel': 'fa-hotel',
-          'Office': 'fa-briefcase', 'FurnishedApartment': 'fa-couch', 'ShortStay': 'fa-calendar-week',
-          'SharedLiving': 'fa-users', 'StudentAccommodation': 'fa-graduation-cap'
-        };
-        return iconMap[type] || 'fa-home';
-      }
-      window.getTypeIcon = getTypeIcon;
-    })();
+      // Use unique names to avoid conflicts with script.js globals
+      let khomo_infinite_page = 1;
+      let khomo_infinite_loading = false;
+      let khomo_infinite_hasMore = true;
 
-    const backToTop = document.getElementById('backToTop');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 300) backToTop.classList.add('visible');
-      else backToTop.classList.remove('visible');
-    });
-    backToTop.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const mobileDropdown = document.getElementById('mobileSettingsDropdown');
-    if (mobileMenuBtn && mobileDropdown) {
-      mobileMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mobileDropdown.classList.toggle('active');
-      });
-      document.addEventListener('click', (e) => {
-        if (!mobileMenuBtn.contains(e.target) && !mobileDropdown.contains(e.target)) {
-          mobileDropdown.classList.remove('active');
+      // Recently viewed (store up to 5 house IDs) – reuse existing if defined, else create
+      if (typeof window.recentlyViewed === 'undefined') {
+        window.recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+      }
+      function addRecentlyViewed(houseId) {
+        let list = window.recentlyViewed || [];
+        list = list.filter(id => id !== houseId);
+        list.unshift(houseId);
+        if (list.length > 5) list.pop();
+        window.recentlyViewed = list;
+        localStorage.setItem('recentlyViewed', JSON.stringify(list));
+        renderRecentlyViewed();
+      }
+      async function renderRecentlyViewed() {
+        const section = document.getElementById('recentlyViewedSection');
+        const container = document.getElementById('recentlyViewedList');
+        const list = window.recentlyViewed || [];
+        if (!list.length) {
+          if (section) section.style.display = 'none';
+          return;
         }
-      });
-      const mobileLang = document.getElementById('mobileLangSelect');
-      const mobileTheme = document.getElementById('mobileThemeSelect');
-      const desktopLang = document.querySelector('.lang-select');
-      const desktopTheme = document.querySelector('.theme-select');
-      if (mobileLang && desktopLang) {
-        mobileLang.value = desktopLang.value;
-        mobileLang.addEventListener('change', () => { desktopLang.value = mobileLang.value; desktopLang.dispatchEvent(new Event('change')); });
-      }
-      if (mobileTheme && desktopTheme) {
-        mobileTheme.value = desktopTheme.value;
-        mobileTheme.addEventListener('change', () => { desktopTheme.value = mobileTheme.value; desktopTheme.dispatchEvent(new Event('change')); });
-      }
-    }
-
-    window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; };
-    window.closeLightbox = function() { document.getElementById('lightboxModal').style.display = 'none'; };
-    window.closePropertyModal = function() { document.getElementById('propertyModal').style.display = 'none'; };
-    window.closeLandlordModal = function() { document.getElementById('landlordModal').style.display = 'none'; };
-    window.closeShareModal = function() { document.getElementById('shareModal').style.display = 'none'; document.getElementById('shareStatus').innerHTML = ''; };
-    window.closeComparisonModal = function() { document.getElementById('comparisonModal').style.display = 'none'; };
-    window.escapeHtml = function(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); };
-  </script>
-
-  <!-- ========== CORE ENHANCEMENT SCRIPT (Load More, Lightbox, Preview, New Badge, Recently Viewed, Clear Filters) ========== -->
-  <script>
-    // Global state for pagination
-    let currentPage = 1;
-    let isLoading = false;
-    let hasMore = true;
-    let totalPages = 1;
-
-    // Recently viewed (store up to 5 house IDs)
-    let recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-
-    function addRecentlyViewed(houseId) {
-      recentlyViewed = recentlyViewed.filter(id => id !== houseId);
-      recentlyViewed.unshift(houseId);
-      if (recentlyViewed.length > 5) recentlyViewed.pop();
-      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
-      renderRecentlyViewed();
-    }
-
-    async function renderRecentlyViewed() {
-      const section = document.getElementById('recentlyViewedSection');
-      const container = document.getElementById('recentlyViewedList');
-      if (!recentlyViewed.length) {
-        section.style.display = 'none';
-        return;
-      }
-      section.style.display = 'block';
-      container.innerHTML = '<div class="loading-indicator" style="display:block;">Loading...</div>';
-      try {
-        const ids = recentlyViewed.join(',');
-        const res = await fetch(`/api/houses?ids=${ids}&limit=5`);
-        const data = await res.json();
-        const houses = data.houses || [];
-        container.innerHTML = houses.map(house => `
-          <div class="recent-card" onclick="showDetails('${house._id}')">
-            <img src="${house.images?.[0] || 'placeholder.jpg'}" loading="lazy">
-            <div class="info">
-              <h4>${escapeHtml(house.name)}</h4>
-              <p>MWK ${house.price.toLocaleString()}</p>
+        if (section) section.style.display = 'block';
+        if (!container) return;
+        container.innerHTML = '<div class="loading-indicator" style="display:block;">Loading...</div>';
+        try {
+          const ids = list.join(',');
+          const res = await fetch(`/api/houses?ids=${ids}&limit=5`);
+          const data = await res.json();
+          const houses = data.houses || [];
+          container.innerHTML = houses.map(house => `
+            <div class="recent-card" onclick="showDetails('${house._id}')">
+              <img src="${house.images?.[0] || 'placeholder.jpg'}" loading="lazy">
+              <div class="info">
+                <h4>${escapeHtml(house.name)}</h4>
+                <p>MWK ${house.price.toLocaleString()}</p>
+              </div>
             </div>
-          </div>
-        `).join('');
-      } catch (err) {
-        console.error('Failed to load recently viewed', err);
-        container.innerHTML = '<p>Unable to load recently viewed.</p>';
+          `).join('');
+        } catch (err) {
+          console.error('Failed to load recently viewed', err);
+          container.innerHTML = '<p>Unable to load recently viewed.</p>';
+        }
       }
-    }
 
-    // Instant preview tooltip
-    let previewTimeout;
-    let currentTooltip = null;
-    function showPreview(house, event) {
-      if (window.innerWidth < 768) return;
-      if (previewTimeout) clearTimeout(previewTimeout);
-      previewTimeout = setTimeout(() => {
-        if (currentTooltip) currentTooltip.remove();
-        const tooltip = document.createElement('div');
-        tooltip.className = 'house-preview-tooltip';
-        tooltip.innerHTML = `
-          <h4>${escapeHtml(house.name)}</h4>
-          <p class="price">MWK ${house.price.toLocaleString()}</p>
-          <p><i class="fas fa-bed"></i> ${house.bedrooms || '?'} beds</p>
-          <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
-          <p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'New'}</p>
-        `;
-        document.body.appendChild(tooltip);
-        const x = event.clientX + 15;
-        const y = event.clientY + 15;
-        tooltip.style.left = Math.min(x, window.innerWidth - tooltip.offsetWidth - 10) + 'px';
-        tooltip.style.top = Math.min(y, window.innerHeight - tooltip.offsetHeight - 10) + 'px';
-        currentTooltip = tooltip;
-      }, 300);
-    }
-    function hidePreview() {
-      if (previewTimeout) clearTimeout(previewTimeout);
-      if (currentTooltip) {
-        currentTooltip.remove();
-        currentTooltip = null;
+      // Instant preview tooltip
+      let previewTimeout;
+      let currentTooltip = null;
+      function showPreview(house, event) {
+        if (window.innerWidth < 768) return;
+        if (previewTimeout) clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(() => {
+          if (currentTooltip) currentTooltip.remove();
+          const tooltip = document.createElement('div');
+          tooltip.className = 'house-preview-tooltip';
+          tooltip.innerHTML = `
+            <h4>${escapeHtml(house.name)}</h4>
+            <p class="price">MWK ${house.price.toLocaleString()}</p>
+            <p><i class="fas fa-bed"></i> ${house.bedrooms || '?'} beds</p>
+            <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
+            <p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'New'}</p>
+          `;
+          document.body.appendChild(tooltip);
+          const x = event.clientX + 15;
+          const y = event.clientY + 15;
+          tooltip.style.left = Math.min(x, window.innerWidth - tooltip.offsetWidth - 10) + 'px';
+          tooltip.style.top = Math.min(y, window.innerHeight - tooltip.offsetHeight - 10) + 'px';
+          currentTooltip = tooltip;
+        }, 300);
       }
-    }
+      function hidePreview() {
+        if (previewTimeout) clearTimeout(previewTimeout);
+        if (currentTooltip) {
+          currentTooltip.remove();
+          currentTooltip = null;
+        }
+      }
 
-    // LIGHTBOX GALLERY with dots
-    let currentGalleryImages = [];
-    let currentGalleryIndex = 0;
-    let gallerySlider = null;
-    let galleryDotsContainer = null;
+      // LIGHTBOX GALLERY with dots and counter
+      let currentGalleryImages = [];
+      let currentGalleryIndex = 0;
+      let gallerySlider = null;
+      let galleryDotsContainer = null;
 
-    function openGallery(images, startIndex = 0) {
-      if (!images || images.length === 0) return;
-      currentGalleryImages = images;
-      currentGalleryIndex = startIndex;
+      function openGallery(images, startIndex = 0) {
+        if (!images || images.length === 0) return;
+        currentGalleryImages = images;
+        currentGalleryIndex = startIndex;
 
-      let lightbox = document.getElementById('globalLightbox');
-      if (!lightbox) {
-        lightbox = document.createElement('div');
-        lightbox.id = 'globalLightbox';
-        lightbox.className = 'lightbox-gallery';
-        lightbox.innerHTML = `
-          <div class="close-gallery"><i class="fas fa-times"></i></div>
-          <div class="gallery-container">
-            <div class="gallery-slider"></div>
-            <div class="gallery-nav">
-              <button class="gallery-prev"><i class="fas fa-chevron-left"></i></button>
-              <button class="gallery-next"><i class="fas fa-chevron-right"></i></button>
+        let lightbox = document.getElementById('globalLightbox');
+        if (!lightbox) {
+          lightbox = document.createElement('div');
+          lightbox.id = 'globalLightbox';
+          lightbox.className = 'lightbox-gallery';
+          lightbox.innerHTML = `
+            <div class="close-gallery"><i class="fas fa-times"></i></div>
+            <div class="gallery-container">
+              <div class="gallery-slider"></div>
+              <div class="gallery-nav">
+                <button class="gallery-prev"><i class="fas fa-chevron-left"></i></button>
+                <button class="gallery-next"><i class="fas fa-chevron-right"></i></button>
+              </div>
             </div>
-          </div>
-          <div class="gallery-counter"></div>
-          <div class="gallery-dots"></div>
-        `;
-        document.body.appendChild(lightbox);
+            <div class="gallery-counter"></div>
+            <div class="gallery-dots"></div>
+          `;
+          document.body.appendChild(lightbox);
 
-        const closeBtn = lightbox.querySelector('.close-gallery');
-        const prevBtn = lightbox.querySelector('.gallery-prev');
-        const nextBtn = lightbox.querySelector('.gallery-next');
-        closeBtn.addEventListener('click', () => lightbox.classList.remove('active'));
-        prevBtn.addEventListener('click', () => {
-          if (currentGalleryImages.length) {
-            currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
-            updateGallerySlider();
-          }
-        });
-        nextBtn.addEventListener('click', () => {
-          if (currentGalleryImages.length) {
-            currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
-            updateGallerySlider();
-          }
-        });
-        // Touch swipe support
-        let touchStartX = 0;
-        lightbox.addEventListener('touchstart', (e) => {
-          touchStartX = e.touches[0].clientX;
-        });
-        lightbox.addEventListener('touchend', (e) => {
-          const endX = e.changedTouches[0].clientX;
-          const diff = endX - touchStartX;
-          if (Math.abs(diff) > 50) {
-            if (diff > 0) prevBtn.click();
-            else nextBtn.click();
-          }
-        });
+          const closeBtn = lightbox.querySelector('.close-gallery');
+          const prevBtn = lightbox.querySelector('.gallery-prev');
+          const nextBtn = lightbox.querySelector('.gallery-next');
+          closeBtn.addEventListener('click', () => lightbox.classList.remove('active'));
+          prevBtn.addEventListener('click', () => {
+            if (currentGalleryImages.length) {
+              currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+              updateGallerySlider();
+            }
+          });
+          nextBtn.addEventListener('click', () => {
+            if (currentGalleryImages.length) {
+              currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
+              updateGallerySlider();
+            }
+          });
+          // Touch swipe support
+          let touchStartX = 0;
+          lightbox.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+          });
+          lightbox.addEventListener('touchend', (e) => {
+            const endX = e.changedTouches[0].clientX;
+            const diff = endX - touchStartX;
+            if (Math.abs(diff) > 50) {
+              if (diff > 0) prevBtn.click();
+              else nextBtn.click();
+            }
+          });
+        }
+        gallerySlider = lightbox.querySelector('.gallery-slider');
+        galleryDotsContainer = lightbox.querySelector('.gallery-dots');
+        updateGallerySlider();
+        lightbox.classList.add('active');
       }
-      gallerySlider = lightbox.querySelector('.gallery-slider');
-      galleryDotsContainer = lightbox.querySelector('.gallery-dots');
-      updateGallerySlider();
-      lightbox.classList.add('active');
-    }
 
-    function updateGallerySlider() {
-      if (!gallerySlider) return;
-      gallerySlider.innerHTML = '';
-      if (galleryDotsContainer) galleryDotsContainer.innerHTML = '';
-      
-      currentGalleryImages.forEach((imgSrc, idx) => {
-        const slide = document.createElement('div');
-        slide.className = 'gallery-slide';
-        const img = document.createElement('img');
-        img.src = imgSrc;
-        img.alt = 'Property image';
-        slide.appendChild(img);
-        gallerySlider.appendChild(slide);
-        
-        if (galleryDotsContainer) {
+      function updateGallerySlider() {
+        if (!gallerySlider) return;
+        gallerySlider.innerHTML = '';
+        galleryDotsContainer.innerHTML = '';
+        currentGalleryImages.forEach((imgSrc, idx) => {
+          const slide = document.createElement('div');
+          slide.className = 'gallery-slide';
+          const img = document.createElement('img');
+          img.src = imgSrc;
+          img.alt = 'Property image';
+          slide.appendChild(img);
+          gallerySlider.appendChild(slide);
+          // Dot
           const dot = document.createElement('div');
           dot.className = 'gallery-dot';
           if (idx === currentGalleryIndex) dot.classList.add('active');
@@ -2829,268 +2386,160 @@
             updateGalleryDotsAndCounter();
           });
           galleryDotsContainer.appendChild(dot);
-        }
-      });
-      
-      const slideWidth = gallerySlider.clientWidth;
-      if (slideWidth > 0) {
+        });
+        // Scroll to current index
+        const slideWidth = gallerySlider.clientWidth;
         gallerySlider.scrollTo({ left: currentGalleryIndex * slideWidth, behavior: 'smooth' });
+        updateGalleryDotsAndCounter();
+        gallerySlider.onscroll = () => {
+          const newIndex = Math.round(gallerySlider.scrollLeft / gallerySlider.clientWidth);
+          if (newIndex !== currentGalleryIndex && newIndex >= 0 && newIndex < currentGalleryImages.length) {
+            currentGalleryIndex = newIndex;
+            updateGalleryDotsAndCounter();
+          }
+        };
       }
-      updateGalleryDotsAndCounter();
-      
-      gallerySlider.onscroll = () => {
-        const newIndex = Math.round(gallerySlider.scrollLeft / gallerySlider.clientWidth);
-        if (newIndex !== currentGalleryIndex && newIndex >= 0 && newIndex < currentGalleryImages.length) {
-          currentGalleryIndex = newIndex;
-          updateGalleryDotsAndCounter();
-        }
-      };
-    }
 
-    function updateGalleryDotsAndCounter() {
-      if (galleryDotsContainer) {
-        const dots = galleryDotsContainer.querySelectorAll('.gallery-dot');
+      function updateGalleryDotsAndCounter() {
+        const dots = document.querySelectorAll('#globalLightbox .gallery-dot');
         dots.forEach((dot, idx) => {
           if (idx === currentGalleryIndex) dot.classList.add('active');
           else dot.classList.remove('active');
         });
+        const counter = document.querySelector('#globalLightbox .gallery-counter');
+        if (counter) {
+          counter.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
+        }
       }
-      const counter = document.querySelector('#globalLightbox .gallery-counter');
-      if (counter) {
-        counter.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
-      }
-    }
 
-    // Main load houses function with pagination
-    const originalLoadHouses = window.loadHouses;
-    window.loadHouses = async function(page = 1, append = false) {
-      if (isLoading) return;
-      isLoading = true;
-      
-      const loadMoreBtn = document.getElementById('loadMoreBtn');
-      const loadingIndicator = document.getElementById('loadingIndicator');
-      
-      if (!append) {
-        currentPage = 1;
-        hasMore = true;
-        document.getElementById('houses-container').innerHTML = '<div class="loading-indicator show">Loading properties...</div>';
-        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-      } else {
-        if (loadingIndicator) loadingIndicator.classList.add('show');
-      }
-      
-      // Gather current filters
-      const minPrice = document.getElementById('priceMin').value;
-      const maxPrice = document.getElementById('priceMax').value;
-      const region = document.getElementById('regionFilter').value;
-      const sort = document.getElementById('sortSelect').value;
-      const search = document.getElementById('searchInput').value;
-      const type = document.querySelector('.tab-btn.active')?.getAttribute('data-type') || 'all';
-      const wifi = document.getElementById('filterWifi').checked;
-      const parking = document.getElementById('filterParking').checked;
-      const furnished = document.getElementById('filterFurnished').checked;
-      const petFriendly = document.getElementById('filterPetFriendly').checked;
-      const pool = document.getElementById('filterPool').checked;
-      const ac = document.getElementById('filterAC').checked;
-      const district = document.getElementById('districtFilterSelect')?.value || '';
-      
-      const params = new URLSearchParams({
-        page, limit: 12,
-        ...(minPrice && minPrice != '0' && { minPrice }), 
-        ...(maxPrice && maxPrice != '2000000' && { maxPrice }),
-        ...(region && { region }), 
-        ...(sort !== 'default' && { sort }),
-        ...(search && { search }), 
-        ...(type !== 'all' && { type }),
-        ...(wifi && { wifi: true }), 
-        ...(parking && { parking: true }),
-        ...(furnished && { furnished: true }), 
-        ...(petFriendly && { petFriendly: true }),
-        ...(pool && { pool: true }), 
-        ...(ac && { ac: true }),
-        ...(district && { district })
-      });
-      
-      try {
-        const res = await fetch(`/api/houses?${params.toString()}`);
-        const data = await res.json();
-        const houses = data.houses || [];
-        totalPages = data.pages || 1;
-        
-        if (houses.length === 0 || page >= totalPages) {
-          hasMore = false;
-          if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-        } else {
-          hasMore = true;
-        }
-        
-        if (append) {
-          const container = document.getElementById('houses-container');
-          houses.forEach(house => {
-            const card = createHouseCard(house);
-            container.appendChild(card);
-          });
-        } else {
-          renderHouses(houses);
-        }
-        
-        if (hasMore && page < totalPages) {
-          if (loadMoreBtn) {
-            loadMoreBtn.style.display = 'block';
-            loadMoreBtn.disabled = false;
-            loadMoreBtn.innerHTML = 'Load More Properties <i class="fas fa-arrow-down"></i>';
-          }
-          currentPage = page;
-        } else {
-          if (loadMoreBtn) {
-            loadMoreBtn.style.display = 'none';
-          }
-        }
-      } catch (err) {
-        console.error('Error loading houses:', err);
-        if (!append) document.getElementById('houses-container').innerHTML = '<p>Error loading properties. Please try again.</p>';
-      } finally {
-        isLoading = false;
-        const loadingIndicatorElem = document.getElementById('loadingIndicator');
-        if (loadingIndicatorElem) loadingIndicatorElem.classList.remove('show');
-      }
-    };
-
-    function createHouseCard(house) {
-      const card = document.createElement('div');
-      card.className = 'house-card';
-      
-      const isNew = (() => {
-        if (!house.createdAt) return false;
-        const diff = (Date.now() - new Date(house.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-        return diff < 1;
-      })();
-      
-      const images = house.images && house.images.length ? house.images : ['placeholder.jpg'];
-      let slidesHtml = '', dotsHtml = '';
-      images.forEach((img, idx) => {
-        slidesHtml += `<div class="slide" data-img-index="${idx}"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
-        dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
-      });
-      
-      card.innerHTML = `
-        <div class="slider" data-house-id="${house._id}">
-          <div class="slides-container">${slidesHtml}</div>
-          <div class="dots">${dotsHtml}</div>
-        </div>
-        <div class="house-card-content">
-          <h3>${escapeHtml(house.name)} ${isNew ? '<span class="new-badge">New</span>' : ''}</h3>
-          <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
-          <div class="price">MWK ${house.price.toLocaleString()}</div>
-          <div class="strong-fields">
-            <span><i class="fas fa-bed"></i> ${house.bedrooms || '?'}</span>
-            <span><i class="fas fa-bath"></i> ${house.bathrooms || '?'}</span>
-            ${house.selfContained ? '<span><i class="fas fa-door-closed"></i> Self-contained</span>' : ''}
-          </div>
-          <div class="action-buttons">
-            <button class="read-more-btn" onclick="showDetails('${house._id}')">Read More</button>
-            <button class="fav-btn"><i class="far fa-heart"></i></button>
-          </div>
-        </div>
-      `;
-      
-      // Slider initialization and image click for lightbox
-      const slider = card.querySelector('.slider');
-      const slidesContainer = slider.querySelector('.slides-container');
-      const dots = slider.querySelectorAll('.dot');
-      
-      if (slidesContainer && dots.length) {
-        let activeIndex = 0;
-        const updateActiveDot = () => {
-          const scrollLeft = slidesContainer.scrollLeft;
-          const slideWidth = slidesContainer.clientWidth;
-          if (slideWidth === 0) return;
-          const newIndex = Math.round(scrollLeft / slideWidth);
-          if (newIndex !== activeIndex && newIndex >= 0 && newIndex < dots.length) {
-            activeIndex = newIndex;
-            dots.forEach((dot, idx) => dot.classList.toggle('active', idx === activeIndex));
-          }
-        };
-        slidesContainer.addEventListener('scroll', updateActiveDot);
-        slidesContainer.addEventListener('touchmove', updateActiveDot);
-        setTimeout(updateActiveDot, 100);
-        
-        dots.forEach((dot, idx) => {
-          dot.addEventListener('click', (e) => {
-            e.stopPropagation();
-            slidesContainer.scrollTo({ left: idx * slidesContainer.clientWidth, behavior: 'smooth' });
-          });
-        });
-        
-        // Add click event on each slide image to open lightbox
-        const slides = slidesContainer.querySelectorAll('.slide');
-        slides.forEach((slide, idx) => {
+      // Override the original renderHouses to add lightbox and infinite scroll hooks
+      // We'll monkey-patch after script.js loads, but script.js defines renderHouses.
+      // We'll wait for the DOM and then patch the existing renderHouses function.
+      function enhanceHouseCards() {
+        // Attach lightbox click to all .slide images
+        document.querySelectorAll('.slider .slide').forEach(slide => {
+          if (slide.dataset.lightboxAttached) return;
+          slide.dataset.lightboxAttached = 'true';
           slide.addEventListener('click', (e) => {
             e.stopPropagation();
-            openGallery(images, idx);
+            const sliderDiv = slide.closest('.slider');
+            const slidesContainer = sliderDiv.querySelector('.slides-container');
+            const slides = slidesContainer.querySelectorAll('.slide');
+            const images = Array.from(slides).map(s => s.querySelector('img').src);
+            const currentIdx = Array.from(slides).indexOf(slide);
+            openGallery(images, currentIdx);
+          });
+        });
+        // Attach preview tooltip to cards
+        document.querySelectorAll('.house-card').forEach(card => {
+          if (card.dataset.previewAttached) return;
+          card.dataset.previewAttached = 'true';
+          // Get house data – we need to find the house object. Since script.js has allHouses, we can look up by ID
+          const houseId = card.querySelector('[data-house-id]')?.dataset.houseId || card.querySelector('.slider .slides-container')?.dataset.houseId;
+          if (houseId && window.allHouses) {
+            const house = window.allHouses.find(h => h._id === houseId);
+            if (house) {
+              card.addEventListener('mouseenter', (e) => showPreview(house, e));
+              card.addEventListener('mousemove', (e) => {
+                if (currentTooltip) {
+                  let x = e.clientX + 15;
+                  let y = e.clientY + 15;
+                  currentTooltip.style.left = Math.min(x, window.innerWidth - currentTooltip.offsetWidth - 10) + 'px';
+                  currentTooltip.style.top = Math.min(y, window.innerHeight - currentTooltip.offsetHeight - 10) + 'px';
+                }
+              });
+              card.addEventListener('mouseleave', hidePreview);
+            }
+          }
+          // Add click to recently viewed
+          card.addEventListener('click', () => {
+            if (houseId) addRecentlyViewed(houseId);
           });
         });
       }
-      
-      // Preview on hover
-      card.addEventListener('mouseenter', (e) => showPreview(house, e));
-      card.addEventListener('mousemove', (e) => {
-        if (currentTooltip) {
-          let x = e.clientX + 15;
-          let y = e.clientY + 15;
-          currentTooltip.style.left = Math.min(x, window.innerWidth - currentTooltip.offsetWidth - 10) + 'px';
-          currentTooltip.style.top = Math.min(y, window.innerHeight - currentTooltip.offsetHeight - 10) + 'px';
+
+      // Infinite scroll: use window scroll + load more button
+      function checkScrollAndLoad() {
+        if (khomo_infinite_loading || !khomo_infinite_hasMore) return;
+        const scrollPosition = window.scrollY + window.innerHeight;
+        const pageHeight = document.documentElement.scrollHeight;
+        if (scrollPosition >= pageHeight - 200) {
+          loadMoreHouses();
         }
-      });
-      card.addEventListener('mouseleave', hidePreview);
-      card.addEventListener('click', () => addRecentlyViewed(house._id));
-      
-      return card;
-    }
-
-    function renderHouses(houses) {
-      const container = document.getElementById('houses-container');
-      container.innerHTML = '';
-      houses.forEach(house => {
-        container.appendChild(createHouseCard(house));
-      });
-    }
-
-    // Load More button click handler
-    document.getElementById('loadMoreBtn').addEventListener('click', () => {
-      if (!isLoading && hasMore && currentPage < totalPages) {
-        window.loadHouses(currentPage + 1, true);
       }
-    });
 
-    // Clear filters button
-    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
-      const slider = document.getElementById('priceSlider').noUiSlider;
-      if (slider) slider.set([0, 2000000]);
-      document.getElementById('priceMin').value = 0;
-      document.getElementById('priceMax').value = 2000000;
-      document.getElementById('priceMinLabel').innerText = 'Min: 0';
-      document.getElementById('priceMaxLabel').innerText = 'Max: 2,000,000';
-      document.getElementById('regionFilter').value = '';
-      const districtSelect = document.getElementById('districtFilterSelect');
-      if (districtSelect) districtSelect.value = '';
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelector('.tab-btn[data-type="all"]').classList.add('active');
-      document.querySelectorAll('.amenities-filters input').forEach(cb => cb.checked = false);
-      document.getElementById('searchInput').value = '';
-      document.getElementById('applyFiltersBtn').click();
-    });
+      async function loadMoreHouses() {
+        if (khomo_infinite_loading || !khomo_infinite_hasMore) return;
+        khomo_infinite_loading = true;
+        document.getElementById('loadingIndicator').classList.add('show');
+        const nextPage = khomo_infinite_page + 1;
+        try {
+          // Use the global loadHouses function from script.js if it supports append?
+          // script.js loadHouses replaces the whole list. We need to fetch next page manually and append.
+          // Since script.js has a global `loadHouses` that re-renders, we need to override it or use our own.
+          // Simpler: Use the same API endpoint with page param and append.
+          const params = new URLSearchParams(window.location.search);
+          params.set('page', nextPage);
+          params.set('limit', 12);
+          const res = await fetch(`/api/houses?${params.toString()}`);
+          const data = await res.json();
+          const houses = data.houses || [];
+          if (houses.length === 0) {
+            khomo_infinite_hasMore = false;
+            document.getElementById('loadMoreBtn').style.display = 'none';
+          } else {
+            // Append cards to container
+            const container = document.getElementById('houses-container');
+            houses.forEach(house => {
+              // Create card using the existing renderHouses logic? But we can't call renderHouses because it would clear.
+              // Instead, we'll create a card using the same structure as script.js does.
+              // We'll reuse the existing createHouseCard function if available, otherwise build manually.
+              if (typeof window.createHouseCard === 'function') {
+                const card = window.createHouseCard(house);
+                container.appendChild(card);
+              } else {
+                // Fallback – create a simple card
+                const card = document.createElement('div');
+                card.className = 'house-card';
+                card.innerHTML = `<div class="house-card-content"><h3>${house.name}</h3><p>Price: MWK ${house.price}</p></div>`;
+                container.appendChild(card);
+              }
+            });
+            khomo_infinite_page = nextPage;
+            // Re-attach lightbox and preview to new cards
+            enhanceHouseCards();
+          }
+        } catch (err) {
+          console.error('Failed to load more houses', err);
+        } finally {
+          khomo_infinite_loading = false;
+          document.getElementById('loadingIndicator').classList.remove('show');
+        }
+      }
 
-    // Override showDetails
-    const originalShowDetails = window.showDetails;
-    window.showDetails = async function(houseId) {
-      addRecentlyViewed(houseId);
-      if (originalShowDetails) originalShowDetails(houseId);
-    };
+      // Set up scroll listener and load more button
+      let scrollTimeout;
+      window.addEventListener('scroll', () => {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(checkScrollAndLoad, 200);
+      });
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMoreHouses);
+      }
 
-    // Initial load
-    window.loadHouses(1, false);
-    renderRecentlyViewed();
+      // Observe changes to houses-container to attach enhancements
+      const observer = new MutationObserver(() => enhanceHouseCards());
+      const housesContainer = document.getElementById('houses-container');
+      if (housesContainer) observer.observe(housesContainer, { childList: true, subtree: true });
+      // Also run once after a short delay
+      setTimeout(enhanceHouseCards, 1500);
+
+      // Export needed functions to global scope
+      window.openGallery = openGallery;
+      window.addRecentlyViewed = addRecentlyViewed;
+      window.renderRecentlyViewed = renderRecentlyViewed;
+    })();
   </script>
 </body>
 </html>
