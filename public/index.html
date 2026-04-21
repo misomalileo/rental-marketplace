@@ -662,9 +662,7 @@
       position: relative;
       pointer-events: auto;
       z-index: 10;
-      background: rgba(0,0,0,0.2);
-      border-radius: 12px;
-      overflow: hidden;
+      /* border removed – keep only the 3D animation */
     }
     #hero3dHouse canvas {
       width: 100% !important;
@@ -843,7 +841,7 @@
       background: var(--button-hover);
       transform: translateY(-2px);
     }
-    /* Recently viewed carousel */
+    /* Recently viewed carousel – small squared images */
     .recently-viewed {
       margin: 2rem 0;
     }
@@ -862,13 +860,14 @@
       padding-bottom: 0.5rem;
     }
     .recent-card {
-      flex: 0 0 200px;
+      flex: 0 0 100px;
       background: var(--card-bg);
-      border-radius: 20px;
+      border-radius: 12px;
       overflow: hidden;
       scroll-snap-align: start;
       border: 1px solid var(--input-border);
       transition: all 0.2s;
+      cursor: pointer;
     }
     .recent-card:hover {
       transform: translateY(-4px);
@@ -876,20 +875,22 @@
     }
     .recent-card img {
       width: 100%;
-      height: 120px;
+      height: 100px;
       object-fit: cover;
     }
     .recent-card .info {
-      padding: 0.5rem;
+      padding: 0.4rem;
+      text-align: center;
     }
     .recent-card .info h4 {
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-weight: 600;
     }
     .recent-card .info p {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--gray-500);
     }
     /* Tooltip for instant preview */
