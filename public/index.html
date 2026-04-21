@@ -179,6 +179,7 @@
       scroll-snap-align: start;
       width: 100%;
       height: 100%;
+      cursor: pointer;
     }
     .slider .slide img {
       width: 100%;
@@ -824,6 +825,24 @@
     .loading-indicator.show {
       display: block;
     }
+    /* Load More button (fallback) */
+    .load-more-btn {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.5rem 1.5rem;
+      margin: 1rem auto;
+      cursor: pointer;
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .load-more-btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
     /* Recently viewed carousel */
     .recently-viewed {
       margin: 2rem 0;
@@ -900,7 +919,7 @@
       .house-preview-tooltip { display: none; }
     }
 
-    /* ========== LIGHTBOX GALLERY (full screen, swipe) ========== */
+    /* ========== LIGHTBOX GALLERY (full screen, swipe, dots) ========== */
     .lightbox-gallery {
       position: fixed;
       top: 0;
@@ -1014,6 +1033,29 @@
       padding: 5px 12px;
       border-radius: 30px;
       backdrop-filter: blur(4px);
+    }
+    .lightbox-gallery .gallery-dots {
+      position: absolute;
+      bottom: 80px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      z-index: 20002;
+    }
+    .lightbox-gallery .gallery-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .lightbox-gallery .gallery-dot.active {
+      width: 24px;
+      border-radius: 4px;
+      background: white;
     }
 
     /* Pagination hidden (infinite scroll replaces it) */
@@ -1692,6 +1734,8 @@
     <h2 style="margin:0.8rem 0 0.3rem"><i class="fas fa-list"></i> Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
     <div class="loading-indicator" id="loadingIndicator"><i class="fas fa-spinner fa-pulse"></i> Loading more properties...</div>
+    <!-- Load More button as fallback -->
+    <button id="loadMoreBtn" class="load-more-btn" style="display: none;">Load More Properties</button>
 
     <!-- Recently Viewed Section -->
     <div class="recently-viewed" id="recentlyViewedSection" style="display: none;">
@@ -2685,18 +2729,17 @@
       }
     }
 
-    // LIGHTBOX GALLERY
+    // LIGHTBOX GALLERY with dots and counter
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
     let gallerySlider = null;
-    let galleryContainer = null;
+    let galleryDotsContainer = null;
 
     function openGallery(images, startIndex = 0) {
       if (!images || images.length === 0) return;
       currentGalleryImages = images;
       currentGalleryIndex = startIndex;
 
-      // Create lightbox if not exists
       let lightbox = document.getElementById('globalLightbox');
       if (!lightbox) {
         lightbox = document.createElement('div');
@@ -2712,6 +2755,7 @@
             </div>
           </div>
           <div class="gallery-counter"></div>
+          <div class="gallery-dots"></div>
         `;
         document.body.appendChild(lightbox);
 
@@ -2746,6 +2790,7 @@
         });
       }
       gallerySlider = lightbox.querySelector('.gallery-slider');
+      galleryDotsContainer = lightbox.querySelector('.gallery-dots');
       updateGallerySlider();
       lightbox.classList.add('active');
     }
@@ -2753,6 +2798,7 @@
     function updateGallerySlider() {
       if (!gallerySlider) return;
       gallerySlider.innerHTML = '';
+      galleryDotsContainer.innerHTML = '';
       currentGalleryImages.forEach((imgSrc, idx) => {
         const slide = document.createElement('div');
         slide.className = 'gallery-slide';
@@ -2761,23 +2807,41 @@
         img.alt = 'Property image';
         slide.appendChild(img);
         gallerySlider.appendChild(slide);
+        // Dot
+        const dot = document.createElement('div');
+        dot.className = 'gallery-dot';
+        if (idx === currentGalleryIndex) dot.classList.add('active');
+        dot.addEventListener('click', () => {
+          currentGalleryIndex = idx;
+          const slideWidth = gallerySlider.clientWidth;
+          gallerySlider.scrollTo({ left: idx * slideWidth, behavior: 'smooth' });
+          updateGalleryDotsAndCounter();
+        });
+        galleryDotsContainer.appendChild(dot);
       });
       // Scroll to current index
       const slideWidth = gallerySlider.clientWidth;
       gallerySlider.scrollTo({ left: currentGalleryIndex * slideWidth, behavior: 'smooth' });
-      const counter = document.querySelector('#globalLightbox .gallery-counter');
-      if (counter) {
-        counter.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
-      }
-      // Update counter on scroll
+      updateGalleryDotsAndCounter();
       gallerySlider.onscroll = () => {
         const newIndex = Math.round(gallerySlider.scrollLeft / gallerySlider.clientWidth);
         if (newIndex !== currentGalleryIndex && newIndex >= 0 && newIndex < currentGalleryImages.length) {
           currentGalleryIndex = newIndex;
-          const counterDiv = document.querySelector('#globalLightbox .gallery-counter');
-          if (counterDiv) counterDiv.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
+          updateGalleryDotsAndCounter();
         }
       };
+    }
+
+    function updateGalleryDotsAndCounter() {
+      const dots = document.querySelectorAll('#globalLightbox .gallery-dot');
+      dots.forEach((dot, idx) => {
+        if (idx === currentGalleryIndex) dot.classList.add('active');
+        else dot.classList.remove('active');
+      });
+      const counter = document.querySelector('#globalLightbox .gallery-counter');
+      if (counter) {
+        counter.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
+      }
     }
 
     // Override the original loadHouses function to support infinite scroll, new badge, lazy loading, preview, and lightbox on image click
@@ -2820,7 +2884,8 @@
         const res = await fetch(`/api/houses?${params.toString()}`);
         const data = await res.json();
         const houses = data.houses || [];
-        if (houses.length === 0 || houses.length < 12) hasMore = false;
+        const totalPages = data.pages || 1;
+        if (houses.length === 0 || page >= totalPages) hasMore = false;
         if (append) {
           const container = document.getElementById('houses-container');
           houses.forEach(house => {
@@ -2832,6 +2897,13 @@
         }
         if (hasMore) currentPage = page;
         else document.getElementById('loadingIndicator').classList.remove('show');
+
+        // Show/hide load more button
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (loadMoreBtn) {
+          if (hasMore) loadMoreBtn.style.display = 'block';
+          else loadMoreBtn.style.display = 'none';
+        }
       } catch (err) {
         console.error(err);
         if (!append) document.getElementById('houses-container').innerHTML = '<p>Error loading properties.</p>';
@@ -2933,41 +3005,44 @@
       });
     }
 
-    // Infinite scroll observer (placed after houses container)
-    const sentinel = document.createElement('div');
-    sentinel.style.height = '20px';
-    sentinel.style.width = '100%';
-    const housesContainer = document.getElementById('houses-container');
-    housesContainer.parentNode.insertBefore(sentinel, housesContainer.nextSibling);
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isLoading && hasMore) {
+    // Infinite scroll using window scroll (more reliable than sentinel)
+    let scrollTimeout;
+    function checkScrollAndLoad() {
+      if (isLoading || !hasMore) return;
+      const scrollPosition = window.scrollY + window.innerHeight;
+      const pageHeight = document.documentElement.scrollHeight;
+      // When near the bottom (200px threshold)
+      if (scrollPosition >= pageHeight - 200) {
         window.loadHouses(currentPage + 1, true);
       }
-    }, { threshold: 0.5, rootMargin: '200px' });
-    observer.observe(sentinel);
+    }
+    window.addEventListener('scroll', () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(checkScrollAndLoad, 200);
+    });
+
+    // Load More button fallback
+    document.getElementById('loadMoreBtn').addEventListener('click', () => {
+      if (!isLoading && hasMore) {
+        window.loadHouses(currentPage + 1, true);
+      }
+    });
 
     // Clear filters button
     document.getElementById('clearFiltersBtn').addEventListener('click', () => {
-      // Reset price slider
       const slider = document.getElementById('priceSlider').noUiSlider;
       slider.set([0, 2000000]);
       document.getElementById('priceMin').value = 0;
       document.getElementById('priceMax').value = 2000000;
       document.getElementById('priceMinLabel').innerText = 'Min: 0';
       document.getElementById('priceMaxLabel').innerText = 'Max: 2,000,000';
-      // Reset region
       document.getElementById('regionFilter').value = '';
-      // Reset district
       const districtSelect = document.getElementById('districtFilterSelect');
       if (districtSelect) districtSelect.value = '';
-      // Reset type tab
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelector('.tab-btn[data-type="all"]').classList.add('active');
-      // Reset amenities checkboxes
       document.querySelectorAll('.amenities-filters input').forEach(cb => cb.checked = false);
-      // Reset search input
       document.getElementById('searchInput').value = '';
-      // Trigger apply
       document.getElementById('applyFiltersBtn').click();
     });
 
