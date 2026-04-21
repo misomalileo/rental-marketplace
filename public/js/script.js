@@ -103,7 +103,7 @@ function addCrownToLandlordAvatar(avatarElement, isPremiumLandlord) {
   container.appendChild(crown);
 }
 
-// ========== LOAD HERO CAROUSEL ==========
+// ========== LOAD HERO CAROUSEL (enhanced with lazy loading) ==========
 async function loadHeroCarousel() {
   try {
     const res = await fetch('/api/houses?page=1&limit=6');
@@ -118,7 +118,7 @@ async function loadHeroCarousel() {
     wrapper.innerHTML = houses.map(house => `
       <div class="swiper-slide">
         <div class="carousel-card">
-          <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}">
+          <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}" loading="lazy">
           <div class="carousel-card-content">
             <h3>${escapeHtml(house.name)}</h3>
             <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
@@ -493,6 +493,8 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     renderMarkers(allHouses);
     renderPagination();
     updateURL();
+    // After rendering, attach infinite scroll listener if not already
+    attachInfiniteScroll();
   } catch (err) {
     console.error("Failed loading houses:", err);
     const container = document.getElementById("houses-container");
@@ -717,7 +719,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `<td></tbody></table>`;
+  tableHtml += `<tr></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -732,7 +734,7 @@ function openComparisonModal() {
 }
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
-// ========== RENDER HOUSE CARDS (with price change display) ==========
+// ========== RENDER HOUSE CARDS (with price change display, lazy loading, new badge, tooltip) ==========
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
@@ -809,6 +811,13 @@ function renderHouses(houses) {
     const displayType = getDisplayType(house.type);
     const typeIcon = getTypeIcon(house.type);
     const strongFieldsHtml = getStrongFieldsHTML(house);
+    
+    // "New" badge (last 24 hours)
+    let newBadgeHtml = '';
+    if (house.createdAt) {
+      const diffHours = (Date.now() - new Date(house.createdAt).getTime()) / (1000 * 60 * 60);
+      if (diffHours < 24) newBadgeHtml = '<span class="new-badge"><i class="fas fa-bolt"></i> New</span>';
+    }
 
     card.innerHTML = `
       <div class="slider">
@@ -819,6 +828,7 @@ function renderHouses(houses) {
       </div>
       <div class="house-card-content">
         ${landlordInfoHtml}
+        ${newBadgeHtml}
         ${featuredBadge}
         ${selfContainedBadge}
         ${genderBadgeHtml}
@@ -944,13 +954,344 @@ function renderHouses(houses) {
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star") || e.target.classList.contains("dot")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" }).catch(err => console.error("Failed to record view", err));
+      // Add to recently viewed (store in localStorage)
+      addToRecentlyViewed(house._id);
     });
+
+    // Attach hover tooltip (instant preview)
+    attachTooltipToCard(card, house);
   });
 
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
   });
+}
+
+// ========== INSTANT PREVIEW TOOLTIP ==========
+let tooltipTimeout;
+let currentTooltip = null;
+function attachTooltipToCard(card, house) {
+  let timeout;
+  card.addEventListener('mouseenter', (e) => {
+    timeout = setTimeout(() => {
+      if (currentTooltip) currentTooltip.remove();
+      const tooltip = document.createElement('div');
+      tooltip.className = 'house-preview-tooltip';
+      tooltip.innerHTML = `
+        <h4>${escapeHtml(house.name)}</h4>
+        <p class="price">MWK ${house.price.toLocaleString()}</p>
+        <p><i class="fas fa-bed"></i> ${house.bedrooms || '?'} beds</p>
+        <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
+        <p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'New'}</p>
+      `;
+      document.body.appendChild(tooltip);
+      const x = e.clientX + 15;
+      const y = e.clientY + 15;
+      tooltip.style.left = Math.min(x, window.innerWidth - tooltip.offsetWidth - 10) + 'px';
+      tooltip.style.top = Math.min(y, window.innerHeight - tooltip.offsetHeight - 10) + 'px';
+      currentTooltip = tooltip;
+    }, 300);
+  });
+  card.addEventListener('mouseleave', () => {
+    clearTimeout(timeout);
+    if (currentTooltip) {
+      currentTooltip.remove();
+      currentTooltip = null;
+    }
+  });
+  card.addEventListener('mousemove', (e) => {
+    if (currentTooltip) {
+      let x = e.clientX + 15;
+      let y = e.clientY + 15;
+      currentTooltip.style.left = Math.min(x, window.innerWidth - currentTooltip.offsetWidth - 10) + 'px';
+      currentTooltip.style.top = Math.min(y, window.innerHeight - currentTooltip.offsetHeight - 10) + 'px';
+    }
+  });
+}
+
+// ========== RECENTLY VIEWED (localStorage) ==========
+let recentlyViewedIds = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+function addToRecentlyViewed(houseId) {
+  recentlyViewedIds = recentlyViewedIds.filter(id => id !== houseId);
+  recentlyViewedIds.unshift(houseId);
+  if (recentlyViewedIds.length > 5) recentlyViewedIds.pop();
+  localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewedIds));
+  renderRecentlyViewed();
+}
+async function renderRecentlyViewed() {
+  const section = document.getElementById('recentlyViewedSection');
+  const container = document.getElementById('recentlyViewedList');
+  if (!recentlyViewedIds.length) {
+    if (section) section.style.display = 'none';
+    return;
+  }
+  if (section) section.style.display = 'block';
+  if (!container) return;
+  container.innerHTML = '<div class="loading-indicator" style="display:block;">Loading...</div>';
+  try {
+    const ids = recentlyViewedIds.join(',');
+    const res = await fetch(`/api/houses?ids=${ids}&limit=5`);
+    const data = await res.json();
+    const houses = data.houses || [];
+    container.innerHTML = houses.map(house => `
+      <div class="recent-card" onclick="showDetails('${house._id}')">
+        <img src="${house.images?.[0] || 'placeholder.jpg'}" loading="lazy">
+        <div class="info">
+          <h4>${escapeHtml(house.name)}</h4>
+          <p>MWK ${house.price.toLocaleString()}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load recently viewed', err);
+    container.innerHTML = '<p>Unable to load recently viewed.</p>';
+  }
+}
+
+// ========== CLEAR FILTERS BUTTON ==========
+function initClearFiltersButton() {
+  const clearBtn = document.getElementById('clearFiltersBtn');
+  if (!clearBtn) return;
+  clearBtn.addEventListener('click', () => {
+    // Reset price slider
+    const slider = document.getElementById('priceSlider');
+    if (slider && slider.noUiSlider) slider.noUiSlider.set([0, 2000000]);
+    // Reset region
+    const regionSelect = document.getElementById('regionFilter');
+    if (regionSelect) regionSelect.value = '';
+    // Reset district
+    const districtSelect = document.getElementById('districtFilterSelect');
+    if (districtSelect) districtSelect.value = '';
+    window.selectedDistrict = null;
+    currentDistrict = '';
+    // Reset type tab to "all"
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    const allTab = document.querySelector('.tab-btn[data-type="all"]');
+    if (allTab) allTab.classList.add('active');
+    currentType = 'all';
+    // Reset amenities checkboxes
+    document.querySelectorAll('.amenities-filters input').forEach(cb => cb.checked = false);
+    // Reset search input
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    // Reset sort
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) sortSelect.value = 'default';
+    currentSort = 'default';
+    // Reset page
+    currentPage = 1;
+    // Re-apply filters (which will load houses with cleared filters)
+    applyFilters();
+  });
+}
+
+// ========== INFINITE SCROLL (replaces pagination) ==========
+let isLoadingMore = false;
+let hasMorePages = true;
+let infiniteScrollEnabled = true;
+
+function attachInfiniteScroll() {
+  if (!infiniteScrollEnabled) return;
+  window.removeEventListener('scroll', handleScroll);
+  window.addEventListener('scroll', handleScroll);
+}
+function handleScroll() {
+  if (isLoadingMore || !hasMorePages) return;
+  const scrollPosition = window.scrollY + window.innerHeight;
+  const pageHeight = document.documentElement.scrollHeight;
+  if (scrollPosition >= pageHeight - 300) {
+    loadNextPage();
+  }
+}
+async function loadNextPage() {
+  if (isLoadingMore || !hasMorePages) return;
+  isLoadingMore = true;
+  const nextPage = currentPage + 1;
+  if (nextPage > totalPages) {
+    hasMorePages = false;
+    isLoadingMore = false;
+    return;
+  }
+  try {
+    const params = new URLSearchParams();
+    params.append('page', nextPage);
+    params.append('limit', 12);
+    if (currentType !== 'all') params.append('type', currentType);
+    if (currentFilters.minPrice) params.append('minPrice', currentFilters.minPrice);
+    if (currentFilters.maxPrice) params.append('maxPrice', currentFilters.maxPrice);
+    if (currentFilters.bedrooms) params.append('bedrooms', currentFilters.bedrooms);
+    if (currentFilters.wifi) params.append('wifi', 'true');
+    if (currentFilters.parking) params.append('parking', 'true');
+    if (currentFilters.furnished) params.append('furnished', 'true');
+    if (currentFilters.petFriendly) params.append('petFriendly', 'true');
+    if (currentFilters.pool) params.append('pool', 'true');
+    if (currentFilters.ac) params.append('ac', 'true');
+    if (currentSort !== 'default') params.append('sort', currentSort);
+    if (currentDistrict) params.append('district', currentDistrict);
+    const res = await fetch(`/api/houses?${params.toString()}`);
+    const data = await res.json();
+    const newHouses = data.houses || [];
+    if (newHouses.length === 0) {
+      hasMorePages = false;
+    } else {
+      allHouses = [...allHouses, ...newHouses];
+      currentPage = nextPage;
+      totalPages = data.pages;
+      // Append only the new houses to the DOM (without re-rendering all)
+      const container = document.getElementById('houses-container');
+      newHouses.forEach(house => {
+        const card = createHouseCardElement(house);
+        container.appendChild(card);
+      });
+      renderMarkers(allHouses);
+      renderPagination();
+    }
+  } catch (err) {
+    console.error('Infinite scroll error:', err);
+  } finally {
+    isLoadingMore = false;
+  }
+}
+// Helper to create a single card element (used for appending)
+function createHouseCardElement(house) {
+  const card = document.createElement('div');
+  card.className = 'house-card';
+  const images = house.images && house.images.length ? house.images : ['placeholder.jpg'];
+  let slidesHtml = '';
+  let dotsHtml = '';
+  images.forEach((img, idx) => {
+    slidesHtml += `<div class="slide"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
+    dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
+  });
+  let avatarHtml = '';
+  if (house.owner) {
+    const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
+    const avatarStyle = house.owner.profilePicture ? `<img src="${house.owner.profilePicture}" alt="${house.owner.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:1rem;">${initial}</span>`;
+    avatarHtml = `<div class="landlord-avatar" data-landlord-id="${house.owner._id}" onclick="event.stopPropagation(); showLandlordProfile('${house.owner._id}')">${avatarStyle}</div>`;
+  }
+  const isPremiumLandlord = house.owner && (house.owner.verificationType === 'premium' || house.owner.role === 'premium_landlord');
+  let landlordBadge = '';
+  if (house.owner && (house.owner.verificationType === 'official' || house.owner.verificationType === 'premium')) {
+    landlordBadge = `<span class="verified-badge-custom" style="display: inline-flex; align-items: center; margin-left: 6px;">${fbSaturatedSky(18)}</span>`;
+  }
+  let landlordInfoHtml = '';
+  if (house.owner) {
+    landlordInfoHtml = `<div class="landlord-info-row" style="position: relative;">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${landlordBadge}</div>`;
+  }
+  const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
+  const selfContainedBadge = house.selfContained ? '<span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
+  let genderBadgeHtml = '';
+  if (house.gender && house.gender !== 'none') {
+    let genderClass = '', genderText = '';
+    if (house.gender === 'boys') { genderClass = 'gender-boys'; genderText = '<i class="fas fa-mars"></i> Boys Only'; }
+    else if (house.gender === 'girls') { genderClass = 'gender-girls'; genderText = '<i class="fas fa-venus"></i> Girls Only'; }
+    else if (house.gender === 'mixed') { genderClass = 'gender-mixed'; genderText = '<i class="fas fa-venus-mars"></i> Mixed'; }
+    genderBadgeHtml = `<span class="badge ${genderClass}">${genderText}</span>`;
+  }
+  let rentalStatusBadge = '';
+  if (house.rentalStatus === 'available') rentalStatusBadge = '<span class="badge available"><i class="fas fa-check-circle"></i> Available</span>';
+  else if (house.rentalStatus === 'rented') rentalStatusBadge = '<span class="badge rented"><i class="fas fa-ban"></i> Rented</span>';
+  else if (house.rentalStatus === 'pending') rentalStatusBadge = '<span class="badge pending"><i class="fas fa-clock"></i> Pending</span>';
+  
+  let priceHtml = '';
+  const priceValue = house.price;
+  const formattedPrice = `MWK ${Number(priceValue).toLocaleString()}`;
+  if (house.oldPrice && house.oldPrice !== priceValue) {
+    const oldPrice = house.oldPrice;
+    const change = priceValue - oldPrice;
+    const percent = ((change / oldPrice) * 100).toFixed(0);
+    const changeClass = change < 0 ? 'negative' : '';
+    const changeSymbol = change < 0 ? '↓' : '↑';
+    priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${Math.abs(percent)}% ${changeSymbol}</span> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+  } else {
+    priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+  }
+  
+  const ratingStars = getStarRating(house.averageRating);
+  const ratingText = house.averageRating ? house.averageRating.toFixed(1) : "N/A";
+  const isLoggedIn = checkAuth();
+  const currentUserId = getUserIdFromToken();
+  const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+  const favIcon = favorites.includes(house._id) ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
+  const chatBtn = (isLoggedIn && house.owner && house.owner._id !== currentUserId) ? `<button class="chat-btn" onclick="startChat('${house.owner._id}', '${house._id}')"><i class="fas fa-comment-dots"></i> Chat</button>` : '';
+  const shareBtn = `<button class="share-btn" onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>`;
+  const isSelected = comparisonList.includes(house._id);
+  const compareBtn = `<button class="compare-btn" data-id="${house._id}" onclick="addToCompare('${house._id}')"><i class="fas fa-chart-simple"></i> ${isSelected ? 'Remove' : 'Compare'}</button>`;
+  const reportBtn = isLoggedIn ? `<button class="report-btn" onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>` : '';
+  const favBtn = `<button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>`;
+  const readMoreBtn = `<button class="read-more-btn" onclick="showDetails('${house._id}')"><i class="fas fa-book-open"></i> Read more</button>`;
+  const ratingWidgetHtml = `<div class="rating-widget" data-house-id="${house._id}">${[1,2,3,4,5].map(v => `<span class="star" data-value="${v}">☆</span>`).join('')}<span class="rating-message" style="font-size:0.6rem; margin-left:0.5rem;"></span></div>`;
+  const displayType = getDisplayType(house.type);
+  const typeIcon = getTypeIcon(house.type);
+  const strongFieldsHtml = getStrongFieldsHTML(house);
+  
+  let newBadgeHtml = '';
+  if (house.createdAt) {
+    const diffHours = (Date.now() - new Date(house.createdAt).getTime()) / (1000 * 60 * 60);
+    if (diffHours < 24) newBadgeHtml = '<span class="new-badge"><i class="fas fa-bolt"></i> New</span>';
+  }
+
+  card.innerHTML = `
+    <div class="slider">
+      <div class="slides-container" data-house-id="${house._id}">
+        ${slidesHtml}
+      </div>
+      <div class="dots">${dotsHtml}</div>
+    </div>
+    <div class="house-card-content">
+      ${landlordInfoHtml}
+      ${newBadgeHtml}
+      ${featuredBadge}
+      ${selfContainedBadge}
+      ${genderBadgeHtml}
+      ${rentalStatusBadge}
+      <h3>${house.name}</h3>
+      <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
+      ${priceHtml}
+      ${strongFieldsHtml}
+      <p><i class="fas ${typeIcon}"></i> ${displayType}</p>
+      <p><i class="fas fa-star"></i> Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
+      ${ratingWidgetHtml}
+      <div class="action-buttons">
+        ${chatBtn}
+        ${favBtn}
+        ${shareBtn}
+        ${compareBtn}
+        ${reportBtn}
+      </div>
+      ${readMoreBtn}
+    </div>
+  `;
+
+  // Attach slider logic and tooltip (similar to original renderHouses)
+  const sliderContainer = card.querySelector('.slides-container');
+  const dots = card.querySelectorAll('.dot');
+  if (sliderContainer && dots.length) {
+    let activeIndex = 0;
+    const updateActiveDot = () => {
+      const scrollLeft = sliderContainer.scrollLeft;
+      const slideWidth = sliderContainer.clientWidth;
+      if (slideWidth === 0) return;
+      const newIndex = Math.round(scrollLeft / slideWidth);
+      if (newIndex !== activeIndex && newIndex >= 0 && newIndex < dots.length) {
+        activeIndex = newIndex;
+        dots.forEach((dot, idx) => dot.classList.toggle('active', idx === activeIndex));
+      }
+    };
+    sliderContainer.addEventListener('scroll', updateActiveDot);
+    sliderContainer.addEventListener('touchmove', updateActiveDot);
+    setTimeout(updateActiveDot, 100);
+    dots.forEach((dot, idx) => {
+      dot.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sliderContainer.scrollTo({ left: idx * sliderContainer.clientWidth, behavior: 'smooth' });
+      });
+    });
+  }
+  // Tooltip
+  attachTooltipToCard(card, house);
+  return card;
 }
 
 // ========== REPORT, CHAT, LANDLORD PROFILE ==========
@@ -1702,6 +2043,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAndUpdateUserMenu();
   loadAmenityLayers(); // This populates healthPoints, schoolPoints, marketPoints and sets up toggles
   initHeatmap();
+  initClearFiltersButton();
+  renderRecentlyViewed(); // initial render of recently viewed
+  attachInfiniteScroll();
 });
 
 // Expose global functions
