@@ -814,7 +814,7 @@
     }
     .fav-btn { background: none; border: 1px solid var(--input-border); color: var(--text-color); }
 
-    /* Infinite scroll loading indicator */
+    /* Loading indicator */
     .loading-indicator {
       text-align: center;
       padding: 1.5rem;
@@ -825,24 +825,32 @@
     .loading-indicator.show {
       display: block;
     }
-    /* Load More button (fallback) */
+    
+    /* Load More button */
     .load-more-btn {
-      background: var(--button-bg);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
       color: white;
       border: none;
       border-radius: 40px;
-      padding: 0.5rem 1.5rem;
-      margin: 1rem auto;
+      padding: 0.75rem 2rem;
+      margin: 1rem auto 2rem;
       cursor: pointer;
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       font-weight: 600;
       transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     .load-more-btn:hover {
-      background: var(--button-hover);
       transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.3);
     }
+    .load-more-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
     /* Recently viewed carousel */
     .recently-viewed {
       margin: 2rem 0;
@@ -919,7 +927,7 @@
       .house-preview-tooltip { display: none; }
     }
 
-    /* ========== LIGHTBOX GALLERY (full screen, swipe, dots) ========== */
+    /* ========== LIGHTBOX GALLERY (full screen, swipe, with dots) ========== */
     .lightbox-gallery {
       position: fixed;
       top: 0;
@@ -1041,14 +1049,14 @@
       right: 0;
       display: flex;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       z-index: 20002;
     }
     .lightbox-gallery .gallery-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.4);
       transition: all 0.2s;
       cursor: pointer;
     }
@@ -1058,7 +1066,7 @@
       background: white;
     }
 
-    /* Pagination hidden (infinite scroll replaces it) */
+    /* Pagination hidden - using Load More */
     .pagination {
       display: none;
     }
@@ -1734,8 +1742,9 @@
     <h2 style="margin:0.8rem 0 0.3rem"><i class="fas fa-list"></i> Available Properties</h2>
     <div id="houses-container">Loading houses...</div>
     <div class="loading-indicator" id="loadingIndicator"><i class="fas fa-spinner fa-pulse"></i> Loading more properties...</div>
-    <!-- Load More button as fallback -->
-    <button id="loadMoreBtn" class="load-more-btn" style="display: none;">Load More Properties</button>
+    
+    <!-- Load More Button - This replaces infinite scroll and works reliably -->
+    <button id="loadMoreBtn" class="load-more-btn" style="display: none;">Load More Properties <i class="fas fa-arrow-down"></i></button>
 
     <!-- Recently Viewed Section -->
     <div class="recently-viewed" id="recentlyViewedSection" style="display: none;">
@@ -2648,13 +2657,13 @@
     window.escapeHtml = function(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); };
   </script>
 
-  <!-- ========== CORE ENHANCEMENT SCRIPT (infinite scroll, preview, new badge, recently viewed, clear filters, LIGHTBOX) ========== -->
+  <!-- ========== CORE ENHANCEMENT SCRIPT (Load More, Lightbox, Preview, New Badge, Recently Viewed, Clear Filters) ========== -->
   <script>
-    // Global state for infinite scroll
+    // Global state for pagination
     let currentPage = 1;
     let isLoading = false;
     let hasMore = true;
-    let currentFilters = {};
+    let totalPages = 1;
 
     // Recently viewed (store up to 5 house IDs)
     let recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
@@ -2729,7 +2738,7 @@
       }
     }
 
-    // LIGHTBOX GALLERY with dots and counter
+    // LIGHTBOX GALLERY with dots
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
     let gallerySlider = null;
@@ -2798,7 +2807,8 @@
     function updateGallerySlider() {
       if (!gallerySlider) return;
       gallerySlider.innerHTML = '';
-      galleryDotsContainer.innerHTML = '';
+      if (galleryDotsContainer) galleryDotsContainer.innerHTML = '';
+      
       currentGalleryImages.forEach((imgSrc, idx) => {
         const slide = document.createElement('div');
         slide.className = 'gallery-slide';
@@ -2807,22 +2817,27 @@
         img.alt = 'Property image';
         slide.appendChild(img);
         gallerySlider.appendChild(slide);
-        // Dot
-        const dot = document.createElement('div');
-        dot.className = 'gallery-dot';
-        if (idx === currentGalleryIndex) dot.classList.add('active');
-        dot.addEventListener('click', () => {
-          currentGalleryIndex = idx;
-          const slideWidth = gallerySlider.clientWidth;
-          gallerySlider.scrollTo({ left: idx * slideWidth, behavior: 'smooth' });
-          updateGalleryDotsAndCounter();
-        });
-        galleryDotsContainer.appendChild(dot);
+        
+        if (galleryDotsContainer) {
+          const dot = document.createElement('div');
+          dot.className = 'gallery-dot';
+          if (idx === currentGalleryIndex) dot.classList.add('active');
+          dot.addEventListener('click', () => {
+            currentGalleryIndex = idx;
+            const slideWidth = gallerySlider.clientWidth;
+            gallerySlider.scrollTo({ left: idx * slideWidth, behavior: 'smooth' });
+            updateGalleryDotsAndCounter();
+          });
+          galleryDotsContainer.appendChild(dot);
+        }
       });
-      // Scroll to current index
+      
       const slideWidth = gallerySlider.clientWidth;
-      gallerySlider.scrollTo({ left: currentGalleryIndex * slideWidth, behavior: 'smooth' });
+      if (slideWidth > 0) {
+        gallerySlider.scrollTo({ left: currentGalleryIndex * slideWidth, behavior: 'smooth' });
+      }
       updateGalleryDotsAndCounter();
+      
       gallerySlider.onscroll = () => {
         const newIndex = Math.round(gallerySlider.scrollLeft / gallerySlider.clientWidth);
         if (newIndex !== currentGalleryIndex && newIndex >= 0 && newIndex < currentGalleryImages.length) {
@@ -2833,30 +2848,38 @@
     }
 
     function updateGalleryDotsAndCounter() {
-      const dots = document.querySelectorAll('#globalLightbox .gallery-dot');
-      dots.forEach((dot, idx) => {
-        if (idx === currentGalleryIndex) dot.classList.add('active');
-        else dot.classList.remove('active');
-      });
+      if (galleryDotsContainer) {
+        const dots = galleryDotsContainer.querySelectorAll('.gallery-dot');
+        dots.forEach((dot, idx) => {
+          if (idx === currentGalleryIndex) dot.classList.add('active');
+          else dot.classList.remove('active');
+        });
+      }
       const counter = document.querySelector('#globalLightbox .gallery-counter');
       if (counter) {
         counter.innerText = `${currentGalleryIndex+1} / ${currentGalleryImages.length}`;
       }
     }
 
-    // Override the original loadHouses function to support infinite scroll, new badge, lazy loading, preview, and lightbox on image click
+    // Main load houses function with pagination
     const originalLoadHouses = window.loadHouses;
     window.loadHouses = async function(page = 1, append = false) {
       if (isLoading) return;
       isLoading = true;
+      
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      
       if (!append) {
         currentPage = 1;
         hasMore = true;
         document.getElementById('houses-container').innerHTML = '<div class="loading-indicator show">Loading properties...</div>';
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
       } else {
-        document.getElementById('loadingIndicator').classList.add('show');
+        if (loadingIndicator) loadingIndicator.classList.add('show');
       }
-      // Gather current filters (same as original logic)
+      
+      // Gather current filters
       const minPrice = document.getElementById('priceMin').value;
       const maxPrice = document.getElementById('priceMax').value;
       const region = document.getElementById('regionFilter').value;
@@ -2870,22 +2893,37 @@
       const pool = document.getElementById('filterPool').checked;
       const ac = document.getElementById('filterAC').checked;
       const district = document.getElementById('districtFilterSelect')?.value || '';
+      
       const params = new URLSearchParams({
         page, limit: 12,
-        ...(minPrice && { minPrice }), ...(maxPrice && { maxPrice }),
-        ...(region && { region }), ...(sort !== 'default' && { sort }),
-        ...(search && { search }), ...(type !== 'all' && { type }),
-        ...(wifi && { wifi: true }), ...(parking && { parking: true }),
-        ...(furnished && { furnished: true }), ...(petFriendly && { petFriendly: true }),
-        ...(pool && { pool: true }), ...(ac && { ac: true }),
+        ...(minPrice && minPrice != '0' && { minPrice }), 
+        ...(maxPrice && maxPrice != '2000000' && { maxPrice }),
+        ...(region && { region }), 
+        ...(sort !== 'default' && { sort }),
+        ...(search && { search }), 
+        ...(type !== 'all' && { type }),
+        ...(wifi && { wifi: true }), 
+        ...(parking && { parking: true }),
+        ...(furnished && { furnished: true }), 
+        ...(petFriendly && { petFriendly: true }),
+        ...(pool && { pool: true }), 
+        ...(ac && { ac: true }),
         ...(district && { district })
       });
+      
       try {
         const res = await fetch(`/api/houses?${params.toString()}`);
         const data = await res.json();
         const houses = data.houses || [];
-        const totalPages = data.pages || 1;
-        if (houses.length === 0 || page >= totalPages) hasMore = false;
+        totalPages = data.pages || 1;
+        
+        if (houses.length === 0 || page >= totalPages) {
+          hasMore = false;
+          if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        } else {
+          hasMore = true;
+        }
+        
         if (append) {
           const container = document.getElementById('houses-container');
           houses.forEach(house => {
@@ -2895,38 +2933,46 @@
         } else {
           renderHouses(houses);
         }
-        if (hasMore) currentPage = page;
-        else document.getElementById('loadingIndicator').classList.remove('show');
-
-        // Show/hide load more button
-        const loadMoreBtn = document.getElementById('loadMoreBtn');
-        if (loadMoreBtn) {
-          if (hasMore) loadMoreBtn.style.display = 'block';
-          else loadMoreBtn.style.display = 'none';
+        
+        if (hasMore && page < totalPages) {
+          if (loadMoreBtn) {
+            loadMoreBtn.style.display = 'block';
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.innerHTML = 'Load More Properties <i class="fas fa-arrow-down"></i>';
+          }
+          currentPage = page;
+        } else {
+          if (loadMoreBtn) {
+            loadMoreBtn.style.display = 'none';
+          }
         }
       } catch (err) {
-        console.error(err);
-        if (!append) document.getElementById('houses-container').innerHTML = '<p>Error loading properties.</p>';
+        console.error('Error loading houses:', err);
+        if (!append) document.getElementById('houses-container').innerHTML = '<p>Error loading properties. Please try again.</p>';
       } finally {
         isLoading = false;
-        document.getElementById('loadingIndicator').classList.remove('show');
+        const loadingIndicatorElem = document.getElementById('loadingIndicator');
+        if (loadingIndicatorElem) loadingIndicatorElem.classList.remove('show');
       }
     };
 
     function createHouseCard(house) {
       const card = document.createElement('div');
       card.className = 'house-card';
+      
       const isNew = (() => {
         if (!house.createdAt) return false;
         const diff = (Date.now() - new Date(house.createdAt).getTime()) / (1000 * 60 * 60 * 24);
         return diff < 1;
       })();
+      
       const images = house.images && house.images.length ? house.images : ['placeholder.jpg'];
       let slidesHtml = '', dotsHtml = '';
       images.forEach((img, idx) => {
         slidesHtml += `<div class="slide" data-img-index="${idx}"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
         dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
       });
+      
       card.innerHTML = `
         <div class="slider" data-house-id="${house._id}">
           <div class="slides-container">${slidesHtml}</div>
@@ -2947,10 +2993,12 @@
           </div>
         </div>
       `;
-      // Slider initialization
+      
+      // Slider initialization and image click for lightbox
       const slider = card.querySelector('.slider');
       const slidesContainer = slider.querySelector('.slides-container');
       const dots = slider.querySelectorAll('.dot');
+      
       if (slidesContainer && dots.length) {
         let activeIndex = 0;
         const updateActiveDot = () => {
@@ -2966,12 +3014,14 @@
         slidesContainer.addEventListener('scroll', updateActiveDot);
         slidesContainer.addEventListener('touchmove', updateActiveDot);
         setTimeout(updateActiveDot, 100);
+        
         dots.forEach((dot, idx) => {
           dot.addEventListener('click', (e) => {
             e.stopPropagation();
             slidesContainer.scrollTo({ left: idx * slidesContainer.clientWidth, behavior: 'smooth' });
           });
         });
+        
         // Add click event on each slide image to open lightbox
         const slides = slidesContainer.querySelectorAll('.slide');
         slides.forEach((slide, idx) => {
@@ -2981,6 +3031,7 @@
           });
         });
       }
+      
       // Preview on hover
       card.addEventListener('mouseenter', (e) => showPreview(house, e));
       card.addEventListener('mousemove', (e) => {
@@ -2992,8 +3043,8 @@
         }
       });
       card.addEventListener('mouseleave', hidePreview);
-      // Click to add to recently viewed
       card.addEventListener('click', () => addRecentlyViewed(house._id));
+      
       return card;
     }
 
@@ -3005,25 +3056,9 @@
       });
     }
 
-    // Infinite scroll using window scroll (more reliable than sentinel)
-    let scrollTimeout;
-    function checkScrollAndLoad() {
-      if (isLoading || !hasMore) return;
-      const scrollPosition = window.scrollY + window.innerHeight;
-      const pageHeight = document.documentElement.scrollHeight;
-      // When near the bottom (200px threshold)
-      if (scrollPosition >= pageHeight - 200) {
-        window.loadHouses(currentPage + 1, true);
-      }
-    }
-    window.addEventListener('scroll', () => {
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(checkScrollAndLoad, 200);
-    });
-
-    // Load More button fallback
+    // Load More button click handler
     document.getElementById('loadMoreBtn').addEventListener('click', () => {
-      if (!isLoading && hasMore) {
+      if (!isLoading && hasMore && currentPage < totalPages) {
         window.loadHouses(currentPage + 1, true);
       }
     });
@@ -3031,7 +3066,7 @@
     // Clear filters button
     document.getElementById('clearFiltersBtn').addEventListener('click', () => {
       const slider = document.getElementById('priceSlider').noUiSlider;
-      slider.set([0, 2000000]);
+      if (slider) slider.set([0, 2000000]);
       document.getElementById('priceMin').value = 0;
       document.getElementById('priceMax').value = 2000000;
       document.getElementById('priceMinLabel').innerText = 'Min: 0';
@@ -3046,7 +3081,7 @@
       document.getElementById('applyFiltersBtn').click();
     });
 
-    // Override showDetails to also add to recently viewed (handled by card click anyway, but also in modal)
+    // Override showDetails
     const originalShowDetails = window.showDetails;
     window.showDetails = async function(houseId) {
       addRecentlyViewed(houseId);
