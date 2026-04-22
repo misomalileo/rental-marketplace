@@ -20,9 +20,6 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
   <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
-  <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heatmap.js"></script>
   <style>
     /* ========== GLOBAL ZOOM-PROOF RESET ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -805,6 +802,16 @@
     /* ========== MAP & AMENITY TOGGLE PANEL ========== */
     .map-section { margin: 1.5rem 0; }
     #map { height: 380px; width: 100%; border-radius: 28px; overflow: hidden; border: 1px solid var(--input-border); }
+    /* 3D Explorer container */
+    #explorer3d {
+      height: 380px;
+      width: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+      background: #111;
+      display: none;
+    }
     .map-controls {
       margin: 0.6rem 0;
       display: flex;
@@ -1416,14 +1423,12 @@
         <i class="fas fa-fire"></i> <span>Featured Properties</span>
         <span class="carousel-subtitle">Handpicked for you</span>
       </div>
-      <!-- Promotional banner below subtitle -->
       <div class="promo-banner">
         <i class="fas fa-gem"></i> Limited Offer: Premium users get early access to new listings! <i class="fas fa-arrow-right"></i>
       </div>
       <div class="swiper hero-swiper">
         <div class="swiper-wrapper" id="carousel-wrapper"></div>
         <div class="swiper-pagination"></div>
-        <!-- navigation arrows removed -->
       </div>
     </div>
   </div>
@@ -1478,6 +1483,7 @@
     <section class="map-section" id="map-section">
       <h2><i class="fas fa-map"></i> Map View</h2>
       <div class="map-controls">
+        <button id="toggle3DExplorer" class="save-search-btn" style="background: #8b5cf6;"><i class="fas fa-cube"></i> 3D Explorer</button>
         <button id="drawAreaBtn" class="save-search-btn"><i class="fas fa-draw-polygon"></i> Draw Area</button>
         <button id="clearDrawBtn" class="save-search-btn" style="background:#e74c3c;"><i class="fas fa-trash-alt"></i> Clear</button>
         <div class="radius-slider">
@@ -1492,7 +1498,6 @@
         <button id="toggleHeatmapBtn" class="spatial-btn"><i class="fas fa-fire"></i> Property Heatmap</button>
         <button id="walkabilityBtn" class="spatial-btn"><i class="fas fa-walking"></i> Walkability</button>
       </div>
-      <!-- Amenity Toggle Panel -->
       <div class="amenity-toggles" id="amenityTogglePanel">
         <button class="amenity-toggle-btn" data-layer="hospitals"><i class="fas fa-hospital"></i> Hospitals</button>
         <button class="amenity-toggle-btn" data-layer="schools"><i class="fas fa-school"></i> Schools</button>
@@ -1506,6 +1511,7 @@
         <button class="amenity-toggle-btn" data-layer="worship"><i class="fas fa-church"></i> Worship</button>
       </div>
       <div id="map"></div>
+      <div id="explorer3d"></div>
     </section>
 
     <section class="gps-section">
@@ -1516,7 +1522,6 @@
     </section>
   </main>
 
-  <!-- WOOOW FOOTER – redesigned with extra polish -->
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-col">
@@ -1575,10 +1580,9 @@
     </div>
   </footer>
 
-  <!-- Back to Top Button -->
   <div id="backToTop" class="back-to-top"><i class="fas fa-arrow-up"></i></div>
 
-  <!-- ========== MODALS (FULLY POPULATED) ========== -->
+  <!-- ========== MODALS ========== -->
   <div id="dreamMatchModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('dreamMatchModal')">&times;</span>
@@ -1672,21 +1676,22 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/renderers/CSS2DRenderer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
-  <script src="js/script.js"></script>
   <script src="js/chatbot.js"></script>
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <!-- 3D House Script (standalone, using global THREE) -->
+  <!-- 3D House Script (unchanged) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     (function() {
       const container = document.getElementById('hero3dHouse');
       if (!container) return;
 
-      // Ensure container size
       const width = container.clientWidth;
       const height = container.clientHeight;
       if (width === 0 || height === 0) {
@@ -1708,7 +1713,6 @@
       renderer.shadowMap.enabled = true;
       container.appendChild(renderer.domElement);
 
-      // Simple OrbitControls (if available, otherwise we create a basic auto-rotate)
       let controls = null;
       if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -1719,11 +1723,9 @@
         controls.enablePan = false;
         controls.target.set(0, 1.2, 0);
       } else {
-        // fallback: manual rotation
         window.autoRotateAngle = 0;
       }
 
-      // Lights
       const ambientLight = new THREE.AmbientLight(0x404060, 0.55);
       scene.add(ambientLight);
       const mainLight = new THREE.DirectionalLight(0xffeebb, 1.2);
@@ -1743,7 +1745,6 @@
       frontFill.position.set(0, 1.5, 3);
       scene.add(frontFill);
 
-      // Ground disc
       const glowDisc = new THREE.Mesh(
         new THREE.CircleGeometry(2.8, 16),
         new THREE.MeshStandardMaterial({ color: 0x2266aa, emissive: 0x114477, roughness: 0.3, metalness: 0.7, transparent: true, opacity: 0.25 })
@@ -1752,21 +1753,18 @@
       glowDisc.position.y = -1.12;
       scene.add(glowDisc);
 
-      // Materials
       const wallMat = new THREE.MeshStandardMaterial({ color: 0xfff5e6, roughness: 0.25, metalness: 0.1 });
       const roofMat = new THREE.MeshStandardMaterial({ color: 0x2a7fff, roughness: 0.4, metalness: 0.2, emissive: 0x002244 });
       const trimMat = new THREE.MeshStandardMaterial({ color: 0xff6b4a, roughness: 0.3 });
       const doorMat = new THREE.MeshStandardMaterial({ color: 0xdd44aa, emissive: 0x551133, emissiveIntensity: 0.2, metalness: 0.1 });
       const garageMat = new THREE.MeshStandardMaterial({ color: 0xf0ecff, roughness: 0.3 });
 
-      // House
       const houseWidth = 2.6, houseHeight = 1.8, houseDepth = 2.6;
       const base = new THREE.Mesh(new THREE.BoxGeometry(houseWidth, houseHeight, houseDepth), wallMat);
       base.castShadow = true;
       base.position.y = -0.2;
       scene.add(base);
 
-      // Roof
       const roofGeo = new THREE.ConeGeometry(2.2, 1.4, 4);
       const roof = new THREE.Mesh(roofGeo, roofMat);
       roof.castShadow = true;
@@ -1774,7 +1772,6 @@
       roof.rotation.y = Math.PI / 4;
       scene.add(roof);
 
-      // Chimney
       const chimneyBase = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.1, 0.55), new THREE.MeshStandardMaterial({ color: 0xdd6644 }));
       chimneyBase.castShadow = true;
       chimneyBase.position.set(0.95, 0.65, 0.85);
@@ -1784,7 +1781,6 @@
       chimneyTop.position.set(0.95, 1.2, 0.85);
       scene.add(chimneyTop);
 
-      // Garage
       const garage = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.5, 1.8), garageMat);
       garage.castShadow = true;
       garage.position.set(1.9, -0.3, -0.6);
@@ -1796,7 +1792,6 @@
       garageDoor.position.set(1.9, -0.05, -1.35);
       scene.add(garageDoor);
 
-      // Windows
       const windowMatGlow = new THREE.MeshStandardMaterial({ color: 0xaaffff, emissive: 0x33aacc, emissiveIntensity: 0.5, metalness: 0.9 });
       function addWindow(x, y, z, w = 0.7, h = 0.7) {
         const win = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), windowMatGlow);
@@ -1819,7 +1814,6 @@
       garageWin.position.set(1.9, 0.25, 0.1);
       scene.add(garageWin);
 
-      // Door
       const door = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.3, 0.12), doorMat);
       door.castShadow = true;
       door.position.set(0, -0.15, 1.42);
@@ -1828,7 +1822,6 @@
       knob.position.set(0.28, -0.1, 1.5);
       scene.add(knob);
 
-      // Steps
       const stepMat = new THREE.MeshStandardMaterial({ color: 0xaa8866, roughness: 0.7 });
       const step1 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.45), stepMat);
       step1.position.set(0, -0.45, 1.78);
@@ -1837,7 +1830,6 @@
       step2.position.set(0, -0.32, 1.85);
       scene.add(step2);
 
-      // Bushes
       const bushMat = new THREE.MeshStandardMaterial({ color: 0x5aac44, emissive: 0x226622, emissiveIntensity: 0.12 });
       function addBush(x, z, scaleVal) {
         const bush = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), bushMat);
@@ -1852,7 +1844,6 @@
       addBush(1.9, -1.2, 0.8);
       addBush(-1.6, -1.3, 0.7);
 
-      // Particles
       const particleCount = 300;
       const particlesGeo = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
@@ -1872,7 +1863,6 @@
       const particles = new THREE.Points(particlesGeo, particleMat);
       scene.add(particles);
 
-      // Stars
       const starCount = 400;
       const starGeo = new THREE.BufferGeometry();
       const starPositions = [];
@@ -1886,7 +1876,6 @@
       const stars = new THREE.Points(starGeo, starMatPoints);
       scene.add(stars);
 
-      // Fireflies
       const fireflies = [];
       for (let i = 0; i < 30; i++) {
         const orbMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422, emissiveIntensity: 0.5, transparent: true });
@@ -1934,7 +1923,6 @@
         if (controls) {
           controls.update();
         } else {
-          // manual rotation
           window.autoRotateAngle += 0.008;
           camera.position.x = 5 * Math.sin(window.autoRotateAngle);
           camera.position.z = 6 * Math.cos(window.autoRotateAngle);
@@ -1955,441 +1943,7 @@
     })();
   </script>
 
-  <!-- ========== DISTRICT BOUNDARIES & FILTER (original, untouched) ========== -->
-  <script>
-    function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
-      const overlay = document.createElement('div');
-      overlay.className = 'custom-modal-overlay';
-      let icon = '<i class="fas fa-info-circle"></i>';
-      let title = 'Information';
-      if (type === 'success') { icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; title = 'Success'; }
-      else if (type === 'error') { icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>'; title = 'Error'; }
-      else if (type === 'confirm') { icon = '<i class="fas fa-question-circle" style="color: #f59e0b;"></i>'; title = 'Confirmation'; }
-      overlay.innerHTML = `<div class="custom-modal">${icon}<h3>${title}</h3><p>${message}</p><div class="custom-modal-buttons">${type === 'confirm' ? '<button class="custom-modal-btn confirm">Yes, Proceed</button><button class="custom-modal-btn cancel">Cancel</button>' : '<button class="custom-modal-btn confirm">OK</button>'}</div></div>`;
-      document.body.appendChild(overlay);
-      const confirmBtn = overlay.querySelector('.confirm');
-      const cancelBtn = overlay.querySelector('.cancel');
-      confirmBtn?.addEventListener('click', () => { overlay.remove(); if (onConfirm) onConfirm(); });
-      cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
-    }
-
-    let mapCheckInterval = setInterval(function() {
-      if (typeof map !== 'undefined' && map) {
-        clearInterval(mapCheckInterval);
-        console.log("Map detected, loading district boundaries from local file...");
-        initDistrictBoundaries();
-      }
-    }, 500);
-
-    let districtLayer = null;
-    let currentHighlight = null;
-
-    function initDistrictBoundaries() {
-      const mapContainer = document.getElementById('map');
-      if (mapContainer) mapContainer.style.opacity = '0.7';
-
-      fetch('/data/malawi_districts.geojson')
-        .then(response => {
-          if (!response.ok) throw new Error('GeoJSON file not found. Please ensure it is saved at public/data/malawi_districts.geojson');
-          return response.json();
-        })
-        .then(geojson => {
-          districtLayer = L.geoJSON(geojson, {
-            style: function() {
-              return {
-                color: '#3b82f6',
-                weight: 1.8,
-                fillColor: '#60a5fa',
-                fillOpacity: 0.2,
-                className: 'district-boundary'
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              const districtName = feature.properties.name;
-              if (!districtName) return;
-              layer.bindPopup(`<strong>${districtName}</strong><br>Click to view properties`);
-
-              layer.on('click', function() {
-                map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-                if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                currentHighlight = layer;
-                layer.setStyle({
-                  fillColor: '#f59e0b',
-                  fillOpacity: 0.5,
-                  weight: 3.5,
-                  color: '#d97706'
-                });
-                filterPropertiesByDistrict(districtName);
-                const districtSelect = document.getElementById('districtFilterSelect');
-                if (districtSelect) districtSelect.value = districtName;
-              });
-
-              layer.on('mouseover', function() {
-                if (currentHighlight !== layer) {
-                  layer.setStyle({ fillOpacity: 0.4, weight: 2.8 });
-                }
-              });
-              layer.on('mouseout', function() {
-                if (currentHighlight !== layer) districtLayer.resetStyle(layer);
-                else {
-                  layer.setStyle({
-                    fillColor: '#f59e0b',
-                    fillOpacity: 0.5,
-                    weight: 3.5,
-                    color: '#d97706'
-                  });
-                }
-              });
-            }
-          }).addTo(map);
-
-          const districts = [];
-          L.geoJSON(geojson, {
-            onEachFeature: function(feature, layer) {
-              const name = feature.properties.name;
-              if (name && !districts.includes(name)) districts.push(name);
-            }
-          });
-          districts.sort();
-
-          const filterRow = document.querySelector('.filters-row');
-          if (filterRow && !document.getElementById('districtFilterSelect')) {
-            const districtDiv = document.createElement('div');
-            districtDiv.className = 'district-filter';
-            districtDiv.innerHTML = `
-              <select id="districtFilterSelect" class="sort-select" style="min-width: 160px;">
-                <option value="">All Districts</option>
-                ${districts.map(d => `<option value="${d}">${d}</option>`).join('')}
-              </select>
-            `;
-            filterRow.appendChild(districtDiv);
-
-            document.getElementById('districtFilterSelect').addEventListener('change', function(e) {
-              const selected = e.target.value;
-              if (selected) {
-                districtLayer.eachLayer(layer => {
-                  const name = layer.feature?.properties?.name;
-                  if (name === selected) {
-                    map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-                    if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                    currentHighlight = layer;
-                    layer.setStyle({
-                      fillColor: '#f59e0b',
-                      fillOpacity: 0.5,
-                      weight: 3.5,
-                      color: '#d97706'
-                    });
-                    filterPropertiesByDistrict(selected);
-                  }
-                });
-              } else {
-                if (currentHighlight) districtLayer.resetStyle(currentHighlight);
-                currentHighlight = null;
-                filterPropertiesByDistrict(null);
-                map.flyToBounds([[-17.2, 33.2], [-9.2, 36.2]], { duration: 1.2 });
-              }
-            });
-          }
-
-          mapContainer.style.opacity = '1';
-          console.log("District boundaries loaded successfully!");
-          map.attributionControl.addAttribution('District boundaries: <a href="https://simplemaps.com" target="_blank">SimpleMaps</a>');
-        })
-        .catch(error => {
-          console.error("Failed to load district boundaries:", error);
-          if (mapContainer) mapContainer.style.opacity = '1';
-        });
-    }
-
-    window.selectedDistrict = null;
-    function filterPropertiesByDistrict(district) {
-      window.selectedDistrict = district;
-      const applyBtn = document.getElementById('applyFiltersBtn');
-      if (applyBtn) applyBtn.click();
-      else console.log("District filter selected:", district);
-    }
-  </script>
-
-  <!-- ========== AMENITY LAYERS & SUB-DISTRICTS ========== -->
-  <script>
-    let amenityLoadInterval = setInterval(function() {
-      if (typeof map !== 'undefined' && map && districtLayer) {
-        clearInterval(amenityLoadInterval);
-        console.log("Loading amenity layers...");
-        loadAllAmenityLayers();
-        loadSubDistricts();
-      }
-    }, 1000);
-
-    let amenityLayers = {};
-    let subDistrictLayer = null;
-    let healthPoints = [];
-    let schoolPoints = [];
-    let marketPoints = [];
-
-    function getAmenityName(feature) {
-      if (feature.properties.name) return feature.properties.name;
-      if (feature.properties.other_tags) {
-        const match = feature.properties.other_tags.match(/"name"=>"([^"]+)"/);
-        if (match) return match[1];
-      }
-      return "Amenity";
-    }
-
-    function createMarker(latlng, iconClass, color) {
-      return L.marker(latlng, {
-        icon: L.divIcon({
-          html: `<i class="${iconClass}" style="color:${color}; font-size:20px; text-shadow: 0 0 2px white;"></i>`,
-          iconSize: [24, 24],
-          className: 'custom-amenity-icon'
-        })
-      });
-    }
-
-    async function loadLayer(url, layerName, iconClass, color, storeArray = null, layerKey = null) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          console.warn(`Skipping ${layerName} – file not found (404)`);
-          return null;
-        }
-        const data = await response.json();
-        const layer = L.geoJSON(data, {
-          pointToLayer: (feature, latlng) => createMarker(latlng, iconClass, color),
-          onEachFeature: (feature, layer) => {
-            const name = getAmenityName(feature);
-            layer.bindPopup(`<strong>${name}</strong><br>${layerName}`);
-          }
-        });
-        layer.addTo(map);
-        amenityLayers[layerName] = layer;
-        if (storeArray && data.features) {
-          data.features.forEach(f => {
-            if (f.geometry && f.geometry.coordinates) {
-              storeArray.push({
-                lat: f.geometry.coordinates[1],
-                lng: f.geometry.coordinates[0],
-                name: getAmenityName(f)
-              });
-            }
-          });
-          console.log(`Loaded ${layerName}: ${data.features.length} features, stored ${storeArray.length} points`);
-        } else {
-          console.log(`Loaded ${layerName}: ${data.features?.length || 0} features`);
-        }
-        return layer;
-      } catch (err) {
-        console.warn(`Failed to load ${layerName}:`, err.message);
-        return null;
-      }
-    }
-
-    async function loadAllAmenityLayers() {
-      const layers = [
-        { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints, key: 'hospitals' },
-        { url: '/data/malawi_schools.geojson', name: 'Schools', icon: 'fas fa-school', color: '#3b82f6', store: schoolPoints, key: 'schools' },
-        { url: '/data/malawi_markets.geojson', name: 'Markets', icon: 'fas fa-store', color: '#f59e0b', store: marketPoints, key: 'markets' },
-        { url: '/data/malawi_banks.geojson', name: 'Banks & ATMs', icon: 'fas fa-university', color: '#8b5cf6', store: null, key: 'banks' },
-        { url: '/data/malawi_police.geojson', name: 'Police', icon: 'fas fa-shield-alt', color: '#1e293b', store: null, key: 'police' },
-        { url: '/data/malawi_fuel.geojson', name: 'Fuel Stations', icon: 'fas fa-gas-pump', color: '#10b981', store: null, key: 'fuel' },
-        { url: '/data/malawi_restaurants.geojson', name: 'Restaurants', icon: 'fas fa-utensils', color: '#ec4899', store: null, key: 'restaurants' },
-        { url: '/data/malawi_hotels.geojson', name: 'Hotels', icon: 'fas fa-bed', color: '#6b7280', store: null, key: 'hotels' },
-        { url: '/data/malawi_transport.geojson', name: 'Transport', icon: 'fas fa-bus', color: '#f97316', store: null, key: 'transport' },
-        { url: '/data/malawi_worship.geojson', name: 'Places of Worship', icon: 'fas fa-church', color: '#a855f7', store: null, key: 'worship' }
-      ];
-      for (const l of layers) {
-        await loadLayer(l.url, l.name, l.icon, l.color, l.store, l.key);
-      }
-
-      const overlayControl = {};
-      for (const [name, layer] of Object.entries(amenityLayers)) {
-        overlayControl[name] = layer;
-      }
-      if (Object.keys(overlayControl).length > 0) {
-        L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
-      }
-      if (districtLayer) {
-        L.control.layers(null, { "Districts": districtLayer }, { collapsed: false }).addTo(map);
-      }
-    }
-
-    async function loadSubDistricts() {
-      try {
-        const response = await fetch('/data/malawi_subdistricts.geojson');
-        if (!response.ok) throw new Error('Not found');
-        const data = await response.json();
-        subDistrictLayer = L.geoJSON(data, {
-          style: {
-            color: '#a855f7',
-            weight: 1.5,
-            fillColor: '#c084fc',
-            fillOpacity: 0.15,
-            dashArray: '5,5',
-            className: 'subdistrict-boundary'
-          },
-          onEachFeature: function(feature, layer) {
-            const name = feature.properties.name || 'Sub‑district';
-            layer.bindPopup(`<strong>${name}</strong><br>Click to view properties`);
-            layer.on('click', function() {
-              map.flyToBounds(layer.getBounds(), { duration: 1.2 });
-              if (window.currentHighlightSub) subDistrictLayer.resetStyle(window.currentHighlightSub);
-              window.currentHighlightSub = layer;
-              layer.setStyle({
-                fillColor: '#f59e0b',
-                fillOpacity: 0.5,
-                weight: 2.5,
-                color: '#d97706'
-              });
-              filterPropertiesBySubDistrict(name);
-            });
-            layer.on('mouseover', function() {
-              if (window.currentHighlightSub !== layer) layer.setStyle({ fillOpacity: 0.3, weight: 2 });
-            });
-            layer.on('mouseout', function() {
-              if (window.currentHighlightSub !== layer) subDistrictLayer.resetStyle(layer);
-            });
-          }
-        }).addTo(map);
-        const overlayControl = {};
-        for (const [name, layer] of Object.entries(amenityLayers)) overlayControl[name] = layer;
-        overlayControl['Sub‑districts'] = subDistrictLayer;
-        if (districtLayer) overlayControl['Districts'] = districtLayer;
-        const existingControl = document.querySelector('.leaflet-control-layers');
-        if (existingControl) existingControl.remove();
-        L.control.layers(null, overlayControl, { collapsed: false }).addTo(map);
-        console.log("Sub‑districts loaded");
-      } catch (err) {
-        console.warn("Sub‑districts not loaded (file missing)");
-      }
-    }
-
-    function filterPropertiesBySubDistrict(subDistrictName) {
-      window.selectedSubDistrict = subDistrictName;
-      const applyBtn = document.getElementById('applyFiltersBtn');
-      if (applyBtn) applyBtn.click();
-    }
-  </script>
-
-  <script>
-    (function() {
-      const originalLoadHeroCarousel = window.loadHeroCarousel;
-      if (originalLoadHeroCarousel) {
-        window.loadHeroCarousel = async function() {
-          try {
-            const res = await fetch('/api/houses?page=1&limit=20');
-            const data = await res.json();
-            let houses = data.houses || [];
-            const wrapper = document.getElementById('carousel-wrapper');
-            if (!wrapper) return;
-            
-            const getDisplayType = (type) => {
-              const typeMap = {
-                'House': 'House', 'Apartment': 'Apartment', 'Room': 'Room', 'Hostel': 'Hostel',
-                'Office': 'Office', 'FurnishedApartment': 'Furnished Apt', 'ShortStay': 'Short-Stay',
-                'SharedLiving': 'Shared Living', 'StudentAccommodation': 'Student Acc'
-              };
-              return typeMap[type] || type;
-            };
-            
-            let slidesHtml = houses.map(house => `
-              <div class="swiper-slide">
-                <div class="carousel-card">
-                  <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}">
-                  <div class="carousel-card-content">
-                    <h3>${escapeHtml(house.name)}</h3>
-                    <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
-                    <div class="carousel-price">MWK ${Number(house.price).toLocaleString()}</div>
-                    <div class="property-type-badge"><i class="fas ${getTypeIcon(house.type)}"></i> ${getDisplayType(house.type)}</div>
-                    <button class="carousel-btn" onclick="showDetails('${house._id}')">View Details</button>
-                  </div>
-                </div>
-              </div>
-            `).join('');
-            
-            const adSlide = `
-              <div class="swiper-slide ad-slide" onclick="window.location.href='premium-dashboard.html'">
-                <div class="ad-content">
-                  <i class="fas fa-crown"></i>
-                  <h4>Go Premium</h4>
-                  <p>Unlock early access, price drops & AI insights</p>
-                  <div class="ad-btn">Upgrade Now →</div>
-                </div>
-              </div>
-            `;
-            slidesHtml += adSlide;
-            
-            wrapper.innerHTML = slidesHtml;
-            
-            if (window.heroSwiper) window.heroSwiper.destroy(true, true);
-            window.heroSwiper = new Swiper('.hero-swiper', {
-              loop: true,
-              autoplay: { delay: 5000, disableOnInteraction: false },
-              effect: 'slide',
-              grabCursor: true,
-              slidesPerView: 1,
-              spaceBetween: 20,
-              breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
-              pagination: { el: '.swiper-pagination', clickable: true },
-              navigation: false
-            });
-          } catch (err) {
-            console.error('Failed to load carousel:', err);
-          }
-        };
-      }
-      function getTypeIcon(type) {
-        const iconMap = {
-          'House': 'fa-home', 'Apartment': 'fa-building', 'Room': 'fa-bed', 'Hostel': 'fa-hotel',
-          'Office': 'fa-briefcase', 'FurnishedApartment': 'fa-couch', 'ShortStay': 'fa-calendar-week',
-          'SharedLiving': 'fa-users', 'StudentAccommodation': 'fa-graduation-cap'
-        };
-        return iconMap[type] || 'fa-home';
-      }
-      window.getTypeIcon = getTypeIcon;
-    })();
-
-    const backToTop = document.getElementById('backToTop');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 300) backToTop.classList.add('visible');
-      else backToTop.classList.remove('visible');
-    });
-    backToTop.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const mobileDropdown = document.getElementById('mobileSettingsDropdown');
-    if (mobileMenuBtn && mobileDropdown) {
-      mobileMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mobileDropdown.classList.toggle('active');
-      });
-      document.addEventListener('click', (e) => {
-        if (!mobileMenuBtn.contains(e.target) && !mobileDropdown.contains(e.target)) {
-          mobileDropdown.classList.remove('active');
-        }
-      });
-      const mobileLang = document.getElementById('mobileLangSelect');
-      const mobileTheme = document.getElementById('mobileThemeSelect');
-      const desktopLang = document.querySelector('.lang-select');
-      const desktopTheme = document.querySelector('.theme-select');
-      if (mobileLang && desktopLang) {
-        mobileLang.value = desktopLang.value;
-        mobileLang.addEventListener('change', () => { desktopLang.value = mobileLang.value; desktopLang.dispatchEvent(new Event('change')); });
-      }
-      if (mobileTheme && desktopTheme) {
-        mobileTheme.value = desktopTheme.value;
-        mobileTheme.addEventListener('change', () => { desktopTheme.value = mobileTheme.value; desktopTheme.dispatchEvent(new Event('change')); });
-      }
-    }
-
-    window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; };
-    window.closeLightbox = function() { document.getElementById('lightboxModal').style.display = 'none'; };
-    window.closePropertyModal = function() { document.getElementById('propertyModal').style.display = 'none'; };
-    window.closeLandlordModal = function() { document.getElementById('landlordModal').style.display = 'none'; };
-    window.closeShareModal = function() { document.getElementById('shareModal').style.display = 'none'; document.getElementById('shareStatus').innerHTML = ''; };
-    window.closeComparisonModal = function() { document.getElementById('comparisonModal').style.display = 'none'; };
-    window.escapeHtml = function(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); };
-  </script>
+  <!-- District Boundaries & 3D Explorer Scripts (now merged into script.js) -->
+  <script src="js/script.js"></script>
 </body>
 </html>

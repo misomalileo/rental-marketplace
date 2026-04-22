@@ -1,5 +1,5 @@
 // ======================================
-// GLOBAL VARIABLES
+// GLOBAL VARIABLES (existing + new for 3D)
 // ======================================
 let allHouses = [];
 let map;
@@ -30,7 +30,18 @@ let amenityLayers = {};
 // Last selected house for nearby searches
 let lastSelectedHouse = null;
 
-// ========== TOAST NOTIFICATION (replaces alert) ==========
+// ========== 3D Explorer Variables ==========
+let is3DActive = false;
+let scene3D, camera3D, renderer3D, controls3D, css2DRenderer;
+let districtMeshes = []; // store { mesh, data }
+let heatColumns = [];
+let raycaster;
+let hoveredDistrict = null;
+let vibeTooltip = null;
+let floatingCardsGroup = null;
+let currentDistrictProperties = [];
+
+// ========== TOAST NOTIFICATION ==========
 function showToast(message, type = 'info') {
   const existing = document.querySelector('.toast-notification');
   if (existing) existing.remove();
@@ -138,27 +149,23 @@ async function loadHeroCarousel() {
       spaceBetween: 20,
       breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
       pagination: { el: '.swiper-pagination', clickable: true },
-      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
+      navigation: false
     });
   } catch (err) {
     console.error('Failed to load carousel:', err);
   }
 }
 
-// ========== DREAM MATCH SCORING (includes property type) ==========
+// ========== DREAM MATCH SCORING (unchanged) ==========
 function scoreHouseForDream(house, answers) {
   let score = 0;
-  // Property type match (penalty if type doesn't match)
   if (answers.type && house.type !== answers.type) score -= 50;
-
-  // Work from home
   if (answers.workFromHome === "essential") {
     if (house.bedrooms >= 2 || house.selfContained) score += 30;
     else if (house.bedrooms >= 1) score += 10;
   } else if (answers.workFromHome === "nice") {
     if (house.bedrooms >= 2 || house.selfContained) score += 15;
   }
-  // Social
   if (answers.social === "often") {
     if (house.pool) score += 25;
     if (house.furnished) score += 15;
@@ -166,14 +173,12 @@ function scoreHouseForDream(house, answers) {
   } else if (answers.social === "sometimes") {
     if (house.furnished) score += 10;
   }
-  // Outdoor
   if (answers.outdoor === "essential") {
     if (house.petFriendly) score += 20;
     if (house.selfContained) score += 10;
   } else if (answers.outdoor === "nice") {
     if (house.petFriendly) score += 10;
   }
-  // Noise
   if (answers.noise === "quiet") {
     if (house.pool) score -= 15;
     if (house.selfContained) score += 10;
@@ -181,14 +186,12 @@ function scoreHouseForDream(house, answers) {
     if (house.pool) score += 15;
     if (house.furnished) score += 5;
   }
-  // Budget & bedrooms
   if (answers.maxPrice && house.price > answers.maxPrice) score -= 100;
   if (answers.bedrooms && house.bedrooms < answers.bedrooms) score -= 100;
   if (house.averageRating) score += house.averageRating * 5;
   return Math.max(0, score);
 }
 
-// ========== DREAM MATCH SUBMIT (MULTIPLE RESULTS, WITH TYPE) ==========
 async function submitDreamMatch(e) {
   e.preventDefault();
   const type = document.getElementById("dream_type").value;
@@ -203,8 +206,6 @@ async function submitDreamMatch(e) {
   const grid = document.getElementById("dreamMatchGrid");
   resultsDiv.style.display = "block";
   if (!grid) {
-    // Fallback for old HTML structure
-    console.warn("Dream match grid not found, using old wrapper");
     const wrapper = document.getElementById("dreamMatchWrapper");
     if (wrapper) wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div></div></div>';
   } else {
@@ -493,6 +494,10 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     renderMarkers(allHouses);
     renderPagination();
     updateURL();
+    // If 3D view is active, refresh the 3D districts & heat columns
+    if (is3DActive) {
+      refresh3DExplorer();
+    }
   } catch (err) {
     console.error("Failed loading houses:", err);
     const container = document.getElementById("houses-container");
@@ -645,7 +650,7 @@ function initMap() {
 }
 function filterHousesByPolygon() {
   if (!drawnPolygon) return;
-  const filtered = allHouses.filter(house => { if (!house.lat || !house.lng) return false; const point = turf.point([house.lng, house.lat]); const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]); const poly = turf.polygon([coords]); return turf.booleanPointInPoint(point, poly); });
+  const filtered = allHouses.filter(house => { if (!house.lat || !house.lng) return false; const point = turf.point([house.lng, house.lat]); const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]); const poly = turf.polygon([coords]); return turf.booleanPointInPolygon(point, poly); });
   renderHouses(filtered);
   renderMarkers(filtered);
 }
@@ -717,7 +722,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `<td></tbody></table>`;
+  tableHtml += `<tr></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -780,7 +785,6 @@ function renderHouses(houses) {
     else if (house.rentalStatus === 'rented') rentalStatusBadge = '<span class="badge rented"><i class="fas fa-ban"></i> Rented</span>';
     else if (house.rentalStatus === 'pending') rentalStatusBadge = '<span class="badge pending"><i class="fas fa-clock"></i> Pending</span>';
     
-    // Price display with old price and percentage change
     let priceHtml = '';
     const priceValue = house.price;
     const formattedPrice = `MWK ${Number(priceValue).toLocaleString()}`;
@@ -842,11 +846,9 @@ function renderHouses(houses) {
     `;
     container.appendChild(card);
 
-    // Apply crown to landlord avatar if premium
     const landlordAvatarDiv = card.querySelector('.landlord-avatar');
     if (landlordAvatarDiv && isPremiumLandlord) addCrownToLandlordAvatar(landlordAvatarDiv, true);
 
-    // Initialize slider
     const sliderContainer = card.querySelector('.slides-container');
     const dots = card.querySelectorAll('.dot');
     if (sliderContainer && dots.length) {
@@ -872,7 +874,6 @@ function renderHouses(houses) {
       });
     }
 
-    // Rating widget
     const ratingWidget = card.querySelector('.rating-widget');
     if (ratingWidget) {
       const stars = ratingWidget.querySelectorAll('.star');
@@ -928,7 +929,6 @@ function renderHouses(houses) {
       resetStars();
     }
 
-    // Lightbox on image click
     const slidesContainer = card.querySelector('.slides-container');
     if (slidesContainer) {
       slidesContainer.addEventListener('click', (e) => {
@@ -940,7 +940,6 @@ function renderHouses(houses) {
       });
     }
 
-    // Record view on card click
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star") || e.target.classList.contains("dot")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" }).catch(err => console.error("Failed to record view", err));
@@ -1267,7 +1266,6 @@ async function showDetails(houseId) {
     } catch(e) {}
   }
 
-  // Fetch tenant's offer
   let myOffer = null;
   if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
     try {
@@ -1287,7 +1285,6 @@ async function showDetails(houseId) {
   }
   document.getElementById('modalDetails').innerHTML = detailsHtml;
 
-  // Attach accept/reject handlers if counter offer
   if (myOffer && myOffer.status === 'countered') {
     const acceptBtn = document.getElementById('acceptCounterFromModalBtn');
     const rejectBtn = document.getElementById('rejectCounterFromModalBtn');
@@ -1311,7 +1308,6 @@ async function showDetails(houseId) {
     });
   }
 
-  // Make an Offer button
   const hasActiveOffer = myOffer && (myOffer.status === 'pending' || myOffer.status === 'countered');
   if (isLoggedIn && house.owner && house.owner._id !== currentUserId && house.allowBidding !== false && !hasActiveOffer) {
     const offerSection = document.createElement('div');
@@ -1348,7 +1344,6 @@ async function showDetails(houseId) {
     });
   }
 
-  // Highest bid for premium users
   if (isLoggedIn && house.showHighestBidToPremium) {
     try {
       const token = localStorage.getItem('token');
@@ -1373,7 +1368,6 @@ async function showDetails(houseId) {
     } catch (err) { console.error('Failed to fetch highest bid', err); }
   }
 
-  // Lease negotiation
   if (isLoggedIn && house.owner && house.owner._id === currentUserId) {
     const leaseBtn = document.createElement('button');
     leaseBtn.className = 'save-search-btn';
@@ -1529,7 +1523,6 @@ function initAmenityToggles() {
     const layerKey = btn.dataset.layer;
     const layer = amenityLayers[layerKey];
     if (!layer) return;
-    // Initially hide all amenity layers (clean map)
     map.removeLayer(layer);
     btn.classList.remove('active');
     btn.addEventListener('click', () => {
@@ -1544,7 +1537,7 @@ function initAmenityToggles() {
   });
 }
 
-// ========== LOAD AMENITY LAYERS (populate healthPoints, etc.) ==========
+// ========== LOAD AMENITY LAYERS ==========
 async function loadAmenityLayers() {
   const layers = [
     { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints, key: 'hospitals' },
@@ -1582,7 +1575,6 @@ async function loadAmenityLayers() {
     } catch(e) { console.warn(`Skipped ${l.url}`); }
   }
   console.log(`Loaded ${healthPoints.length} health facilities, ${schoolPoints.length} schools, ${marketPoints.length} markets`);
-  // After loading, initialise toggles if the HTML contains the amenity toggle panel
   initAmenityToggles();
 }
 
@@ -1609,6 +1601,378 @@ function initHeatmap() {
   }
 }
 
+// ============================================================
+// ========== 3D DISTRICT EXPLORER (Feature 1) ================
+// ============================================================
+async function init3DExplorer() {
+  const container = document.getElementById('explorer3d');
+  if (!container) return;
+
+  // Clean up existing scene
+  if (scene3D) {
+    while(container.firstChild) container.removeChild(container.firstChild);
+    if (renderer3D) renderer3D.dispose();
+  }
+
+  // Setup Three.js scene
+  scene3D = new THREE.Scene();
+  scene3D.background = new THREE.Color(0x071a2b);
+  scene3D.fog = new THREE.FogExp2(0x071a2b, 0.008);
+
+  camera3D = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera3D.position.set(10, 12, 15);
+  camera3D.lookAt(0, 0, 0);
+
+  renderer3D = new THREE.WebGLRenderer({ antialias: true });
+  renderer3D.setSize(container.clientWidth, container.clientHeight);
+  renderer3D.shadowMap.enabled = true;
+  container.appendChild(renderer3D.domElement);
+
+  css2DRenderer = new THREE.CSS2DRenderer();
+  css2DRenderer.setSize(container.clientWidth, container.clientHeight);
+  css2DRenderer.domElement.style.position = 'absolute';
+  css2DRenderer.domElement.style.top = '0px';
+  css2DRenderer.domElement.style.left = '0px';
+  css2DRenderer.domElement.style.pointerEvents = 'none';
+  container.appendChild(css2DRenderer.domElement);
+
+  controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
+  controls3D.enableDamping = true;
+  controls3D.dampingFactor = 0.05;
+  controls3D.autoRotate = false;
+  controls3D.enableZoom = true;
+  controls3D.enablePan = true;
+  controls3D.target.set(0, 2, 0);
+
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+  scene3D.add(ambientLight);
+  const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
+  dirLight.position.set(5, 10, 7);
+  dirLight.castShadow = true;
+  scene3D.add(dirLight);
+  const fillLight = new THREE.PointLight(0x4488ff, 0.4);
+  fillLight.position.set(0, 3, 2);
+  scene3D.add(fillLight);
+  const backLight = new THREE.PointLight(0xffaa66, 0.5);
+  backLight.position.set(-3, 4, -5);
+  scene3D.add(backLight);
+
+  // Ground grid
+  const gridHelper = new THREE.GridHelper(30, 20, 0x88aaff, 0x335588);
+  gridHelper.position.y = -1.2;
+  gridHelper.material.transparent = true;
+  gridHelper.material.opacity = 0.4;
+  scene3D.add(gridHelper);
+
+  // Raycaster for hover
+  raycaster = new THREE.Raycaster();
+  raycaster.params.Points = { threshold: 0.5 };
+
+  // Load district GeoJSON and create extruded meshes
+  try {
+    const res = await fetch('/data/malawi_districts.geojson');
+    if (!res.ok) throw new Error('District GeoJSON not found');
+    const geojson = await res.json();
+
+    // Calculate property density per district
+    const densityMap = {};
+    allHouses.forEach(house => {
+      if (!house.lat || !house.lng) return;
+      // Find which district contains this point (simple point-in-polygon)
+      for (const feature of geojson.features) {
+        const polygon = turf.polygon(feature.geometry.coordinates);
+        if (turf.booleanPointInPolygon(turf.point([house.lng, house.lat]), polygon)) {
+          const name = feature.properties.name;
+          densityMap[name] = (densityMap[name] || 0) + 1;
+          break;
+        }
+      }
+    });
+
+    // Compute bounding box for centering
+    let bounds = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+    geojson.features.forEach(feature => {
+      const coords = feature.geometry.coordinates[0];
+      coords.forEach(coord => {
+        bounds.minX = Math.min(bounds.minX, coord[0]);
+        bounds.maxX = Math.max(bounds.maxX, coord[0]);
+        bounds.minZ = Math.min(bounds.minZ, coord[1]);
+        bounds.maxZ = Math.max(bounds.maxZ, coord[1]);
+      });
+    });
+    const centerLng = (bounds.minX + bounds.maxX) / 2;
+    const centerLat = (bounds.minZ + bounds.maxZ) / 2;
+    const scaleX = 8 / (bounds.maxX - bounds.minX);
+    const scaleZ = 8 / (bounds.maxZ - bounds.minZ);
+    const offsetX = -centerLng * scaleX;
+    const offsetZ = -centerLat * scaleZ;
+
+    // Store district data for hover & click
+    districtMeshes = [];
+
+    geojson.features.forEach(feature => {
+      const name = feature.properties.name;
+      const polygonCoords = feature.geometry.coordinates[0];
+      // Convert to 3D points (x = lng, z = lat, y = 0)
+      const shapePoints = polygonCoords.map(coord => {
+        const x = coord[0] * scaleX + offsetX;
+        const z = coord[1] * scaleZ + offsetZ;
+        return new THREE.Vector2(x, z);
+      });
+      const shape = new THREE.Shape(shapePoints.map(p => new THREE.Vector2(p.x, p.y)));
+      const extrudeSettings = {
+        steps: 1,
+        depth: 0.3 + (densityMap[name] || 0) * 0.05,
+        bevelEnabled: true,
+        bevelThickness: 0.05,
+        bevelSize: 0.05,
+        bevelSegments: 3
+      };
+      const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      geometry.computeVertexNormals();
+      geometry.rotateX(-Math.PI / 2);
+      const color = new THREE.Color().setHSL(0.55 + (densityMap[name] || 0) * 0.03, 0.8, 0.5);
+      const material = new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.1, emissive: 0x112233 });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData = { name, density: densityMap[name] || 0, center: { lng: centerLng, lat: centerLat } };
+      scene3D.add(mesh);
+      districtMeshes.push(mesh);
+
+      // Add glowing column (heat column)
+      const height = 1.0 + (densityMap[name] || 0) * 0.2;
+      const columnMat = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff2200, emissiveIntensity: 0.3 });
+      const columnGeo = new THREE.CylinderGeometry(0.2, 0.3, height, 8);
+      const column = new THREE.Mesh(columnGeo, columnMat);
+      // Find center of district for column placement
+      let cx = 0, cz = 0;
+      polygonCoords.forEach(coord => { cx += coord[0]; cz += coord[1]; });
+      cx = cx / polygonCoords.length;
+      cz = cz / polygonCoords.length;
+      column.position.x = cx * scaleX + offsetX;
+      column.position.z = cz * scaleZ + offsetZ;
+      column.position.y = extrudeSettings.depth + height/2;
+      column.castShadow = true;
+      scene3D.add(column);
+      heatColumns.push(column);
+    });
+
+    // Center camera
+    camera3D.position.set(0, 5, 12);
+    controls3D.target.set(0, 2, 0);
+    controls3D.update();
+
+    // Add twinkling stars
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 800;
+    const starPositions = [];
+    for (let i = 0; i < starCount; i++) {
+      starPositions.push((Math.random() - 0.5) * 200);
+      starPositions.push((Math.random() - 0.5) * 80);
+      starPositions.push((Math.random() - 0.5) * 80 - 40);
+    }
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
+    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true, opacity: 0.7 });
+    const starsObj = new THREE.Points(starGeometry, starMaterial);
+    scene3D.add(starsObj);
+
+    // Add subtle animated particles around districts
+    const particleCount = 1500;
+    const particleGeo = new THREE.BufferGeometry();
+    const particlePositions = [];
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions.push((Math.random() - 0.5) * 20);
+      particlePositions.push(Math.random() * 6);
+      particlePositions.push((Math.random() - 0.5) * 20);
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(particlePositions), 3));
+    const particleMat = new THREE.PointsMaterial({ color: 0xffaa66, size: 0.03, transparent: true, blending: THREE.AdditiveBlending });
+    const particlesObj = new THREE.Points(particleGeo, particleMat);
+    scene3D.add(particlesObj);
+
+    // Animation loop
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      controls3D.update(); // only if controls need update
+      particlesObj.rotation.y += 0.002;
+      starsObj.rotation.y += 0.0005;
+      renderer3D.render(scene3D, camera3D);
+      css2DRenderer.render(scene3D, camera3D);
+    }
+    animate3D();
+
+    // Hover & click events
+    window.addEventListener('mousemove', onMouseMove);
+    function onMouseMove(event) {
+      const rect = container.getBoundingClientRect();
+      const mouse = new THREE.Vector2();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera3D);
+      const intersects = raycaster.intersectObjects(districtMeshes);
+      if (intersects.length > 0 && hoveredDistrict !== intersects[0].object) {
+        if (hoveredDistrict) {
+          hoveredDistrict.material.emissiveIntensity = 0;
+          removeVibeTooltip();
+        }
+        hoveredDistrict = intersects[0].object;
+        hoveredDistrict.material.emissiveIntensity = 0.3;
+        showVibeTooltip(hoveredDistrict.userData.name, hoveredDistrict.userData.density);
+      } else if (intersects.length === 0 && hoveredDistrict) {
+        hoveredDistrict.material.emissiveIntensity = 0;
+        hoveredDistrict = null;
+        removeVibeTooltip();
+      }
+    }
+
+    function showVibeTooltip(districtName, density) {
+      removeVibeTooltip();
+      // Compute vibe scores using amenity data
+      let walkScore = 50, safetyScore = 60, noiseScore = 70;
+      // Simple simulation: more density => lower walkability? Actually more amenities = better
+      if (healthPoints.length > 0) walkScore = Math.min(95, 60 + density * 5);
+      if (schoolPoints.length > 0) safetyScore = Math.min(90, 55 + density * 4);
+      if (marketPoints.length > 0) noiseScore = Math.max(40, 75 - density * 3);
+      let vibeEmoji = '🌿 Quiet';
+      if (density > 5) vibeEmoji = '🏙 Lively';
+      else if (density > 2) vibeEmoji = '🚌 Connected';
+      const tooltipDiv = document.createElement('div');
+      tooltipDiv.id = 'vibeTooltip';
+      tooltipDiv.style.position = 'absolute';
+      tooltipDiv.style.bottom = '20px';
+      tooltipDiv.style.left = '20px';
+      tooltipDiv.style.backgroundColor = 'rgba(0,0,0,0.75)';
+      tooltipDiv.style.color = 'white';
+      tooltipDiv.style.padding = '12px 16px';
+      tooltipDiv.style.borderRadius = '20px';
+      tooltipDiv.style.backdropFilter = 'blur(8px)';
+      tooltipDiv.style.fontSize = '0.8rem';
+      tooltipDiv.style.maxWidth = '220px';
+      tooltipDiv.style.zIndex = '10000';
+      tooltipDiv.innerHTML = `
+        <strong><i class="fas fa-map-marker-alt"></i> ${districtName}</strong><br>
+        <i class="fas fa-home"></i> Properties: ${density}<br>
+        <i class="fas fa-walking"></i> Walkability: ${walkScore}/100<br>
+        <i class="fas fa-shield-alt"></i> Safety: ${safetyScore}/100<br>
+        <i class="fas fa-volume-up"></i> Noise: ${noiseScore}/100<br>
+        <div style="margin-top:6px;">${vibeEmoji}</div>
+      `;
+      container.parentElement.appendChild(tooltipDiv);
+    }
+
+    function removeVibeTooltip() {
+      const existing = document.getElementById('vibeTooltip');
+      if (existing) existing.remove();
+    }
+
+    // Click on district -> show floating property cards
+    districtMeshes.forEach(mesh => {
+      mesh.addEventListener('click', () => {
+        const districtName = mesh.userData.name;
+        const propertiesInDistrict = allHouses.filter(house => {
+          if (!house.lat || !house.lng) return false;
+          const point = turf.point([house.lng, house.lat]);
+          const feature = geojson.features.find(f => f.properties.name === districtName);
+          if (!feature) return false;
+          return turf.booleanPointInPolygon(point, turf.polygon(feature.geometry.coordinates));
+        });
+        showFloatingPropertyCards(propertiesInDistrict, districtName);
+      });
+    });
+
+  } catch (err) {
+    console.error('Failed to init 3D Explorer:', err);
+    showToast('Could not load 3D Explorer. Please try again later.', 'error');
+  }
+}
+
+function showFloatingPropertyCards(properties, districtName) {
+  if (!floatingCardsGroup) {
+    floatingCardsGroup = new THREE.Group();
+    scene3D.add(floatingCardsGroup);
+  }
+  // Clear previous cards
+  while(floatingCardsGroup.children.length) {
+    floatingCardsGroup.remove(floatingCardsGroup.children[0]);
+  }
+  if (!properties.length) {
+    showToast(`No properties found in ${districtName}.`, 'info');
+    return;
+  }
+  const startX = -3;
+  const startZ = -2;
+  const stepX = 2.2;
+  const stepZ = 2.2;
+  properties.slice(0, 12).forEach((house, idx) => {
+    const cardDiv = document.createElement('div');
+    cardDiv.style.backgroundColor = 'var(--card-bg)';
+    cardDiv.style.borderRadius = '12px';
+    cardDiv.style.padding = '8px';
+    cardDiv.style.width = '180px';
+    cardDiv.style.textAlign = 'center';
+    cardDiv.style.cursor = 'pointer';
+    cardDiv.style.border = '1px solid rgba(0,0,0,0.1)';
+    cardDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+    cardDiv.innerHTML = `
+      <img src="${house.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:100px; object-fit:cover; border-radius:8px;">
+      <h4 style="margin:6px 0 2px; font-size:0.8rem;">${house.name}</h4>
+      <p style="font-size:0.7rem; margin:2px 0;">MWK ${house.price.toLocaleString()}</p>
+      <button class="carousel-btn" style="margin-top:4px; background:#2563eb;">View</button>
+    `;
+    cardDiv.addEventListener('click', () => showDetails(house._id));
+    const css2DObject = new THREE.CSS2DObject(cardDiv);
+    const row = Math.floor(idx / 4);
+    const col = idx % 4;
+    css2DObject.position.set(startX + col * stepX, 3 + row * 2.2, startZ);
+    floatingCardsGroup.add(css2DObject);
+  });
+  // Fly camera to see the cards
+  camera3D.position.set(0, 6, 10);
+  controls3D.target.set(0, 3, 0);
+  controls3D.update();
+  setTimeout(() => {
+    // Auto remove after 15 seconds
+    setTimeout(() => {
+      while(floatingCardsGroup.children.length) floatingCardsGroup.remove(floatingCardsGroup.children[0]);
+    }, 15000);
+  }, 100);
+}
+
+function refresh3DExplorer() {
+  if (is3DActive) {
+    init3DExplorer();
+  }
+}
+
+function toggle3DExplorer() {
+  const mapDiv = document.getElementById('map');
+  const explorerDiv = document.getElementById('explorer3d');
+  const toggleBtn = document.getElementById('toggle3DExplorer');
+  if (!is3DActive) {
+    mapDiv.style.display = 'none';
+    explorerDiv.style.display = 'block';
+    init3DExplorer();
+    is3DActive = true;
+    toggleBtn.innerHTML = '<i class="fas fa-map"></i> 2D Map';
+  } else {
+    mapDiv.style.display = 'block';
+    explorerDiv.style.display = 'none';
+    if (scene3D) {
+      // Cleanup
+      const container = document.getElementById('explorer3d');
+      while(container.firstChild) container.removeChild(container.firstChild);
+      scene3D = null;
+      camera3D = null;
+      renderer3D = null;
+      controls3D = null;
+    }
+    is3DActive = false;
+    toggleBtn.innerHTML = '<i class="fas fa-cube"></i> 3D Explorer';
+  }
+}
+
 // ========== EVENT LISTENERS & INITIALIZATION ==========
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
@@ -1625,8 +1989,8 @@ const nearBtn = document.getElementById("nearMeBtn"); if (nearBtn) { nearBtn.onc
 const gpsBtn = document.getElementById("getLocationBtn"); if (gpsBtn) { gpsBtn.addEventListener("click", () => { const status = document.getElementById("gpsStatus"); if (navigator.geolocation) { status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Getting location..."; navigator.geolocation.getCurrentPosition(pos => { document.getElementById("latitude").value = pos.coords.latitude; document.getElementById("longitude").value = pos.coords.longitude; status.innerHTML = `<i class="fas fa-check-circle"></i> Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`; }, () => { status.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Allow location access"; }, { enableHighAccuracy: true }); } else { status.innerHTML = "GPS not supported"; } }); }
 const regionSelect = document.getElementById('regionFilter'); if (regionSelect) regionSelect.addEventListener('change', () => { currentRegion = regionSelect.value; applyRegionFilter(); });
 const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (compareFloatingBtn) compareFloatingBtn.addEventListener('click', openComparisonModal);
+const toggle3DBtn = document.getElementById('toggle3DExplorer'); if (toggle3DBtn) toggle3DBtn.addEventListener('click', toggle3DExplorer);
 
-// Dream Match listeners
 const dreamLink = document.getElementById('dreamMatchLink');
 if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
 const dreamForm = document.getElementById('dreamMatchForm');
@@ -1635,12 +1999,10 @@ const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
 if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
 window.closeDreamMatchModal = closeDreamMatchModal;
 
-// Nearby amenity buttons (now call the detailed version)
 document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
 document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
 document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
 
-// Heatmap button
 const heatmapBtn = document.getElementById('toggleHeatmapBtn');
 if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
   heatmapBtn.addEventListener('click', () => {
@@ -1658,7 +2020,6 @@ if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
   });
 }
 
-// Walkability button
 const walkBtn = document.getElementById('walkabilityBtn');
 if (walkBtn) {
   walkBtn.addEventListener('click', () => {
@@ -1674,7 +2035,6 @@ if (walkBtn) {
   });
 }
 
-// Sync district dropdown
 function syncDistrictFilter() {
   const districtSelect = document.getElementById('districtFilterSelect');
   if (districtSelect) districtSelect.value = currentDistrict || '';
@@ -1700,7 +2060,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHouses(currentPage, currentType, currentFilters, currentSort);
   loadHeroCarousel();
   loadAndUpdateUserMenu();
-  loadAmenityLayers(); // This populates healthPoints, schoolPoints, marketPoints and sets up toggles
+  loadAmenityLayers();
   initHeatmap();
 });
 
