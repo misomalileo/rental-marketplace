@@ -32,10 +32,9 @@ let lastSelectedHouse = null;
 
 // ========== 3D Explorer Variables ==========
 let is3DActive = false;
-let scene3D, camera3D, renderer3D, controls3D, css2DRenderer;
+let scene3D, camera3D, renderer3D, controls3D;
 let districtBars = []; // store { mesh, data, centroid }
 let vibeTooltip = null;
-let floatingCardsGroup = null;
 
 // ========== TOAST NOTIFICATION ==========
 function showToast(message, type = 'info') {
@@ -1598,7 +1597,7 @@ function initHeatmap() {
 }
 
 // ============================================================
-// ========== SIMPLIFIED 3D EXPLORER (BARS + TOOLTIPS) ==========
+// ========== SIMPLIFIED 3D EXPLORER (BARS + MODAL ON CLICK) ==========
 // ============================================================
 async function init3DExplorer() {
   const container = document.getElementById('explorer3d');
@@ -1629,14 +1628,12 @@ async function init3DExplorer() {
   renderer3D.shadowMap.enabled = true;
   container.appendChild(renderer3D.domElement);
 
-  css2DRenderer = new THREE.CSS2DRenderer();
-  css2DRenderer.setSize(width, height);
-  css2DRenderer.domElement.style.position = 'absolute';
-  css2DRenderer.domElement.style.top = '0px';
-  css2DRenderer.domElement.style.left = '0px';
-  css2DRenderer.domElement.style.pointerEvents = 'none';
-  container.appendChild(css2DRenderer.domElement);
-
+  // OrbitControls
+  if (typeof THREE.OrbitControls === 'undefined') {
+    console.error("OrbitControls not loaded – 3D view will not work properly");
+    showToast("3D controls not available, please refresh.", "error");
+    return;
+  }
   controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
   controls3D.enableDamping = true;
   controls3D.dampingFactor = 0.05;
@@ -1711,7 +1708,6 @@ async function init3DExplorer() {
   for (const feature of geoJsonData.features) {
     let lat, lng;
     if (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon") {
-      // Use turf to get centroid
       const centroid = turf.centroid(feature);
       lng = centroid.geometry.coordinates[0];
       lat = centroid.geometry.coordinates[1];
@@ -1759,20 +1755,6 @@ async function init3DExplorer() {
     bar.userData = { name: c.name, density: c.density, lat: c.lat, lng: c.lng };
     scene3D.add(bar);
     districtBars.push(bar);
-
-    // Add CSS2D label
-    const labelDiv = document.createElement('div');
-    labelDiv.textContent = c.name;
-    labelDiv.style.backgroundColor = 'rgba(0,0,0,0.6)';
-    labelDiv.style.color = 'white';
-    labelDiv.style.padding = '2px 6px';
-    labelDiv.style.borderRadius = '20px';
-    labelDiv.style.fontSize = '10px';
-    labelDiv.style.fontWeight = 'bold';
-    labelDiv.style.whiteSpace = 'nowrap';
-    const labelObj = new THREE.CSS2DObject(labelDiv);
-    labelObj.position.set(x, height + 0.2, z);
-    scene3D.add(labelObj);
   });
 
   // Add stars and particles for atmosphere
@@ -1809,11 +1791,10 @@ async function init3DExplorer() {
     particles.rotation.y += 0.002;
     stars.rotation.y += 0.0005;
     renderer3D.render(scene3D, camera3D);
-    css2DRenderer.render(scene3D, camera3D);
   }
   animate3D();
 
-  // Hover tooltip (raycaster)
+  // Hover tooltip (simple div)
   const raycaster = new THREE.Raycaster();
   let hoveredBar = null;
   let tooltipDiv = null;
@@ -1876,7 +1857,7 @@ async function init3DExplorer() {
     }
   });
 
-  // Click on bar -> show floating property cards
+  // Click on bar -> show properties in a modal (no CSS2DRenderer needed)
   districtBars.forEach(bar => {
     bar.addEventListener('click', () => {
       const districtName = bar.userData.name;
@@ -1887,47 +1868,29 @@ async function init3DExplorer() {
         const dist = getDistance(center.lat, center.lng, h.lat, h.lng);
         return dist < 0.5;
       });
-      if (!floatingCardsGroup) {
-        floatingCardsGroup = new THREE.Group();
-        scene3D.add(floatingCardsGroup);
-      }
-      while(floatingCardsGroup.children.length) floatingCardsGroup.remove(floatingCardsGroup.children[0]);
       if (!props.length) {
         showToast(`No properties found near ${districtName}.`, 'info');
         return;
       }
-      const startX = -3, startZ = -2, stepX = 2.2, stepZ = 2.2;
-      props.slice(0, 12).forEach((house, idx) => {
-        const cardDiv = document.createElement('div');
-        cardDiv.style.backgroundColor = 'white';
-        cardDiv.style.borderRadius = '12px';
-        cardDiv.style.padding = '8px';
-        cardDiv.style.width = '180px';
-        cardDiv.style.textAlign = 'center';
-        cardDiv.style.cursor = 'pointer';
-        cardDiv.style.border = '1px solid #ccc';
-        cardDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-        cardDiv.innerHTML = `
-          <img src="${house.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:100px; object-fit:cover; border-radius:8px;">
-          <h4 style="margin:6px 0 2px; font-size:0.8rem;">${escapeHtml(house.name)}</h4>
-          <p style="font-size:0.7rem; margin:2px 0;">MWK ${house.price.toLocaleString()}</p>
-          <button class="carousel-btn" style="margin-top:4px; background:#2563eb;">View</button>
+      // Build a modal with property cards
+      const modalDiv = document.createElement('div');
+      modalDiv.className = 'modal';
+      modalDiv.style.display = 'flex';
+      let cardsHtml = '<div style="max-height: 70vh; overflow-y: auto; padding: 10px;"><h3>Properties in ' + districtName + '</h3><div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">';
+      props.forEach(house => {
+        cardsHtml += `
+          <div class="house-card" style="cursor:pointer; border:1px solid #ddd; border-radius:12px; overflow:hidden;" onclick="showDetails('${house._id}'); this.closest('.modal').remove();">
+            <img src="${house.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:120px; object-fit:cover;">
+            <div style="padding:8px;">
+              <h4 style="font-size:0.8rem;">${escapeHtml(house.name)}</h4>
+              <p style="font-size:0.7rem;">MWK ${house.price.toLocaleString()}</p>
+            </div>
+          </div>
         `;
-        cardDiv.addEventListener('click', () => showDetails(house._id));
-        const css2DObject = new THREE.CSS2DObject(cardDiv);
-        const row = Math.floor(idx / 4);
-        const col = idx % 4;
-        css2DObject.position.set(startX + col * stepX, 3 + row * 2.2, startZ);
-        floatingCardsGroup.add(css2DObject);
       });
-      camera3D.position.set(0, 6, 12);
-      controls3D.target.set(0, 2, 0);
-      controls3D.update();
-      setTimeout(() => {
-        if (floatingCardsGroup) {
-          while(floatingCardsGroup.children.length) floatingCardsGroup.remove(floatingCardsGroup.children[0]);
-        }
-      }, 15000);
+      cardsHtml += '</div></div>';
+      modalDiv.innerHTML = `<div class="modal-content" style="max-width:600px;"><span class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</span>${cardsHtml}</div>`;
+      document.body.appendChild(modalDiv);
     });
   });
 
