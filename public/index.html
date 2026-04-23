@@ -706,7 +706,7 @@
       background: var(--input-bg); color: var(--text-color); font-size: 0.85rem;
     }
 
-    /* ========== MARKET PULSE WIDGET (NEW) ========== */
+    /* ========== MARKET PULSE WIDGET (with district selector) ========== */
     .market-pulse {
       background: var(--card-bg);
       border-radius: 28px;
@@ -734,6 +734,18 @@
     .pulse-title i {
       font-size: 1.2rem;
       color: var(--primary);
+    }
+    .district-pulse-selector {
+      margin-left: auto;
+    }
+    .district-pulse-selector select {
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--input-border);
+      border-radius: 40px;
+      padding: 0.3rem 1rem;
+      font-size: 0.7rem;
+      cursor: pointer;
     }
     .price-scout {
       display: flex;
@@ -821,6 +833,20 @@
     .price-compare { font-size: 0.65rem; font-weight: 600; margin: 0.2rem 0; }
     .price-below { color: #10b981; }
     .price-above { color: #ef4444; }
+
+    @media (max-width: 768px) {
+      .pulse-header {
+        flex-wrap: wrap;
+      }
+      .district-pulse-selector {
+        margin-left: 0;
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+      .district-pulse-selector select {
+        width: 100%;
+      }
+    }
 
     /* Property grid */
     #houses-container {
@@ -1575,12 +1601,17 @@
 
     <input type="text" id="searchInput" placeholder="Search by area or name...">
 
-    <!-- ========== MARKET PULSE WIDGET (NEW) ========== -->
+    <!-- ========== MARKET PULSE WIDGET (with district selector) ========== -->
     <div class="market-pulse" id="marketPulse">
       <div class="pulse-header">
         <div class="pulse-title">
           <i class="fas fa-chart-line"></i> Market Pulse
           <span class="price-scout"><i class="fas fa-robot"></i> Price Scout AI</span>
+        </div>
+        <div class="district-pulse-selector">
+          <select id="pulseDistrictSelect" class="sort-select" style="padding:0.3rem 1rem; font-size:0.7rem; background:var(--input-bg);">
+            <option value="">All Malawi</option>
+          </select>
         </div>
         <div class="price-scout" id="weeklySummary">
           <i class="fas fa-microphone-alt"></i> <span>Loading insights...</span>
