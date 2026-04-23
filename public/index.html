@@ -1677,8 +1677,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
-  <!-- OrbitControls will be included only if needed, but we will not use it -->
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/chatbot.js"></script>
@@ -1943,12 +1941,9 @@
     })();
   </script>
 
-  <!-- ========== MAIN APPLICATION SCRIPT (ALL-IN-ONE) ========== -->
+  <!-- MAIN APPLICATION SCRIPT – Fully working 3D Explorer with proper cleanup -->
   <script>
-    // This script replaces the external script.js and includes the 3D Explorer with manual camera controls
-    // All existing functionality is preserved, but we add a working 3D view that does not depend on OrbitControls.
-
-    // Global variables
+    // ========== GLOBAL VARIABLES ==========
     let allHouses = [];
     let map;
     let markersLayer;
@@ -1981,8 +1976,10 @@
     let isDragging = false;
     let lastMouseX = 0, lastMouseY = 0;
     let cameraTheta = 0.8, cameraPhi = 1.2, cameraRadius = 12;
+    let animationId = null;
+    let starsObj, particlesObj;
 
-    // Helper functions (simplified versions of your existing ones)
+    // ========== HELPER FUNCTIONS ==========
     function showToast(message, type = 'info') {
       const existing = document.querySelector('.toast-notification');
       if (existing) existing.remove();
@@ -2032,7 +2029,11 @@
       return iconMap[type] || 'fa-home';
     }
 
-    // Simplified renderHouses (keeps existing functionality)
+    function getStrongFieldsHTML(house) { return ''; }
+    function getStarRating(average) { if (!average) return "☆☆☆☆☆"; const full = Math.round(average); return "★".repeat(full) + "☆".repeat(5-full); }
+    function fbSaturatedSky(size) { return `<span style="background:#1877F2; border-radius:50%; display:inline-block; width:18px; height:18px; text-align:center; line-height:18px;"><i class="fas fa-check" style="color:white; font-size:10px;"></i></span>`; }
+
+    // ========== RENDER HOUSES ==========
     function renderHouses(houses) {
       const container = document.getElementById("houses-container");
       if (!container) return;
@@ -2041,10 +2042,7 @@
       const isLoggedIn = !!localStorage.getItem("token");
       let currentUserId = null;
       if (isLoggedIn) {
-        try {
-          const payload = JSON.parse(atob(localStorage.getItem("token").split('.')[1]));
-          currentUserId = payload.id;
-        } catch(e) {}
+        try { const payload = JSON.parse(atob(localStorage.getItem("token").split('.')[1])); currentUserId = payload.id; } catch(e) {}
       }
       houses.forEach(house => {
         const card = document.createElement("div");
@@ -2112,7 +2110,6 @@
         const ratingWidgetHtml = `<div class="rating-widget" data-house-id="${house._id}">${[1,2,3,4,5].map(v => `<span class="star" data-value="${v}">☆</span>`).join('')}<span class="rating-message" style="font-size:0.6rem; margin-left:0.5rem;"></span></div>`;
         const displayType = getDisplayType(house.type);
         const typeIcon = getTypeIcon(house.type);
-        const strongFieldsHtml = getStrongFieldsHTML(house);
 
         card.innerHTML = `
           <div class="slider">
@@ -2130,7 +2127,6 @@
             <h3>${house.name}</h3>
             <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
             ${priceHtml}
-            ${strongFieldsHtml}
             <p><i class="fas ${typeIcon}"></i> ${displayType}</p>
             <p><i class="fas fa-star"></i> Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
             ${ratingWidgetHtml}
@@ -2146,7 +2142,7 @@
         `;
         container.appendChild(card);
 
-        // Initialize slider dots
+        // Initialize slider
         const sliderContainer = card.querySelector('.slides-container');
         const dots = card.querySelectorAll('.dot');
         if (sliderContainer && dots.length) {
@@ -2172,7 +2168,7 @@
           });
         }
 
-        // Rating widget (simplified)
+        // Rating widget
         const ratingWidget = card.querySelector('.rating-widget');
         if (ratingWidget) {
           const stars = ratingWidget.querySelectorAll('.star');
@@ -2230,50 +2226,7 @@
       });
     }
 
-    // Stub functions for missing helpers (to avoid errors)
-    function getStarRating(average) { if (!average) return "☆☆☆☆☆"; const full = Math.round(average); return "★".repeat(full) + "☆".repeat(5-full); }
-    function getStrongFieldsHTML(house) { return ''; }
-    function fbSaturatedSky(size) { return `<span style="background:#1877F2; border-radius:50%; display:inline-block; width:18px; height:18px; text-align:center; line-height:18px;"><i class="fas fa-check" style="color:white; font-size:10px;"></i></span>`; }
-    function showLandlordProfile(id) { showToast("Landlord profile feature coming soon"); }
-    function startChat(recipientId, houseId) { showToast("Chat feature coming soon"); }
-    function shareHouse(houseId, name) { showToast("Share feature coming soon"); }
-    function reportHouse(houseId) { showToast("Report feature coming soon"); }
-    function toggleFavorite(id) { let favs = JSON.parse(localStorage.getItem("favorites") || "[]"); if (favs.includes(id)) favs = favs.filter(x => x !== id); else favs.push(id); localStorage.setItem("favorites", JSON.stringify(favs)); renderHouses(allHouses); }
-    function addToCompare(id) { if (comparisonList.includes(id)) comparisonList = comparisonList.filter(x => x !== id); else if (comparisonList.length < 3) comparisonList.push(id); else showToast("Max 3 properties to compare", "error"); updateCompareButton(); renderHouses(allHouses); }
-    function updateCompareButton() { const btn = document.getElementById('compareFloatingBtn'); const countSpan = document.getElementById('compareCount'); if (btn && countSpan) { countSpan.textContent = comparisonList.length; btn.style.display = comparisonList.length > 0 ? 'flex' : 'none'; } }
-    function showDetails(houseId) { const house = allHouses.find(h => h._id === houseId); if (house) { alert(`Details for ${house.name}\nPrice: MWK ${house.price}\nLocation: ${house.location}\nType: ${house.type}\nContact: ${house.phone || 'N/A'}`); } else { alert("Property not found"); } }
-
-    // Map initialization (simplified but functional)
-    function initMap() {
-      map = L.map("map").setView([-15.786, 35.005], 12);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors" }).addTo(map);
-      markersLayer = L.markerClusterGroup();
-      map.addLayer(markersLayer);
-      drawnItems = L.featureGroup().addTo(map);
-      const drawControl = new L.Control.Draw({ edit: { featureGroup: drawnItems, remove: true }, draw: { polygon: true } });
-      map.addControl(drawControl);
-      map.on(L.Draw.Event.CREATED, (e) => { if (drawnPolygon) map.removeLayer(drawnPolygon); drawnPolygon = e.layer; drawnItems.addLayer(drawnPolygon); });
-      const clearDrawBtn = document.getElementById('clearDrawBtn');
-      if (clearDrawBtn) clearDrawBtn.addEventListener('click', () => { drawnItems.clearLayers(); drawnPolygon = null; renderHouses(allHouses); renderMarkers(allHouses); });
-      const radiusSlider = document.getElementById('radiusSliderControl');
-      const radiusValueSpan = document.getElementById('radiusValueControl');
-      if (radiusSlider) radiusSlider.addEventListener('input', (e) => { radius = parseFloat(e.target.value); radiusValueSpan.innerText = radius + ' km'; });
-      const applyRadiusBtn = document.getElementById('applyRadiusBtn');
-      if (applyRadiusBtn) applyRadiusBtn.addEventListener('click', () => { if (userLocation) { const nearby = allHouses.filter(h => h.lat && h.lng && getDistance(userLocation.lat, userLocation.lng, h.lat, h.lng) <= radius); renderHouses(nearby); renderMarkers(nearby); map.setView([userLocation.lat, userLocation.lng], 14); L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("You are here").openPopup(); } else { showToast("Please use 'Near Me' first", "error"); } });
-    }
-
-    function renderMarkers(houses) {
-      if (!markersLayer) return;
-      markersLayer.clearLayers();
-      houses.forEach(house => {
-        if (!house.lat || !house.lng) return;
-        const marker = L.marker([house.lat, house.lng]);
-        marker.bindPopup(`<b>${house.name}</b><br>MWK ${house.price}<br>${house.location}`);
-        markersLayer.addLayer(marker);
-      });
-    }
-
-    // Fetch houses from API
+    // ========== FETCH HOUSES ==========
     async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
       try {
         const params = new URLSearchParams();
@@ -2322,7 +2275,37 @@
 
     function changePage(page) { if (page < 1 || page > totalPages) return; currentPage = page; loadHouses(currentPage, currentType, currentFilters, currentSort); }
 
-    // Price slider
+    // ========== MAP FUNCTIONS ==========
+    function initMap() {
+      map = L.map("map").setView([-15.786, 35.005], 12);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors" }).addTo(map);
+      markersLayer = L.markerClusterGroup();
+      map.addLayer(markersLayer);
+      drawnItems = L.featureGroup().addTo(map);
+      const drawControl = new L.Control.Draw({ edit: { featureGroup: drawnItems, remove: true }, draw: { polygon: true } });
+      map.addControl(drawControl);
+      map.on(L.Draw.Event.CREATED, (e) => { if (drawnPolygon) map.removeLayer(drawnPolygon); drawnPolygon = e.layer; drawnItems.addLayer(drawnPolygon); });
+      const clearDrawBtn = document.getElementById('clearDrawBtn');
+      if (clearDrawBtn) clearDrawBtn.addEventListener('click', () => { drawnItems.clearLayers(); drawnPolygon = null; renderHouses(allHouses); renderMarkers(allHouses); });
+      const radiusSlider = document.getElementById('radiusSliderControl');
+      const radiusValueSpan = document.getElementById('radiusValueControl');
+      if (radiusSlider) radiusSlider.addEventListener('input', (e) => { radius = parseFloat(e.target.value); radiusValueSpan.innerText = radius + ' km'; });
+      const applyRadiusBtn = document.getElementById('applyRadiusBtn');
+      if (applyRadiusBtn) applyRadiusBtn.addEventListener('click', () => { if (userLocation) { const nearby = allHouses.filter(h => h.lat && h.lng && getDistance(userLocation.lat, userLocation.lng, h.lat, h.lng) <= radius); renderHouses(nearby); renderMarkers(nearby); map.setView([userLocation.lat, userLocation.lng], 14); L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("You are here").openPopup(); } else { showToast("Please use 'Near Me' first", "error"); } });
+    }
+
+    function renderMarkers(houses) {
+      if (!markersLayer) return;
+      markersLayer.clearLayers();
+      houses.forEach(house => {
+        if (!house.lat || !house.lng) return;
+        const marker = L.marker([house.lat, house.lng]);
+        marker.bindPopup(`<b>${house.name}</b><br>MWK ${house.price}<br>${house.location}`);
+        markersLayer.addLayer(marker);
+      });
+    }
+
+    // ========== FILTERS & PRICE SLIDER ==========
     function initPriceSlider() {
       const slider = document.getElementById('priceSlider');
       if (!slider) return;
@@ -2369,11 +2352,29 @@
       loadHouses(currentPage, currentType, currentFilters, currentSort);
     }
 
-    // 3D Explorer with manual mouse controls (no OrbitControls)
+    // ========== 3D EXPLORER (MANUAL CONTROLS, NO ORBITCONTROLS) ==========
+    function stop3DAnimation() {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+    }
+
+    function updateCameraPosition() {
+      if (!camera3D) return;
+      const x = cameraRadius * Math.sin(cameraPhi) * Math.cos(cameraTheta);
+      const y = cameraRadius * Math.cos(cameraPhi);
+      const z = cameraRadius * Math.sin(cameraPhi) * Math.sin(cameraTheta);
+      camera3D.position.set(x, y, z);
+      camera3D.lookAt(0, 2, 0);
+    }
+
     async function init3DExplorer() {
       const container = document.getElementById('explorer3d');
       if (!container) return;
-      // Clean up existing
+      
+      // Clean up existing scene and stop animation
+      stop3DAnimation();
       if (scene3D) {
         while (container.firstChild) container.removeChild(container.firstChild);
         if (renderer3D) renderer3D.dispose();
@@ -2405,6 +2406,7 @@
       const fillLight = new THREE.PointLight(0x4488ff, 0.4);
       fillLight.position.set(0, 3, 2);
       scene3D.add(fillLight);
+      
       // Ground grid
       const gridHelper = new THREE.GridHelper(20, 20, 0x88aaff, 0x335588);
       gridHelper.position.y = -0.5;
@@ -2412,7 +2414,7 @@
       gridHelper.material.opacity = 0.4;
       scene3D.add(gridHelper);
 
-      // Load GeoJSON and create bars
+      // Load GeoJSON (or dummy) and create bars
       let centroids = [];
       try {
         const res = await fetch('/data/malawi_districts.geojson');
@@ -2483,8 +2485,8 @@
       }
       starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
       const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true });
-      const stars = new THREE.Points(starGeo, starMat);
-      scene3D.add(stars);
+      starsObj = new THREE.Points(starGeo, starMat);
+      scene3D.add(starsObj);
 
       const particleCount = 1000;
       const particleGeo = new THREE.BufferGeometry();
@@ -2496,16 +2498,16 @@
       }
       particleGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(particlePositions), 3));
       const particleMat = new THREE.PointsMaterial({ color: 0xffaa66, size: 0.04, transparent: true, blending: THREE.AdditiveBlending });
-      const particles = new THREE.Points(particleGeo, particleMat);
-      scene3D.add(particles);
+      particlesObj = new THREE.Points(particleGeo, particleMat);
+      scene3D.add(particlesObj);
 
-      // Mouse controls (drag to rotate)
+      // Mouse controls
       let mouseDown = false;
-      let lastMouseX = 0, lastMouseY = 0;
+      let lastX = 0, lastY = 0;
       container.addEventListener('mousedown', (e) => {
         mouseDown = true;
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
+        lastX = e.clientX;
+        lastY = e.clientY;
         container.style.cursor = 'grabbing';
       });
       window.addEventListener('mouseup', () => {
@@ -2514,30 +2516,21 @@
       });
       window.addEventListener('mousemove', (e) => {
         if (!mouseDown) return;
-        const deltaX = e.clientX - lastMouseX;
-        const deltaY = e.clientY - lastMouseY;
-        cameraTheta += deltaX * 0.01;
-        cameraPhi += deltaY * 0.01;
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        cameraTheta += dx * 0.01;
+        cameraPhi += dy * 0.01;
         cameraPhi = Math.max(0.2, Math.min(Math.PI - 0.2, cameraPhi));
         updateCameraPosition();
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
+        lastX = e.clientX;
+        lastY = e.clientY;
       });
-      // Zoom with wheel
       container.addEventListener('wheel', (e) => {
         cameraRadius += e.deltaY * 0.01;
         cameraRadius = Math.max(5, Math.min(20, cameraRadius));
         updateCameraPosition();
         e.preventDefault();
       });
-
-      function updateCameraPosition() {
-        const x = cameraRadius * Math.sin(cameraPhi) * Math.cos(cameraTheta);
-        const y = cameraRadius * Math.cos(cameraPhi);
-        const z = cameraRadius * Math.sin(cameraPhi) * Math.sin(cameraTheta);
-        camera3D.position.set(x, y, z);
-        camera3D.lookAt(0, 2, 0);
-      }
 
       // Hover tooltip
       const raycaster = new THREE.Raycaster();
@@ -2589,7 +2582,7 @@
         }
       });
 
-      // Click on bar -> show properties in modal
+      // Click on bar -> show properties modal
       districtBars.forEach(bar => {
         bar.addEventListener('click', () => {
           const districtName = bar.userData.name;
@@ -2622,13 +2615,14 @@
 
       // Animation loop
       function animate3D() {
-        requestAnimationFrame(animate3D);
-        particles.rotation.y += 0.002;
-        stars.rotation.y += 0.0005;
+        if (!renderer3D || !scene3D) return;
+        if (particlesObj) particlesObj.rotation.y += 0.002;
+        if (starsObj) starsObj.rotation.y += 0.0005;
         renderer3D.render(scene3D, camera3D);
+        animationId = requestAnimationFrame(animate3D);
       }
       animate3D();
-      console.log("3D Explorer ready with manual controls");
+      console.log("3D Explorer ready");
     }
 
     function toggle3DExplorer() {
@@ -2642,11 +2636,12 @@
         is3DActive = true;
         toggleBtn.innerHTML = '<i class="fas fa-map"></i> 2D Map';
       } else {
+        stop3DAnimation();
         mapDiv.style.display = 'block';
         explorerDiv.style.display = 'none';
         if (scene3D) {
           const container = document.getElementById('explorer3d');
-          while(container.firstChild) container.removeChild(container.firstChild);
+          while (container.firstChild) container.removeChild(container.firstChild);
           scene3D = null;
           camera3D = null;
           renderer3D = null;
@@ -2656,7 +2651,17 @@
       }
     }
 
-    // Event listeners
+    // ========== STUB FUNCTIONS FOR COMPLETENESS ==========
+    function showLandlordProfile(id) { showToast("Landlord profile coming soon"); }
+    function startChat(recipientId, houseId) { showToast("Chat feature coming soon"); }
+    function shareHouse(houseId, name) { showToast("Share feature coming soon"); }
+    function reportHouse(houseId) { showToast("Report feature coming soon"); }
+    function toggleFavorite(id) { let favs = JSON.parse(localStorage.getItem("favorites") || "[]"); if (favs.includes(id)) favs = favs.filter(x => x !== id); else favs.push(id); localStorage.setItem("favorites", JSON.stringify(favs)); renderHouses(allHouses); }
+    function addToCompare(id) { if (comparisonList.includes(id)) comparisonList = comparisonList.filter(x => x !== id); else if (comparisonList.length < 3) comparisonList.push(id); else showToast("Max 3 properties to compare", "error"); updateCompareButton(); renderHouses(allHouses); }
+    function updateCompareButton() { const btn = document.getElementById('compareFloatingBtn'); const countSpan = document.getElementById('compareCount'); if (btn && countSpan) { countSpan.textContent = comparisonList.length; btn.style.display = comparisonList.length > 0 ? 'flex' : 'none'; } }
+    function showDetails(houseId) { const house = allHouses.find(h => h._id === houseId); if (house) { alert(`Details for ${house.name}\nPrice: MWK ${house.price}\nLocation: ${house.location}\nType: ${house.type}\nContact: ${house.phone || 'N/A'}`); } else { alert("Property not found"); } }
+
+    // ========== EVENT LISTENERS & INIT ==========
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2679,6 +2684,21 @@
         }, () => { document.getElementById('gpsStatus').innerHTML = "Location access denied"; });
       } else { document.getElementById('gpsStatus').innerHTML = "GPS not supported"; }
     });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileDropdown = document.getElementById('mobileSettingsDropdown');
+    if (mobileMenuBtn && mobileDropdown) {
+      mobileMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mobileDropdown.classList.toggle('active');
+      });
+      document.addEventListener('click', (e) => {
+        if (!mobileMenuBtn.contains(e.target) && !mobileDropdown.contains(e.target)) {
+          mobileDropdown.classList.remove('active');
+        }
+      });
+    }
 
     // Initialize everything
     document.addEventListener('DOMContentLoaded', () => {
