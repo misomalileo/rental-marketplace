@@ -35,7 +35,7 @@ let priceTrendChart = null;
 let pulseDistrictSelect = null;
 let currentPulseDistrict = '';
 
-// ========== TOAST NOTIFICATION (replaces alert) ==========
+// ========== TOAST NOTIFICATION ==========
 function showToast(message, type = 'info') {
   const existing = document.querySelector('.toast-notification');
   if (existing) existing.remove();
@@ -150,11 +150,10 @@ async function loadHeroCarousel() {
   }
 }
 
-// ========== DREAM MATCH SCORING (includes property type) ==========
+// ========== DREAM MATCH SCORING ==========
 function scoreHouseForDream(house, answers) {
   let score = 0;
   if (answers.type && house.type !== answers.type) score -= 50;
-
   if (answers.workFromHome === "essential") {
     if (house.bedrooms >= 2 || house.selfContained) score += 30;
     else if (house.bedrooms >= 1) score += 10;
@@ -201,7 +200,6 @@ async function submitDreamMatch(e) {
   const grid = document.getElementById("dreamMatchGrid");
   resultsDiv.style.display = "block";
   if (!grid) {
-    console.warn("Dream match grid not found, using old wrapper");
     const wrapper = document.getElementById("dreamMatchWrapper");
     if (wrapper) wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div></div></div>';
   } else {
@@ -266,7 +264,7 @@ function closeDreamMatchModal() {
   if (modal) modal.style.display = "none";
 }
 
-// ========== REGION MAPPING ==========
+// ========== REGION MAPPING & DISTRICT DETECTION ==========
 const regionMap = {
   'Mzuzu': 'Northern', 'Rumphi': 'Northern', 'Karonga': 'Northern', 'Chitipa': 'Northern',
   'Nkhata Bay': 'Northern', 'Mzimba': 'Northern',
@@ -276,6 +274,20 @@ const regionMap = {
   'Mangochi': 'Southern', 'Balaka': 'Southern', 'Chikwawa': 'Southern', 'Nsanje': 'Southern',
   'Phalombe': 'Southern', 'Machinga': 'Southern'
 };
+
+// Improved district detection: also looks at property's district field and location parts
+function detectDistrict(house) {
+  if (house.district && house.district !== '') return house.district;
+  if (!house.location) return 'Other';
+  const locLower = house.location.toLowerCase();
+  for (const district of Object.keys(regionMap)) {
+    if (locLower.includes(district.toLowerCase())) return district;
+  }
+  // fallback: first word of location
+  const firstWord = house.location.split(/[ ,-]/)[0];
+  if (firstWord && firstWord.length > 2) return firstWord;
+  return 'Other';
+}
 
 // ========== HELPER FUNCTIONS ==========
 function checkAuth() { return !!localStorage.getItem("token"); }
@@ -358,7 +370,7 @@ function getStrongFieldsHTML(house) {
     case 'Hostel':
       let hostelFields = [];
       if (details.vacancies) hostelFields.push(`<i class="fas fa-bed"></i> ${details.vacancies} vacancies`);
-      if (details.bedsPerRoom) hostelFields.push(`<i class="fas fa-users"></i> ${details.bedsPerRoom} beds/room`);
+      if (details.bedsPerRoom) hostelFields.push(`<i class="fas fa-users</i> ${details.bedsPerRoom} beds/room`);
       return hostelFields.length ? `<div class="strong-fields">${hostelFields.join(' • ')}</div>` : '';
     case 'FurnishedApartment':
       let furnishedFields = [];
@@ -490,7 +502,6 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     renderMarkers(allHouses);
     renderPagination();
     updateURL();
-    // Update market pulse after new data loads
     setTimeout(() => updateMarketPulse(currentPulseDistrict), 500);
   } catch (err) {
     console.error("Failed loading houses:", err);
@@ -731,7 +742,7 @@ function openComparisonModal() {
 }
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
-// ========== RENDER HOUSE CARDS (with price change display) ==========
+// ========== RENDER HOUSE CARDS (original, preserved) ==========
 const originalRenderHouses = function(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
@@ -946,16 +957,14 @@ const originalRenderHouses = function(houses) {
   });
 };
 
-// We will wrap the original render function to add badges
+// Wrap renderHouses to add smart badges after original render
 let renderHouses = function(houses) {
   originalRenderHouses(houses);
-  // After standard render, add smart badges
   const avgMap = getDistrictAvgPriceMap();
   document.querySelectorAll('.house-card').forEach((card, idx) => {
     const house = houses[idx];
     if (house) addSmartBadges(card, house, avgMap);
   });
-  // Update market pulse after rendering
   setTimeout(() => updateMarketPulse(currentPulseDistrict), 100);
 };
 
@@ -1544,7 +1553,7 @@ function initAmenityToggles() {
   });
 }
 
-// ========== LOAD AMENITY LAYERS (populate healthPoints, etc.) ==========
+// ========== LOAD AMENITY LAYERS ==========
 async function loadAmenityLayers() {
   const layers = [
     { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints, key: 'hospitals' },
@@ -1609,21 +1618,13 @@ function initHeatmap() {
 }
 
 // ======================================================
-// ========== NEW FEATURE: MARKET PULSE & SMART PRICE SCOUT ==========
+// ========== MARKET PULSE & SMART PRICE SCOUT (REAL DATA) ==========
 // ======================================================
 
-// Helper: compute district average price map
 function getDistrictAvgPriceMap() {
   const districtMap = {};
   allHouses.forEach(house => {
-    if (!house.location) return;
-    let district = 'Unknown';
-    for (const d of Object.keys(regionMap)) {
-      if (house.location.toLowerCase().includes(d.toLowerCase())) {
-        district = d;
-        break;
-      }
-    }
+    const district = detectDistrict(house);
     if (!districtMap[district]) districtMap[district] = { sum: 0, count: 0 };
     districtMap[district].sum += house.price;
     districtMap[district].count++;
@@ -1635,7 +1636,6 @@ function getDistrictAvgPriceMap() {
   return avgMap;
 }
 
-// Add demand badge and price comparison to a card
 function addSmartBadges(card, house, avgPriceMap) {
   // Demand badge
   const views = house.views || 0;
@@ -1654,13 +1654,7 @@ function addSmartBadges(card, house, avgPriceMap) {
   }
 
   // Price comparison
-  let district = 'Unknown';
-  for (const d of Object.keys(regionMap)) {
-    if (house.location && house.location.toLowerCase().includes(d.toLowerCase())) {
-      district = d;
-      break;
-    }
-  }
+  const district = detectDistrict(house);
   const avgPrice = avgPriceMap[district];
   if (avgPrice && avgPrice > 0) {
     const diffPercent = ((house.price - avgPrice) / avgPrice * 100).toFixed(0);
@@ -1674,7 +1668,6 @@ function addSmartBadges(card, house, avgPriceMap) {
   }
 }
 
-// Update Market Pulse widget
 async function updateMarketPulse(districtFilter = '') {
   const totalListingsEl = document.getElementById('totalListings');
   const avgPriceEl = document.getElementById('avgPrice');
@@ -1684,13 +1677,9 @@ async function updateMarketPulse(districtFilter = '') {
 
   if (!totalListingsEl) return;
 
-  // Filter houses by district if selected
   let filteredHouses = allHouses;
-  if (districtFilter) {
-    filteredHouses = allHouses.filter(house => {
-      if (!house.location) return false;
-      return house.location.toLowerCase().includes(districtFilter.toLowerCase());
-    });
+  if (districtFilter && districtFilter !== '') {
+    filteredHouses = allHouses.filter(house => detectDistrict(house) === districtFilter);
   }
 
   const total = filteredHouses.length;
@@ -1707,17 +1696,11 @@ async function updateMarketPulse(districtFilter = '') {
   animateNumber(avgPriceEl, Math.round(avgPrice));
   animateNumber(hotListingsEl, hotCount);
 
-  // Hot districts (global)
+  // Hot districts (global, based on views)
   const districtViews = {};
   allHouses.forEach(h => {
-    let district = 'Unknown';
-    for (const d of Object.keys(regionMap)) {
-      if (h.location && h.location.toLowerCase().includes(d.toLowerCase())) {
-        district = d;
-        break;
-      }
-    }
-    districtViews[district] = (districtViews[district] || 0) + (h.views || 0);
+    const d = detectDistrict(h);
+    districtViews[d] = (districtViews[d] || 0) + (h.views || 0);
   });
   const topDistricts = Object.entries(districtViews).sort((a,b) => b[1] - a[1]).slice(0, 5);
   if (topDistricts.length) {
@@ -1726,23 +1709,33 @@ async function updateMarketPulse(districtFilter = '') {
     hotDistrictsMarquee.innerHTML = '<span><i class="fas fa-chart-line"></i> No data yet</span>';
   }
 
-  // Weekly summary (district‑aware)
-  const summaries = districtFilter ? [
-    `In ${districtFilter}, prices are stable – good time to rent.`,
-    `${districtFilter} sees 15% more listings this week.`,
-    `Demand in ${districtFilter} increased by 20% – act fast!`,
-    `Average rent in ${districtFilter} is MWK ${Math.round(avgPrice).toLocaleString()}.`,
-    `Landlords in ${districtFilter} are open to negotiation.`
-  ] : [
-    "Prices in Lilongwe dropped 2% this week – great time to rent!",
-    "Blantyre sees 15% more listings – more choices for you.",
-    "Mzuzu market is stable – landlords are open to negotiation.",
-    "Demand for furnished apartments increased by 30%.",
-    "Student housing near UNIMA is trending – act fast!"
-  ];
-  weeklySummarySpan.textContent = summaries[Math.floor(Math.random() * summaries.length)];
+  // Real weekly summary
+  let summary = '';
+  if (districtFilter && districtFilter !== '') {
+    const globalAvg = allHouses.length ? allHouses.reduce((s, h) => s + h.price, 0) / allHouses.length : 0;
+    const districtAvg = avgPrice;
+    const diffPercent = globalAvg ? ((districtAvg - globalAvg) / globalAvg * 100).toFixed(0) : 0;
+    if (diffPercent > 10) summary = `${districtFilter} prices are ${diffPercent}% above national average – landlords may negotiate.`;
+    else if (diffPercent < -10) summary = `${districtFilter} prices are ${Math.abs(diffPercent)}% below national average – great value!`;
+    else summary = `${districtFilter} prices are in line with national average – stable market.`;
+    
+    // Add demand info
+    const districtHotCount = filteredHouses.filter(h => {
+      const views = h.views || 0;
+      const fav = favorites.includes(h._id) ? 1 : 0;
+      return (views * 0.6 + fav * 40) > 80;
+    }).length;
+    if (districtHotCount > 2) summary += ` 🔥 ${districtHotCount} hot properties in this district.`;
+  } else {
+    // All Malawi summary
+    const totalHot = hotCount;
+    const topDistrict = topDistricts[0] ? topDistricts[0][0] : 'no district';
+    summary = `Malawi market: ${totalHot} hot properties. ${topDistrict} leads with ${districtViews[topDistrict] || 0} views.`;
+    if (avgPrice > 0) summary += ` Average rent MWK ${Math.round(avgPrice).toLocaleString()}.`;
+  }
+  weeklySummarySpan.textContent = summary;
 
-  // Update trend chart
+  // Update trend chart (simulated but based on real avg price trend)
   const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   let trendData = [avgPrice];
   for (let i = 1; i < 7; i++) {
@@ -1790,7 +1783,6 @@ function animateNumber(element, target) {
   });
 }
 
-// Populate pulse district dropdown after districts are loaded
 function populatePulseDistrictDropdown(districts) {
   pulseDistrictSelect = document.getElementById('pulseDistrictSelect');
   if (!pulseDistrictSelect) return;
@@ -1819,7 +1811,6 @@ const gpsBtn = document.getElementById("getLocationBtn"); if (gpsBtn) { gpsBtn.a
 const regionSelect = document.getElementById('regionFilter'); if (regionSelect) regionSelect.addEventListener('change', () => { currentRegion = regionSelect.value; applyRegionFilter(); });
 const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (compareFloatingBtn) compareFloatingBtn.addEventListener('click', openComparisonModal);
 
-// Dream Match listeners
 const dreamLink = document.getElementById('dreamMatchLink');
 if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
 const dreamForm = document.getElementById('dreamMatchForm');
@@ -1828,12 +1819,10 @@ const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
 if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
 window.closeDreamMatchModal = closeDreamMatchModal;
 
-// Nearby amenity buttons
 document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
 document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
 document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
 
-// Heatmap button
 const heatmapBtn = document.getElementById('toggleHeatmapBtn');
 if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
   heatmapBtn.addEventListener('click', () => {
@@ -1851,7 +1840,6 @@ if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
   });
 }
 
-// Walkability button
 const walkBtn = document.getElementById('walkabilityBtn');
 if (walkBtn) {
   walkBtn.addEventListener('click', () => {
@@ -1867,13 +1855,22 @@ if (walkBtn) {
   });
 }
 
-// Sync district dropdown
 function syncDistrictFilter() {
   const districtSelect = document.getElementById('districtFilterSelect');
   if (districtSelect) districtSelect.value = currentDistrict || '';
 }
 
-// ========== INITIALIZATION ==========
+// Populate pulse dropdown after districts are known
+function initPulseDropdown() {
+  const districts = [...new Set(allHouses.map(h => detectDistrict(h)))].filter(d => d !== 'Other');
+  if (districts.length) populatePulseDistrictDropdown(districts);
+  else {
+    // fallback to regionMap keys
+    const fallback = Object.keys(regionMap);
+    populatePulseDistrictDropdown(fallback);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
   initPriceSlider();
@@ -1895,6 +1892,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAndUpdateUserMenu();
   loadAmenityLayers();
   initHeatmap();
+  setTimeout(() => initPulseDropdown(), 1500);
 });
 
 // Expose global functions
