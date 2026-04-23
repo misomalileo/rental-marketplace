@@ -33,13 +33,9 @@ let lastSelectedHouse = null;
 // ========== 3D Explorer Variables ==========
 let is3DActive = false;
 let scene3D, camera3D, renderer3D, controls3D, css2DRenderer;
-let districtMeshes = []; // store { mesh, data }
-let heatColumns = [];
-let raycaster;
-let hoveredDistrict = null;
+let districtBars = []; // store { mesh, data, centroid }
 let vibeTooltip = null;
 let floatingCardsGroup = null;
-let currentDistrictProperties = [];
 
 // ========== TOAST NOTIFICATION ==========
 function showToast(message, type = 'info') {
@@ -715,7 +711,7 @@ function openComparisonModal() {
       }
       tableHtml += `<td style="padding: 8px;">${value}</td>`;
     });
-    tableHtml += `<tr>`;
+    tableHtml += `</tr>`;
   });
   tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
   housesToCompare.forEach(house => {
@@ -1602,15 +1598,18 @@ function initHeatmap() {
 }
 
 // ============================================================
-// ========== 3D DISTRICT EXPLORER (Feature 1) ================
+// ========== SIMPLIFIED 3D EXPLORER (BARS + TOOLTIPS) ==========
 // ============================================================
 async function init3DExplorer() {
   const container = document.getElementById('explorer3d');
-  if (!container) return;
+  if (!container) {
+    console.error("No #explorer3d container found");
+    return;
+  }
 
   // Clean up existing scene
   if (scene3D) {
-    while(container.firstChild) container.removeChild(container.firstChild);
+    while (container.firstChild) container.removeChild(container.firstChild);
     if (renderer3D) renderer3D.dispose();
   }
 
@@ -1619,17 +1618,19 @@ async function init3DExplorer() {
   scene3D.background = new THREE.Color(0x071a2b);
   scene3D.fog = new THREE.FogExp2(0x071a2b, 0.008);
 
-  camera3D = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-  camera3D.position.set(10, 12, 15);
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+  camera3D = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+  camera3D.position.set(10, 8, 15);
   camera3D.lookAt(0, 0, 0);
 
   renderer3D = new THREE.WebGLRenderer({ antialias: true });
-  renderer3D.setSize(container.clientWidth, container.clientHeight);
+  renderer3D.setSize(width, height);
   renderer3D.shadowMap.enabled = true;
   container.appendChild(renderer3D.domElement);
 
   css2DRenderer = new THREE.CSS2DRenderer();
-  css2DRenderer.setSize(container.clientWidth, container.clientHeight);
+  css2DRenderer.setSize(width, height);
   css2DRenderer.domElement.style.position = 'absolute';
   css2DRenderer.domElement.style.top = '0px';
   css2DRenderer.domElement.style.left = '0px';
@@ -1659,285 +1660,278 @@ async function init3DExplorer() {
   scene3D.add(backLight);
 
   // Ground grid
-  const gridHelper = new THREE.GridHelper(30, 20, 0x88aaff, 0x335588);
-  gridHelper.position.y = -1.2;
+  const gridHelper = new THREE.GridHelper(20, 20, 0x88aaff, 0x335588);
+  gridHelper.position.y = -0.5;
   gridHelper.material.transparent = true;
   gridHelper.material.opacity = 0.4;
   scene3D.add(gridHelper);
 
-  // Raycaster for hover
-  raycaster = new THREE.Raycaster();
-  raycaster.params.Points = { threshold: 0.5 };
-
-  // Load district GeoJSON and create extruded meshes
+  // Load GeoJSON and create bars
+  let geoJsonData = null;
   try {
     const res = await fetch('/data/malawi_districts.geojson');
-    if (!res.ok) throw new Error('District GeoJSON not found');
-    const geojson = await res.json();
-
-    // Calculate property density per district
-    const densityMap = {};
+    if (res.ok) {
+      geoJsonData = await res.json();
+      console.log("Loaded real districts GeoJSON");
+    } else {
+      throw new Error("GeoJSON not found");
+    }
+  } catch (err) {
+    console.warn("No district GeoJSON – creating dummy districts from property locations");
+    if (!allHouses.length) {
+      console.warn("No houses loaded yet, will retry in 2 seconds");
+      setTimeout(() => init3DExplorer(), 2000);
+      return;
+    }
+    // Create dummy districts based on property clusters
+    const clusters = {};
     allHouses.forEach(house => {
       if (!house.lat || !house.lng) return;
-      // Find which district contains this point (simple point-in-polygon)
-      for (const feature of geojson.features) {
-        const polygon = turf.polygon(feature.geometry.coordinates);
-        if (turf.booleanPointInPolygon(turf.point([house.lng, house.lat]), polygon)) {
-          const name = feature.properties.name;
-          densityMap[name] = (densityMap[name] || 0) + 1;
-          break;
-        }
-      }
+      const latBin = Math.floor(house.lat * 4) / 4;
+      const lngBin = Math.floor(house.lng * 4) / 4;
+      const key = `${latBin},${lngBin}`;
+      if (!clusters[key]) clusters[key] = { lat: latBin, lng: lngBin, count: 0, houses: [] };
+      clusters[key].count++;
+      clusters[key].houses.push(house);
     });
-
-    // Compute bounding box for centering
-    let bounds = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
-    geojson.features.forEach(feature => {
-      const coords = feature.geometry.coordinates[0];
-      coords.forEach(coord => {
-        bounds.minX = Math.min(bounds.minX, coord[0]);
-        bounds.maxX = Math.max(bounds.maxX, coord[0]);
-        bounds.minZ = Math.min(bounds.minZ, coord[1]);
-        bounds.maxZ = Math.max(bounds.maxZ, coord[1]);
+    geoJsonData = { type: "FeatureCollection", features: [] };
+    let idx = 0;
+    for (const key in clusters) {
+      const c = clusters[key];
+      geoJsonData.features.push({
+        type: "Feature",
+        properties: { name: `Area ${idx++}`, density: c.count },
+        geometry: { type: "Point", coordinates: [c.lng, c.lat] }
       });
-    });
-    const centerLng = (bounds.minX + bounds.maxX) / 2;
-    const centerLat = (bounds.minZ + bounds.maxZ) / 2;
-    const scaleX = 8 / (bounds.maxX - bounds.minX);
-    const scaleZ = 8 / (bounds.maxZ - bounds.minZ);
-    const offsetX = -centerLng * scaleX;
-    const offsetZ = -centerLat * scaleZ;
-
-    // Store district data for hover & click
-    districtMeshes = [];
-
-    geojson.features.forEach(feature => {
-      const name = feature.properties.name;
-      const polygonCoords = feature.geometry.coordinates[0];
-      // Convert to 3D points (x = lng, z = lat, y = 0)
-      const shapePoints = polygonCoords.map(coord => {
-        const x = coord[0] * scaleX + offsetX;
-        const z = coord[1] * scaleZ + offsetZ;
-        return new THREE.Vector2(x, z);
-      });
-      const shape = new THREE.Shape(shapePoints.map(p => new THREE.Vector2(p.x, p.y)));
-      const extrudeSettings = {
-        steps: 1,
-        depth: 0.3 + (densityMap[name] || 0) * 0.05,
-        bevelEnabled: true,
-        bevelThickness: 0.05,
-        bevelSize: 0.05,
-        bevelSegments: 3
-      };
-      const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-      geometry.computeVertexNormals();
-      geometry.rotateX(-Math.PI / 2);
-      const color = new THREE.Color().setHSL(0.55 + (densityMap[name] || 0) * 0.03, 0.8, 0.5);
-      const material = new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.1, emissive: 0x112233 });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.userData = { name, density: densityMap[name] || 0, center: { lng: centerLng, lat: centerLat } };
-      scene3D.add(mesh);
-      districtMeshes.push(mesh);
-
-      // Add glowing column (heat column)
-      const height = 1.0 + (densityMap[name] || 0) * 0.2;
-      const columnMat = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff2200, emissiveIntensity: 0.3 });
-      const columnGeo = new THREE.CylinderGeometry(0.2, 0.3, height, 8);
-      const column = new THREE.Mesh(columnGeo, columnMat);
-      // Find center of district for column placement
-      let cx = 0, cz = 0;
-      polygonCoords.forEach(coord => { cx += coord[0]; cz += coord[1]; });
-      cx = cx / polygonCoords.length;
-      cz = cz / polygonCoords.length;
-      column.position.x = cx * scaleX + offsetX;
-      column.position.z = cz * scaleZ + offsetZ;
-      column.position.y = extrudeSettings.depth + height/2;
-      column.castShadow = true;
-      scene3D.add(column);
-      heatColumns.push(column);
-    });
-
-    // Center camera
-    camera3D.position.set(0, 5, 12);
-    controls3D.target.set(0, 2, 0);
-    controls3D.update();
-
-    // Add twinkling stars
-    const starGeometry = new THREE.BufferGeometry();
-    const starCount = 800;
-    const starPositions = [];
-    for (let i = 0; i < starCount; i++) {
-      starPositions.push((Math.random() - 0.5) * 200);
-      starPositions.push((Math.random() - 0.5) * 80);
-      starPositions.push((Math.random() - 0.5) * 80 - 40);
     }
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
-    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true, opacity: 0.7 });
-    const starsObj = new THREE.Points(starGeometry, starMaterial);
-    scene3D.add(starsObj);
-
-    // Add subtle animated particles around districts
-    const particleCount = 1500;
-    const particleGeo = new THREE.BufferGeometry();
-    const particlePositions = [];
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions.push((Math.random() - 0.5) * 20);
-      particlePositions.push(Math.random() * 6);
-      particlePositions.push((Math.random() - 0.5) * 20);
-    }
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(particlePositions), 3));
-    const particleMat = new THREE.PointsMaterial({ color: 0xffaa66, size: 0.03, transparent: true, blending: THREE.AdditiveBlending });
-    const particlesObj = new THREE.Points(particleGeo, particleMat);
-    scene3D.add(particlesObj);
-
-    // Animation loop
-    function animate3D() {
-      requestAnimationFrame(animate3D);
-      controls3D.update(); // only if controls need update
-      particlesObj.rotation.y += 0.002;
-      starsObj.rotation.y += 0.0005;
-      renderer3D.render(scene3D, camera3D);
-      css2DRenderer.render(scene3D, camera3D);
-    }
-    animate3D();
-
-    // Hover & click events
-    window.addEventListener('mousemove', onMouseMove);
-    function onMouseMove(event) {
-      const rect = container.getBoundingClientRect();
-      const mouse = new THREE.Vector2();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera3D);
-      const intersects = raycaster.intersectObjects(districtMeshes);
-      if (intersects.length > 0 && hoveredDistrict !== intersects[0].object) {
-        if (hoveredDistrict) {
-          hoveredDistrict.material.emissiveIntensity = 0;
-          removeVibeTooltip();
-        }
-        hoveredDistrict = intersects[0].object;
-        hoveredDistrict.material.emissiveIntensity = 0.3;
-        showVibeTooltip(hoveredDistrict.userData.name, hoveredDistrict.userData.density);
-      } else if (intersects.length === 0 && hoveredDistrict) {
-        hoveredDistrict.material.emissiveIntensity = 0;
-        hoveredDistrict = null;
-        removeVibeTooltip();
-      }
-    }
-
-    function showVibeTooltip(districtName, density) {
-      removeVibeTooltip();
-      // Compute vibe scores using amenity data
-      let walkScore = 50, safetyScore = 60, noiseScore = 70;
-      // Simple simulation: more density => lower walkability? Actually more amenities = better
-      if (healthPoints.length > 0) walkScore = Math.min(95, 60 + density * 5);
-      if (schoolPoints.length > 0) safetyScore = Math.min(90, 55 + density * 4);
-      if (marketPoints.length > 0) noiseScore = Math.max(40, 75 - density * 3);
-      let vibeEmoji = '🌿 Quiet';
-      if (density > 5) vibeEmoji = '🏙 Lively';
-      else if (density > 2) vibeEmoji = '🚌 Connected';
-      const tooltipDiv = document.createElement('div');
-      tooltipDiv.id = 'vibeTooltip';
-      tooltipDiv.style.position = 'absolute';
-      tooltipDiv.style.bottom = '20px';
-      tooltipDiv.style.left = '20px';
-      tooltipDiv.style.backgroundColor = 'rgba(0,0,0,0.75)';
-      tooltipDiv.style.color = 'white';
-      tooltipDiv.style.padding = '12px 16px';
-      tooltipDiv.style.borderRadius = '20px';
-      tooltipDiv.style.backdropFilter = 'blur(8px)';
-      tooltipDiv.style.fontSize = '0.8rem';
-      tooltipDiv.style.maxWidth = '220px';
-      tooltipDiv.style.zIndex = '10000';
-      tooltipDiv.innerHTML = `
-        <strong><i class="fas fa-map-marker-alt"></i> ${districtName}</strong><br>
-        <i class="fas fa-home"></i> Properties: ${density}<br>
-        <i class="fas fa-walking"></i> Walkability: ${walkScore}/100<br>
-        <i class="fas fa-shield-alt"></i> Safety: ${safetyScore}/100<br>
-        <i class="fas fa-volume-up"></i> Noise: ${noiseScore}/100<br>
-        <div style="margin-top:6px;">${vibeEmoji}</div>
-      `;
-      container.parentElement.appendChild(tooltipDiv);
-    }
-
-    function removeVibeTooltip() {
-      const existing = document.getElementById('vibeTooltip');
-      if (existing) existing.remove();
-    }
-
-    // Click on district -> show floating property cards
-    districtMeshes.forEach(mesh => {
-      mesh.addEventListener('click', () => {
-        const districtName = mesh.userData.name;
-        const propertiesInDistrict = allHouses.filter(house => {
-          if (!house.lat || !house.lng) return false;
-          const point = turf.point([house.lng, house.lat]);
-          const feature = geojson.features.find(f => f.properties.name === districtName);
-          if (!feature) return false;
-          return turf.booleanPointInPolygon(point, turf.polygon(feature.geometry.coordinates));
-        });
-        showFloatingPropertyCards(propertiesInDistrict, districtName);
-      });
-    });
-
-  } catch (err) {
-    console.error('Failed to init 3D Explorer:', err);
-    showToast('Could not load 3D Explorer. Please try again later.', 'error');
   }
-}
 
-function showFloatingPropertyCards(properties, districtName) {
-  if (!floatingCardsGroup) {
-    floatingCardsGroup = new THREE.Group();
-    scene3D.add(floatingCardsGroup);
+  // Compute centroids for each feature
+  const centroids = [];
+  for (const feature of geoJsonData.features) {
+    let lat, lng;
+    if (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon") {
+      // Use turf to get centroid
+      const centroid = turf.centroid(feature);
+      lng = centroid.geometry.coordinates[0];
+      lat = centroid.geometry.coordinates[1];
+    } else if (feature.geometry.type === "Point") {
+      lng = feature.geometry.coordinates[0];
+      lat = feature.geometry.coordinates[1];
+    } else {
+      continue;
+    }
+    const name = feature.properties.name;
+    const density = feature.properties.density || allHouses.filter(h => {
+      if (!h.lat || !h.lng) return false;
+      const dist = getDistance(lat, lng, h.lat, h.lng);
+      return dist < 0.5; // within 0.5 km
+    }).length;
+    centroids.push({ lat, lng, name, density });
   }
-  // Clear previous cards
-  while(floatingCardsGroup.children.length) {
-    floatingCardsGroup.remove(floatingCardsGroup.children[0]);
-  }
-  if (!properties.length) {
-    showToast(`No properties found in ${districtName}.`, 'info');
-    return;
-  }
-  const startX = -3;
-  const startZ = -2;
-  const stepX = 2.2;
-  const stepZ = 2.2;
-  properties.slice(0, 12).forEach((house, idx) => {
-    const cardDiv = document.createElement('div');
-    cardDiv.style.backgroundColor = 'var(--card-bg)';
-    cardDiv.style.borderRadius = '12px';
-    cardDiv.style.padding = '8px';
-    cardDiv.style.width = '180px';
-    cardDiv.style.textAlign = 'center';
-    cardDiv.style.cursor = 'pointer';
-    cardDiv.style.border = '1px solid rgba(0,0,0,0.1)';
-    cardDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-    cardDiv.innerHTML = `
-      <img src="${house.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:100px; object-fit:cover; border-radius:8px;">
-      <h4 style="margin:6px 0 2px; font-size:0.8rem;">${house.name}</h4>
-      <p style="font-size:0.7rem; margin:2px 0;">MWK ${house.price.toLocaleString()}</p>
-      <button class="carousel-btn" style="margin-top:4px; background:#2563eb;">View</button>
-    `;
-    cardDiv.addEventListener('click', () => showDetails(house._id));
-    const css2DObject = new THREE.CSS2DObject(cardDiv);
-    const row = Math.floor(idx / 4);
-    const col = idx % 4;
-    css2DObject.position.set(startX + col * stepX, 3 + row * 2.2, startZ);
-    floatingCardsGroup.add(css2DObject);
+
+  // Normalize coordinates to fit in scene (-8..8 range)
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  centroids.forEach(c => {
+    minLat = Math.min(minLat, c.lat);
+    maxLat = Math.max(maxLat, c.lat);
+    minLng = Math.min(minLng, c.lng);
+    maxLng = Math.max(maxLng, c.lng);
   });
-  // Fly camera to see the cards
-  camera3D.position.set(0, 6, 10);
-  controls3D.target.set(0, 3, 0);
-  controls3D.update();
-  setTimeout(() => {
-    // Auto remove after 15 seconds
-    setTimeout(() => {
+  const scaleX = 12 / (maxLng - minLng);
+  const scaleZ = 12 / (maxLat - minLat);
+  const offsetX = -(minLng + maxLng) / 2 * scaleX;
+  const offsetZ = -(minLat + maxLat) / 2 * scaleZ;
+
+  // Create bars
+  districtBars = [];
+  centroids.forEach(c => {
+    const x = c.lng * scaleX + offsetX;
+    const z = c.lat * scaleZ + offsetZ;
+    const height = Math.max(0.5, Math.min(3, c.density * 0.3));
+    const color = new THREE.Color().setHSL(0.3 + Math.min(0.4, c.density * 0.05), 1, 0.5);
+    const geometry = new THREE.CylinderGeometry(0.4, 0.5, height, 8);
+    const material = new THREE.MeshStandardMaterial({ color, emissive: 0x442200, emissiveIntensity: 0.2 });
+    const bar = new THREE.Mesh(geometry, material);
+    bar.position.set(x, height / 2, z);
+    bar.castShadow = true;
+    bar.receiveShadow = true;
+    bar.userData = { name: c.name, density: c.density, lat: c.lat, lng: c.lng };
+    scene3D.add(bar);
+    districtBars.push(bar);
+
+    // Add CSS2D label
+    const labelDiv = document.createElement('div');
+    labelDiv.textContent = c.name;
+    labelDiv.style.backgroundColor = 'rgba(0,0,0,0.6)';
+    labelDiv.style.color = 'white';
+    labelDiv.style.padding = '2px 6px';
+    labelDiv.style.borderRadius = '20px';
+    labelDiv.style.fontSize = '10px';
+    labelDiv.style.fontWeight = 'bold';
+    labelDiv.style.whiteSpace = 'nowrap';
+    const labelObj = new THREE.CSS2DObject(labelDiv);
+    labelObj.position.set(x, height + 0.2, z);
+    scene3D.add(labelObj);
+  });
+
+  // Add stars and particles for atmosphere
+  const starCount = 800;
+  const starGeo = new THREE.BufferGeometry();
+  const starPositions = [];
+  for (let i = 0; i < starCount; i++) {
+    starPositions.push((Math.random() - 0.5) * 200);
+    starPositions.push((Math.random() - 0.5) * 80);
+    starPositions.push((Math.random() - 0.5) * 80 - 40);
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true });
+  const stars = new THREE.Points(starGeo, starMat);
+  scene3D.add(stars);
+
+  const particleCount = 1000;
+  const particleGeo = new THREE.BufferGeometry();
+  const particlePositions = [];
+  for (let i = 0; i < particleCount; i++) {
+    particlePositions.push((Math.random() - 0.5) * 20);
+    particlePositions.push(Math.random() * 6);
+    particlePositions.push((Math.random() - 0.5) * 20);
+  }
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(particlePositions), 3));
+  const particleMat = new THREE.PointsMaterial({ color: 0xffaa66, size: 0.04, transparent: true, blending: THREE.AdditiveBlending });
+  const particles = new THREE.Points(particleGeo, particleMat);
+  scene3D.add(particles);
+
+  // Animation loop
+  function animate3D() {
+    requestAnimationFrame(animate3D);
+    controls3D.update();
+    particles.rotation.y += 0.002;
+    stars.rotation.y += 0.0005;
+    renderer3D.render(scene3D, camera3D);
+    css2DRenderer.render(scene3D, camera3D);
+  }
+  animate3D();
+
+  // Hover tooltip (raycaster)
+  const raycaster = new THREE.Raycaster();
+  let hoveredBar = null;
+  let tooltipDiv = null;
+
+  function removeTooltip() {
+    if (tooltipDiv) tooltipDiv.remove();
+    tooltipDiv = null;
+  }
+
+  function showTooltip(bar, mouseX, mouseY) {
+    removeTooltip();
+    const density = bar.userData.density;
+    let walkScore = Math.min(95, 50 + density * 5);
+    let safetyScore = Math.min(90, 55 + density * 4);
+    let noiseScore = Math.max(40, 75 - density * 3);
+    let vibeEmoji = density > 8 ? '🏙 Lively' : (density > 3 ? '🚌 Connected' : '🌿 Quiet');
+    tooltipDiv = document.createElement('div');
+    tooltipDiv.style.position = 'absolute';
+    tooltipDiv.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    tooltipDiv.style.color = 'white';
+    tooltipDiv.style.padding = '8px 12px';
+    tooltipDiv.style.borderRadius = '16px';
+    tooltipDiv.style.fontSize = '12px';
+    tooltipDiv.style.maxWidth = '200px';
+    tooltipDiv.style.pointerEvents = 'none';
+    tooltipDiv.style.zIndex = '10000';
+    tooltipDiv.style.backdropFilter = 'blur(4px)';
+    tooltipDiv.innerHTML = `
+      <strong>${bar.userData.name}</strong><br>
+      Properties: ${density}<br>
+      Walkability: ${walkScore}/100<br>
+      Safety: ${safetyScore}/100<br>
+      Noise: ${noiseScore}/100<br>
+      ${vibeEmoji}
+    `;
+    document.body.appendChild(tooltipDiv);
+    tooltipDiv.style.left = (mouseX + 15) + 'px';
+    tooltipDiv.style.top = (mouseY + 15) + 'px';
+  }
+
+  window.addEventListener('mousemove', (event) => {
+    const rect = container.getBoundingClientRect();
+    const mouse = new THREE.Vector2();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera3D);
+    const intersects = raycaster.intersectObjects(districtBars);
+    if (intersects.length > 0 && hoveredBar !== intersects[0].object) {
+      if (hoveredBar) hoveredBar.material.emissiveIntensity = 0;
+      hoveredBar = intersects[0].object;
+      hoveredBar.material.emissiveIntensity = 0.5;
+      showTooltip(hoveredBar, event.clientX, event.clientY);
+    } else if (intersects.length === 0 && hoveredBar) {
+      hoveredBar.material.emissiveIntensity = 0;
+      hoveredBar = null;
+      removeTooltip();
+    } else if (intersects.length > 0 && hoveredBar === intersects[0].object && tooltipDiv) {
+      tooltipDiv.style.left = (event.clientX + 15) + 'px';
+      tooltipDiv.style.top = (event.clientY + 15) + 'px';
+    }
+  });
+
+  // Click on bar -> show floating property cards
+  districtBars.forEach(bar => {
+    bar.addEventListener('click', () => {
+      const districtName = bar.userData.name;
+      const center = { lat: bar.userData.lat, lng: bar.userData.lng };
+      // Find properties within 0.5 km of this bar
+      const props = allHouses.filter(h => {
+        if (!h.lat || !h.lng) return false;
+        const dist = getDistance(center.lat, center.lng, h.lat, h.lng);
+        return dist < 0.5;
+      });
+      if (!floatingCardsGroup) {
+        floatingCardsGroup = new THREE.Group();
+        scene3D.add(floatingCardsGroup);
+      }
       while(floatingCardsGroup.children.length) floatingCardsGroup.remove(floatingCardsGroup.children[0]);
-    }, 15000);
-  }, 100);
+      if (!props.length) {
+        showToast(`No properties found near ${districtName}.`, 'info');
+        return;
+      }
+      const startX = -3, startZ = -2, stepX = 2.2, stepZ = 2.2;
+      props.slice(0, 12).forEach((house, idx) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.style.backgroundColor = 'white';
+        cardDiv.style.borderRadius = '12px';
+        cardDiv.style.padding = '8px';
+        cardDiv.style.width = '180px';
+        cardDiv.style.textAlign = 'center';
+        cardDiv.style.cursor = 'pointer';
+        cardDiv.style.border = '1px solid #ccc';
+        cardDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+        cardDiv.innerHTML = `
+          <img src="${house.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:100px; object-fit:cover; border-radius:8px;">
+          <h4 style="margin:6px 0 2px; font-size:0.8rem;">${escapeHtml(house.name)}</h4>
+          <p style="font-size:0.7rem; margin:2px 0;">MWK ${house.price.toLocaleString()}</p>
+          <button class="carousel-btn" style="margin-top:4px; background:#2563eb;">View</button>
+        `;
+        cardDiv.addEventListener('click', () => showDetails(house._id));
+        const css2DObject = new THREE.CSS2DObject(cardDiv);
+        const row = Math.floor(idx / 4);
+        const col = idx % 4;
+        css2DObject.position.set(startX + col * stepX, 3 + row * 2.2, startZ);
+        floatingCardsGroup.add(css2DObject);
+      });
+      camera3D.position.set(0, 6, 12);
+      controls3D.target.set(0, 2, 0);
+      controls3D.update();
+      setTimeout(() => {
+        if (floatingCardsGroup) {
+          while(floatingCardsGroup.children.length) floatingCardsGroup.remove(floatingCardsGroup.children[0]);
+        }
+      }, 15000);
+    });
+  });
+
+  console.log("3D Explorer ready – you should see colored bars now!");
 }
 
 function refresh3DExplorer() {
@@ -1960,7 +1954,6 @@ function toggle3DExplorer() {
     mapDiv.style.display = 'block';
     explorerDiv.style.display = 'none';
     if (scene3D) {
-      // Cleanup
       const container = document.getElementById('explorer3d');
       while(container.firstChild) container.removeChild(container.firstChild);
       scene3D = null;
