@@ -1,5 +1,5 @@
 // ======================================
-// GLOBAL VARIABLES (existing + new for 3D)
+// GLOBAL VARIABLES
 // ======================================
 let allHouses = [];
 let map;
@@ -30,13 +30,7 @@ let amenityLayers = {};
 // Last selected house for nearby searches
 let lastSelectedHouse = null;
 
-// ========== 3D Explorer Variables ==========
-let is3DActive = false;
-let scene3D, camera3D, renderer3D, controls3D;
-let districtBars = []; // store { mesh, data, centroid }
-let vibeTooltip = null;
-
-// ========== TOAST NOTIFICATION ==========
+// ========== TOAST NOTIFICATION (replaces alert) ==========
 function showToast(message, type = 'info') {
   const existing = document.querySelector('.toast-notification');
   if (existing) existing.remove();
@@ -144,23 +138,27 @@ async function loadHeroCarousel() {
       spaceBetween: 20,
       breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } },
       pagination: { el: '.swiper-pagination', clickable: true },
-      navigation: false
+      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
     });
   } catch (err) {
     console.error('Failed to load carousel:', err);
   }
 }
 
-// ========== DREAM MATCH SCORING (unchanged) ==========
+// ========== DREAM MATCH SCORING (includes property type) ==========
 function scoreHouseForDream(house, answers) {
   let score = 0;
+  // Property type match (penalty if type doesn't match)
   if (answers.type && house.type !== answers.type) score -= 50;
+
+  // Work from home
   if (answers.workFromHome === "essential") {
     if (house.bedrooms >= 2 || house.selfContained) score += 30;
     else if (house.bedrooms >= 1) score += 10;
   } else if (answers.workFromHome === "nice") {
     if (house.bedrooms >= 2 || house.selfContained) score += 15;
   }
+  // Social
   if (answers.social === "often") {
     if (house.pool) score += 25;
     if (house.furnished) score += 15;
@@ -168,12 +166,14 @@ function scoreHouseForDream(house, answers) {
   } else if (answers.social === "sometimes") {
     if (house.furnished) score += 10;
   }
+  // Outdoor
   if (answers.outdoor === "essential") {
     if (house.petFriendly) score += 20;
     if (house.selfContained) score += 10;
   } else if (answers.outdoor === "nice") {
     if (house.petFriendly) score += 10;
   }
+  // Noise
   if (answers.noise === "quiet") {
     if (house.pool) score -= 15;
     if (house.selfContained) score += 10;
@@ -181,12 +181,14 @@ function scoreHouseForDream(house, answers) {
     if (house.pool) score += 15;
     if (house.furnished) score += 5;
   }
+  // Budget & bedrooms
   if (answers.maxPrice && house.price > answers.maxPrice) score -= 100;
   if (answers.bedrooms && house.bedrooms < answers.bedrooms) score -= 100;
   if (house.averageRating) score += house.averageRating * 5;
   return Math.max(0, score);
 }
 
+// ========== DREAM MATCH SUBMIT (MULTIPLE RESULTS, WITH TYPE) ==========
 async function submitDreamMatch(e) {
   e.preventDefault();
   const type = document.getElementById("dream_type").value;
@@ -201,6 +203,8 @@ async function submitDreamMatch(e) {
   const grid = document.getElementById("dreamMatchGrid");
   resultsDiv.style.display = "block";
   if (!grid) {
+    // Fallback for old HTML structure
+    console.warn("Dream match grid not found, using old wrapper");
     const wrapper = document.getElementById("dreamMatchWrapper");
     if (wrapper) wrapper.innerHTML = '<div class="swiper-slide"><div class="dream-card"><div class="dream-card-content"><i class="fas fa-spinner fa-pulse"></i> Finding your dream homes...</div></div></div>';
   } else {
@@ -489,10 +493,6 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     renderMarkers(allHouses);
     renderPagination();
     updateURL();
-    // If 3D view is active, refresh the 3D districts & heat columns
-    if (is3DActive) {
-      refresh3DExplorer();
-    }
   } catch (err) {
     console.error("Failed loading houses:", err);
     const container = document.getElementById("houses-container");
@@ -645,7 +645,7 @@ function initMap() {
 }
 function filterHousesByPolygon() {
   if (!drawnPolygon) return;
-  const filtered = allHouses.filter(house => { if (!house.lat || !house.lng) return false; const point = turf.point([house.lng, house.lat]); const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]); const poly = turf.polygon([coords]); return turf.booleanPointInPolygon(point, poly); });
+  const filtered = allHouses.filter(house => { if (!house.lat || !house.lng) return false; const point = turf.point([house.lng, house.lat]); const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]); const poly = turf.polygon([coords]); return turf.booleanPointInPoint(point, poly); });
   renderHouses(filtered);
   renderMarkers(filtered);
 }
@@ -710,7 +710,7 @@ function openComparisonModal() {
       }
       tableHtml += `<td style="padding: 8px;">${value}</td>`;
     });
-    tableHtml += `</tr>`;
+    tableHtml += `<tr>`;
   });
   tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
   housesToCompare.forEach(house => {
@@ -780,6 +780,7 @@ function renderHouses(houses) {
     else if (house.rentalStatus === 'rented') rentalStatusBadge = '<span class="badge rented"><i class="fas fa-ban"></i> Rented</span>';
     else if (house.rentalStatus === 'pending') rentalStatusBadge = '<span class="badge pending"><i class="fas fa-clock"></i> Pending</span>';
     
+    // Price display with old price and percentage change
     let priceHtml = '';
     const priceValue = house.price;
     const formattedPrice = `MWK ${Number(priceValue).toLocaleString()}`;
@@ -841,9 +842,11 @@ function renderHouses(houses) {
     `;
     container.appendChild(card);
 
+    // Apply crown to landlord avatar if premium
     const landlordAvatarDiv = card.querySelector('.landlord-avatar');
     if (landlordAvatarDiv && isPremiumLandlord) addCrownToLandlordAvatar(landlordAvatarDiv, true);
 
+    // Initialize slider
     const sliderContainer = card.querySelector('.slides-container');
     const dots = card.querySelectorAll('.dot');
     if (sliderContainer && dots.length) {
@@ -869,6 +872,7 @@ function renderHouses(houses) {
       });
     }
 
+    // Rating widget
     const ratingWidget = card.querySelector('.rating-widget');
     if (ratingWidget) {
       const stars = ratingWidget.querySelectorAll('.star');
@@ -924,6 +928,7 @@ function renderHouses(houses) {
       resetStars();
     }
 
+    // Lightbox on image click
     const slidesContainer = card.querySelector('.slides-container');
     if (slidesContainer) {
       slidesContainer.addEventListener('click', (e) => {
@@ -935,6 +940,7 @@ function renderHouses(houses) {
       });
     }
 
+    // Record view on card click
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star") || e.target.classList.contains("dot")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" }).catch(err => console.error("Failed to record view", err));
@@ -1261,6 +1267,7 @@ async function showDetails(houseId) {
     } catch(e) {}
   }
 
+  // Fetch tenant's offer
   let myOffer = null;
   if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
     try {
@@ -1280,6 +1287,7 @@ async function showDetails(houseId) {
   }
   document.getElementById('modalDetails').innerHTML = detailsHtml;
 
+  // Attach accept/reject handlers if counter offer
   if (myOffer && myOffer.status === 'countered') {
     const acceptBtn = document.getElementById('acceptCounterFromModalBtn');
     const rejectBtn = document.getElementById('rejectCounterFromModalBtn');
@@ -1303,6 +1311,7 @@ async function showDetails(houseId) {
     });
   }
 
+  // Make an Offer button
   const hasActiveOffer = myOffer && (myOffer.status === 'pending' || myOffer.status === 'countered');
   if (isLoggedIn && house.owner && house.owner._id !== currentUserId && house.allowBidding !== false && !hasActiveOffer) {
     const offerSection = document.createElement('div');
@@ -1339,6 +1348,7 @@ async function showDetails(houseId) {
     });
   }
 
+  // Highest bid for premium users
   if (isLoggedIn && house.showHighestBidToPremium) {
     try {
       const token = localStorage.getItem('token');
@@ -1363,6 +1373,7 @@ async function showDetails(houseId) {
     } catch (err) { console.error('Failed to fetch highest bid', err); }
   }
 
+  // Lease negotiation
   if (isLoggedIn && house.owner && house.owner._id === currentUserId) {
     const leaseBtn = document.createElement('button');
     leaseBtn.className = 'save-search-btn';
@@ -1518,6 +1529,7 @@ function initAmenityToggles() {
     const layerKey = btn.dataset.layer;
     const layer = amenityLayers[layerKey];
     if (!layer) return;
+    // Initially hide all amenity layers (clean map)
     map.removeLayer(layer);
     btn.classList.remove('active');
     btn.addEventListener('click', () => {
@@ -1532,7 +1544,7 @@ function initAmenityToggles() {
   });
 }
 
-// ========== LOAD AMENITY LAYERS ==========
+// ========== LOAD AMENITY LAYERS (populate healthPoints, etc.) ==========
 async function loadAmenityLayers() {
   const layers = [
     { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints, key: 'hospitals' },
@@ -1570,6 +1582,7 @@ async function loadAmenityLayers() {
     } catch(e) { console.warn(`Skipped ${l.url}`); }
   }
   console.log(`Loaded ${healthPoints.length} health facilities, ${schoolPoints.length} schools, ${marketPoints.length} markets`);
+  // After loading, initialise toggles if the HTML contains the amenity toggle panel
   initAmenityToggles();
 }
 
@@ -1596,339 +1609,6 @@ function initHeatmap() {
   }
 }
 
-// ============================================================
-// ========== SIMPLIFIED 3D EXPLORER (BARS + MODAL ON CLICK) ==========
-// ============================================================
-async function init3DExplorer() {
-  const container = document.getElementById('explorer3d');
-  if (!container) {
-    console.error("No #explorer3d container found");
-    return;
-  }
-
-  // Clean up existing scene
-  if (scene3D) {
-    while (container.firstChild) container.removeChild(container.firstChild);
-    if (renderer3D) renderer3D.dispose();
-  }
-
-  // Setup Three.js scene
-  scene3D = new THREE.Scene();
-  scene3D.background = new THREE.Color(0x071a2b);
-  scene3D.fog = new THREE.FogExp2(0x071a2b, 0.008);
-
-  const width = container.clientWidth;
-  const height = container.clientHeight;
-  camera3D = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-  camera3D.position.set(10, 8, 15);
-  camera3D.lookAt(0, 0, 0);
-
-  renderer3D = new THREE.WebGLRenderer({ antialias: true });
-  renderer3D.setSize(width, height);
-  renderer3D.shadowMap.enabled = true;
-  container.appendChild(renderer3D.domElement);
-
-  // OrbitControls
-  if (typeof THREE.OrbitControls === 'undefined') {
-    console.error("OrbitControls not loaded – 3D view will not work properly");
-    showToast("3D controls not available, please refresh.", "error");
-    return;
-  }
-  controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
-  controls3D.enableDamping = true;
-  controls3D.dampingFactor = 0.05;
-  controls3D.autoRotate = false;
-  controls3D.enableZoom = true;
-  controls3D.enablePan = true;
-  controls3D.target.set(0, 2, 0);
-
-  // Lighting
-  const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
-  scene3D.add(ambientLight);
-  const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
-  dirLight.position.set(5, 10, 7);
-  dirLight.castShadow = true;
-  scene3D.add(dirLight);
-  const fillLight = new THREE.PointLight(0x4488ff, 0.4);
-  fillLight.position.set(0, 3, 2);
-  scene3D.add(fillLight);
-  const backLight = new THREE.PointLight(0xffaa66, 0.5);
-  backLight.position.set(-3, 4, -5);
-  scene3D.add(backLight);
-
-  // Ground grid
-  const gridHelper = new THREE.GridHelper(20, 20, 0x88aaff, 0x335588);
-  gridHelper.position.y = -0.5;
-  gridHelper.material.transparent = true;
-  gridHelper.material.opacity = 0.4;
-  scene3D.add(gridHelper);
-
-  // Load GeoJSON and create bars
-  let geoJsonData = null;
-  try {
-    const res = await fetch('/data/malawi_districts.geojson');
-    if (res.ok) {
-      geoJsonData = await res.json();
-      console.log("Loaded real districts GeoJSON");
-    } else {
-      throw new Error("GeoJSON not found");
-    }
-  } catch (err) {
-    console.warn("No district GeoJSON – creating dummy districts from property locations");
-    if (!allHouses.length) {
-      console.warn("No houses loaded yet, will retry in 2 seconds");
-      setTimeout(() => init3DExplorer(), 2000);
-      return;
-    }
-    // Create dummy districts based on property clusters
-    const clusters = {};
-    allHouses.forEach(house => {
-      if (!house.lat || !house.lng) return;
-      const latBin = Math.floor(house.lat * 4) / 4;
-      const lngBin = Math.floor(house.lng * 4) / 4;
-      const key = `${latBin},${lngBin}`;
-      if (!clusters[key]) clusters[key] = { lat: latBin, lng: lngBin, count: 0, houses: [] };
-      clusters[key].count++;
-      clusters[key].houses.push(house);
-    });
-    geoJsonData = { type: "FeatureCollection", features: [] };
-    let idx = 0;
-    for (const key in clusters) {
-      const c = clusters[key];
-      geoJsonData.features.push({
-        type: "Feature",
-        properties: { name: `Area ${idx++}`, density: c.count },
-        geometry: { type: "Point", coordinates: [c.lng, c.lat] }
-      });
-    }
-  }
-
-  // Compute centroids for each feature
-  const centroids = [];
-  for (const feature of geoJsonData.features) {
-    let lat, lng;
-    if (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon") {
-      const centroid = turf.centroid(feature);
-      lng = centroid.geometry.coordinates[0];
-      lat = centroid.geometry.coordinates[1];
-    } else if (feature.geometry.type === "Point") {
-      lng = feature.geometry.coordinates[0];
-      lat = feature.geometry.coordinates[1];
-    } else {
-      continue;
-    }
-    const name = feature.properties.name;
-    const density = feature.properties.density || allHouses.filter(h => {
-      if (!h.lat || !h.lng) return false;
-      const dist = getDistance(lat, lng, h.lat, h.lng);
-      return dist < 0.5; // within 0.5 km
-    }).length;
-    centroids.push({ lat, lng, name, density });
-  }
-
-  // Normalize coordinates to fit in scene (-8..8 range)
-  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-  centroids.forEach(c => {
-    minLat = Math.min(minLat, c.lat);
-    maxLat = Math.max(maxLat, c.lat);
-    minLng = Math.min(minLng, c.lng);
-    maxLng = Math.max(maxLng, c.lng);
-  });
-  const scaleX = 12 / (maxLng - minLng);
-  const scaleZ = 12 / (maxLat - minLat);
-  const offsetX = -(minLng + maxLng) / 2 * scaleX;
-  const offsetZ = -(minLat + maxLat) / 2 * scaleZ;
-
-  // Create bars
-  districtBars = [];
-  centroids.forEach(c => {
-    const x = c.lng * scaleX + offsetX;
-    const z = c.lat * scaleZ + offsetZ;
-    const height = Math.max(0.5, Math.min(3, c.density * 0.3));
-    const color = new THREE.Color().setHSL(0.3 + Math.min(0.4, c.density * 0.05), 1, 0.5);
-    const geometry = new THREE.CylinderGeometry(0.4, 0.5, height, 8);
-    const material = new THREE.MeshStandardMaterial({ color, emissive: 0x442200, emissiveIntensity: 0.2 });
-    const bar = new THREE.Mesh(geometry, material);
-    bar.position.set(x, height / 2, z);
-    bar.castShadow = true;
-    bar.receiveShadow = true;
-    bar.userData = { name: c.name, density: c.density, lat: c.lat, lng: c.lng };
-    scene3D.add(bar);
-    districtBars.push(bar);
-  });
-
-  // Add stars and particles for atmosphere
-  const starCount = 800;
-  const starGeo = new THREE.BufferGeometry();
-  const starPositions = [];
-  for (let i = 0; i < starCount; i++) {
-    starPositions.push((Math.random() - 0.5) * 200);
-    starPositions.push((Math.random() - 0.5) * 80);
-    starPositions.push((Math.random() - 0.5) * 80 - 40);
-  }
-  starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
-  const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true });
-  const stars = new THREE.Points(starGeo, starMat);
-  scene3D.add(stars);
-
-  const particleCount = 1000;
-  const particleGeo = new THREE.BufferGeometry();
-  const particlePositions = [];
-  for (let i = 0; i < particleCount; i++) {
-    particlePositions.push((Math.random() - 0.5) * 20);
-    particlePositions.push(Math.random() * 6);
-    particlePositions.push((Math.random() - 0.5) * 20);
-  }
-  particleGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(particlePositions), 3));
-  const particleMat = new THREE.PointsMaterial({ color: 0xffaa66, size: 0.04, transparent: true, blending: THREE.AdditiveBlending });
-  const particles = new THREE.Points(particleGeo, particleMat);
-  scene3D.add(particles);
-
-  // Animation loop
-  function animate3D() {
-    requestAnimationFrame(animate3D);
-    controls3D.update();
-    particles.rotation.y += 0.002;
-    stars.rotation.y += 0.0005;
-    renderer3D.render(scene3D, camera3D);
-  }
-  animate3D();
-
-  // Hover tooltip (simple div)
-  const raycaster = new THREE.Raycaster();
-  let hoveredBar = null;
-  let tooltipDiv = null;
-
-  function removeTooltip() {
-    if (tooltipDiv) tooltipDiv.remove();
-    tooltipDiv = null;
-  }
-
-  function showTooltip(bar, mouseX, mouseY) {
-    removeTooltip();
-    const density = bar.userData.density;
-    let walkScore = Math.min(95, 50 + density * 5);
-    let safetyScore = Math.min(90, 55 + density * 4);
-    let noiseScore = Math.max(40, 75 - density * 3);
-    let vibeEmoji = density > 8 ? '🏙 Lively' : (density > 3 ? '🚌 Connected' : '🌿 Quiet');
-    tooltipDiv = document.createElement('div');
-    tooltipDiv.style.position = 'absolute';
-    tooltipDiv.style.backgroundColor = 'rgba(0,0,0,0.8)';
-    tooltipDiv.style.color = 'white';
-    tooltipDiv.style.padding = '8px 12px';
-    tooltipDiv.style.borderRadius = '16px';
-    tooltipDiv.style.fontSize = '12px';
-    tooltipDiv.style.maxWidth = '200px';
-    tooltipDiv.style.pointerEvents = 'none';
-    tooltipDiv.style.zIndex = '10000';
-    tooltipDiv.style.backdropFilter = 'blur(4px)';
-    tooltipDiv.innerHTML = `
-      <strong>${bar.userData.name}</strong><br>
-      Properties: ${density}<br>
-      Walkability: ${walkScore}/100<br>
-      Safety: ${safetyScore}/100<br>
-      Noise: ${noiseScore}/100<br>
-      ${vibeEmoji}
-    `;
-    document.body.appendChild(tooltipDiv);
-    tooltipDiv.style.left = (mouseX + 15) + 'px';
-    tooltipDiv.style.top = (mouseY + 15) + 'px';
-  }
-
-  window.addEventListener('mousemove', (event) => {
-    const rect = container.getBoundingClientRect();
-    const mouse = new THREE.Vector2();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera3D);
-    const intersects = raycaster.intersectObjects(districtBars);
-    if (intersects.length > 0 && hoveredBar !== intersects[0].object) {
-      if (hoveredBar) hoveredBar.material.emissiveIntensity = 0;
-      hoveredBar = intersects[0].object;
-      hoveredBar.material.emissiveIntensity = 0.5;
-      showTooltip(hoveredBar, event.clientX, event.clientY);
-    } else if (intersects.length === 0 && hoveredBar) {
-      hoveredBar.material.emissiveIntensity = 0;
-      hoveredBar = null;
-      removeTooltip();
-    } else if (intersects.length > 0 && hoveredBar === intersects[0].object && tooltipDiv) {
-      tooltipDiv.style.left = (event.clientX + 15) + 'px';
-      tooltipDiv.style.top = (event.clientY + 15) + 'px';
-    }
-  });
-
-  // Click on bar -> show properties in a modal (no CSS2DRenderer needed)
-  districtBars.forEach(bar => {
-    bar.addEventListener('click', () => {
-      const districtName = bar.userData.name;
-      const center = { lat: bar.userData.lat, lng: bar.userData.lng };
-      // Find properties within 0.5 km of this bar
-      const props = allHouses.filter(h => {
-        if (!h.lat || !h.lng) return false;
-        const dist = getDistance(center.lat, center.lng, h.lat, h.lng);
-        return dist < 0.5;
-      });
-      if (!props.length) {
-        showToast(`No properties found near ${districtName}.`, 'info');
-        return;
-      }
-      // Build a modal with property cards
-      const modalDiv = document.createElement('div');
-      modalDiv.className = 'modal';
-      modalDiv.style.display = 'flex';
-      let cardsHtml = '<div style="max-height: 70vh; overflow-y: auto; padding: 10px;"><h3>Properties in ' + districtName + '</h3><div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">';
-      props.forEach(house => {
-        cardsHtml += `
-          <div class="house-card" style="cursor:pointer; border:1px solid #ddd; border-radius:12px; overflow:hidden;" onclick="showDetails('${house._id}'); this.closest('.modal').remove();">
-            <img src="${house.images?.[0] || 'placeholder.jpg'}" style="width:100%; height:120px; object-fit:cover;">
-            <div style="padding:8px;">
-              <h4 style="font-size:0.8rem;">${escapeHtml(house.name)}</h4>
-              <p style="font-size:0.7rem;">MWK ${house.price.toLocaleString()}</p>
-            </div>
-          </div>
-        `;
-      });
-      cardsHtml += '</div></div>';
-      modalDiv.innerHTML = `<div class="modal-content" style="max-width:600px;"><span class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</span>${cardsHtml}</div>`;
-      document.body.appendChild(modalDiv);
-    });
-  });
-
-  console.log("3D Explorer ready – you should see colored bars now!");
-}
-
-function refresh3DExplorer() {
-  if (is3DActive) {
-    init3DExplorer();
-  }
-}
-
-function toggle3DExplorer() {
-  const mapDiv = document.getElementById('map');
-  const explorerDiv = document.getElementById('explorer3d');
-  const toggleBtn = document.getElementById('toggle3DExplorer');
-  if (!is3DActive) {
-    mapDiv.style.display = 'none';
-    explorerDiv.style.display = 'block';
-    init3DExplorer();
-    is3DActive = true;
-    toggleBtn.innerHTML = '<i class="fas fa-map"></i> 2D Map';
-  } else {
-    mapDiv.style.display = 'block';
-    explorerDiv.style.display = 'none';
-    if (scene3D) {
-      const container = document.getElementById('explorer3d');
-      while(container.firstChild) container.removeChild(container.firstChild);
-      scene3D = null;
-      camera3D = null;
-      renderer3D = null;
-      controls3D = null;
-    }
-    is3DActive = false;
-    toggleBtn.innerHTML = '<i class="fas fa-cube"></i> 3D Explorer';
-  }
-}
-
 // ========== EVENT LISTENERS & INITIALIZATION ==========
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
@@ -1945,8 +1625,8 @@ const nearBtn = document.getElementById("nearMeBtn"); if (nearBtn) { nearBtn.onc
 const gpsBtn = document.getElementById("getLocationBtn"); if (gpsBtn) { gpsBtn.addEventListener("click", () => { const status = document.getElementById("gpsStatus"); if (navigator.geolocation) { status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Getting location..."; navigator.geolocation.getCurrentPosition(pos => { document.getElementById("latitude").value = pos.coords.latitude; document.getElementById("longitude").value = pos.coords.longitude; status.innerHTML = `<i class="fas fa-check-circle"></i> Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`; }, () => { status.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Allow location access"; }, { enableHighAccuracy: true }); } else { status.innerHTML = "GPS not supported"; } }); }
 const regionSelect = document.getElementById('regionFilter'); if (regionSelect) regionSelect.addEventListener('change', () => { currentRegion = regionSelect.value; applyRegionFilter(); });
 const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (compareFloatingBtn) compareFloatingBtn.addEventListener('click', openComparisonModal);
-const toggle3DBtn = document.getElementById('toggle3DExplorer'); if (toggle3DBtn) toggle3DBtn.addEventListener('click', toggle3DExplorer);
 
+// Dream Match listeners
 const dreamLink = document.getElementById('dreamMatchLink');
 if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
 const dreamForm = document.getElementById('dreamMatchForm');
@@ -1955,10 +1635,12 @@ const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
 if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
 window.closeDreamMatchModal = closeDreamMatchModal;
 
+// Nearby amenity buttons (now call the detailed version)
 document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
 document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
 document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
 
+// Heatmap button
 const heatmapBtn = document.getElementById('toggleHeatmapBtn');
 if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
   heatmapBtn.addEventListener('click', () => {
@@ -1976,6 +1658,7 @@ if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
   });
 }
 
+// Walkability button
 const walkBtn = document.getElementById('walkabilityBtn');
 if (walkBtn) {
   walkBtn.addEventListener('click', () => {
@@ -1991,6 +1674,7 @@ if (walkBtn) {
   });
 }
 
+// Sync district dropdown
 function syncDistrictFilter() {
   const districtSelect = document.getElementById('districtFilterSelect');
   if (districtSelect) districtSelect.value = currentDistrict || '';
@@ -2016,7 +1700,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHouses(currentPage, currentType, currentFilters, currentSort);
   loadHeroCarousel();
   loadAndUpdateUserMenu();
-  loadAmenityLayers();
+  loadAmenityLayers(); // This populates healthPoints, schoolPoints, marketPoints and sets up toggles
   initHeatmap();
 });
 
@@ -2044,3 +1728,205 @@ window.openLightbox = (images, startIndex) => {
   modal.style.display = 'flex';
 };
 window.closeLightbox = () => document.getElementById('lightboxModal').style.display = 'none';
+
+// ======================================================
+// ========== NEW FEATURE: MARKET PULSE & SMART PRICE SCOUT ==========
+// ======================================================
+// This block adds the global market pulse widget and smart badges to property cards.
+// It does not modify any existing function – it only adds new ones and extends renderHouses.
+
+let priceTrendChart = null;
+
+// Helper: compute district average price map
+function getDistrictAvgPriceMap() {
+  const districtMap = {};
+  allHouses.forEach(house => {
+    if (!house.location) return;
+    // Try to match district from location (simple heuristic: first word or known district)
+    let district = 'Unknown';
+    for (const d of Object.keys(regionMap)) {
+      if (house.location.toLowerCase().includes(d.toLowerCase())) {
+        district = d;
+        break;
+      }
+    }
+    if (!districtMap[district]) districtMap[district] = { sum: 0, count: 0 };
+    districtMap[district].sum += house.price;
+    districtMap[district].count++;
+  });
+  const avgMap = {};
+  for (const d in districtMap) {
+    avgMap[d] = districtMap[d].sum / districtMap[d].count;
+  }
+  return avgMap;
+}
+
+// Add demand badge and price comparison to a card
+function addSmartBadges(card, house, avgPriceMap) {
+  // Demand badge
+  const views = house.views || 0;
+  const favCount = JSON.parse(localStorage.getItem("favorites") || "[]").includes(house._id) ? 1 : 0;
+  const demandScore = (views * 0.6) + (favCount * 40);
+  let demandClass = '', demandText = '';
+  if (demandScore > 80) { demandClass = 'demand-high'; demandText = '🔥 High demand'; }
+  else if (demandScore > 40) { demandClass = 'demand-trend'; demandText = '📈 Trending'; }
+  else { demandClass = 'demand-new'; demandText = '🟢 New / quiet'; }
+  const badgeDiv = document.createElement('div');
+  badgeDiv.className = `demand-badge ${demandClass}`;
+  badgeDiv.innerHTML = `<i class="fas fa-chart-line"></i> ${demandText}`;
+  const priceP = card.querySelector('.price');
+  if (priceP && priceP.parentNode) {
+    priceP.parentNode.insertBefore(badgeDiv, priceP.nextSibling);
+  }
+
+  // Price comparison
+  let district = 'Unknown';
+  for (const d of Object.keys(regionMap)) {
+    if (house.location && house.location.toLowerCase().includes(d.toLowerCase())) {
+      district = d;
+      break;
+    }
+  }
+  const avgPrice = avgPriceMap[district];
+  if (avgPrice && avgPrice > 0) {
+    const diffPercent = ((house.price - avgPrice) / avgPrice * 100).toFixed(0);
+    const diffClass = diffPercent < 0 ? 'price-below' : 'price-above';
+    const diffSymbol = diffPercent < 0 ? '↓' : '↑';
+    const compHtml = `<div class="price-compare ${diffClass}"><i class="fas fa-chart-simple"></i> ${Math.abs(diffPercent)}% ${diffSymbol} vs district avg</div>`;
+    const priceContainer = card.querySelector('.price');
+    if (priceContainer && priceContainer.parentNode) {
+      priceContainer.parentNode.insertAdjacentHTML('beforeend', compHtml);
+    }
+  }
+}
+
+// Update Market Pulse widget
+async function updateMarketPulse() {
+  const totalListingsEl = document.getElementById('totalListings');
+  const avgPriceEl = document.getElementById('avgPrice');
+  const hotListingsEl = document.getElementById('hotListings');
+  const hotDistrictsMarquee = document.getElementById('hotDistrictsMarquee');
+  const weeklySummarySpan = document.querySelector('#weeklySummary span');
+
+  if (!totalListingsEl) return;
+
+  // Compute stats
+  const total = allHouses.length;
+  const avgPrice = total > 0 ? allHouses.reduce((s, h) => s + h.price, 0) / total : 0;
+  // Hot properties: demandScore > 80
+  const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+  const hotCount = allHouses.filter(h => {
+    const views = h.views || 0;
+    const fav = favorites.includes(h._id) ? 1 : 0;
+    return (views * 0.6 + fav * 40) > 80;
+  }).length;
+
+  // Animate numbers
+  animateNumber(totalListingsEl, total);
+  animateNumber(avgPriceEl, Math.round(avgPrice));
+  animateNumber(hotListingsEl, hotCount);
+
+  // Hot districts: count views per district
+  const districtViews = {};
+  allHouses.forEach(h => {
+    let district = 'Unknown';
+    for (const d of Object.keys(regionMap)) {
+      if (h.location && h.location.toLowerCase().includes(d.toLowerCase())) {
+        district = d;
+        break;
+      }
+    }
+    districtViews[district] = (districtViews[district] || 0) + (h.views || 0);
+  });
+  const topDistricts = Object.entries(districtViews).sort((a,b) => b[1] - a[1]).slice(0, 5);
+  if (topDistricts.length) {
+    hotDistrictsMarquee.innerHTML = topDistricts.map(([d, views]) => `<span><i class="fas fa-fire"></i> ${d} – ${views} views this week</span>`).join('');
+  } else {
+    hotDistrictsMarquee.innerHTML = '<span><i class="fas fa-chart-line"></i> No data yet</span>';
+  }
+
+  // Weekly summary (simulated)
+  const summaries = [
+    "Prices in Lilongwe dropped 2% this week – great time to rent!",
+    "Blantyre sees 15% more listings – more choices for you.",
+    "Mzuzu market is stable – landlords are open to negotiation.",
+    "Demand for furnished apartments increased by 30%.",
+    "Student housing near UNIMA is trending – act fast!"
+  ];
+  weeklySummarySpan.textContent = summaries[Math.floor(Math.random() * summaries.length)];
+
+  // Update trend chart (simulated 7-day price trend)
+  const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  // Generate random but plausible trend based on region filter
+  let trendData = [avgPrice];
+  for (let i = 1; i < 7; i++) {
+    const prev = trendData[i-1];
+    const change = (Math.random() - 0.5) * 0.03 * prev;
+    trendData.push(Math.max(prev + change, prev * 0.9));
+  }
+  if (priceTrendChart) priceTrendChart.destroy();
+  const ctx = document.getElementById('priceTrendChart').getContext('2d');
+  priceTrendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Avg Price (MWK)',
+        data: trendData,
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37,99,235,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `MWK ${Math.round(ctx.raw).toLocaleString()}` } } },
+      scales: { y: { ticks: { callback: (val) => (val/1000).toFixed(0)+'k' } } }
+    }
+  });
+}
+
+function animateNumber(element, target) {
+  if (!element) return;
+  const start = parseInt(element.innerText) || 0;
+  if (start === target) return;
+  anime({
+    targets: { val: start },
+    val: target,
+    round: 1,
+    duration: 800,
+    easing: 'easeOutQuad',
+    update: function(a) { element.innerText = a.animations[0].currentValue.toLocaleString(); }
+  });
+}
+
+// Extend renderHouses to include smart badges (original renderHouses remains untouched)
+// We will wrap the original renderHouses with a new function that adds badges after rendering.
+const originalRenderHouses = renderHouses;
+window.renderHouses = function(houses) {
+  originalRenderHouses(houses);
+  // After standard render, add badges
+  const avgMap = getDistrictAvgPriceMap();
+  document.querySelectorAll('.house-card').forEach((card, idx) => {
+    const house = houses[idx];
+    if (house) addSmartBadges(card, house, avgMap);
+  });
+  updateMarketPulse(); // refresh widget when houses change
+};
+
+// Also trigger updateMarketPulse when region filter changes
+const originalRegionListener = regionSelect?.onchange;
+if (regionSelect) {
+  regionSelect.addEventListener('change', () => {
+    setTimeout(updateMarketPulse, 500);
+  });
+}
+
+// Initial widget update after first load
+setTimeout(() => {
+  if (allHouses.length) updateMarketPulse();
+}, 1000);

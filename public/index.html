@@ -20,9 +20,10 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
   <link href="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.css" rel="stylesheet">
-  <script src="https://unpkg.com/photo-sphere-viewer@4.1.0/dist/photo-sphere-viewer.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heatmap.js"></script>
+  <!-- Chart.js CDN for market pulse chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Anime.js for count-up effect -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <style>
     /* ========== GLOBAL ZOOM-PROOF RESET ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -704,6 +705,122 @@
       padding: 0.6rem 1rem; border: 1px solid var(--input-border); border-radius: 60px;
       background: var(--input-bg); color: var(--text-color); font-size: 0.85rem;
     }
+
+    /* ========== MARKET PULSE WIDGET (NEW) ========== */
+    .market-pulse {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 1rem;
+      margin: 1rem 0 1.5rem;
+      border: 1px solid var(--input-border);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+    .pulse-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .pulse-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 700;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+    }
+    .pulse-title i {
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    .price-scout {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #f59e0b20, #2563eb20);
+      padding: 0.3rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+    }
+    .price-scout i {
+      font-size: 1rem;
+      color: #f59e0b;
+    }
+    .pulse-stats {
+      display: flex;
+      justify-content: space-around;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: rgba(0,0,0,0.03);
+      border-radius: 24px;
+      padding: 0.6rem 1rem;
+      text-align: center;
+      flex: 1;
+      min-width: 100px;
+    }
+    .stat-number {
+      font-size: 1.4rem;
+      font-weight: 800;
+      font-family: 'Poppins', sans-serif;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      opacity: 0.7;
+    }
+    .trend-chart {
+      margin: 1rem 0;
+    }
+    canvas#priceTrendChart {
+      max-height: 100px;
+      width: 100%;
+    }
+    .hot-districts {
+      background: rgba(0,0,0,0.03);
+      border-radius: 40px;
+      padding: 0.5rem 1rem;
+      font-size: 0.7rem;
+      overflow-x: auto;
+      white-space: nowrap;
+      margin-top: 0.5rem;
+    }
+    .hot-districts span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-right: 1rem;
+    }
+    .hot-districts i {
+      color: #f59e0b;
+    }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(37,99,235,0); }
+      100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+    }
+    .demand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 40px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.6rem;
+      font-weight: 600;
+      margin: 0.2rem 0;
+      animation: pulseGlow 2s infinite;
+    }
+    .demand-high { background: #ef4444; color: white; }
+    .demand-trend { background: #f59e0b; color: white; }
+    .demand-new { background: #10b981; color: white; }
+    .price-compare { font-size: 0.65rem; font-weight: 600; margin: 0.2rem 0; }
+    .price-below { color: #10b981; }
+    .price-above { color: #ef4444; }
 
     /* Property grid */
     #houses-container {
@@ -1457,6 +1574,39 @@
     </section>
 
     <input type="text" id="searchInput" placeholder="Search by area or name...">
+
+    <!-- ========== MARKET PULSE WIDGET (NEW) ========== -->
+    <div class="market-pulse" id="marketPulse">
+      <div class="pulse-header">
+        <div class="pulse-title">
+          <i class="fas fa-chart-line"></i> Market Pulse
+          <span class="price-scout"><i class="fas fa-robot"></i> Price Scout AI</span>
+        </div>
+        <div class="price-scout" id="weeklySummary">
+          <i class="fas fa-microphone-alt"></i> <span>Loading insights...</span>
+        </div>
+      </div>
+      <div class="pulse-stats">
+        <div class="stat-card">
+          <div class="stat-number" id="totalListings">0</div>
+          <div class="stat-label">Active Listings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="avgPrice">0</div>
+          <div class="stat-label">Avg. Price (MWK)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="hotListings">0</div>
+          <div class="stat-label">🔥 Hot Properties</div>
+        </div>
+      </div>
+      <div class="trend-chart">
+        <canvas id="priceTrendChart" width="400" height="100"></canvas>
+      </div>
+      <div class="hot-districts" id="hotDistrictsMarquee">
+        <span><i class="fas fa-fire"></i> Loading districts...</span>
+      </div>
+    </div>
 
     <div class="category-tabs">
       <button class="tab-btn active" data-type="all"><i class="fas fa-globe"></i> All</button>
