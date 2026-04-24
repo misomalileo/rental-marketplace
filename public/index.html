@@ -2637,5 +2637,21 @@
     window.closeComparisonModal = function() { document.getElementById('comparisonModal').style.display = 'none'; };
     window.escapeHtml = function(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); };
   </script>
+
+  <!-- ===== FALLBACK MAP INITIALISATION (ensures map appears even if js/script.js fails) ===== -->
+  <script>
+    (function ensureMap() {
+      if (typeof map !== 'undefined' && map) return;
+      if (!document.getElementById('map')) return;
+      // Simple default map
+      window.map = L.map('map').setView([-13.9833, 33.7833], 7);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB'
+      }).addTo(window.map);
+      window.markersLayer = L.markerClusterGroup().addTo(window.map);
+      console.log("Fallback map initialised");
+    })();
+  </script>
+
 </body>
 </html>
