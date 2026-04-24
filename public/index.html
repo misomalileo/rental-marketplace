@@ -645,12 +645,14 @@
       padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.6rem; margin-left: 0.5rem;
     }
 
-    /* Hero section with video background */
+    /* Hero section – animated gradient background (never blank) */
     .hero {
       position: relative;
       text-align: center;
       padding: 3rem 2rem 2rem;
-      background: none;  /* remove the gradient */
+      background: linear-gradient(135deg, #1e3c72, #2a5298, #1e3c72);
+      background-size: 200% 200%;
+      animation: gradientShift 10s ease infinite;
       border-radius: 64px;
       margin: 1.5rem;
       overflow: hidden;
@@ -659,15 +661,10 @@
       align-items: center;
       justify-content: center;
     }
-    .hero-video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-      pointer-events: none;
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
     .hero-overlay {
       position: absolute;
@@ -675,8 +672,8 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(2px);
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(1px);
       z-index: 1;
     }
     .hero-content {
@@ -903,6 +900,12 @@
       .district-pulse-selector select {
         width: 100%;
       }
+      .hero {
+        padding: 2rem 1rem;
+        margin: 1rem;
+      }
+      .hero h1 { font-size: 1.5rem; }
+      #hero3dHouse { width: 60px; height: 60px; }
     }
 
     /* Property grid */
@@ -1535,7 +1538,6 @@
       .map-controls { flex-direction: column; align-items: stretch; }
       .radius-slider { justify-content: space-between; }
       .amenity-toggles { justify-content: center; }
-      .hero { min-height: 260px; }
     }
 
     /* Desktop: hide mobile menu button */
@@ -1544,7 +1546,7 @@
       .mobile-settings-dropdown { display: none !important; }
     }
 
-    /* ========== CUSTOM MODAL (same as dashboard) ========== */
+    /* ========== CUSTOM MODAL ========== */
     .custom-modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
@@ -1595,10 +1597,6 @@
   </nav>
 
   <header class="hero">
-    <video class="hero-video" autoplay muted loop playsinline poster="https://images.pexels.com/photos/3151919/pexels-photo-3151919.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2">
-      <source src="https://cdn.pixabay.com/video/2021/10/17/93247-624384201_large.mp4" type="video/mp4">
-      <!-- Fallback: a scenic Malawi landscape image -->
-    </video>
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <h1>
@@ -1622,14 +1620,12 @@
         <i class="fas fa-fire"></i> <span>Featured Properties</span>
         <span class="carousel-subtitle">Handpicked for you</span>
       </div>
-      <!-- Promotional banner below subtitle -->
       <div class="promo-banner">
         <i class="fas fa-gem"></i> Limited Offer: Premium users get early access to new listings! <i class="fas fa-arrow-right"></i>
       </div>
       <div class="swiper hero-swiper">
         <div class="swiper-wrapper" id="carousel-wrapper"></div>
         <div class="swiper-pagination"></div>
-        <!-- navigation arrows removed -->
       </div>
     </div>
   </div>
@@ -1664,7 +1660,6 @@
 
     <input type="text" id="searchInput" placeholder="Search by area or name...">
 
-    <!-- ========== MARKET PULSE WIDGET (with district selector) ========== -->
     <div class="market-pulse" id="marketPulse">
       <div class="pulse-header">
         <div class="pulse-title">
@@ -1736,7 +1731,6 @@
         <button id="toggleHeatmapBtn" class="spatial-btn"><i class="fas fa-fire"></i> Property Heatmap</button>
         <button id="walkabilityBtn" class="spatial-btn"><i class="fas fa-walking"></i> Walkability</button>
       </div>
-      <!-- Amenity Toggle Panel -->
       <div class="amenity-toggles" id="amenityTogglePanel">
         <button class="amenity-toggle-btn" data-layer="hospitals"><i class="fas fa-hospital"></i> Hospitals</button>
         <button class="amenity-toggle-btn" data-layer="schools"><i class="fas fa-school"></i> Schools</button>
@@ -1760,7 +1754,6 @@
     </section>
   </main>
 
-  <!-- WOOOW FOOTER – redesigned with extra polish -->
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-col">
@@ -1819,10 +1812,9 @@
     </div>
   </footer>
 
-  <!-- Back to Top Button -->
   <div id="backToTop" class="back-to-top"><i class="fas fa-arrow-up"></i></div>
 
-  <!-- ========== MODALS (FULLY POPULATED) ========== -->
+  <!-- ========== MODALS ========== -->
   <div id="dreamMatchModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('dreamMatchModal')">&times;</span>
@@ -1923,14 +1915,12 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <!-- 3D House Script (standalone, using global THREE) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     (function() {
       const container = document.getElementById('hero3dHouse');
       if (!container) return;
 
-      // Ensure container size
       const width = container.clientWidth;
       const height = container.clientHeight;
       if (width === 0 || height === 0) {
@@ -1952,7 +1942,6 @@
       renderer.shadowMap.enabled = true;
       container.appendChild(renderer.domElement);
 
-      // Simple OrbitControls (if available, otherwise we create a basic auto-rotate)
       let controls = null;
       if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -1963,11 +1952,9 @@
         controls.enablePan = false;
         controls.target.set(0, 1.2, 0);
       } else {
-        // fallback: manual rotation
         window.autoRotateAngle = 0;
       }
 
-      // Lights
       const ambientLight = new THREE.AmbientLight(0x404060, 0.55);
       scene.add(ambientLight);
       const mainLight = new THREE.DirectionalLight(0xffeebb, 1.2);
@@ -1987,7 +1974,6 @@
       frontFill.position.set(0, 1.5, 3);
       scene.add(frontFill);
 
-      // Ground disc
       const glowDisc = new THREE.Mesh(
         new THREE.CircleGeometry(2.8, 16),
         new THREE.MeshStandardMaterial({ color: 0x2266aa, emissive: 0x114477, roughness: 0.3, metalness: 0.7, transparent: true, opacity: 0.25 })
@@ -1996,21 +1982,18 @@
       glowDisc.position.y = -1.12;
       scene.add(glowDisc);
 
-      // Materials
       const wallMat = new THREE.MeshStandardMaterial({ color: 0xfff5e6, roughness: 0.25, metalness: 0.1 });
       const roofMat = new THREE.MeshStandardMaterial({ color: 0x2a7fff, roughness: 0.4, metalness: 0.2, emissive: 0x002244 });
       const trimMat = new THREE.MeshStandardMaterial({ color: 0xff6b4a, roughness: 0.3 });
       const doorMat = new THREE.MeshStandardMaterial({ color: 0xdd44aa, emissive: 0x551133, emissiveIntensity: 0.2, metalness: 0.1 });
       const garageMat = new THREE.MeshStandardMaterial({ color: 0xf0ecff, roughness: 0.3 });
 
-      // House
       const houseWidth = 2.6, houseHeight = 1.8, houseDepth = 2.6;
       const base = new THREE.Mesh(new THREE.BoxGeometry(houseWidth, houseHeight, houseDepth), wallMat);
       base.castShadow = true;
       base.position.y = -0.2;
       scene.add(base);
 
-      // Roof
       const roofGeo = new THREE.ConeGeometry(2.2, 1.4, 4);
       const roof = new THREE.Mesh(roofGeo, roofMat);
       roof.castShadow = true;
@@ -2018,7 +2001,6 @@
       roof.rotation.y = Math.PI / 4;
       scene.add(roof);
 
-      // Chimney
       const chimneyBase = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.1, 0.55), new THREE.MeshStandardMaterial({ color: 0xdd6644 }));
       chimneyBase.castShadow = true;
       chimneyBase.position.set(0.95, 0.65, 0.85);
@@ -2028,7 +2010,6 @@
       chimneyTop.position.set(0.95, 1.2, 0.85);
       scene.add(chimneyTop);
 
-      // Garage
       const garage = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.5, 1.8), garageMat);
       garage.castShadow = true;
       garage.position.set(1.9, -0.3, -0.6);
@@ -2040,7 +2021,6 @@
       garageDoor.position.set(1.9, -0.05, -1.35);
       scene.add(garageDoor);
 
-      // Windows
       const windowMatGlow = new THREE.MeshStandardMaterial({ color: 0xaaffff, emissive: 0x33aacc, emissiveIntensity: 0.5, metalness: 0.9 });
       function addWindow(x, y, z, w = 0.7, h = 0.7) {
         const win = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), windowMatGlow);
@@ -2063,7 +2043,6 @@
       garageWin.position.set(1.9, 0.25, 0.1);
       scene.add(garageWin);
 
-      // Door
       const door = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.3, 0.12), doorMat);
       door.castShadow = true;
       door.position.set(0, -0.15, 1.42);
@@ -2072,7 +2051,6 @@
       knob.position.set(0.28, -0.1, 1.5);
       scene.add(knob);
 
-      // Steps
       const stepMat = new THREE.MeshStandardMaterial({ color: 0xaa8866, roughness: 0.7 });
       const step1 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.45), stepMat);
       step1.position.set(0, -0.45, 1.78);
@@ -2081,7 +2059,6 @@
       step2.position.set(0, -0.32, 1.85);
       scene.add(step2);
 
-      // Bushes
       const bushMat = new THREE.MeshStandardMaterial({ color: 0x5aac44, emissive: 0x226622, emissiveIntensity: 0.12 });
       function addBush(x, z, scaleVal) {
         const bush = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), bushMat);
@@ -2096,7 +2073,6 @@
       addBush(1.9, -1.2, 0.8);
       addBush(-1.6, -1.3, 0.7);
 
-      // Particles
       const particleCount = 300;
       const particlesGeo = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
@@ -2116,7 +2092,6 @@
       const particles = new THREE.Points(particlesGeo, particleMat);
       scene.add(particles);
 
-      // Stars
       const starCount = 400;
       const starGeo = new THREE.BufferGeometry();
       const starPositions = [];
@@ -2130,7 +2105,6 @@
       const stars = new THREE.Points(starGeo, starMatPoints);
       scene.add(stars);
 
-      // Fireflies
       const fireflies = [];
       for (let i = 0; i < 30; i++) {
         const orbMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422, emissiveIntensity: 0.5, transparent: true });
@@ -2178,7 +2152,6 @@
         if (controls) {
           controls.update();
         } else {
-          // manual rotation
           window.autoRotateAngle += 0.008;
           camera.position.x = 5 * Math.sin(window.autoRotateAngle);
           camera.position.z = 6 * Math.cos(window.autoRotateAngle);
@@ -2199,7 +2172,6 @@
     })();
   </script>
 
-  <!-- ========== DISTRICT BOUNDARIES & FILTER (original, untouched) ========== -->
   <script>
     function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
       const overlay = document.createElement('div');
@@ -2354,7 +2326,6 @@
     }
   </script>
 
-  <!-- ========== AMENITY LAYERS & SUB-DISTRICTS ========== -->
   <script>
     let amenityLoadInterval = setInterval(function() {
       if (typeof map !== 'undefined' && map && districtLayer) {
