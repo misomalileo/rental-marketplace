@@ -645,14 +645,72 @@
       padding: 0.2rem 0.5rem; border-radius: 30px; font-size: 0.6rem; margin-left: 0.5rem;
     }
 
-    /* Hero section */
+    /* Hero section with video background */
     .hero {
-      text-align: center; padding: 3rem 2rem 2rem;
-      background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(14,165,164,0.05) 100%);
-      border-radius: 64px; margin: 1.5rem;
+      position: relative;
+      text-align: center;
+      padding: 3rem 2rem 2rem;
+      background: none;  /* remove the gradient */
+      border-radius: 64px;
+      margin: 1.5rem;
+      overflow: hidden;
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .hero h1 { font-size: 2.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
-    /* 3D house container - replaces the old icon */
+    .hero-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      color: white;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, #FFD966, #FF8C42, #FF3B3F);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+    }
+    .hero p {
+      font-size: 1rem;
+      font-weight: 400;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      color: #f0f0f0;
+    }
     #hero3dHouse {
       display: inline-block;
       width: 80px;
@@ -672,7 +730,6 @@
       display: block;
     }
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
-    .hero p { font-size: 1rem; font-weight: 400; color: var(--gray-500); margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
 
     .main-container { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
 
@@ -1478,6 +1535,7 @@
       .map-controls { flex-direction: column; align-items: stretch; }
       .radius-slider { justify-content: space-between; }
       .amenity-toggles { justify-content: center; }
+      .hero { min-height: 260px; }
     }
 
     /* Desktop: hide mobile menu button */
@@ -1537,6 +1595,11 @@
   </nav>
 
   <header class="hero">
+    <video class="hero-video" autoplay muted loop playsinline poster="https://images.pexels.com/photos/3151919/pexels-photo-3151919.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2">
+      <source src="https://cdn.pixabay.com/video/2021/10/17/93247-624384201_large.mp4" type="video/mp4">
+      <!-- Fallback: a scenic Malawi landscape image -->
+    </video>
+    <div class="hero-overlay"></div>
     <div class="hero-content">
       <h1>
         <div id="hero3dHouse"></div>
