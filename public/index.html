@@ -894,10 +894,18 @@
     .price-below { color: #10b981; }
     .price-above { color: #ef4444; }
 
-    /* PHONE FIRST : SIDE REDUCTION (almost half of original side spacing) */
+    /* PHONE FIRST : SIDE REDUCTION (almost half of original side spacing) & HERO SIZE REDUCED */
     @media (max-width: 768px) {
       .main-container { padding: 0 0.75rem; }
-      .hero { margin: 0.6rem; border-radius: 36px; padding: 1.8rem 1rem; }
+      .hero { 
+        margin: 0.6rem; 
+        border-radius: 36px; 
+        padding: 1rem 0.8rem;    /* was 2rem 1rem → reduced height by >50% */
+        min-height: 180px;       /* was 320px → nearly half */
+      }
+      .hero h1 { font-size: 1.5rem; }
+      .hero p { font-size: 0.8rem; }
+      #hero3dHouse { width: 50px; height: 50px; } /* 3D house scales down */
       .carousel-section { margin: 0.5rem; }
       .carousel-container { padding: 0.8rem 0.3rem 1rem; }
       .carousel-title { padding: 0 0.5rem; font-size: 1.2rem; }
@@ -914,9 +922,9 @@
     }
     @media (max-width: 480px) {
       .main-container { padding: 0 0.5rem; }
-      .hero { margin: 0.4rem; border-radius: 28px; }
+      .hero { margin: 0.4rem; border-radius: 28px; padding: 0.8rem 0.6rem; min-height: 160px; }
       .hero h1 { font-size: 1.3rem; }
-      #hero3dHouse { width: 50px; height: 50px; }
+      #hero3dHouse { width: 45px; height: 45px; }
     }
 
     @media (max-width: 768px) {
@@ -931,12 +939,6 @@
       .district-pulse-selector select {
         width: 100%;
       }
-      .hero {
-        padding: 2rem 1rem;
-        margin: 1rem;
-      }
-      .hero h1 { font-size: 1.5rem; }
-      #hero3dHouse { width: 60px; height: 60px; }
     }
 
     /* Property grid */
@@ -1550,11 +1552,6 @@
         gap: 0.8rem;
       }
       .nav-links a { font-size: 0.8rem; }
-      .hero { margin: 0.8rem; padding: 1rem; }
-      .hero h1 { font-size: 1.5rem; }
-      .hero h1 i { font-size: 2rem; }
-      .hero p { font-size: 0.8rem; }
-      #hero3dHouse { width: 60px; height: 60px; margin-right: 0.1rem; }
       .filters-row { flex-direction: column; border-radius: 28px; padding: 0.8rem; }
       #houses-container { grid-template-columns: 1fr; }
       #map { height: 340px; }
