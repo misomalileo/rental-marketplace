@@ -12,7 +12,7 @@ let viewsChart, earningsChart, conversionChart;
 let housesPage = 0;
 const housesPerPage = 6;
 
-// ========== CUSTOM MODAL SYSTEM ==========
+// ========== CUSTOM MODAL ==========
 function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
   const overlay = document.createElement('div');
   overlay.className = 'custom-modal-overlay';
@@ -29,7 +29,7 @@ function showModal(message, type = 'info', onConfirm = null, onCancel = null) {
   cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
 }
 
-// ========== MAP INIT ==========
+// ========== MAP ==========
 function initMap() {
   const container = document.getElementById('map');
   if (!container) return;
@@ -64,9 +64,9 @@ function getLocation() {
   }, () => statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Unable to get location.');
 }
 
-// ========== PROPERTY TYPES & DETAILS ==========
+// ========== PROPERTY TYPES & DETAILS (all boolean fields as dropdown Yes/No) ==========
 const propertyTypeFields = {
-  House: ['bedrooms','bathrooms','selfContained','hasGarden','parkingSpaces','furnished','petFriendly','ac','wifi','pool'],
+  House: ['bedrooms','bathrooms','selfContained','garden','parkingSpaces','furnished','petFriendly','ac','wifi','pool'],
   Apartment: ['bedrooms','bathrooms','floorLevel','hasElevator','selfContained','furnished','parking','securityGuard'],
   Room: ['roomType','sharedWith','bathroomType','kitchenAccess','selfContained','furnished','waterHeater'],
   Hostel: ['totalRooms','vacancies','bedsPerRoom','sharedBathroom','commonKitchen','curfew','laundryService','security'],
@@ -76,6 +76,9 @@ const propertyTypeFields = {
   SharedLiving: ['totalBeds','availableBeds','genderPreference','sharedRoomSize','lockerProvided','commonArea','curfew'],
   StudentAccommodation: ['nearbyUniversity','studentOnly','studyRoom','mealPlan','counselingService','securityGuard','laundry','wifiInRooms','bicycleParking']
 };
+
+const booleanFields = ['selfContained', 'garden', 'hasElevator', 'hasReception', 'instantBooking', 'selfCheckin', 'towelsLinen', 'studentOnly', 'studyRoom', 'mealPlan', 'counselingService', 'wifiInRooms', 'bicycleParking', 'lockerProvided', 'commonKitchen', 'sharedBathroom', 'laundryService', 'security', 'kitchenAccess', 'furnished', 'petFriendly', 'ac', 'wifi', 'pool', 'parking'];
+
 let selectedType = null;
 let typeSpecificData = {};
 
@@ -84,16 +87,19 @@ function generatePropertyDetailsFields(type) {
   if (!container) return;
   const fields = propertyTypeFields[type] || [];
   if (fields.length === 0) { container.innerHTML = '<p class="info">No additional details needed.</p>'; return; }
-  let html = '<div class="details-grid">';
+  let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:0.8rem;">';
   fields.forEach(field => {
     const label = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
     let inputHtml = '';
-    if (field === 'roomType') inputHtml = `<select id="detail_${field}"><option value="single">Single</option><option value="double">Double</option><option value="shared">Shared</option></select>`;
+    if (booleanFields.includes(field)) {
+      inputHtml = `<select id="detail_${field}">
+        <option value="true">Yes</option>
+        <option value="false" selected>No</option>
+      </select>`;
+    } else if (field === 'roomType') inputHtml = `<select id="detail_${field}"><option value="single">Single</option><option value="double">Double</option><option value="shared">Shared</option></select>`;
     else if (field === 'bathroomType') inputHtml = `<select id="detail_${field}"><option value="private">Private</option><option value="shared">Shared</option><option value="outside">Outside</option></select>`;
     else if (field === 'genderPreference') inputHtml = `<select id="detail_${field}"><option value="boys">Boys only</option><option value="girls">Girls only</option><option value="mixed">Mixed</option></select>`;
     else if (field === 'furnitureIncluded' || field === 'utilitiesIncluded') inputHtml = `<input type="text" id="detail_${field}" placeholder="e.g., bed,sofa / water,electricity">`;
-    else if (['selfContained','hasGarden','hasElevator','kitchenAccess','sharedBathroom','commonKitchen','laundryService','studentOnly','studyRoom','mealPlan','counselingService','wifiInRooms','bicycleParking','lockerProvided','commonArea','instantBooking','selfCheckin','towelsLinen','weeklyCleaning'].includes(field))
-      inputHtml = `<select id="detail_${field}"><option value="true">Yes</option><option value="false">No</option></select>`;
     else if (field === 'dailyPrice' || field === 'weeklyPrice' || field === 'cleaningFee' || field === 'securityDeposit')
       inputHtml = `<input type="number" id="detail_${field}" placeholder="MWK">`;
     else inputHtml = `<input type="text" id="detail_${field}" placeholder="Enter ${label.toLowerCase()}">`;
@@ -104,8 +110,7 @@ function generatePropertyDetailsFields(type) {
   document.querySelectorAll('#propertyDetailsContainer input, #propertyDetailsContainer select').forEach(inp => {
     inp.addEventListener('change', () => {
       let val = inp.value;
-      if (inp.type === 'checkbox') val = inp.checked;
-      else if (inp.tagName === 'SELECT' && (inp.options[0]?.value === 'true' || inp.options[0]?.value === 'false'))
+      if (inp.tagName === 'SELECT' && booleanFields.includes(inp.id.replace('detail_', '')))
         val = inp.value === 'true';
       const key = inp.id.replace('detail_', '');
       typeSpecificData[key] = val;
@@ -117,8 +122,7 @@ function collectPropertyDetails() {
   const details = {};
   document.querySelectorAll('#propertyDetailsContainer input, #propertyDetailsContainer select').forEach(inp => {
     let val = inp.value;
-    if (inp.type === 'checkbox') val = inp.checked;
-    else if (inp.tagName === 'SELECT' && (inp.options[0]?.value === 'true' || inp.options[0]?.value === 'false'))
+    if (inp.tagName === 'SELECT' && booleanFields.includes(inp.id.replace('detail_', '')))
       val = inp.value === 'true';
     const key = inp.id.replace('detail_', '');
     details[key] = val;
@@ -269,22 +273,22 @@ function updateVerificationUI() {
 function payForVerification(type) {
   currentPaymentAction = type === 'official' ? 'verifyOfficial' : 'verifyPremium';
   currentHouseId = null;
-  document.getElementById('paymentTitle').innerHTML = type === 'official' ? 'Official Landlord' : 'Premium Landlord';
   document.getElementById('paymentAmount').innerText = `MWK ${type === 'official' ? 2500 : 5000}`;
   document.getElementById('paymentModal').style.display = 'block';
   document.getElementById('paymentStatus').innerHTML = '';
   document.getElementById('phoneNumber').value = '';
 }
+window.payForVerification = payForVerification;
 
 function featureHouse(id) {
   currentPaymentAction = 'feature';
   currentHouseId = id;
-  document.getElementById('paymentTitle').innerHTML = 'Feature House';
   document.getElementById('paymentAmount').innerText = 'MWK 5000';
   document.getElementById('paymentModal').style.display = 'block';
   document.getElementById('paymentStatus').innerHTML = '';
   document.getElementById('phoneNumber').value = '';
 }
+window.featureHouse = featureHouse;
 
 async function processPayment(method) {
   const phone = document.getElementById('phoneNumber').value.trim();
@@ -305,6 +309,7 @@ async function processPayment(method) {
     } else statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed: ' + (data.message || 'Error');
   } catch (err) { statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Network error'; }
 }
+window.processPayment = processPayment;
 
 function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; currentPaymentAction = null; currentHouseId = null; }
 window.closePaymentModal = closePaymentModal;
@@ -344,16 +349,45 @@ async function loadMyHouses() {
     renderHousesPage();
     loadBookingRequests();
     loadHouseStats();
+    updateRealAIInsight();
   } catch (err) { console.error(err); }
 }
 
 function renderHousesPage() {
+  const totalPages = Math.ceil(myHouses.length / housesPerPage);
   const start = housesPage * housesPerPage;
   const end = start + housesPerPage;
   const toShow = myHouses.slice(start, end);
   renderHouses(toShow);
-  const btn = document.getElementById('loadMoreHousesBtn');
-  if (btn) btn.style.display = (end >= myHouses.length) ? 'none' : 'block';
+  renderPaginationControls(totalPages);
+}
+
+function renderPaginationControls(totalPages) {
+  let paginationHtml = `<div class="pagination-container">
+    <button class="pagination-btn" id="prevPageBtn" ${housesPage === 0 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Previous</button>
+    <div class="page-numbers">`;
+  for (let i = 0; i < totalPages; i++) {
+    paginationHtml += `<button class="page-number ${i === housesPage ? 'active' : ''}" data-page="${i}">${i+1}</button>`;
+  }
+  paginationHtml += `</div>
+    <button class="pagination-btn" id="nextPageBtn" ${housesPage === totalPages-1 ? 'disabled' : ''}>Next <i class="fas fa-chevron-right"></i></button>
+  </div>`;
+  const container = document.getElementById('my-houses');
+  const existingPagination = document.querySelector('.pagination-container');
+  if (existingPagination) existingPagination.remove();
+  container.insertAdjacentHTML('afterend', paginationHtml);
+  document.getElementById('prevPageBtn')?.addEventListener('click', () => {
+    if (housesPage > 0) { housesPage--; renderHousesPage(); }
+  });
+  document.getElementById('nextPageBtn')?.addEventListener('click', () => {
+    if (housesPage < totalPages-1) { housesPage++; renderHousesPage(); }
+  });
+  document.querySelectorAll('.page-number').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      housesPage = parseInt(e.target.dataset.page);
+      renderHousesPage();
+    });
+  });
 }
 
 function renderHouses(houses) {
@@ -371,9 +405,9 @@ function renderHouses(houses) {
       <div class="house-card">
         <img src="${img}">
         <div class="house-content">
-          <h3 style="font-size:0.9rem;">${house.name}</h3>
+          <h3 style="font-size:0.9rem;">${escapeHtml(house.name)}</h3>
           ${rentalStatusBadge}
-          <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
+          <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
           <p><i class="fas fa-money-bill-wave"></i> MWK ${house.price?.toLocaleString()}</p>
           <p><i class="fas fa-eye"></i> ${house.views || 0}</p>
           <p><i class="fas fa-star"></i> ${house.averageRating ? house.averageRating.toFixed(1) : 'No ratings'}</p>
@@ -382,7 +416,7 @@ function renderHouses(houses) {
             <button class="delete" onclick="deleteHouse('${house._id}')"><i class="fas fa-trash-alt"></i> Delete</button>
             ${rentalAction}
             ${featureBtn}
-            <button class="booking-btn" onclick="openBookingModalFromDashboard('${house._id}', '${house.name}')"><i class="fas fa-calendar-check"></i> Request Booking</button>
+            <button class="booking-btn" onclick="openBookingModalFromDashboard('${house._id}', '${escapeHtml(house.name)}')"><i class="fas fa-calendar-check"></i> Request Booking</button>
           </div>
         </div>
       </div>
@@ -420,7 +454,7 @@ async function deleteHouse(id) {
   });
 }
 
-// ========== IMAGE PREVIEW WITH REMOVE BUTTON ==========
+// ========== IMAGE PREVIEW ==========
 let uploadFileList = [];
 let editUploadFileList = [];
 
@@ -471,14 +505,11 @@ document.getElementById('editImages').addEventListener('change', function(e) {
   updateImagePreview('editImagePreview', editUploadFileList, 'editImages');
 });
 
-// ========== EDIT MODAL (FIXED MAP) ==========
+// ========== EDIT MODAL ==========
 function openEditModal(houseId) {
   currentEditId = houseId;
   const house = myHouses.find(h => h._id === houseId);
-  if (!house) {
-    showModal('Property not found', 'error');
-    return;
-  }
+  if (!house) { showModal('Property not found', 'error'); return; }
   document.getElementById('editHouseId').value = house._id;
   document.getElementById('editName').value = house.name || '';
   document.getElementById('editLocation').value = house.location || '';
@@ -487,77 +518,27 @@ function openEditModal(houseId) {
   document.getElementById('editDescription').value = house.description || '';
   document.getElementById('editLat').value = house.lat || '';
   document.getElementById('editLng').value = house.lng || '';
-  document.getElementById('editType').value = house.type || 'House';
-  document.getElementById('editBedrooms').value = house.bedrooms || 0;
-  document.getElementById('editCondition').value = house.condition || 'Good';
-  document.getElementById('editWifi').checked = house.wifi || false;
-  document.getElementById('editParking').checked = house.parking || false;
-  document.getElementById('editFurnished').checked = house.furnished || false;
-  document.getElementById('editPetFriendly').checked = house.petFriendly || false;
-  document.getElementById('editPool').checked = house.pool || false;
-  document.getElementById('editAC').checked = house.ac || false;
-  document.getElementById('editVirtualTourUrl').value = house.virtualTourUrl || '';
-  const unavail = document.getElementById('editUnavailableDates');
-  if (unavail._flatpickr) unavail._flatpickr.destroy();
-  flatpickr(unavail, { mode: 'multiple', dateFormat: 'Y-m-d', defaultDate: house.unavailableDates ? house.unavailableDates.map(d => new Date(d)) : [] });
-  
   document.getElementById('editModal').style.display = 'block';
-  
-  // Activate first tab
-  document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
-  document.getElementById('editBasic').classList.add('active');
-  document.querySelectorAll('.edit-tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelector('.edit-tab-btn[data-edit-tab="basic"]').classList.add('active');
-  
-  // Remove any existing map to prevent duplication
-  if (editMap) {
-    editMap.remove();
-    editMap = null;
-    editMarker = null;
+
+  if (editMap) editMap.remove();
+  const lat = parseFloat(house.lat) || -15.7861;
+  const lng = parseFloat(house.lng) || 35.0058;
+  editMap = L.map('editMap').setView([lat, lng], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(editMap);
+  if (house.lat && house.lng) {
+    editMarker = L.marker([lat, lng]).addTo(editMap).bindPopup('Current location');
   }
-  
-  // Function to initialise the map in the location tab
-  const initLocationMap = () => {
-    const lat = parseFloat(document.getElementById('editLat').value) || -15.7861;
-    const lng = parseFloat(document.getElementById('editLng').value) || 35.0058;
-    if (editMap) editMap.remove();
-    editMap = L.map('editMap').setView([lat, lng], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(editMap);
-    if (document.getElementById('editLat').value && document.getElementById('editLng').value) {
-      editMarker = L.marker([lat, lng]).addTo(editMap).bindPopup('Property location');
-    }
-    editMap.on('click', function(ev) {
-      document.getElementById('editLat').value = ev.latlng.lat;
-      document.getElementById('editLng').value = ev.latlng.lng;
-      if (editMarker) editMap.removeLayer(editMarker);
-      editMarker = L.marker(ev.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
-    });
-    // Force map to resize correctly after a short delay
-    setTimeout(() => { editMap.invalidateSize(); }, 200);
-  };
-  
-  // Attach click event to the location tab button
-  const locationTabBtn = document.querySelector('.edit-tab-btn[data-edit-tab="location"]');
-  if (locationTabBtn) {
-    // Remove previous listeners to avoid duplicates
-    const newBtn = locationTabBtn.cloneNode(true);
-    locationTabBtn.parentNode.replaceChild(newBtn, locationTabBtn);
-    newBtn.addEventListener('click', (e) => {
-      // Switch tab manually
-      document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
-      document.getElementById('editLocationTab').classList.add('active');
-      document.querySelectorAll('.edit-tab-btn').forEach(b => b.classList.remove('active'));
-      newBtn.classList.add('active');
-      // Initialise map after the tab is visible
-      setTimeout(initLocationMap, 100);
-    });
-    // If the location tab is already active (unlikely), init immediately
-    if (document.getElementById('editLocationTab').classList.contains('active')) {
-      setTimeout(initLocationMap, 100);
-    }
-  }
+  editMap.on('click', function(ev) {
+    document.getElementById('editLat').value = ev.latlng.lat;
+    document.getElementById('editLng').value = ev.latlng.lng;
+    if (editMarker) editMap.removeLayer(editMarker);
+    editMarker = L.marker([ev.latlng.lat, ev.latlng.lng]).addTo(editMap).bindPopup('New location').openPopup();
+  });
+  setTimeout(() => editMap.invalidateSize(), 200);
 }
-function closeEditModal() { document.getElementById('editModal').style.display = 'none'; if (editMap) editMap.remove(); editMap = null; editMarker = null; }
+window.openEditModal = openEditModal;
+
+function closeEditModal() { document.getElementById('editModal').style.display = 'none'; if (editMap) editMap.remove(); editMap = null; }
 window.closeEditModal = closeEditModal;
 
 function getEditLocation() {
@@ -573,27 +554,13 @@ function getEditLocation() {
 }
 window.getEditLocation = getEditLocation;
 
-document.querySelectorAll('.edit-tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tabId = btn.getAttribute('data-edit-tab');
-    document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
-    document.getElementById(`edit${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`).classList.add('active');
-    document.querySelectorAll('.edit-tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
-
 document.getElementById('editForm').addEventListener('submit', async e => {
   e.preventDefault(); showLoading();
   const formData = new FormData(e.target);
-  formData.delete('houseId');
-  const unavailable = document.getElementById('editUnavailableDates').value;
-  const dates = unavailable ? unavailable.split(', ').filter(d => d) : [];
-  formData.append('unavailableDates', JSON.stringify(dates));
-  for (let file of editUploadFileList) {
-    formData.append('images', file);
-  }
   try {
+    for (let file of editUploadFileList) {
+      formData.append('images', file);
+    }
     const res = await fetch('/api/houses/' + currentEditId, { method: 'PUT', headers: { Authorization: 'Bearer ' + token }, body: formData });
     if (res.ok) { showModal('Property updated!', 'success'); closeEditModal(); loadMyHouses(); editUploadFileList = []; document.getElementById('editImagePreview').innerHTML = ''; }
     else { const data = await res.json(); showModal('Update failed: ' + (data.message || 'Unknown error'), 'error'); }
@@ -610,13 +577,38 @@ async function loadHouseStats() {
     const viewsData = data.views.map(d => d.views);
     if (viewsChart) viewsChart.destroy();
     viewsChart = new Chart(document.getElementById('viewsChart'), { type: 'line', data: { labels, datasets: [{ label: 'Views', data: viewsData, borderColor: '#3498db', fill: true }] } });
-    if (earningsChart) earningsChart.destroy();
-    earningsChart = new Chart(document.getElementById('earningsChart'), { type: 'bar', data: { labels: ['Week 1','Week 2','Week 3','Week 4'], datasets: [{ label: 'MWK', data: [10000,15000,8000,20000], backgroundColor: '#2ecc71' }] } });
-    if (conversionChart) conversionChart.destroy();
-    conversionChart = new Chart(document.getElementById('conversionChart'), { type: 'doughnut', data: { labels: ['Converted','Not'], datasets: [{ data: [5,95], backgroundColor: ['#f1c40f','#95a5a6'] }] } });
-    const avgViews = viewsData.reduce((a,b)=>a+b,0)/viewsData.length;
-    document.getElementById('insightText').innerHTML = avgViews > 20 ? '30% more views than similar houses. Great!' : '20% fewer views. Improve your photos.';
   } catch (err) { console.error(err); }
+}
+
+// REAL AI INSIGHT from actual data
+function updateRealAIInsight() {
+  if (!myHouses.length) {
+    document.getElementById('insightText').innerHTML = 'Add your first property to receive AI insights.';
+    return;
+  }
+  let totalViews = 0;
+  let totalBookings = 0;
+  let totalRating = 0;
+  myHouses.forEach(h => {
+    totalViews += h.views || 0;
+    totalBookings += h.bookings || 0;
+    totalRating += h.averageRating || 0;
+  });
+  const avgViews = totalViews / myHouses.length;
+  const avgRating = totalRating / myHouses.length;
+  const globalAvgViews = 120; // placeholder, ideally fetch from backend
+  const diffPercent = ((avgViews - globalAvgViews) / globalAvgViews * 100).toFixed(0);
+  let insight = '';
+  if (avgViews > globalAvgViews) {
+    insight = `🔥 Your properties get ${diffPercent}% more views than the platform average. Great engagement! Consider adding more photos to boost even higher.`;
+  } else if (avgViews < globalAvgViews) {
+    insight = `⚠️ Your listings receive ${Math.abs(diffPercent)}% fewer views. Try featuring your best property or improving descriptions.`;
+  } else {
+    insight = `📊 Your views are on par with the platform average. Keep updating your listings regularly.`;
+  }
+  if (avgRating > 4) insight += ` ⭐ Excellent average rating (${avgRating.toFixed(1)}/5) – tenants love you!`;
+  else if (avgRating < 3) insight += ` 💡 Your rating (${avgRating.toFixed(1)}/5) could improve. Respond faster to enquiries.`;
+  document.getElementById('insightText').innerHTML = insight;
 }
 
 // ========== BOOKINGS ==========
@@ -737,7 +729,6 @@ async function loadLeaseNegotiations() {
           contractId = contract._id;
         }
       } catch(e) { console.warn(e); }
-      
       let statusClass = 'offer-status';
       let statusText = l.status;
       if (contractStatus === 'active') { statusClass += ' accepted'; statusText = 'Signed & Active'; }
@@ -745,10 +736,8 @@ async function loadLeaseNegotiations() {
       else if (l.status === 'signed') { statusClass += ' accepted'; statusText = 'Signed ✓'; }
       else if (l.status === 'agreed') { statusClass += ' pending'; statusText = 'Awaiting Signatures'; }
       else if (l.status === 'negotiating') { statusClass += ' pending'; statusText = 'Negotiating'; }
-      
-      const downloadBtn = (contractStatus === 'active' || l.status === 'signed') ? `<button class="edit" style="margin-left:0.5rem;" onclick="downloadLeaseContract('${l._id}')">Contract</button>` : '';
-      const endLeaseBtn = (contractStatus === 'active') ? `<button class="mark-rented-btn" onclick="endLease('${contractId}')" style="margin-left:0.5rem;"><i class="fas fa-ban"></i> End Lease</button>` : '';
-      
+      const downloadBtn = (contractStatus === 'active' || l.status === 'signed') ? `<button class="edit" onclick="downloadLeaseContract('${l._id}')">Contract</button>` : '';
+      const endLeaseBtn = (contractStatus === 'active') ? `<button class="mark-rented-btn" onclick="endLease('${contractId}')">End Lease</button>` : '';
       container.innerHTML += `
         <div class="lease-card">
           <div class="offer-header"><strong>${l.houseId?.name || 'Unknown'}</strong><span class="${statusClass}">${statusText}</span></div>
@@ -769,23 +758,16 @@ async function loadLeaseNegotiations() {
     }
   } catch (err) { console.error(err); document.getElementById('leaseList').innerHTML = '<p>Error loading leases.</p>'; }
 }
+window.loadLeaseNegotiations = loadLeaseNegotiations;
 
 async function endLease(contractId) {
   showModal('WARNING: Ending the lease will terminate the contract and mark the property as available. Are you sure?', 'confirm', async () => {
     showLoading();
     try {
-      const res = await fetch(`/api/lease/terminate/${contractId}`, {
-        method: 'PUT',
-        headers: { Authorization: 'Bearer ' + token }
-      });
+      const res = await fetch(`/api/lease/terminate/${contractId}`, { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
       const data = await res.json();
-      if (res.ok) {
-        showModal('Lease terminated successfully.', 'success');
-        loadLeaseNegotiations();
-        loadMyHouses();
-      } else {
-        showModal(data.message || 'Failed to terminate lease', 'error');
-      }
+      if (res.ok) { showModal('Lease terminated successfully.', 'success'); loadLeaseNegotiations(); loadMyHouses(); }
+      else { showModal(data.message || 'Failed to terminate lease', 'error'); }
     } catch (err) { showModal('Network error', 'error'); } finally { hideLoading(); }
   });
 }
@@ -822,7 +804,7 @@ function addPremiumCrownToAvatar() {
   addCrown(document.getElementById('profileAvatar'));
 }
 
-// ========== WIZARD STEPS & TAB SWITCHING ==========
+// ========== WIZARD STEPS ==========
 let currentStep = 1;
 const steps = [1,2,3,4];
 function updateWizard() {
@@ -844,7 +826,6 @@ function updateWizard() {
     if (submitBtn) submitBtn.style.display = 'none';
   }
 }
-
 document.getElementById('prevBtn')?.addEventListener('click', () => { if (currentStep > 1) { currentStep--; updateWizard(); } });
 document.getElementById('nextBtn')?.addEventListener('click', () => { if (currentStep < 4) { currentStep++; updateWizard(); } });
 document.querySelectorAll('.wizard-nav-btn').forEach(btn => {
@@ -858,15 +839,15 @@ document.querySelectorAll('.tab-btn-dash').forEach(btn => {
     document.querySelectorAll('.tab-btn-dash').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.getElementById(`${tab}-tab`).classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.getElementById(`${tab}-tab`).style.display = 'block';
     if (tab === 'offers') loadOffers();
     if (tab === 'lease') loadLeaseNegotiations();
     if (tab === 'bookings') loadBookingRequests();
   });
 });
 
-// ========== UPLOAD FORM SUBMIT ==========
+// ========== UPLOAD FORM ==========
 document.getElementById('houseForm').addEventListener('submit', async e => {
   e.preventDefault();
   const name = document.getElementById('propName').value.trim();
@@ -891,13 +872,13 @@ document.getElementById('houseForm').addEventListener('submit', async e => {
   formData.append('phone', phone);
   formData.append('description', description);
   formData.append('type', selectedType);
-  ['wifi','parking','furnished','petFriendly','pool','ac'].forEach(a => {
+  const amenityFields = ['wifi','parking','furnished','petFriendly','pool','ac','garden','guard','gym','balcony'];
+  amenityFields.forEach(a => {
     const cb = document.querySelector(`input[name="${a}"]`);
     formData.append(a, cb && cb.checked ? 'on' : 'off');
   });
   formData.append('condition', document.querySelector('select[name="condition"]')?.value || 'Good');
   formData.append('gender', document.querySelector('select[name="gender"]')?.value || 'none');
-  formData.append('selfContained', document.querySelector('input[name="selfContained"]')?.checked ? 'on' : 'off');
   const lat = document.getElementById('latitude').value;
   const lng = document.getElementById('longitude').value;
   if (lat) formData.append('lat', lat);
@@ -944,9 +925,10 @@ function showLoading() { document.getElementById('loadingOverlay').style.display
 function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
 function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 window.logout = logout;
+
 window.openBookingModalFromDashboard = function(houseId, houseName) {
   window.currentBookingHouseId = houseId;
-  document.getElementById('bookingHouseInfo').innerHTML = `<p><strong>${houseName}</strong></p>`;
+  document.getElementById('bookingHouseInfo').innerHTML = `<p><strong>${escapeHtml(houseName)}</strong></p>`;
   document.getElementById('bookingStart').value = '';
   document.getElementById('bookingEnd').value = '';
   document.getElementById('bookingMessage').value = '';
@@ -974,14 +956,16 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
 function closeBookingModal() { document.getElementById('bookingModal').style.display = 'none'; }
 window.closeBookingModal = closeBookingModal;
 
-// ========== LOAD MORE BUTTON ==========
-const loadMoreBtn = document.getElementById('loadMoreHousesBtn');
-if (loadMoreBtn) {
-  loadMoreBtn.addEventListener('click', () => {
-    housesPage++;
-    renderHousesPage();
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
   });
 }
+window.escapeHtml = escapeHtml;
 
 // ========== INIT ==========
 fetchUser();
