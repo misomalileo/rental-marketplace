@@ -2380,11 +2380,8 @@
       }
     }, 1000);
 
-    let amenityLayers = {};
-    let subDistrictLayer = null;
-    let healthPoints = [];
-    let schoolPoints = [];
-    let marketPoints = [];
+    // DO NOT redeclare these variables with 'let' - they are already global from script.js
+    // amenityLayers, subDistrictLayer, healthPoints, schoolPoints, marketPoints are globals
 
     function getAmenityName(feature) {
       if (feature.properties.name) return feature.properties.name;
