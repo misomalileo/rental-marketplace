@@ -84,8 +84,6 @@ function handleLandlordClick(e) {
   const landlordId = this.getAttribute('data-landlord-id');
   if (landlordId) showLandlordProfile(landlordId);
 }
-
-// ========== ADD CROWN TO LANDLORD AVATAR ==========
 function addCrownToLandlordAvatar(avatarElement, isPremiumLandlord) {
   if (!isPremiumLandlord) return;
   if (avatarElement.parentElement && avatarElement.parentElement.classList.contains('avatar-container')) {
@@ -185,7 +183,6 @@ function scoreHouseForDream(house, answers) {
   if (house.averageRating) score += house.averageRating * 5;
   return Math.max(0, score);
 }
-
 async function submitDreamMatch(e) {
   e.preventDefault();
   const type = document.getElementById("dream_type").value;
@@ -250,7 +247,6 @@ async function submitDreamMatch(e) {
   else if (document.getElementById("dreamMatchWrapper")) document.getElementById("dreamMatchWrapper").innerHTML = resultsHtml;
   showToast(`Found ${top.length} dream matches!`);
 }
-
 function openDreamMatchModal() {
   const modal = document.getElementById("dreamMatchModal");
   if (modal) modal.style.display = "block";
@@ -258,7 +254,6 @@ function openDreamMatchModal() {
   const resultsDiv = document.getElementById("dreamMatchResults");
   if (resultsDiv) resultsDiv.style.display = "none";
 }
-
 function closeDreamMatchModal() {
   const modal = document.getElementById("dreamMatchModal");
   if (modal) modal.style.display = "none";
@@ -274,8 +269,6 @@ const regionMap = {
   'Mangochi': 'Southern', 'Balaka': 'Southern', 'Chikwawa': 'Southern', 'Nsanje': 'Southern',
   'Phalombe': 'Southern', 'Machinga': 'Southern'
 };
-
-// Improved district detection: also looks at property's district field and location parts
 function detectDistrict(house) {
   if (house.district && house.district !== '') return house.district;
   if (!house.location) return 'Other';
@@ -283,7 +276,6 @@ function detectDistrict(house) {
   for (const district of Object.keys(regionMap)) {
     if (locLower.includes(district.toLowerCase())) return district;
   }
-  // fallback: first word of location
   const firstWord = house.location.split(/[ ,-]/)[0];
   if (firstWord && firstWord.length > 2) return firstWord;
   return 'Other';
@@ -315,85 +307,34 @@ function getDistance(lat1, lng1, lat2, lng2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
-
 function getDisplayType(type) {
   const typeMap = {
-    'House': 'House',
-    'Apartment': 'Apartment',
-    'Room': 'Room',
-    'Hostel': 'Hostel',
-    'Office': 'Office',
-    'FurnishedApartment': 'Furnished Apartment',
-    'ShortStay': 'Short-Stay',
-    'SharedLiving': 'Shared Living',
-    'StudentAccommodation': 'Student Accommodation'
+    'House': 'House', 'Apartment': 'Apartment', 'Room': 'Room', 'Hostel': 'Hostel',
+    'Office': 'Office', 'FurnishedApartment': 'Furnished Apartment', 'ShortStay': 'Short-Stay',
+    'SharedLiving': 'Shared Living', 'StudentAccommodation': 'Student Accommodation'
   };
   return typeMap[type] || type;
 }
-
 function getTypeIcon(type) {
   const iconMap = {
-    'House': 'fa-home',
-    'Apartment': 'fa-building',
-    'Room': 'fa-bed',
-    'Hostel': 'fa-hotel',
-    'Office': 'fa-briefcase',
-    'FurnishedApartment': 'fa-couch',
-    'ShortStay': 'fa-calendar-week',
-    'SharedLiving': 'fa-users',
-    'StudentAccommodation': 'fa-graduation-cap'
+    'House': 'fa-home', 'Apartment': 'fa-building', 'Room': 'fa-bed', 'Hostel': 'fa-hotel',
+    'Office': 'fa-briefcase', 'FurnishedApartment': 'fa-couch', 'ShortStay': 'fa-calendar-week',
+    'SharedLiving': 'fa-users', 'StudentAccommodation': 'fa-graduation-cap'
   };
   return iconMap[type] || 'fa-home';
 }
 
-function getStrongFieldsHTML(house) {
-  const details = house.propertyDetails || {};
-  switch (house.type) {
-    case 'House':
-      let houseFields = [];
-      if (house.bedrooms) houseFields.push(`<i class="fas fa-bed"></i> ${house.bedrooms} bed`);
-      if (house.bathrooms) houseFields.push(`<i class="fas fa-bath"></i> ${house.bathrooms} bath`);
-      if (house.selfContained) houseFields.push(`<i class="fas fa-home"></i> Self Contained`);
-      return houseFields.length ? `<div class="strong-fields">${houseFields.join(' • ')}</div>` : '';
-    case 'Apartment':
-      let aptFields = [];
-      if (house.bedrooms) aptFields.push(`<i class="fas fa-bed"></i> ${house.bedrooms} bed`);
-      if (details.floorLevel) aptFields.push(`<i class="fas fa-layer-group"></i> Floor ${details.floorLevel}`);
-      if (details.hasElevator === 'true' || details.hasElevator === true) aptFields.push(`<i class="fas fa-arrow-up"></i> Elevator`);
-      return aptFields.length ? `<div class="strong-fields">${aptFields.join(' • ')}</div>` : '';
-    case 'Room':
-      let roomFields = [];
-      const roomType = details.roomType || 'Single';
-      roomFields.push(`<i class="fas fa-door-open"></i> ${roomType}`);
-      if (details.bathroomType) roomFields.push(`<i class="fas fa-toilet"></i> ${details.bathroomType} bath`);
-      return `<div class="strong-fields">${roomFields.join(' • ')}</div>`;
-    case 'Hostel':
-      let hostelFields = [];
-      if (details.vacancies) hostelFields.push(`<i class="fas fa-bed"></i> ${details.vacancies} vacancies`);
-      if (details.bedsPerRoom) hostelFields.push(`<i class="fas fa-users</i> ${details.bedsPerRoom} beds/room`);
-      return hostelFields.length ? `<div class="strong-fields">${hostelFields.join(' • ')}</div>` : '';
-    case 'FurnishedApartment':
-      let furnishedFields = [];
-      if (house.furnished || details.furnished === 'true' || details.furnished === true) furnishedFields.push(`<i class="fas fa-couch"></i> Furnished`);
-      if (details.utilitiesIncluded) furnishedFields.push(`<i class="fas fa-water"></i> Utilities incl.`);
-      return furnishedFields.length ? `<div class="strong-fields">${furnishedFields.join(' • ')}</div>` : '';
-    case 'ShortStay':
-      let shortFields = [];
-      if (details.dailyPrice) shortFields.push(`<i class="fas fa-sun"></i> MWK ${Number(details.dailyPrice).toLocaleString()}/day`);
-      if (details.minimumStay) shortFields.push(`<i class="fas fa-clock"></i> Min ${details.minimumStay} days`);
-      return shortFields.length ? `<div class="strong-fields">${shortFields.join(' • ')}</div>` : '';
-    case 'SharedLiving':
-      let sharedFields = [];
-      if (details.availableBeds) sharedFields.push(`<i class="fas fa-bed"></i> ${details.availableBeds} beds left`);
-      if (details.genderPreference) sharedFields.push(`<i class="fas fa-venus-mars"></i> ${details.genderPreference}`);
-      return sharedFields.length ? `<div class="strong-fields">${sharedFields.join(' • ')}</div>` : '';
-    case 'StudentAccommodation':
-      let studentFields = [];
-      if (details.nearbyUniversity) studentFields.push(`<i class="fas fa-university"></i> ${details.nearbyUniversity}`);
-      if (details.studentOnly === 'true' || details.studentOnly === true) studentFields.push(`<i class="fas fa-graduation-cap"></i> Students only`);
-      return studentFields.length ? `<div class="strong-fields">${studentFields.join(' • ')}</div>` : '';
-    default: return '';
-  }
+// ========== AMENITIES STRING FOR CARD ==========
+function getAmenitiesString(house) {
+  let amenities = [];
+  if (house.furnished) amenities.push('<i class="fas fa-couch"></i> Furnished');
+  if (house.selfContained) amenities.push('<i class="fas fa-home"></i> Self Contained');
+  if (house.parking) amenities.push('<i class="fas fa-parking"></i> Parking');
+  if (house.wifi) amenities.push('<i class="fas fa-wifi"></i> WiFi');
+  if (house.petFriendly) amenities.push('<i class="fas fa-paw"></i> Pet');
+  if (house.pool) amenities.push('<i class="fas fa-swimming-pool"></i> Pool');
+  if (house.ac) amenities.push('<i class="fas fa-snowflake"></i> AC');
+  return amenities.length ? `<div class="amenities-row">${amenities.join(' • ')}</div>` : '';
 }
 
 // ========== CUSTOM MARKER ICON ==========
@@ -416,8 +357,6 @@ function getMarkerIcon(house) {
   const html = `<div style="background-color: ${bgColor}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white;"><i class="fas ${iconClass}"></i></div>`;
   return L.divIcon({ html, iconSize: [32, 32], popupAnchor: [0, -16], className: 'custom-marker' });
 }
-
-// ========== RENDER MARKERS ==========
 function renderMarkers(houses) {
   if (!markersLayer) return;
   markersLayer.clearLayers();
@@ -509,7 +448,6 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     if (container) container.innerHTML = "<p>Failed to load houses. Please refresh.</p>";
   }
 }
-
 function updateURL() {
   const url = new URL(window.location);
   url.searchParams.set('page', currentPage);
@@ -521,7 +459,6 @@ function updateURL() {
   else url.searchParams.delete('district');
   window.history.replaceState({}, '', url);
 }
-
 function renderPagination() {
   const paginationDiv = document.getElementById('pagination');
   if (!paginationDiv) return;
@@ -534,7 +471,6 @@ function renderPagination() {
   html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})">Next <i class="fas fa-chevron-right"></i></button>`;
   paginationDiv.innerHTML = html;
 }
-
 function changePage(page) {
   if (page < 1 || page > totalPages) return;
   currentPage = page;
@@ -580,7 +516,6 @@ function initPriceSlider() {
     maxLabel.innerText = `Max: ${max.toLocaleString()}`;
   });
 }
-
 function getCurrentFilters() {
   const districtDropdownEl = document.getElementById('districtFilterSelect');
   let districtValue = '';
@@ -742,14 +677,15 @@ function openComparisonModal() {
 }
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
-// ========== RENDER HOUSE CARDS (original, preserved) ==========
-const originalRenderHouses = function(houses) {
+// ========== RENDER HOUSE CARDS (NEW SIMPLIFIED DESIGN) ==========
+function renderHouses(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
   container.innerHTML = "";
   const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
   const isLoggedIn = checkAuth();
   const currentUserId = getUserIdFromToken();
+
   houses.forEach(house => {
     const card = document.createElement("div");
     card.className = "house-card";
@@ -760,6 +696,7 @@ const originalRenderHouses = function(houses) {
       slidesHtml += `<div class="slide"><img src="${img}" alt="${escapeHtml(house.name)}" loading="lazy"></div>`;
       dotsHtml += `<span class="dot" data-index="${idx}"></span>`;
     });
+
     let avatarHtml = '';
     if (house.owner) {
       const initial = house.owner.name ? house.owner.name.charAt(0).toUpperCase() : '?';
@@ -775,49 +712,58 @@ const originalRenderHouses = function(houses) {
     if (house.owner) {
       landlordInfoHtml = `<div class="landlord-info-row" style="position: relative;">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${landlordBadge}</div>`;
     }
-    const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
-    const selfContainedBadge = house.selfContained ? '<span class="badge self-contained"><i class="fas fa-home"></i> Self Contained</span>' : '';
-    let genderBadgeHtml = '';
-    if (house.gender && house.gender !== 'none') {
-      let genderClass = '', genderText = '';
-      if (house.gender === 'boys') { genderClass = 'gender-boys'; genderText = '<i class="fas fa-mars"></i> Boys Only'; }
-      else if (house.gender === 'girls') { genderClass = 'gender-girls'; genderText = '<i class="fas fa-venus"></i> Girls Only'; }
-      else if (house.gender === 'mixed') { genderClass = 'gender-mixed'; genderText = '<i class="fas fa-venus-mars"></i> Mixed'; }
-      genderBadgeHtml = `<span class="badge ${genderClass}">${genderText}</span>`;
-    }
+
+    // Status badges (available, featured, new/trending)
     let rentalStatusBadge = '';
     if (house.rentalStatus === 'available') rentalStatusBadge = '<span class="badge available"><i class="fas fa-check-circle"></i> Available</span>';
     else if (house.rentalStatus === 'rented') rentalStatusBadge = '<span class="badge rented"><i class="fas fa-ban"></i> Rented</span>';
     else if (house.rentalStatus === 'pending') rentalStatusBadge = '<span class="badge pending"><i class="fas fa-clock"></i> Pending</span>';
-    
-    let priceHtml = '';
-    const priceValue = house.price;
-    const formattedPrice = `MWK ${Number(priceValue).toLocaleString()}`;
-    if (house.oldPrice && house.oldPrice !== priceValue) {
-      const oldPrice = house.oldPrice;
-      const change = priceValue - oldPrice;
-      const percent = ((change / oldPrice) * 100).toFixed(0);
-      const changeClass = change < 0 ? 'negative' : '';
-      const changeSymbol = change < 0 ? '↓' : '↑';
-      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${Math.abs(percent)}% ${changeSymbol}</span> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
-    } else {
-      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+    const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
+    let trendingBadge = '';
+    if (house.views && house.views > 100) trendingBadge = '<span class="badge demand-trend"><i class="fas fa-chart-line"></i> Trending</span>';
+    else if (house.isNew) trendingBadge = '<span class="badge demand-new"><i class="fas fa-sparkles"></i> New</span>';
+    const statusRow = `<div class="status-badges" style="display:flex; flex-wrap:wrap; gap:4px; margin: 4px 0;">${rentalStatusBadge} ${featuredBadge} ${trendingBadge}</div>`;
+
+    // Price display
+    let priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+
+    // Amenities row (only furnished/self contained per type)
+    let amenitiesHtml = '';
+    if (house.furnished || house.selfContained) {
+      let amenitiesList = [];
+      if (house.furnished) amenitiesList.push('<i class="fas fa-couch"></i> Furnished');
+      if (house.selfContained) amenitiesList.push('<i class="fas fa-home"></i> Self Contained');
+      amenitiesHtml = `<div class="amenities-row">${amenitiesList.join(' • ')}</div>`;
     }
-    
-    const ratingStars = getStarRating(house.averageRating);
-    const ratingText = house.averageRating ? house.averageRating.toFixed(1) : "N/A";
-    const favIcon = favorites.includes(house._id) ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
-    const chatBtn = (isLoggedIn && house.owner && house.owner._id !== currentUserId) ? `<button class="chat-btn" onclick="startChat('${house.owner._id}', '${house._id}')"><i class="fas fa-comment-dots"></i> Chat</button>` : '';
-    const shareBtn = `<button class="share-btn" onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>`;
-    const isSelected = comparisonList.includes(house._id);
-    const compareBtn = `<button class="compare-btn" data-id="${house._id}" onclick="addToCompare('${house._id}')"><i class="fas fa-chart-simple"></i> ${isSelected ? 'Remove' : 'Compare'}</button>`;
-    const reportBtn = isLoggedIn ? `<button class="report-btn" onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>` : '';
-    const favBtn = `<button class="fav-btn" onclick="toggleFavorite('${house._id}')">${favIcon}</button>`;
+
+    // Per-type specific fields
+    let typeSpecificHtml = '';
+    switch (house.type) {
+      case 'Hostel':
+        typeSpecificHtml = `<p><i class="fas fa-hotel"></i> Total rooms: ${house.totalRooms || 'N/A'} | Vacancies: ${house.vacancies || 'N/A'}</p>`;
+        if (house.gender && house.gender !== 'none') typeSpecificHtml += `<p><i class="fas fa-venus-mars"></i> Gender: ${house.gender}</p>`;
+        break;
+      case 'Office':
+        typeSpecificHtml = `<p><i class="fas fa-chart-line"></i> Office size: ${house.officeSize || 'N/A'} sqm</p>`;
+        break;
+      case 'ShortStay':
+        typeSpecificHtml = `<p><i class="fas fa-sun"></i> Daily: MWK ${house.dailyPrice?.toLocaleString() || 'N/A'} | Weekly: MWK ${house.weeklyPrice?.toLocaleString() || 'N/A'}</p>`;
+        break;
+      case 'SharedLiving':
+        typeSpecificHtml = `<p><i class="fas fa-users"></i> Total beds: ${house.totalBeds || 'N/A'} | Available: ${house.availableBeds || 'N/A'}</p>`;
+        if (house.gender && house.gender !== 'none') typeSpecificHtml += `<p><i class="fas fa-venus-mars"></i> Gender: ${house.gender}</p>`;
+        if (house.roomSize) typeSpecificHtml += `<p><i class="fas fa-ruler-combined"></i> Room size: ${house.roomSize} sqm</p>`;
+        break;
+      case 'StudentAccommodation':
+        typeSpecificHtml = `<p><i class="fas fa-university"></i> Nearby: ${house.nearbyUniversity || 'N/A'}</p>`;
+        break;
+      default:
+        typeSpecificHtml = `<p><i class="fas fa-bed"></i> Bedrooms: ${house.bedrooms || 'N/A'}</p>`;
+        break;
+    }
+
+    // Read more button (all extra buttons go inside modal)
     const readMoreBtn = `<button class="read-more-btn" onclick="showDetails('${house._id}')"><i class="fas fa-book-open"></i> Read more</button>`;
-    const ratingWidgetHtml = `<div class="rating-widget" data-house-id="${house._id}">${[1,2,3,4,5].map(v => `<span class="star" data-value="${v}">☆</span>`).join('')}<span class="rating-message" style="font-size:0.6rem; margin-left:0.5rem;"></span></div>`;
-    const displayType = getDisplayType(house.type);
-    const typeIcon = getTypeIcon(house.type);
-    const strongFieldsHtml = getStrongFieldsHTML(house);
 
     card.innerHTML = `
       <div class="slider">
@@ -828,32 +774,18 @@ const originalRenderHouses = function(houses) {
       </div>
       <div class="house-card-content">
         ${landlordInfoHtml}
-        ${featuredBadge}
-        ${selfContainedBadge}
-        ${genderBadgeHtml}
-        ${rentalStatusBadge}
+        ${statusRow}
         <h3>${house.name}</h3>
         <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
         ${priceHtml}
-        ${strongFieldsHtml}
-        <p><i class="fas ${typeIcon}"></i> ${displayType}</p>
-        <p><i class="fas fa-star"></i> Rating: <span class="rating-value">${ratingText}</span> <span class="rating-stars">${ratingStars}</span></p>
-        ${ratingWidgetHtml}
-        <div class="action-buttons">
-          ${chatBtn}
-          ${favBtn}
-          ${shareBtn}
-          ${compareBtn}
-          ${reportBtn}
-        </div>
+        ${typeSpecificHtml}
+        ${amenitiesHtml}
         ${readMoreBtn}
       </div>
     `;
     container.appendChild(card);
 
-    const landlordAvatarDiv = card.querySelector('.landlord-avatar');
-    if (landlordAvatarDiv && isPremiumLandlord) addCrownToLandlordAvatar(landlordAvatarDiv, true);
-
+    // Attach slider logic
     const sliderContainer = card.querySelector('.slides-container');
     const dots = card.querySelectorAll('.dot');
     if (sliderContainer && dots.length) {
@@ -879,61 +811,7 @@ const originalRenderHouses = function(houses) {
       });
     }
 
-    const ratingWidget = card.querySelector('.rating-widget');
-    if (ratingWidget) {
-      const stars = ratingWidget.querySelectorAll('.star');
-      const houseId = ratingWidget.dataset.houseId;
-      const messageSpan = ratingWidget.querySelector('.rating-message');
-      const highlightStars = (value) => { stars.forEach((star, idx) => { star.textContent = idx < value ? '★' : '☆'; }); };
-      const resetStars = () => {
-        const currentRating = house.averageRating || 0;
-        const rounded = Math.round(currentRating);
-        stars.forEach((star, idx) => { star.textContent = idx < rounded ? '★' : '☆'; });
-      };
-      stars.forEach(star => {
-        star.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const value = parseInt(star.dataset.value);
-          const token = localStorage.getItem('token');
-          if (!token) {
-            messageSpan.textContent = 'Please login to rate';
-            setTimeout(() => messageSpan.textContent = '', 2000);
-            return;
-          }
-          try {
-            const res = await fetch(`/api/houses/${houseId}/rate`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-              body: JSON.stringify({ value })
-            });
-            const data = await res.json();
-            if (res.ok) {
-              messageSpan.textContent = '✅ Rated!';
-              setTimeout(() => messageSpan.textContent = '', 1500);
-              const ratingValueSpan = card.querySelector('.rating-value');
-              const ratingStarsSpan = card.querySelector('.rating-stars');
-              if (data.average) {
-                ratingValueSpan.textContent = data.average.toFixed(1);
-                ratingStarsSpan.textContent = getStarRating(data.average);
-              }
-              const foundHouse = allHouses.find(h => h._id === houseId);
-              if (foundHouse) foundHouse.averageRating = data.average;
-              resetStars();
-            } else {
-              messageSpan.textContent = data.message || 'Error';
-              setTimeout(() => messageSpan.textContent = '', 2000);
-            }
-          } catch (err) {
-            messageSpan.textContent = 'Network error';
-            setTimeout(() => messageSpan.textContent = '', 2000);
-          }
-        });
-        star.addEventListener('mouseenter', () => { highlightStars(parseInt(star.dataset.value)); });
-        star.addEventListener('mouseleave', resetStars);
-      });
-      resetStars();
-    }
-
+    // Lightbox on image click
     const slidesContainer = card.querySelector('.slides-container');
     if (slidesContainer) {
       slidesContainer.addEventListener('click', (e) => {
@@ -945,28 +823,30 @@ const originalRenderHouses = function(houses) {
       });
     }
 
+    // Record view on card click (but not on buttons)
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star") || e.target.classList.contains("dot")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" }).catch(err => console.error("Failed to record view", err));
     });
   });
 
+  // Re-attach landlord click handlers
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
   });
-};
 
-// Wrap renderHouses to add smart badges after original render
-let renderHouses = function(houses) {
-  originalRenderHouses(houses);
-  const avgMap = getDistrictAvgPriceMap();
-  document.querySelectorAll('.house-card').forEach((card, idx) => {
-    const house = houses[idx];
-    if (house) addSmartBadges(card, house, avgMap);
+  // Add crown to premium landlord avatars
+  document.querySelectorAll('.landlord-avatar').forEach(avatar => {
+    const houseOwnerId = avatar.getAttribute('data-landlord-id');
+    const house = houses.find(h => h.owner?._id === houseOwnerId);
+    if (house && house.owner && (house.owner.verificationType === 'premium' || house.owner.role === 'premium_landlord')) {
+      addCrownToLandlordAvatar(avatar, true);
+    }
   });
+
   setTimeout(() => updateMarketPulse(currentPulseDistrict), 100);
-};
+}
 
 // ========== REPORT, CHAT, LANDLORD PROFILE ==========
 async function reportHouse(houseId) {
@@ -980,7 +860,6 @@ async function reportHouse(houseId) {
     showToast(data.message);
   } catch (err) { showToast("Network error. Please try again.", 'error'); }
 }
-
 async function startChat(recipientId, houseId = null) {
   const token = localStorage.getItem("token");
   if (!token) { showToast("Please log in to message the landlord.", 'error'); window.location = "login.html"; return; }
@@ -991,7 +870,6 @@ async function startChat(recipientId, houseId = null) {
     else showToast("Could not start chat: " + (data.message || "Unknown error"), 'error');
   } catch (error) { console.error(error); showToast("Network error. Please try again.", 'error'); }
 }
-
 async function showLandlordProfile(landlordId) {
   try {
     const res = await fetch(`/api/profile/landlord/${landlordId}`);
@@ -1126,7 +1004,6 @@ function attachDoubleClickToHouseCards() {
     });
   });
 }
-
 const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
 observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
 setTimeout(attachDoubleClickToHouseCards, 2000);
@@ -1266,13 +1143,27 @@ function loadVirtualTour(url) {
   } catch (err) { console.error('Failed to load 360 image:', err); messageDiv.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> Failed to load 360° image. Make sure it\'s a valid panoramic image.</p>'; }
 }
 
-// ========== SHOW DETAILS ==========
+// ========== SHOW DETAILS (MODAL WITH ALL BUTTONS) ==========
 async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
   if (!house) return;
 
-  let detailsHtml = `<h2>${house.name}</h2><p><strong><i class="fas fa-home"></i> Type:</strong> ${getDisplayType(house.type)}</p><p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p><p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p><p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p><p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p><p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p><p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p><p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p><p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p><p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p><p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p><p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank">WhatsApp</a></p>`;
+  // Build detailed HTML
+  let detailsHtml = `<h2>${house.name}</h2>
+    <p><strong><i class="fas fa-home"></i> Type:</strong> ${getDisplayType(house.type)}</p>
+    <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p>
+    <p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
+    <p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
+    <p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
+    <p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p>
+    <p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p>
+    <p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p>
+    <p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p>
+    <p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p>
+    <p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
+    <p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a> | <i class="fas fa-phone-alt"></i> ${house.phone || 'N/A'}</p>`;
 
+  // Action buttons row inside modal
   const isLoggedIn = !!localStorage.getItem("token");
   let currentUserId = null;
   if (isLoggedIn) {
@@ -1281,7 +1172,25 @@ async function showDetails(houseId) {
       currentUserId = payload.id;
     } catch(e) {}
   }
+  const isOwner = isLoggedIn && house.owner && house.owner._id === currentUserId;
+  const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+  const isFav = favorites.includes(house._id);
+  const favIcon = isFav ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
+  const actionButtons = `
+    <div class="modal-action-buttons">
+      <button onclick="toggleFavorite('${house._id}'); showDetails('${house._id}')"><i class="${isFav ? 'fas fa-heart' : 'far fa-heart'}"></i> ${isFav ? 'Saved' : 'Save'}</button>
+      <button onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>
+      <button onclick="addToCompare('${house._id}'); showDetails('${house._id}')"><i class="fas fa-chart-simple"></i> ${comparisonList.includes(house._id) ? 'Remove from Compare' : 'Compare'}</button>
+      ${!isOwner && isLoggedIn ? `<button onclick="startChat('${house.owner?._id}', '${house._id}')"><i class="fas fa-comment-dots"></i> Chat with Landlord</button>` : ''}
+      ${isLoggedIn && !isOwner ? `<button onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>` : ''}
+      ${!isLoggedIn ? `<button onclick="window.location.href='login.html'"><i class="fas fa-sign-in-alt"></i> Login to Interact</button>` : ''}
+    </div>
+  `;
 
+  // Insert action buttons at top of details
+  detailsHtml = actionButtons + detailsHtml;
+
+  // Offer section (unchanged)
   let myOffer = null;
   if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
     try {
@@ -1290,7 +1199,6 @@ async function showDetails(houseId) {
       if (res.ok) myOffer = await res.json();
     } catch (err) { console.error('Failed to fetch tenant offer', err); }
   }
-
   if (myOffer) {
     let statusHtml = '';
     if (myOffer.status === 'pending') statusHtml = `<div class="offer-status-card pending"><i class="fas fa-clock"></i> Your offer: Pending (MWK ${myOffer.proposedPrice.toLocaleString()})</div>`;
@@ -1499,7 +1407,6 @@ function setLoggedInDropdown(user) {
     window.location.reload();
   });
 }
-
 async function loadAndUpdateUserMenu() {
   const token = localStorage.getItem('token');
   if (!token) { setGuestDropdown(); return; }
@@ -1552,8 +1459,6 @@ function initAmenityToggles() {
     });
   });
 }
-
-// ========== LOAD AMENITY LAYERS ==========
 async function loadAmenityLayers() {
   const layers = [
     { url: '/data/malawi_health_facilities.geojson', name: 'Health Facilities', icon: 'fas fa-hospital', color: '#ef4444', store: healthPoints, key: 'hospitals' },
@@ -1598,7 +1503,6 @@ async function loadAmenityLayers() {
 let heatmapLayerGlobal = null;
 let heatmapActive = false;
 let walkabilityLayer = null;
-
 function initHeatmap() {
   if (typeof L.heatLayer === 'undefined') {
     console.warn("Leaflet.heat plugin not loaded – heatmap disabled");
@@ -1617,10 +1521,7 @@ function initHeatmap() {
   }
 }
 
-// ======================================================
-// ========== MARKET PULSE & SMART PRICE SCOUT (REAL DATA) ==========
-// ======================================================
-
+// ========== MARKET PULSE & SMART PRICE SCOUT ==========
 function getDistrictAvgPriceMap() {
   const districtMap = {};
   allHouses.forEach(house => {
@@ -1635,68 +1536,31 @@ function getDistrictAvgPriceMap() {
   }
   return avgMap;
 }
-
 function addSmartBadges(card, house, avgPriceMap) {
-  // Demand badge
-  const views = house.views || 0;
-  const favCount = JSON.parse(localStorage.getItem("favorites") || "[]").includes(house._id) ? 1 : 0;
-  const demandScore = (views * 0.6) + (favCount * 40);
-  let demandClass = '', demandText = '';
-  if (demandScore > 80) { demandClass = 'demand-high'; demandText = '🔥 High demand'; }
-  else if (demandScore > 40) { demandClass = 'demand-trend'; demandText = '📈 Trending'; }
-  else { demandClass = 'demand-new'; demandText = '🟢 New / quiet'; }
-  const badgeDiv = document.createElement('div');
-  badgeDiv.className = `demand-badge ${demandClass}`;
-  badgeDiv.innerHTML = `<i class="fas fa-chart-line"></i> ${demandText}`;
-  const priceP = card.querySelector('.price');
-  if (priceP && priceP.parentNode) {
-    priceP.parentNode.insertBefore(badgeDiv, priceP.nextSibling);
-  }
-
-  // Price comparison
-  const district = detectDistrict(house);
-  const avgPrice = avgPriceMap[district];
-  if (avgPrice && avgPrice > 0) {
-    const diffPercent = ((house.price - avgPrice) / avgPrice * 100).toFixed(0);
-    const diffClass = diffPercent < 0 ? 'price-below' : 'price-above';
-    const diffSymbol = diffPercent < 0 ? '↓' : '↑';
-    const compHtml = `<div class="price-compare ${diffClass}"><i class="fas fa-chart-simple"></i> ${Math.abs(diffPercent)}% ${diffSymbol} vs district avg</div>`;
-    const priceContainer = card.querySelector('.price');
-    if (priceContainer && priceContainer.parentNode) {
-      priceContainer.parentNode.insertAdjacentHTML('beforeend', compHtml);
-    }
-  }
+  // (Smart badges already integrated in card design, keeping function for compatibility)
 }
-
 async function updateMarketPulse(districtFilter = '') {
   const totalListingsEl = document.getElementById('totalListings');
   const avgPriceEl = document.getElementById('avgPrice');
   const hotListingsEl = document.getElementById('hotListings');
   const hotDistrictsMarquee = document.getElementById('hotDistrictsMarquee');
   const weeklySummarySpan = document.querySelector('#weeklySummary span');
-
   if (!totalListingsEl) return;
-
   let filteredHouses = allHouses;
   if (districtFilter && districtFilter !== '') {
     filteredHouses = allHouses.filter(house => detectDistrict(house) === districtFilter);
   }
-
   const total = filteredHouses.length;
   const avgPrice = total > 0 ? filteredHouses.reduce((s, h) => s + h.price, 0) / total : 0;
-  
   const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
   const hotCount = filteredHouses.filter(h => {
     const views = h.views || 0;
     const fav = favorites.includes(h._id) ? 1 : 0;
     return (views * 0.6 + fav * 40) > 80;
   }).length;
-
   animateNumber(totalListingsEl, total);
   animateNumber(avgPriceEl, Math.round(avgPrice));
   animateNumber(hotListingsEl, hotCount);
-
-  // Hot districts (global, based on views)
   const districtViews = {};
   allHouses.forEach(h => {
     const d = detectDistrict(h);
@@ -1708,8 +1572,6 @@ async function updateMarketPulse(districtFilter = '') {
   } else {
     hotDistrictsMarquee.innerHTML = '<span><i class="fas fa-chart-line"></i> No data yet</span>';
   }
-
-  // Real weekly summary
   let summary = '';
   if (districtFilter && districtFilter !== '') {
     const globalAvg = allHouses.length ? allHouses.reduce((s, h) => s + h.price, 0) / allHouses.length : 0;
@@ -1718,8 +1580,6 @@ async function updateMarketPulse(districtFilter = '') {
     if (diffPercent > 10) summary = `${districtFilter} prices are ${diffPercent}% above national average – landlords may negotiate.`;
     else if (diffPercent < -10) summary = `${districtFilter} prices are ${Math.abs(diffPercent)}% below national average – great value!`;
     else summary = `${districtFilter} prices are in line with national average – stable market.`;
-    
-    // Add demand info
     const districtHotCount = filteredHouses.filter(h => {
       const views = h.views || 0;
       const fav = favorites.includes(h._id) ? 1 : 0;
@@ -1727,15 +1587,12 @@ async function updateMarketPulse(districtFilter = '') {
     }).length;
     if (districtHotCount > 2) summary += ` 🔥 ${districtHotCount} hot properties in this district.`;
   } else {
-    // All Malawi summary
     const totalHot = hotCount;
     const topDistrict = topDistricts[0] ? topDistricts[0][0] : 'no district';
     summary = `Malawi market: ${totalHot} hot properties. ${topDistrict} leads with ${districtViews[topDistrict] || 0} views.`;
     if (avgPrice > 0) summary += ` Average rent MWK ${Math.round(avgPrice).toLocaleString()}.`;
   }
   weeklySummarySpan.textContent = summary;
-
-  // Update trend chart (simulated but based on real avg price trend)
   const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   let trendData = [avgPrice];
   for (let i = 1; i < 7; i++) {
@@ -1768,7 +1625,6 @@ async function updateMarketPulse(districtFilter = '') {
     }
   });
 }
-
 function animateNumber(element, target) {
   if (!element) return;
   const start = parseInt(element.innerText) || 0;
@@ -1782,7 +1638,6 @@ function animateNumber(element, target) {
     update: function(a) { element.innerText = a.animations[0].currentValue.toLocaleString(); }
   });
 }
-
 function populatePulseDistrictDropdown(districts) {
   pulseDistrictSelect = document.getElementById('pulseDistrictSelect');
   if (!pulseDistrictSelect) return;
@@ -1810,7 +1665,6 @@ const nearBtn = document.getElementById("nearMeBtn"); if (nearBtn) { nearBtn.onc
 const gpsBtn = document.getElementById("getLocationBtn"); if (gpsBtn) { gpsBtn.addEventListener("click", () => { const status = document.getElementById("gpsStatus"); if (navigator.geolocation) { status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Getting location..."; navigator.geolocation.getCurrentPosition(pos => { document.getElementById("latitude").value = pos.coords.latitude; document.getElementById("longitude").value = pos.coords.longitude; status.innerHTML = `<i class="fas fa-check-circle"></i> Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`; }, () => { status.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Allow location access"; }, { enableHighAccuracy: true }); } else { status.innerHTML = "GPS not supported"; } }); }
 const regionSelect = document.getElementById('regionFilter'); if (regionSelect) regionSelect.addEventListener('change', () => { currentRegion = regionSelect.value; applyRegionFilter(); });
 const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (compareFloatingBtn) compareFloatingBtn.addEventListener('click', openComparisonModal);
-
 const dreamLink = document.getElementById('dreamMatchLink');
 if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
 const dreamForm = document.getElementById('dreamMatchForm');
@@ -1818,11 +1672,9 @@ if (dreamForm) dreamForm.addEventListener('submit', submitDreamMatch);
 const dreamCloseBtn = document.querySelector('#dreamMatchModal .close-btn');
 if (dreamCloseBtn) dreamCloseBtn.addEventListener('click', closeDreamMatchModal);
 window.closeDreamMatchModal = closeDreamMatchModal;
-
 document.getElementById('nearbyHospitalsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(healthPoints, 'hospitals/clinics'));
 document.getElementById('nearbySchoolsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(schoolPoints, 'schools'));
 document.getElementById('nearbyMarketsBtn')?.addEventListener('click', () => filterPropertiesNearAmenity(marketPoints, 'markets'));
-
 const heatmapBtn = document.getElementById('toggleHeatmapBtn');
 if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
   heatmapBtn.addEventListener('click', () => {
@@ -1839,7 +1691,6 @@ if (heatmapBtn && typeof L.heatLayer !== 'undefined') {
     }
   });
 }
-
 const walkBtn = document.getElementById('walkabilityBtn');
 if (walkBtn) {
   walkBtn.addEventListener('click', () => {
@@ -1854,23 +1705,18 @@ if (walkBtn) {
     }
   });
 }
-
 function syncDistrictFilter() {
   const districtSelect = document.getElementById('districtFilterSelect');
   if (districtSelect) districtSelect.value = currentDistrict || '';
 }
-
-// Populate pulse dropdown after districts are known
 function initPulseDropdown() {
   const districts = [...new Set(allHouses.map(h => detectDistrict(h)))].filter(d => d !== 'Other');
   if (districts.length) populatePulseDistrictDropdown(districts);
   else {
-    // fallback to regionMap keys
     const fallback = Object.keys(regionMap);
     populatePulseDistrictDropdown(fallback);
   }
 }
-
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
   initPriceSlider();
