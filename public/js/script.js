@@ -46,6 +46,49 @@ function showToast(message, type = 'info') {
   setTimeout(() => toast.remove(), 3000);
 }
 
+// ========== CUSTOM MODAL (replaces alerts/prompts) ==========
+function showCustomModal(message, type = 'info', onConfirm = null, onCancel = null, inputFields = null) {
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+  let icon = '<i class="fas fa-info-circle"></i>';
+  let title = 'Information';
+  if (type === 'success') { icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; title = 'Success'; }
+  else if (type === 'error') { icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>'; title = 'Error'; }
+  else if (type === 'confirm') { icon = '<i class="fas fa-question-circle" style="color: #f59e0b;"></i>'; title = 'Confirmation'; }
+  
+  let inputHtml = '';
+  if (inputFields) {
+    inputHtml = '<div style="text-align:left; margin: 1rem 0;">';
+    inputFields.forEach(field => {
+      inputHtml += `<label>${field.label}</label>`;
+      if (field.type === 'textarea') inputHtml += `<textarea id="modal_${field.id}" placeholder="${field.placeholder || ''}"></textarea>`;
+      else if (field.type === 'select') {
+        inputHtml += `<select id="modal_${field.id}">`;
+        field.options.forEach(opt => inputHtml += `<option value="${opt.value}">${opt.label}</option>`);
+        inputHtml += `</select>`;
+      }
+      else inputHtml += `<input type="${field.type || 'text'}" id="modal_${field.id}" placeholder="${field.placeholder || ''}" value="${field.value || ''}">`;
+    });
+    inputHtml += '</div>';
+  }
+  
+  overlay.innerHTML = `<div class="custom-modal">${icon}<h3>${title}</h3><p>${message}</p>${inputHtml}<div class="custom-modal-buttons">${type === 'confirm' ? '<button class="custom-modal-btn confirm">Yes, Proceed</button><button class="custom-modal-btn cancel">Cancel</button>' : '<button class="custom-modal-btn confirm">OK</button>'}</div></div>`;
+  document.body.appendChild(overlay);
+  const confirmBtn = overlay.querySelector('.confirm');
+  const cancelBtn = overlay.querySelector('.cancel');
+  confirmBtn?.addEventListener('click', () => {
+    const inputs = {};
+    if (inputFields) {
+      inputFields.forEach(field => {
+        inputs[field.id] = document.getElementById(`modal_${field.id}`).value;
+      });
+    }
+    overlay.remove();
+    if (onConfirm) onConfirm(inputs);
+  });
+  cancelBtn?.addEventListener('click', () => { overlay.remove(); if (onCancel) onCancel(); });
+}
+
 // ========== CUSTOM VERIFIED BADGE (SVG) ==========
 function fbSaturatedSky(size = 18, scallops = 12, depth = 3.5) {
   const cx = size/2, cy = size/2, r = size/2 - 2;
@@ -405,12 +448,12 @@ function renderMarkers(houses) {
   });
 }
 
-// ========== FETCH HOUSES ==========
+// ========== FETCH HOUSES (UPDATED: fetch more for market pulse) ==========
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
     const params = new URLSearchParams();
     params.append('page', page);
-    params.append('limit', 12);
+    params.append('limit', 200); // Increased to fetch all houses for accurate market pulse
     if (type !== 'all') params.append('type', type);
     if (filters.minPrice) params.append('minPrice', filters.minPrice);
     if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
@@ -662,7 +705,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</tr></tbody></table>`;
+  tableHtml += `<table></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -677,7 +720,7 @@ function openComparisonModal() {
 }
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
-// ========== RENDER HOUSE CARDS (NEW SIMPLIFIED DESIGN) ==========
+// ========== RENDER HOUSE CARDS (UPDATED: added property type badge, price change, trending/new badges) ==========
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
@@ -720,12 +763,29 @@ function renderHouses(houses) {
     else if (house.rentalStatus === 'pending') rentalStatusBadge = '<span class="badge pending"><i class="fas fa-clock"></i> Pending</span>';
     const featuredBadge = house.featured ? '<span class="badge featured"><i class="fas fa-star"></i> FEATURED</span>' : '';
     let trendingBadge = '';
-    if (house.views && house.views > 100) trendingBadge = '<span class="badge demand-trend"><i class="fas fa-chart-line"></i> Trending</span>';
-    else if (house.isNew) trendingBadge = '<span class="badge demand-new"><i class="fas fa-sparkles"></i> New</span>';
+    if (house.views && house.views > 100) trendingBadge = '<span class="trending-badge"><i class="fas fa-chart-line"></i> Trending</span>';
+    else if (house.isNew) trendingBadge = '<span class="new-badge"><i class="fas fa-sparkles"></i> New</span>';
     const statusRow = `<div class="status-badges" style="display:flex; flex-wrap:wrap; gap:4px; margin: 4px 0;">${rentalStatusBadge} ${featuredBadge} ${trendingBadge}</div>`;
 
-    // Price display
-    let priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+    // Property type badge (gradient + icon)
+    const typeIcon = getTypeIcon(house.type);
+    const displayType = getDisplayType(house.type);
+    const propertyTypeBadge = `<div class="property-type-badge-card"><i class="fas ${typeIcon}"></i> ${displayType}</div>`;
+
+    // Price display with percentage change if oldPrice exists
+    let priceHtml = '';
+    const priceValue = house.price;
+    const formattedPrice = `MWK ${Number(priceValue).toLocaleString()}`;
+    if (house.oldPrice && house.oldPrice !== priceValue) {
+      const oldPrice = house.oldPrice;
+      const change = priceValue - oldPrice;
+      const percent = ((change / oldPrice) * 100).toFixed(0);
+      const changeClass = change < 0 ? 'negative' : 'positive';
+      const changeSymbol = change < 0 ? '↓' : '↑';
+      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${changeSymbol} ${Math.abs(percent)}%</span> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+    } else {
+      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+    }
 
     // Amenities row (only furnished/self contained per type)
     let amenitiesHtml = '';
@@ -775,6 +835,7 @@ function renderHouses(houses) {
       <div class="house-card-content">
         ${landlordInfoHtml}
         ${statusRow}
+        ${propertyTypeBadge}
         <h3>${house.name}</h3>
         <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
         ${priceHtml}
@@ -848,17 +909,19 @@ function renderHouses(houses) {
   setTimeout(() => updateMarketPulse(currentPulseDistrict), 100);
 }
 
-// ========== REPORT, CHAT, LANDLORD PROFILE ==========
+// ========== REPORT, CHAT, LANDLORD PROFILE (UPDATED: replaced prompt with custom modal) ==========
 async function reportHouse(houseId) {
   const token = localStorage.getItem("token");
   if (!token) { showToast("Please login to report.", 'error'); return; }
-  const reason = prompt("Reason for reporting (e.g., fake listing, wrong price):");
-  if (!reason) return;
-  try {
-    const res = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ houseId, reason }) });
-    const data = await res.json();
-    showToast(data.message);
-  } catch (err) { showToast("Network error. Please try again.", 'error'); }
+  showCustomModal('Please provide a reason for reporting this property:', 'confirm', async (inputs) => {
+    const reason = inputs.reason;
+    if (!reason) { showToast('Reason is required.', 'error'); return; }
+    try {
+      const res = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ houseId, reason }) });
+      const data = await res.json();
+      showToast(data.message);
+    } catch (err) { showToast("Network error. Please try again.", 'error'); }
+  }, null, [{ id: 'reason', label: 'Reason', type: 'textarea', placeholder: 'e.g., fake listing, wrong price...' }]);
 }
 async function startChat(recipientId, houseId = null) {
   const token = localStorage.getItem("token");
@@ -1143,12 +1206,12 @@ function loadVirtualTour(url) {
   } catch (err) { console.error('Failed to load 360 image:', err); messageDiv.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> Failed to load 360° image. Make sure it\'s a valid panoramic image.</p>'; }
 }
 
-// ========== SHOW DETAILS (MODAL WITH ALL BUTTONS) ==========
+// ========== SHOW DETAILS (MODAL WITH ALL BUTTONS, HIDDEN PHONE NUMBER) ==========
 async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
   if (!house) return;
 
-  // Build detailed HTML
+  // Build detailed HTML (phone number removed, only WhatsApp)
   let detailsHtml = `<h2>${house.name}</h2>
     <p><strong><i class="fas fa-home"></i> Type:</strong> ${getDisplayType(house.type)}</p>
     <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p>
@@ -1161,7 +1224,7 @@ async function showDetails(houseId) {
     <p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p>
     <p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p>
     <p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
-    <p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a> | <i class="fas fa-phone-alt"></i> ${house.phone || 'N/A'}</p>`;
+    <p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank" style="background: linear-gradient(135deg, #25D366, #128C7E); padding: 4px 12px; border-radius: 40px; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-whatsapp"></i> WhatsApp</a></p>`;
 
   // Action buttons row inside modal
   const isLoggedIn = !!localStorage.getItem("token");
@@ -1175,7 +1238,6 @@ async function showDetails(houseId) {
   const isOwner = isLoggedIn && house.owner && house.owner._id === currentUserId;
   const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
   const isFav = favorites.includes(house._id);
-  const favIcon = isFav ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
   const actionButtons = `
     <div class="modal-action-buttons">
       <button onclick="toggleFavorite('${house._id}'); showDetails('${house._id}')"><i class="${isFav ? 'fas fa-heart' : 'far fa-heart'}"></i> ${isFav ? 'Saved' : 'Save'}</button>
@@ -1190,7 +1252,7 @@ async function showDetails(houseId) {
   // Insert action buttons at top of details
   detailsHtml = actionButtons + detailsHtml;
 
-  // Offer section (unchanged)
+  // Offer section (unchanged but with custom modal for confirmations)
   let myOffer = null;
   if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
     try {
@@ -1213,22 +1275,24 @@ async function showDetails(houseId) {
     const acceptBtn = document.getElementById('acceptCounterFromModalBtn');
     const rejectBtn = document.getElementById('rejectCounterFromModalBtn');
     if (acceptBtn) acceptBtn.addEventListener('click', async () => {
-      if (!confirm('Accept the landlord’s counter offer?')) return;
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`/api/offers/${myOffer._id}/accept-tenant`, { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
-        if (res.ok) { showToast('Counter offer accepted! The landlord will contact you.'); closePropertyModal(); }
-        else { const err = await res.json(); showToast('Failed: ' + err.message, 'error'); }
-      } catch (err) { showToast('Network error', 'error'); }
+      showCustomModal('Accept the landlord’s counter offer?', 'confirm', async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/offers/${myOffer._id}/accept-tenant`, { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
+          if (res.ok) { showToast('Counter offer accepted! The landlord will contact you.'); closePropertyModal(); }
+          else { const err = await res.json(); showToast('Failed: ' + err.message, 'error'); }
+        } catch (err) { showToast('Network error', 'error'); }
+      });
     });
     if (rejectBtn) rejectBtn.addEventListener('click', async () => {
-      if (!confirm('Reject the landlord’s counter offer?')) return;
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`/api/offers/${myOffer._id}/reject-tenant`, { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
-        if (res.ok) { showToast('Counter offer rejected.'); closePropertyModal(); }
-        else { const err = await res.json(); showToast('Failed: ' + err.message, 'error'); }
-      } catch (err) { showToast('Network error', 'error'); }
+      showCustomModal('Reject the landlord’s counter offer?', 'confirm', async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/offers/${myOffer._id}/reject-tenant`, { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
+          if (res.ok) { showToast('Counter offer rejected.'); closePropertyModal(); }
+          else { const err = await res.json(); showToast('Failed: ' + err.message, 'error'); }
+        } catch (err) { showToast('Network error', 'error'); }
+      });
     });
   }
 
@@ -1310,9 +1374,11 @@ async function showDetails(houseId) {
         const data = await res.json();
         if (res.ok) {
           const negotiationUrl = `${window.location.origin}/lease-negotiation.html?id=${data._id}`;
-          const copyLink = confirm(`Lease negotiation created!\n\nShare this link with the tenant:\n${negotiationUrl}\n\nClick OK to copy the link to clipboard.`);
-          if (copyLink) { await navigator.clipboard.writeText(negotiationUrl); showToast('Link copied to clipboard! Send it to the tenant.'); }
-          window.location.href = negotiationUrl;
+          showCustomModal(`Lease negotiation created!\n\nShare this link with the tenant:\n${negotiationUrl}\n\nClick OK to copy the link to clipboard.`, 'confirm', async () => {
+            await navigator.clipboard.writeText(negotiationUrl);
+            showToast('Link copied to clipboard! Send it to the tenant.');
+            window.location.href = negotiationUrl;
+          });
         } else { showToast('Error: ' + data.message, 'error'); }
       } catch (err) { showToast('Network error: ' + err.message, 'error'); }
     };
