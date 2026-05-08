@@ -64,7 +64,7 @@ function getLocation() {
   }, () => statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Unable to get location.');
 }
 
-// ========== PROPERTY TYPES & DETAILS (amenities removed from here) ==========
+// ========== PROPERTY TYPES & FIELDS (ORDER: common first, then type-specific) ==========
 const propertyTypeFields = {
   House: ['bedrooms','bathrooms','selfContained','parkingSpaces'],
   Apartment: ['bedrooms','bathrooms','floorLevel','hasElevator','selfContained','parking'],
@@ -77,6 +77,32 @@ const propertyTypeFields = {
   StudentAccommodation: ['nearbyUniversity','studentOnly','studyRoom','mealPlan','counselingService','securityGuard','laundry','wifiInRooms','bicycleParking']
 };
 
+function formatLabel(field) {
+  if (field === 'hasElevator') return 'Elevator';
+  if (field === 'hasReception') return 'Reception';
+  if (field === 'instantBooking') return 'Instant Booking';
+  if (field === 'selfCheckin') return 'Self Check-in';
+  if (field === 'towelsLinen') return 'Towels & Linen';
+  if (field === 'studentOnly') return 'Students Only';
+  if (field === 'studyRoom') return 'Study Room';
+  if (field === 'mealPlan') return 'Meal Plan';
+  if (field === 'counselingService') return 'Counseling Service';
+  if (field === 'securityGuard') return 'Security Guard';
+  if (field === 'wifiInRooms') return 'WiFi in Rooms';
+  if (field === 'bicycleParking') return 'Bicycle Parking';
+  if (field === 'lockerProvided') return 'Locker Provided';
+  if (field === 'commonKitchen') return 'Common Kitchen';
+  if (field === 'sharedBathroom') return 'Shared Bathroom';
+  if (field === 'laundryService') return 'Laundry Service';
+  if (field === 'kitchenAccess') return 'Kitchen Access';
+  if (field === 'waterHeater') return 'Water Heater';
+  if (field === 'weeklyCleaning') return 'Weekly Cleaning';
+  if (field === 'furnitureIncluded') return 'Furniture Included';
+  if (field === 'utilitiesIncluded') return 'Utilities Included';
+  if (field === 'internetSpeed') return 'Internet Speed (Mbps)';
+  return field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+}
+
 let selectedType = null;
 let typeSpecificData = {};
 
@@ -84,13 +110,15 @@ function generatePropertyDetailsFields(type) {
   const container = document.getElementById('propertyDetailsContainer');
   if (!container) return;
   const fields = propertyTypeFields[type] || [];
-  if (fields.length === 0) { container.innerHTML = '<p class="info">No additional details needed.</p>'; return; }
-  let html = '<div class="details-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:0.8rem;">';
+  if (fields.length === 0) {
+    container.innerHTML = '<p class="info" style="padding:1rem; text-align:center; opacity:0.7;">No additional details needed.</p>';
+    return;
+  }
+  let html = '<div class="details-grid">';
   fields.forEach(field => {
-    const label = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+    const label = formatLabel(field);
     let inputHtml = '';
-    // Boolean fields become dropdown (Yes/No)
-    if (['selfContained','hasElevator','hasReception','instantBooking','selfCheckin','towelsLinen','studentOnly','studyRoom','mealPlan','counselingService','wifiInRooms','bicycleParking','lockerProvided','commonKitchen','sharedBathroom','laundryService','security','kitchenAccess','waterHeater','weeklyCleaning'].includes(field)) {
+    if (['selfContained','hasElevator','hasReception','instantBooking','selfCheckin','towelsLinen','studentOnly','studyRoom','mealPlan','counselingService','wifiInRooms','bicycleParking','lockerProvided','commonKitchen','sharedBathroom','laundryService','kitchenAccess','waterHeater','weeklyCleaning','furnitureIncluded','utilitiesIncluded','securityGuard'].includes(field)) {
       inputHtml = `<select id="detail_${field}">
         <option value="true">Yes</option>
         <option value="false" selected>No</option>
@@ -98,9 +126,10 @@ function generatePropertyDetailsFields(type) {
     } else if (field === 'roomType') inputHtml = `<select id="detail_${field}"><option value="single">Single</option><option value="double">Double</option><option value="shared">Shared</option></select>`;
     else if (field === 'bathroomType') inputHtml = `<select id="detail_${field}"><option value="private">Private</option><option value="shared">Shared</option><option value="outside">Outside</option></select>`;
     else if (field === 'genderPreference') inputHtml = `<select id="detail_${field}"><option value="boys">Boys only</option><option value="girls">Girls only</option><option value="mixed">Mixed</option></select>`;
-    else if (field === 'furnitureIncluded' || field === 'utilitiesIncluded') inputHtml = `<input type="text" id="detail_${field}" placeholder="e.g., bed,sofa / water,electricity">`;
     else if (field === 'dailyPrice' || field === 'weeklyPrice' || field === 'cleaningFee' || field === 'securityDeposit')
-      inputHtml = `<input type="number" id="detail_${field}" placeholder="MWK">`;
+      inputHtml = `<input type="number" id="detail_${field}" placeholder="MWK" step="1000">`;
+    else if (field === 'internetSpeed')
+      inputHtml = `<input type="number" id="detail_${field}" placeholder="e.g., 50">`;
     else inputHtml = `<input type="text" id="detail_${field}" placeholder="Enter ${label.toLowerCase()}">`;
     html += `<div class="form-group"><label>${label}</label>${inputHtml}</div>`;
   });
@@ -329,7 +358,7 @@ async function loadUnreadCount() {
 }
 setInterval(loadUnreadCount, 60000);
 
-// ========== MY HOUSES with pagination ==========
+// ========== MY HOUSES ==========
 async function loadMyHouses() {
   try {
     const res = await fetch('/api/houses/my-houses', { headers: { Authorization: 'Bearer ' + token } });
@@ -452,7 +481,7 @@ async function deleteHouse(id) {
   });
 }
 
-// ========== IMAGE PREVIEW WITH REMOVE BUTTON ==========
+// ========== IMAGE PREVIEW ==========
 let uploadFileList = [];
 let editUploadFileList = [];
 
@@ -503,7 +532,7 @@ document.getElementById('editImages').addEventListener('change', function(e) {
   updateImagePreview('editImagePreview', editUploadFileList, 'editImages');
 });
 
-// ========== EDIT MODAL (FIXED MAP) ==========
+// ========== EDIT MODAL ==========
 function openEditModal(houseId) {
   currentEditId = houseId;
   const house = myHouses.find(h => h._id === houseId);
@@ -539,20 +568,17 @@ function openEditModal(houseId) {
   
   document.getElementById('editModal').style.display = 'block';
   
-  // Activate first tab
   document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
   document.getElementById('editBasic').classList.add('active');
   document.querySelectorAll('.edit-tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelector('.edit-tab-btn[data-edit-tab="basic"]').classList.add('active');
   
-  // Remove any existing map to prevent duplication
   if (editMap) {
     editMap.remove();
     editMap = null;
     editMarker = null;
   }
   
-  // Function to initialise the map in the location tab
   const initLocationMap = () => {
     const lat = parseFloat(document.getElementById('editLat').value) || -15.7861;
     const lng = parseFloat(document.getElementById('editLng').value) || 35.0058;
@@ -568,26 +594,20 @@ function openEditModal(houseId) {
       if (editMarker) editMap.removeLayer(editMarker);
       editMarker = L.marker(ev.latlng).addTo(editMap).bindPopup('Selected location').openPopup();
     });
-    // Force map to resize correctly after a short delay
     setTimeout(() => { editMap.invalidateSize(); }, 200);
   };
   
-  // Attach click event to the location tab button
   const locationTabBtn = document.querySelector('.edit-tab-btn[data-edit-tab="location"]');
   if (locationTabBtn) {
-    // Remove previous listeners to avoid duplicates
     const newBtn = locationTabBtn.cloneNode(true);
     locationTabBtn.parentNode.replaceChild(newBtn, locationTabBtn);
     newBtn.addEventListener('click', (e) => {
-      // Switch tab manually
       document.querySelectorAll('.edit-tab-pane').forEach(pane => pane.classList.remove('active'));
       document.getElementById('editLocationTab').classList.add('active');
       document.querySelectorAll('.edit-tab-btn').forEach(b => b.classList.remove('active'));
       newBtn.classList.add('active');
-      // Initialise map after the tab is visible
       setTimeout(initLocationMap, 100);
     });
-    // If the location tab is already active (unlikely), init immediately
     if (document.getElementById('editLocationTab').classList.contains('active')) {
       setTimeout(initLocationMap, 100);
     }
@@ -655,7 +675,6 @@ async function loadHouseStats() {
   } catch (err) { console.error(err); }
 }
 
-// ========== REAL AI INSIGHT ==========
 function updateRealAIInsight() {
   if (!myHouses.length) {
     document.getElementById('insightText').innerHTML = 'Add your first property to receive AI insights.';
@@ -671,7 +690,6 @@ function updateRealAIInsight() {
   });
   const avgViews = totalViews / myHouses.length;
   const avgRating = totalRating / myHouses.length;
-  // Platform average (can be fetched from backend, but fallback to 120)
   let globalAvgViews = 120;
   fetch('/api/stats/global')
     .then(res => res.json())
@@ -896,7 +914,7 @@ function addPremiumCrownToAvatar() {
   addCrown(document.getElementById('profileAvatar'));
 }
 
-// ========== WIZARD STEPS & TAB SWITCHING ==========
+// ========== WIZARD STEPS ==========
 let currentStep = 1;
 const steps = [1,2,3,4];
 function updateWizard() {
@@ -965,7 +983,6 @@ document.getElementById('houseForm').addEventListener('submit', async e => {
   formData.append('phone', phone);
   formData.append('description', description);
   formData.append('type', selectedType);
-  // Amenities from step3 (all checkboxes)
   const amenityFields = ['wifi','parking','furnished','petFriendly','pool','ac','garden','guard','gym','balcony'];
   amenityFields.forEach(a => {
     const cb = document.querySelector(`input[name="${a}"]`);
@@ -973,7 +990,6 @@ document.getElementById('houseForm').addEventListener('submit', async e => {
   });
   formData.append('condition', document.querySelector('select[name="condition"]')?.value || 'Good');
   formData.append('gender', document.querySelector('select[name="gender"]')?.value || 'none');
-  // selfContained is inside property details (already collected via collectPropertyDetails)
   const lat = document.getElementById('latitude').value;
   const lng = document.getElementById('longitude').value;
   if (lat) formData.append('lat', lat);
