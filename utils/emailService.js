@@ -1,34 +1,50 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 require("dotenv").config();
 
-// Create transporter with explicit IPv4 and correct Gmail SMTP settings
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-// Force IPv4 only for Gmail domains
-const originalLookup = require("dns").lookup;
-require("dns").lookup = function (hostname, options, callback) {
+// ============================================================
+// FORCE IPv4 FOR ALL HOSTNAME RESOLUTIONS (Gmail & Google)
+// ============================================================
+const originalLookup = dns.lookup;
+dns.lookup = function (hostname, options, callback) {
   if (typeof options === "function") {
     callback = options;
     options = {};
   }
+  // Force IPv4 for any Google/Gmail domain
   if (hostname.includes("gmail.com") || hostname.includes("google.com")) {
     options.family = 4;
   }
   return originalLookup(hostname, options, callback);
 };
 
-// ✅ Generic sendEmail (used by emailNotification.js)
+// ============================================================
+// CREATE TRANSPORTER WITH EXPLICIT IPv4 SOCKET OPTIONS
+// ============================================================
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true for 465, false for 587
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false, // only for development
+  },
+  // Force socket to use IPv4 only
+  socketOptions: {
+    family: 4
+  },
+  // Additional connection options
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
+});
+
+// ============================================================
+// GENERIC SEND EMAIL (used by emailNotification.js)
+// ============================================================
 async function sendEmail({ to, subject, html }) {
   const mailOptions = {
     from: `"Khomo Lathu" <${process.env.EMAIL_USER}>`,
@@ -39,7 +55,9 @@ async function sendEmail({ to, subject, html }) {
   await transporter.sendMail(mailOptions);
 }
 
-// Send verification email
+// ============================================================
+// VERIFICATION EMAIL
+// ============================================================
 async function sendVerificationEmail(email, token) {
   const verificationUrl = `${process.env.FRONTEND_URL || "https://rental-marketplace-irmj.onrender.com"}/verify-email.html?token=${token}`;
   const html = `
@@ -54,7 +72,9 @@ async function sendVerificationEmail(email, token) {
   await sendEmail({ to: email, subject: "Verify Your Email - Khomo Lathu", html });
 }
 
-// Send password reset email
+// ============================================================
+// PASSWORD RESET EMAIL
+// ============================================================
 async function sendPasswordResetEmail(email, token) {
   const resetUrl = `${process.env.FRONTEND_URL || "https://rental-marketplace-irmj.onrender.com"}/reset-password.html?token=${token}`;
   const html = `
