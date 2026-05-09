@@ -24,7 +24,7 @@ function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// ========== REGISTER (FIXED: email sent BEFORE saving user) ==========
+// ========== REGISTER (enhanced error reporting) ==========
 router.post("/register", authLimiter, validateRegister, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password, phone, role = "free" } = req.body;
@@ -60,11 +60,11 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
     res.json({ message: "Registration successful! Please check your email to verify your account." });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Registration failed" });
+    res.status(500).json({ message: "Registration failed: " + (err.message || "Unknown error") });
   }
 });
 
-// ========== VERIFY EMAIL ==========
+// ========== VERIFY EMAIL (unchanged) ==========
 router.get("/verify-email/:token", async (req, res) => {
   try {
     const user = await User.findOne({ emailVerificationToken: req.params.token });
@@ -79,7 +79,7 @@ router.get("/verify-email/:token", async (req, res) => {
   }
 });
 
-// ========== RESEND VERIFICATION ==========
+// ========== RESEND VERIFICATION (unchanged) ==========
 router.post("/resend-verification", authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
@@ -101,7 +101,7 @@ router.post("/resend-verification", authLimiter, async (req, res) => {
   }
 });
 
-// ========== FORGOT PASSWORD ==========
+// ========== FORGOT PASSWORD (unchanged) ==========
 router.post("/forgot-password", authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
@@ -121,7 +121,7 @@ router.post("/forgot-password", authLimiter, async (req, res) => {
   }
 });
 
-// ========== RESET PASSWORD ==========
+// ========== RESET PASSWORD (unchanged) ==========
 router.post("/reset-password", validateResetPassword, handleValidationErrors, async (req, res) => {
   try {
     const { token, newPassword } = req.body;
@@ -149,7 +149,7 @@ router.post("/reset-password", validateResetPassword, handleValidationErrors, as
   }
 });
 
-// ========== LOGIN (with fixed 2FA handling) ==========
+// ========== LOGIN (unchanged) ==========
 router.post("/login", authLimiter, validateLogin, handleValidationErrors, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -179,13 +179,11 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Reset failed attempts
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
     user.passwordChangedAt = Date.now();
     await user.save();
 
-    // 2FA enabled – return temporary token
     if (user.twoFactorEnabled) {
       const tempToken = jwt.sign(
         { id: user._id, role: user.role, twoFactorPending: true },
@@ -199,7 +197,6 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
       });
     }
 
-    // No 2FA – return final token
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -220,7 +217,7 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
   }
 });
 
-// ========== 2FA ENDPOINTS ==========
+// ========== 2FA ENDPOINTS (unchanged) ==========
 router.post("/enable-2fa", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -338,7 +335,7 @@ router.post("/verify-2fa-login", async (req, res) => {
   }
 });
 
-// ========== GET CURRENT USER ==========
+// ========== GET CURRENT USER (unchanged) ==========
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -353,7 +350,7 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
-// ========== GOOGLE LOGIN ==========
+// ========== GOOGLE LOGIN (enhanced role handling) ==========
 router.get("/google", (req, res, next) => {
   const role = req.query.role || "free";
   req.session.intendedRole = role;
@@ -370,20 +367,24 @@ router.get(
     try {
       const user = req.user;
       if (!user) return res.redirect("/login.html?error=google-auth-failed");
+      
       let finalRole = user.role;
       if (!user.role || user.role === "free") {
         const intendedRole = req.session.intendedRole || "free";
         if (intendedRole === "landlord" || intendedRole === "premium_user") {
           user.role = intendedRole;
-          await user.save().catch(err => console.error("Save error:", err));
+          await user.save();
         }
         finalRole = user.role;
       }
+      
       const token = jwt.sign(
         { id: user._id, role: finalRole },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );
+      
+      // Redirect to oauth-redirect.html with token and role
       res.redirect(`/oauth-redirect.html?token=${token}&role=${finalRole}`);
     } catch (err) {
       console.error("Google callback error:", err);
