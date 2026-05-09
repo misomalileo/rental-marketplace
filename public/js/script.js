@@ -705,7 +705,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `<table></tbody></table>`;
+  tableHtml += `</table></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -720,7 +720,7 @@ function openComparisonModal() {
 }
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
-// ========== RENDER HOUSE CARDS (UPDATED: added property type badge, price change, trending/new badges) ==========
+// ========== RENDER HOUSE CARDS (UPDATED: reads propertyDetails for type-specific fields) ==========
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
@@ -776,18 +776,19 @@ function renderHouses(houses) {
     let priceHtml = '';
     const priceValue = house.price;
     const formattedPrice = `MWK ${Number(priceValue).toLocaleString()}`;
+    const isShortStay = house.type === 'ShortStay';
     if (house.oldPrice && house.oldPrice !== priceValue) {
       const oldPrice = house.oldPrice;
       const change = priceValue - oldPrice;
       const percent = ((change / oldPrice) * 100).toFixed(0);
       const changeClass = change < 0 ? 'negative' : 'positive';
       const changeSymbol = change < 0 ? '↓' : '↑';
-      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${changeSymbol} ${Math.abs(percent)}%</span> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${changeSymbol} ${Math.abs(percent)}%</span> ${formattedPrice} ${isShortStay ? '' : (house.type === 'Hostel' ? '/ room' : '/ month')}</p>`;
     } else {
-      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> ${formattedPrice} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> ${formattedPrice} ${isShortStay ? '' : (house.type === 'Hostel' ? '/ room' : '/ month')}</p>`;
     }
 
-    // Amenities row (only furnished/self contained per type)
+    // Amenities row (only furnished/self contained)
     let amenitiesHtml = '';
     if (house.furnished || house.selfContained) {
       let amenitiesList = [];
@@ -796,29 +797,40 @@ function renderHouses(houses) {
       amenitiesHtml = `<div class="amenities-row">${amenitiesList.join(' • ')}</div>`;
     }
 
-    // Per-type specific fields
+    // Per-type specific fields – now read from propertyDetails
+    const pd = house.propertyDetails || {};
     let typeSpecificHtml = '';
     switch (house.type) {
       case 'Hostel':
-        typeSpecificHtml = `<p><i class="fas fa-hotel"></i> Total rooms: ${house.totalRooms || 'N/A'} | Vacancies: ${house.vacancies || 'N/A'}</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-hotel"></i> Total rooms: ${pd.totalRooms || house.totalRooms || 'N/A'} | Vacancies: ${pd.vacancies || house.vacancies || 'N/A'}</p>`;
         if (house.gender && house.gender !== 'none') typeSpecificHtml += `<p><i class="fas fa-venus-mars"></i> Gender: ${house.gender}</p>`;
         break;
       case 'Office':
-        typeSpecificHtml = `<p><i class="fas fa-chart-line"></i> Office size: ${house.officeSize || 'N/A'} sqm</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-chart-line"></i> Office size: ${pd.officeSize || house.officeSize || 'N/A'} sqm</p>`;
         break;
       case 'ShortStay':
-        typeSpecificHtml = `<p><i class="fas fa-sun"></i> Daily: MWK ${house.dailyPrice?.toLocaleString() || 'N/A'} | Weekly: MWK ${house.weeklyPrice?.toLocaleString() || 'N/A'}</p>`;
+        const daily = pd.dailyPrice || house.dailyPrice;
+        const weekly = pd.weeklyPrice || house.weeklyPrice;
+        typeSpecificHtml = `<p><i class="fas fa-sun"></i> Daily: MWK ${daily ? Number(daily).toLocaleString() : 'N/A'} | Weekly: MWK ${weekly ? Number(weekly).toLocaleString() : 'N/A'}</p>`;
         break;
       case 'SharedLiving':
-        typeSpecificHtml = `<p><i class="fas fa-users"></i> Total beds: ${house.totalBeds || 'N/A'} | Available: ${house.availableBeds || 'N/A'}</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-users"></i> Total beds: ${pd.totalBeds || house.totalBeds || 'N/A'} | Available: ${pd.availableBeds || house.availableBeds || 'N/A'}</p>`;
         if (house.gender && house.gender !== 'none') typeSpecificHtml += `<p><i class="fas fa-venus-mars"></i> Gender: ${house.gender}</p>`;
-        if (house.roomSize) typeSpecificHtml += `<p><i class="fas fa-ruler-combined"></i> Room size: ${house.roomSize} sqm</p>`;
+        if (pd.roomSize) typeSpecificHtml += `<p><i class="fas fa-ruler-combined"></i> Room size: ${pd.roomSize} sqm</p>`;
         break;
       case 'StudentAccommodation':
-        typeSpecificHtml = `<p><i class="fas fa-university"></i> Nearby: ${house.nearbyUniversity || 'N/A'}</p>`;
+        const nearbyUni = pd.nearbyUniversity || house.nearbyUniversity;
+        typeSpecificHtml = `<p><i class="fas fa-university"></i> Nearby: ${nearbyUni || 'N/A'}</p>`;
+        break;
+      case 'Room':
+        const roomType = pd.roomType || house.roomType || 'Standard';
+        typeSpecificHtml = `<p><i class="fas fa-door-open"></i> Room type: ${roomType}</p>`;
         break;
       default:
-        typeSpecificHtml = `<p><i class="fas fa-bed"></i> Bedrooms: ${house.bedrooms || 'N/A'}</p>`;
+        // For House, Apartment, FurnishedApartment – show bedrooms
+        const bedrooms = pd.bedrooms || house.bedrooms;
+        if (bedrooms) typeSpecificHtml = `<p><i class="fas fa-bed"></i> Bedrooms: ${bedrooms}</p>`;
+        else typeSpecificHtml = '';
         break;
     }
 
@@ -1206,25 +1218,59 @@ function loadVirtualTour(url) {
   } catch (err) { console.error('Failed to load 360 image:', err); messageDiv.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> Failed to load 360° image. Make sure it\'s a valid panoramic image.</p>'; }
 }
 
-// ========== SHOW DETAILS (MODAL WITH ALL BUTTONS, HIDDEN PHONE NUMBER) ==========
+// ========== SHOW DETAILS (MODAL WITH ALL BUTTONS, READS propertyDetails) ==========
 async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
   if (!house) return;
 
-  // Build detailed HTML (phone number removed, only WhatsApp)
+  const pd = house.propertyDetails || {};
+
+  // Build detailed HTML (phone number hidden, only WhatsApp)
   let detailsHtml = `<h2>${house.name}</h2>
     <p><strong><i class="fas fa-home"></i> Type:</strong> ${getDisplayType(house.type)}</p>
-    <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p>
-    <p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>
-    <p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${house.bedrooms || 'N/A'}</p>
-    <p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${house.bathrooms || 'N/A'}</p>
+    <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p>`;
+
+  // Price section – handle ShortStay separately
+  if (house.type === 'ShortStay') {
+    const daily = pd.dailyPrice || house.dailyPrice;
+    const weekly = pd.weeklyPrice || house.weeklyPrice;
+    detailsHtml += `<p><strong><i class="fas fa-money-bill-wave"></i> Daily Price:</strong> MWK ${daily ? Number(daily).toLocaleString() : 'N/A'}</p>
+                    <p><strong><i class="fas fa-money-bill-wave"></i> Weekly Price:</strong> MWK ${weekly ? Number(weekly).toLocaleString() : 'N/A'}</p>`;
+  } else {
+    detailsHtml += `<p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+  }
+
+  detailsHtml += `<p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${pd.bedrooms || house.bedrooms || 'N/A'}</p>
+    <p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${pd.bathrooms || house.bathrooms || 'N/A'}</p>
     <p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p>
-    <p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p>
+    <p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${pd.selfContained || house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p>
     <p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p>
     <p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p>
     <p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p>
     <p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
     <p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank" style="background: linear-gradient(135deg, #25D366, #128C7E); padding: 4px 12px; border-radius: 40px; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-whatsapp"></i> WhatsApp</a></p>`;
+
+  // Additional type-specific details for modal
+  if (house.type === 'StudentAccommodation') {
+    const uni = pd.nearbyUniversity || house.nearbyUniversity;
+    if (uni) detailsHtml += `<p><strong><i class="fas fa-university"></i> Nearby University:</strong> ${uni}</p>`;
+  }
+  if (house.type === 'Office') {
+    const size = pd.officeSize || house.officeSize;
+    if (size) detailsHtml += `<p><strong><i class="fas fa-chart-line"></i> Office Size:</strong> ${size} sqm</p>`;
+  }
+  if (house.type === 'Room') {
+    const roomType = pd.roomType || house.roomType;
+    if (roomType) detailsHtml += `<p><strong><i class="fas fa-door-open"></i> Room Type:</strong> ${roomType}</p>`;
+  }
+  if (house.type === 'SharedLiving') {
+    const availBeds = pd.availableBeds || house.availableBeds;
+    if (availBeds) detailsHtml += `<p><strong><i class="fas fa-bed"></i> Available Beds:</strong> ${availBeds}</p>`;
+  }
+  if (house.type === 'Hostel') {
+    const vacancies = pd.vacancies || house.vacancies;
+    if (vacancies) detailsHtml += `<p><strong><i class="fas fa-bed"></i> Vacancies:</strong> ${vacancies}</p>`;
+  }
 
   // Action buttons row inside modal
   const isLoggedIn = !!localStorage.getItem("token");
@@ -1249,7 +1295,6 @@ async function showDetails(houseId) {
     </div>
   `;
 
-  // Insert action buttons at top of details
   detailsHtml = actionButtons + detailsHtml;
 
   // Offer section (unchanged but with custom modal for confirmations)
