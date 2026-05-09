@@ -1,31 +1,31 @@
-const { Resend } = require('resend');
+const Brevo = require('@getbrevo/brevo');
 require('dotenv').config();
 
-// Initialize Resend with your API key from environment variables
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Brevo API client
+let apiInstance = new Brevo.TransactionalEmailsApi();
+let apiKey = apiInstance.authentications['apiKey'];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
-// Sender email: use a verified domain or the default Resend test sender
-const FROM_EMAIL = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+// Sender email – you can use any email; Brevo will handle sending.
+// For best deliverability, later verify a domain, but this works immediately.
+const FROM_EMAIL = process.env.EMAIL_FROM || 'noreply@khomolathu.com';
 
 // ============================================================
 // GENERIC SEND EMAIL (used by emailNotification.js)
 // ============================================================
 async function sendEmail({ to, subject, html }) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: `Khomo Lathu <${FROM_EMAIL}>`,
-      to: [to],
-      subject: subject,
-      html: html,
-    });
-    if (error) {
-      console.error('Resend error:', error);
-      throw new Error(error.message);
-    }
-    console.log(`✅ Email sent to ${to}, id: ${data?.id}`);
+    let sendSmtpEmail = new Brevo.SendSmtpEmail();
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.to = [{ email: to }];
+    sendSmtpEmail.htmlContent = html;
+    sendSmtpEmail.sender = { email: FROM_EMAIL, name: 'Khomo Lathu' };
+
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(`✅ Email sent to ${to}, messageId: ${data.messageId}`);
     return data;
   } catch (err) {
-    console.error(`❌ Failed to send email to ${to}:`, err.message);
+    console.error(`❌ Failed to send email to ${to}:`, err);
     throw err;
   }
 }
