@@ -5,9 +5,12 @@ const User = require("../models/User");
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/api/auth/google/callback"
+    callbackURL: "/api/auth/google/callback",
+    passReqToCallback: true,
+    // Force account selection every time
+    prompt: "select_account"
   },
-  async (accessToken, refreshToken, profile, done) => {
+  async (req, accessToken, refreshToken, profile, done) => {
     try {
       let user = await User.findOne({ googleId: profile.id });
       if (!user) {
@@ -18,12 +21,13 @@ passport.use(new GoogleStrategy({
           user.authProvider = "google";
           await user.save();
         } else {
+          // New user – note: email verification will be handled in auth.js
           user = new User({
             name: profile.displayName,
             email: email,
             googleId: profile.id,
             authProvider: "google",
-            verified: false,
+            isEmailVerified: false,   // will be verified by email
             phone: ""
           });
           await user.save();

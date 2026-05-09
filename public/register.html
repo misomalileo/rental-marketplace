@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Register | Khomo Lathu</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -29,63 +26,72 @@
       padding: 2rem;
       border: 1px solid #e2e8f0;
     }
-    .logo {
+    .logo { text-align: center; margin-bottom: 1rem; }
+    .logo i { font-size: 3rem; background: linear-gradient(135deg, #FF8C42, #FFD966); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .logo h2 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.8rem; margin-top: 0.3rem; color: #1e293b; }
+
+    .role-selector {
+      display: flex;
+      gap: 0.8rem;
+      margin-bottom: 1.8rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .role-card {
+      flex: 1;
       text-align: center;
-      margin-bottom: 1.5rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 0.8rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
-    .logo i {
-      font-size: 3rem;
-      background: linear-gradient(135deg, #FF8C42, #FFD966);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .logo h2 {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 700;
-      font-size: 1.8rem;
-      margin-top: 0.5rem;
-      color: #1e293b;
-    }
-    .role-badge {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      background: #fef9e8;
-      padding: 0.6rem;
-      border-radius: 60px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: #FF8C42;
-      border: 1px solid #ffe4b5;
-    }
-    .input-group {
-      margin-bottom: 1rem;
-    }
-    .input-group label {
-      display: block;
-      margin-bottom: 0.4rem;
-      font-weight: 500;
-      font-size: 0.8rem;
-      color: #334155;
-    }
+    .role-card i { font-size: 1.6rem; display: block; margin-bottom: 0.4rem; color: #64748b; }
+    .role-card span { font-size: 0.9rem; font-weight: 600; color: #1e293b; }
+    .role-card small { display: block; font-size: 0.65rem; color: #64748b; margin-top: 0.2rem; }
+    .role-card.active { background: linear-gradient(135deg, #FF8C42, #E67E22); border-color: transparent; }
+    .role-card.active i, .role-card.active span, .role-card.active small { color: white; }
+    .role-card:hover:not(.active) { background: #f1f5f9; transform: translateY(-2px); }
+
+    .input-group { margin-bottom: 1rem; position: relative; }
+    .input-group label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.8rem; color: #334155; }
     .input-group input {
       width: 100%;
-      padding: 0.85rem 1.2rem;
+      padding: 0.85rem 2.5rem 0.85rem 1.2rem;
       border: 1px solid #cbd5e1;
       border-radius: 32px;
       font-size: 0.9rem;
-      transition: border-color 0.2s;
       background: #ffffff;
       color: #0f172a;
       outline: none;
+      transition: border-color 0.2s;
     }
-    .input-group input:focus {
-      border-color: #FF8C42;
-      box-shadow: 0 0 0 3px rgba(255,140,66,0.1);
+    .input-group input:focus { border-color: #FF8C42; box-shadow: 0 0 0 3px rgba(255,140,66,0.1); }
+    .input-group input::placeholder { color: #94a3b8; }
+
+    .password-toggle {
+      position: absolute;
+      right: 18px;
+      bottom: 14px;
+      cursor: pointer;
+      color: #64748b;
+      transition: color 0.2s;
     }
-    .input-group input::placeholder {
-      color: #94a3b8;
+    .password-toggle:hover { color: #FF8C42; }
+
+    .password-strength {
+      font-size: 0.7rem;
+      margin-top: 0.3rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
+    .strength-item { display: inline-flex; align-items: center; gap: 4px; }
+    .strength-item i { font-size: 0.7rem; }
+    .strength-valid { color: #10b981; }
+    .strength-invalid { color: #ef4444; }
+
     .register-btn {
       width: 100%;
       padding: 0.9rem;
@@ -100,33 +106,20 @@
       margin-top: 0.8rem;
       font-family: 'Poppins', sans-serif;
     }
-    .register-btn:hover {
-      opacity: 0.9;
-    }
-    .register-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    .register-btn:hover { opacity: 0.9; }
+    .register-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
     .divider {
       display: flex;
       align-items: center;
-      margin: 1.5rem 0;
+      margin: 1.5rem 0 1rem;
       color: #94a3b8;
       font-size: 0.75rem;
     }
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid #e2e8f0;
-    }
+    .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
     .divider span { margin: 0 0.8rem; }
-    .social-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      margin-bottom: 1rem;
-    }
+
+    .social-buttons { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem; }
     .social-btn {
       display: flex;
       align-items: center;
@@ -138,40 +131,16 @@
       font-weight: 500;
       font-size: 0.9rem;
       cursor: pointer;
-      transition: opacity 0.2s;
       text-decoration: none;
       border: none;
     }
-    .google-btn {
-      background: #ffffff;
-      color: #3c4043;
-      border: 1px solid #dadce0;
-    }
+    .google-btn { background: #ffffff; color: #3c4043; border: 1px solid #dadce0; }
     .google-btn svg { width: 20px; height: 20px; }
     .google-btn:hover { background: #f8f9fa; }
-    .facebook-btn {
-      background: #1877f2;
-      color: white;
-    }
-    .facebook-btn svg { width: 20px; height: 20px; fill: white; }
-    .facebook-btn:hover { background: #166fe5; }
-    .apple-btn {
-      background: #000000;
-      color: white;
-    }
-    .apple-btn svg { width: 20px; height: 20px; fill: white; }
-    .apple-btn:hover { background: #1c1c1e; }
-    .login-link {
-      text-align: center;
-      margin-top: 1rem;
-      font-size: 0.8rem;
-      color: #475569;
-    }
-    .login-link a {
-      color: #FF8C42;
-      font-weight: 600;
-      text-decoration: none;
-    }
+
+    .login-link { text-align: center; margin-top: 1rem; font-size: 0.8rem; color: #475569; }
+    .login-link a { color: #FF8C42; font-weight: 600; text-decoration: none; }
+
     .message {
       margin-top: 1rem;
       padding: 0.8rem;
@@ -180,178 +149,196 @@
       text-align: center;
       display: none;
     }
-    .message.error {
-      background: #fee2e2;
-      color: #b91c1c;
-      border: 1px solid #ef4444;
-    }
-    .message.success {
-      background: #dcfce7;
-      color: #15803d;
-      border: 1px solid #22c55e;
-    }
-    @media (max-width: 640px) {
-      .register-container { padding: 1.5rem; }
-    }
+    .message.error { background: #fee2e2; color: #b91c1c; border: 1px solid #ef4444; }
+    .message.success { background: #dcfce7; color: #15803d; border: 1px solid #22c55e; }
+
+    @media (max-width: 640px) { .register-container { padding: 1.5rem; } }
   </style>
 </head>
 <body>
-  <div class="register-container">
-    <div class="logo">
-      <i class="fas fa-crown"></i>
-      <h2>Join Khomo Lathu</h2>
-    </div>
+<div class="register-container">
+  <div class="logo"><i class="fas fa-crown"></i><h2>Join Khomo Lathu</h2></div>
 
-    <div id="roleBadge" class="role-badge"></div>
-
-    <form id="registerForm">
-      <input type="hidden" id="roleInput" name="role" value="free">
-      <div class="input-group">
-        <label><i class="fas fa-user"></i> Full Name</label>
-        <input type="text" id="name" placeholder="John Doe" required>
-      </div>
-      <div class="input-group">
-        <label><i class="fas fa-envelope"></i> Email Address</label>
-        <input type="email" id="email" placeholder="your@email.com" required>
-      </div>
-      <div class="input-group">
-        <label><i class="fab fa-whatsapp"></i> WhatsApp Number</label>
-        <input type="tel" id="phone" placeholder="265XXXXXXXXX" pattern="265[0-9]{9}" required>
-        <small style="font-size: 0.7rem; color: #64748b;">Format: 265 followed by 9 digits</small>
-      </div>
-      <div class="input-group">
-        <label><i class="fas fa-lock"></i> Password</label>
-        <input type="password" id="password" placeholder="••••••••" required>
-      </div>
-      <div class="input-group">
-        <label><i class="fas fa-check-circle"></i> Confirm Password</label>
-        <input type="password" id="confirmPassword" placeholder="••••••••" required>
-      </div>
-      <button type="submit" class="register-btn" id="registerBtn">
-        <i class="fas fa-user-plus"></i> Create Account
-      </button>
-    </form>
-    <div id="message" class="message"></div>
-
-    <div class="divider"><span>or sign up with</span></div>
-
-    <div class="social-buttons">
-      <a id="googleSignupBtn" class="social-btn google-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-          <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
-          <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
-          <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
-          <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
-        </svg>
-        Continue with Google
-      </a>
-      <a href="/api/auth/facebook" class="social-btn facebook-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.294h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z" fill="white"/>
-        </svg>
-        Continue with Facebook
-      </a>
-      <a href="/api/auth/apple" class="social-btn apple-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path d="M16.365 3.993c.862-1.041 1.44-2.478 1.282-3.993-1.239.05-2.742.824-3.632 1.862-.798.921-1.497 2.381-1.309 3.785 1.382.107 2.796-.704 3.659-1.654zM19.75 8.044c-1.478-.014-2.734.84-3.444.84-.718 0-1.82-.799-2.992-.799-1.65 0-3.129.96-3.979 2.442-1.691 2.933-.436 7.273 1.203 9.656.805 1.174 1.764 2.493 3.02 2.445 1.213-.049 1.672-.785 3.136-.785 1.464 0 1.888.785 3.139.76 1.294-.024 2.112-1.191 2.918-2.364.921-1.342 1.298-2.648 1.319-2.716-.028-.012-2.552-.98-2.578-3.891-.026-2.451 1.996-3.62 2.088-3.681-1.14-1.674-2.914-1.862-3.527-1.887z"/>
-        </svg>
-        Continue with Apple
-      </a>
-    </div>
-
-    <div class="login-link">
-      Already have an account? <a href="login.html">Log in</a>
-    </div>
+  <div class="role-selector" id="roleSelector">
+    <div class="role-card" data-role="free"><i class="fas fa-user"></i><span>Renter</span><small>Search & book</small></div>
+    <div class="role-card" data-role="landlord"><i class="fas fa-building"></i><span>Landlord</span><small>List properties</small></div>
+    <div class="role-card" data-role="premium_user"><i class="fas fa-crown"></i><span>Premium User</span><small>Early access & insights</small></div>
   </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    let selectedRole = urlParams.get('role');
-    if (!selectedRole || !["free", "landlord", "premium_user"].includes(selectedRole)) {
-      selectedRole = 'free';
+  <form id="registerForm">
+    <input type="hidden" id="roleInput" name="role" value="free">
+    <div class="input-group">
+      <label><i class="fas fa-user"></i> Full Name</label>
+      <input type="text" id="name" placeholder="John Doe" required>
+    </div>
+    <div class="input-group">
+      <label><i class="fas fa-envelope"></i> Email Address</label>
+      <input type="email" id="email" placeholder="your@email.com" required>
+    </div>
+    <div class="input-group">
+      <label><i class="fab fa-whatsapp"></i> WhatsApp Number</label>
+      <input type="tel" id="phone" placeholder="265881535985" pattern="265[0-9]{9}" required>
+      <small style="font-size: 0.7rem; color: #64748b;">Format: 265 followed by 9 digits (no spaces)</small>
+    </div>
+    <div class="input-group">
+      <label><i class="fas fa-lock"></i> Password</label>
+      <input type="password" id="password" placeholder="••••••••" required>
+      <span class="password-toggle" id="togglePassword"><i class="far fa-eye"></i></span>
+      <div id="passwordStrength" class="password-strength">
+        <span class="strength-item"><i class="fas fa-circle" id="lengthIcon"></i> 8+ chars</span>
+        <span class="strength-item"><i class="fas fa-circle" id="upperIcon"></i> Uppercase</span>
+        <span class="strength-item"><i class="fas fa-circle" id="lowerIcon"></i> Lowercase</span>
+        <span class="strength-item"><i class="fas fa-circle" id="numberIcon"></i> Number</span>
+      </div>
+    </div>
+    <div class="input-group">
+      <label><i class="fas fa-check-circle"></i> Confirm Password</label>
+      <input type="password" id="confirmPassword" placeholder="••••••••" required>
+      <span class="password-toggle" id="toggleConfirm"><i class="far fa-eye"></i></span>
+    </div>
+    <button type="submit" class="register-btn" id="registerBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+  </form>
+  <div id="message" class="message"></div>
+
+  <div class="divider"><span>or sign up with</span></div>
+  <div class="social-buttons">
+    <a id="googleSignupBtn" class="social-btn google-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+      </svg>
+      Continue with Google
+    </a>
+  </div>
+
+  <div class="login-link">Already have an account? <a href="login.html">Log in</a></div>
+</div>
+
+<script>
+  // Role selection
+  const roleCards = document.querySelectorAll('.role-card');
+  const roleInput = document.getElementById('roleInput');
+  let selectedRole = 'free';
+
+  function setActiveRole(role) {
+    roleCards.forEach(card => {
+      const cardRole = card.getAttribute('data-role');
+      card.classList.toggle('active', cardRole === role);
+    });
+    roleInput.value = role;
+    selectedRole = role;
+    const googleBtn = document.getElementById('googleSignupBtn');
+    if (googleBtn) googleBtn.href = `/api/auth/google?role=${selectedRole}`;
+  }
+  roleCards.forEach(card => {
+    card.addEventListener('click', () => setActiveRole(card.getAttribute('data-role')));
+  });
+  setActiveRole('free');
+
+  // Password strength & toggles
+  const passwordInput = document.getElementById('password');
+  const confirmInput = document.getElementById('confirmPassword');
+  const togglePassword = document.getElementById('togglePassword');
+  const toggleConfirm = document.getElementById('toggleConfirm');
+
+  togglePassword.addEventListener('click', () => {
+    const type = passwordInput.type === 'password' ? 'text' : 'password';
+    passwordInput.type = type;
+    togglePassword.innerHTML = type === 'password' ? '<i class="far fa-eye"></i>' : '<i class="far fa-eye-slash"></i>';
+  });
+  toggleConfirm.addEventListener('click', () => {
+    const type = confirmInput.type === 'password' ? 'text' : 'password';
+    confirmInput.type = type;
+    toggleConfirm.innerHTML = type === 'password' ? '<i class="far fa-eye"></i>' : '<i class="far fa-eye-slash"></i>';
+  });
+
+  const lengthIcon = document.getElementById('lengthIcon');
+  const upperIcon = document.getElementById('upperIcon');
+  const lowerIcon = document.getElementById('lowerIcon');
+  const numberIcon = document.getElementById('numberIcon');
+
+  function updateStrength() {
+    const pwd = passwordInput.value;
+    const hasLength = pwd.length >= 8;
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasNumber = /[0-9]/.test(pwd);
+    lengthIcon.className = hasLength ? 'fas fa-check-circle strength-valid' : 'fas fa-circle strength-invalid';
+    upperIcon.className = hasUpper ? 'fas fa-check-circle strength-valid' : 'fas fa-circle strength-invalid';
+    lowerIcon.className = hasLower ? 'fas fa-check-circle strength-valid' : 'fas fa-circle strength-invalid';
+    numberIcon.className = hasNumber ? 'fas fa-check-circle strength-valid' : 'fas fa-circle strength-invalid';
+  }
+  passwordInput.addEventListener('input', updateStrength);
+  updateStrength();
+
+  // Form submission
+  const form = document.getElementById('registerForm');
+  const registerBtn = document.getElementById('registerBtn');
+  const messageDiv = document.getElementById('message');
+
+  function showMessage(text, type) {
+    messageDiv.textContent = text;
+    messageDiv.className = `message ${type}`;
+    messageDiv.style.display = 'block';
+    setTimeout(() => { messageDiv.style.display = 'none'; }, 6000);
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = passwordInput.value;
+    const confirm = confirmInput.value;
+    const role = roleInput.value;
+
+    if (!name || !email || !phone || !password || !confirm) {
+      showMessage('Please fill in all fields.', 'error');
+      return;
+    }
+    if (!/^265[0-9]{9}$/.test(phone)) {
+      showMessage('Phone number must be 265 followed by 9 digits (e.g., 265881535985).', 'error');
+      return;
+    }
+    if (password !== confirm) {
+      showMessage('Passwords do not match.', 'error');
+      return;
+    }
+    const hasLength = password.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    if (!hasLength || !hasUpper || !hasLower || !hasNumber) {
+      showMessage('Password must be at least 8 characters, include uppercase, lowercase and a number.', 'error');
+      return;
     }
 
-    document.getElementById('roleInput').value = selectedRole;
-    const roleBadge = document.getElementById('roleBadge');
-    if (selectedRole === 'landlord') {
-      roleBadge.innerHTML = '<i class="fas fa-building"></i> You are registering as a Landlord. After email verification, you can list properties.';
-    } else if (selectedRole === 'premium_user') {
-      roleBadge.innerHTML = '<i class="fas fa-crown"></i> You are registering as a Premium User. After email verification, you unlock exclusive features.';
-    } else {
-      roleBadge.innerHTML = '<i class="fas fa-user"></i> You are registering as a Renter. Please verify your email to start searching.';
-    }
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
 
-    const googleLink = document.getElementById('googleSignupBtn');
-    if (googleLink) {
-      googleLink.href = `/api/auth/google?role=${selectedRole}`;
-    }
-
-    const form = document.getElementById('registerForm');
-    const registerBtn = document.getElementById('registerBtn');
-    const messageDiv = document.getElementById('message');
-
-    function showMessage(text, type) {
-      messageDiv.textContent = text;
-      messageDiv.className = 'message ' + type;
-      messageDiv.style.display = 'block';
-      setTimeout(() => {
-        messageDiv.style.display = 'none';
-      }, 6000);
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-      const role = document.getElementById('roleInput').value;
-
-      if (!name || !email || !phone || !password || !confirmPassword) {
-        showMessage('Please fill in all fields.', 'error');
-        return;
-      }
-      if (!/^265[0-9]{9}$/.test(phone)) {
-        showMessage('Phone number must be 265 followed by 9 digits (e.g., 265881535985).', 'error');
-        return;
-      }
-      if (password !== confirmPassword) {
-        showMessage('Passwords do not match.', 'error');
-        return;
-      }
-      if (password.length < 8) {
-        showMessage('Password must be at least 8 characters.', 'error');
-        return;
-      }
-
-      registerBtn.disabled = true;
-      registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
-
-      try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, password, role })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          showMessage('Account created! 📧 Please check your email (including spam) to verify your account.', 'success');
-          setTimeout(() => {
-            window.location.href = 'login.html';
-          }, 3000);
-        } else {
-          showMessage(data.message || 'Registration failed.', 'error');
-          registerBtn.disabled = false;
-          registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
-        }
-      } catch (err) {
-        showMessage('Network error. Please try again.', 'error');
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone, password, role })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showMessage('Account created! 📧 Please check your email (including spam) to verify your account.', 'success');
+        setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+      } else {
+        showMessage(data.message || 'Registration failed. Check console for details.', 'error');
         registerBtn.disabled = false;
         registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
       }
-    });
-  </script>
+    } catch (err) {
+      showMessage('Network error. Please try again.', 'error');
+      registerBtn.disabled = false;
+      registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+    }
+  });
+</script>
 </body>
 </html>
