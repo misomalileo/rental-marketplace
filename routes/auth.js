@@ -24,7 +24,7 @@ function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// ========== REGISTER (enhanced error reporting) ==========
+// ========== REGISTER (unchanged) ==========
 router.post("/register", authLimiter, validateRegister, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password, phone, role = "free" } = req.body;
@@ -42,7 +42,6 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
     const hashed = await bcrypt.hash(password, 12);
     const verificationToken = generateToken();
 
-    // Try to send email first – only save user if email succeeds
     try {
       await sendVerificationEmail(email, verificationToken);
     } catch (emailErr) {
@@ -50,7 +49,6 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
       return res.status(500).json({ message: "Could not send verification email. Please check your email address or try again later." });
     }
 
-    // Email sent successfully – now save the user
     const user = new User({
       name, email, password: hashed, phone, authProvider: "local",
       isEmailVerified: false, emailVerificationToken: verificationToken, role,
@@ -64,7 +62,7 @@ router.post("/register", authLimiter, validateRegister, handleValidationErrors, 
   }
 });
 
-// ========== VERIFY EMAIL (unchanged) ==========
+// ========== VERIFY EMAIL (supports both local and Google users) ==========
 router.get("/verify-email/:token", async (req, res) => {
   try {
     const user = await User.findOne({ emailVerificationToken: req.params.token });
@@ -149,18 +147,21 @@ router.post("/reset-password", validateResetPassword, handleValidationErrors, as
   }
 });
 
-// ========== LOGIN (unchanged) ==========
+// ========== LOGIN (now blocks unverified Google users) ==========
 router.post("/login", authLimiter, validateLogin, handleValidationErrors, async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
     if (!user) return res.status(400).json({ message: "Invalid email or password" });
+    
+    // Block unverified Google users
+    if (!user.isEmailVerified) {
+      return res.status(403).json({ message: "Please verify your email address before logging in. Check your inbox (including spam)." });
+    }
+    
     if (user.authProvider === "google" && !user.password) {
       return res.status(400).json({ message: "This email uses Google Sign-In. Please click 'Login with Google'." });
-    }
-    if (!user.isEmailVerified) {
-      return res.status(403).json({ message: "Please verify your email address before logging in." });
     }
     if (user.lockUntil && user.lockUntil > Date.now()) {
       const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / 60000);
@@ -350,7 +351,7 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
-// ========== GOOGLE LOGIN (enhanced role handling) ==========
+// ========== GOOGLE LOGIN (ENHANCED: sends verification email and redirects to pending page) ==========
 router.get("/google", (req, res, next) => {
   const role = req.query.role || "free";
   req.session.intendedRole = role;
@@ -365,27 +366,72 @@ router.get(
   }),
   async (req, res) => {
     try {
-      const user = req.user;
-      if (!user) return res.redirect("/login.html?error=google-auth-failed");
+      const profile = req.user;
+      if (!profile) return res.redirect("/login.html?error=google-auth-failed");
       
-      let finalRole = user.role;
-      if (!user.role || user.role === "free") {
-        const intendedRole = req.session.intendedRole || "free";
-        if (intendedRole === "landlord" || intendedRole === "premium_user") {
-          user.role = intendedRole;
+      // Find or create user (same as before)
+      let user = await User.findOne({ googleId: profile.googleId });
+      if (!user) {
+        const email = profile.email;
+        user = await User.findOne({ email });
+        if (user) {
+          user.googleId = profile.googleId;
+          user.authProvider = "google";
           await user.save();
+        } else {
+          // NEW USER: create with isEmailVerified = false and generate token
+          const verificationToken = generateToken();
+          user = new User({
+            name: profile.displayName,
+            email,
+            googleId: profile.googleId,
+            authProvider: "google",
+            isEmailVerified: false,
+            emailVerificationToken: verificationToken,
+            phone: "",
+            role: req.session.intendedRole || "free"
+          });
+          await user.save();
+          
+          // Send verification email
+          try {
+            await sendVerificationEmail(email, verificationToken);
+          } catch (emailErr) {
+            console.error("Failed to send verification email to Google user:", emailErr);
+            // Still proceed, but user will see error on the pending page
+          }
         }
-        finalRole = user.role;
+      } else {
+        // Existing Google user – if not verified yet, ensure token exists
+        if (!user.isEmailVerified && !user.emailVerificationToken) {
+          const newToken = generateToken();
+          user.emailVerificationToken = newToken;
+          await user.save();
+          try {
+            await sendVerificationEmail(user.email, newToken);
+          } catch (emailErr) { console.error("Resend verification failed:", emailErr); }
+        }
       }
       
-      const token = jwt.sign(
-        { id: user._id, role: finalRole },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
-      );
+      // Apply intended role if user is still free
+      const intendedRole = req.session.intendedRole || "free";
+      if ((!user.role || user.role === "free") && (intendedRole === "landlord" || intendedRole === "premium_user")) {
+        user.role = intendedRole;
+        await user.save();
+      }
       
-      // Redirect to oauth-redirect.html with token and role
-      res.redirect(`/oauth-redirect.html?token=${token}&role=${finalRole}`);
+      // If email is already verified, issue token and redirect to dashboard
+      if (user.isEmailVerified) {
+        const token = jwt.sign(
+          { id: user._id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: "1d" }
+        );
+        return res.redirect(`/oauth-redirect.html?token=${token}&role=${user.role}`);
+      }
+      
+      // Otherwise, redirect to a "verification pending" page
+      res.redirect(`/verification-pending.html?email=${encodeURIComponent(user.email)}`);
     } catch (err) {
       console.error("Google callback error:", err);
       res.redirect("/login.html?error=google-auth-failed");
