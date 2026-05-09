@@ -1,62 +1,78 @@
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 
-// Create transporter for Gmail
+// Create transporter with explicit IPv4 and correct Gmail SMTP settings
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,                // Use 587 (TLS) instead of 465 (SSL) – better IPv4 support
+  secure: false,            // true for 465, false for 587
   auth: {
-    user: process.env.EMAIL_USER,   // your Gmail address
-    pass: process.env.EMAIL_PASS,   // your Gmail App Password (not normal password)
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    // Force IPv4 by setting the family option (Node.js 18+)
+    // Also reject unauthorized is false for testing, but keep true in production if cert valid
+    rejectUnauthorized: false,
+  },
+  // Force IPv4 only – for older Node versions, use this:
+  // connectionTimeout: 10000,
+  // socketTimeout: 10000,
 });
 
-async function sendEmail({ to, subject, html }) {
+// Fix: Use the 'lookup' option to force IPv4 only (works on Node 18+)
+// For older Node, we can set the 'family' option in the socket.
+// This snippet adds a custom resolver that maps hostnames to IPv4 only.
+const originalLookup = require("dns").lookup;
+require("dns").lookup = function (hostname, options, callback) {
+  if (typeof options === "function") {
+    callback = options;
+    options = {};
+  }
+  // Override for gmail.com and google domains to force IPv4
+  if (hostname.includes("gmail.com") || hostname.includes("google.com")) {
+    options.family = 4; // force IPv4
+  }
+  return originalLookup(hostname, options, callback);
+};
+
+// Send verification email
+async function sendVerificationEmail(email, token) {
+  const verificationUrl = `${process.env.FRONTEND_URL || "https://rental-marketplace-irmj.onrender.com"}/verify-email.html?token=${token}`;
   const mailOptions = {
     from: `"Khomo Lathu" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html,
+    to: email,
+    subject: "Verify Your Email - Khomo Lathu",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Welcome to Khomo Lathu!</h2>
+        <p>Please click the button below to verify your email address:</p>
+        <a href="${verificationUrl}" style="display: inline-block; background: linear-gradient(105deg, #FF8C42, #E67E22); color: white; padding: 12px 24px; text-decoration: none; border-radius: 30px; margin: 20px 0;">Verify Email</a>
+        <p>Or copy this link: <br> ${verificationUrl}</p>
+        <p>If you didn't create an account, you can ignore this email.</p>
+      </div>
+    `,
   };
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent to ${to}`);
-  } catch (err) {
-    console.error("❌ Email error:", err);
-    throw err; // Let the caller handle the failure
-  }
+  await transporter.sendMail(mailOptions);
 }
 
-async function sendVerificationEmail(to, verificationToken) {
-  const baseUrl = process.env.FRONTEND_URL || "https://rental-marketplace-irmj.onrender.com";
-  const verificationLink = `${baseUrl}/verify-email.html?token=${verificationToken}`;
-  const subject = "Verify Your Email Address – Khomo Lathu";
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #2563eb;">Welcome to Khomo Lathu!</h2>
-      <p>Please verify your email address by clicking the link below:</p>
-      <a href="${verificationLink}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 30px;">Verify Email</a>
-      <p>Or copy and paste this link into your browser:</p>
-      <p style="word-break: break-all;">${verificationLink}</p>
-      <p>If you did not create an account, please ignore this email.</p>
-      <hr>
-      <small>Khomo Lathu – Trusted Rentals in Malawi</small>
-    </div>
-  `;
-  return sendEmail({ to, subject, html });
-}
-
-async function sendPasswordResetEmail(to, resetToken) {
-  const baseUrl = process.env.FRONTEND_URL || "https://rental-marketplace-irmj.onrender.com";
-  const resetLink = `${baseUrl}/reset-password.html?token=${resetToken}`;
-  const subject = "Reset Your Password – Khomo Lathu";
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #2563eb;">Password Reset Request</h2>
-      <p>Click the link below to reset your password. This link expires in 1 hour.</p>
-      <a href="${resetLink}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 30px;">Reset Password</a>
-      <p>If you did not request this, please ignore this email.</p>
-    </div>
-  `;
-  return sendEmail({ to, subject, html });
+// Send password reset email
+async function sendPasswordResetEmail(email, token) {
+  const resetUrl = `${process.env.FRONTEND_URL || "https://rental-marketplace-irmj.onrender.com"}/reset-password.html?token=${token}`;
+  const mailOptions = {
+    from: `"Khomo Lathu" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Reset Your Password - Khomo Lathu",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Password Reset Request</h2>
+        <p>Click the button below to reset your password. This link expires in 1 hour.</p>
+        <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(105deg, #FF8C42, #E67E22); color: white; padding: 12px 24px; text-decoration: none; border-radius: 30px; margin: 20px 0;">Reset Password</a>
+        <p>If you didn't request this, you can ignore this email.</p>
+      </div>
+    `,
+  };
+  await transporter.sendMail(mailOptions);
 }
 
 module.exports = { sendVerificationEmail, sendPasswordResetEmail };
