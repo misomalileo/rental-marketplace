@@ -1,21 +1,21 @@
-const Brevo = require('@getbrevo/brevo');
+const SibApiV3Sdk = require('@getbrevo/brevo');
 require('dotenv').config();
 
-// Initialize Brevo API client
-let apiInstance = new Brevo.TransactionalEmailsApi();
-let apiKey = apiInstance.authentications['apiKey'];
+// Configure API key authorization
+let defaultClient = SibApiV3Sdk.ApiClient.instance;
+let apiKey = defaultClient.authentications['api-key'];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 
-// Sender email – you can use any email; Brevo will handle sending.
-// For best deliverability, later verify a domain, but this works immediately.
+let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
 const FROM_EMAIL = process.env.EMAIL_FROM || 'noreply@khomolathu.com';
 
 // ============================================================
-// GENERIC SEND EMAIL (used by emailNotification.js)
+// GENERIC SEND EMAIL
 // ============================================================
 async function sendEmail({ to, subject, html }) {
   try {
-    let sendSmtpEmail = new Brevo.SendSmtpEmail();
+    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.to = [{ email: to }];
     sendSmtpEmail.htmlContent = html;
@@ -25,7 +25,7 @@ async function sendEmail({ to, subject, html }) {
     console.log(`✅ Email sent to ${to}, messageId: ${data.messageId}`);
     return data;
   } catch (err) {
-    console.error(`❌ Failed to send email to ${to}:`, err);
+    console.error(`❌ Failed to send email to ${to}:`, err.body || err);
     throw err;
   }
 }
