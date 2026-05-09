@@ -3,7 +3,7 @@ const dns = require("dns");
 require("dotenv").config();
 
 // ============================================================
-// FORCE IPv4 FOR ALL HOSTNAME RESOLUTIONS (Gmail & Google)
+// FORCE IPv4 FOR ALL DNS RESOLUTIONS (comprehensive)
 // ============================================================
 const originalLookup = dns.lookup;
 dns.lookup = function (hostname, options, callback) {
@@ -19,31 +19,30 @@ dns.lookup = function (hostname, options, callback) {
 };
 
 // ============================================================
-// CREATE TRANSPORTER WITH EXPLICIT IPv4 SOCKET OPTIONS
+// ALTERNATIVE: Use port 465 (SSL) – more stable for IPv4
 // ============================================================
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // true for 465, false for 587
+  port: 465,                // SSL instead of TLS
+  secure: true,             // true for port 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  tls: {
-    rejectUnauthorized: false, // only for development
-  },
-  // Force socket to use IPv4 only
+  // Force socket to IPv4 only
   socketOptions: {
     family: 4
   },
-  // Additional connection options
+  tls: {
+    rejectUnauthorized: false,  // only for development, remove in production
+  },
   connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 10000,
 });
 
 // ============================================================
-// GENERIC SEND EMAIL (used by emailNotification.js)
+// GENERIC SEND EMAIL
 // ============================================================
 async function sendEmail({ to, subject, html }) {
   const mailOptions = {
