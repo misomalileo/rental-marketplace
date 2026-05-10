@@ -16,8 +16,8 @@ const {
 const { sendWhatsAppAlert } = require("../services/whatsappService");
 const SavedSearch = require("../models/SavedSearch");
 
-// ========== EMAIL NOTIFICATION FOR PREMIUM USERS (DISABLED - moved to Supabase) ==========
-// const { notifyMatchingSavedSearches } = require("../utils/emailNotification");
+// ========== EMAIL NOTIFICATION FOR PREMIUM USERS ==========
+const { notifyMatchingSavedSearches } = require("../utils/emailNotification");
 
 // ========== MALAWI DISTRICTS LIST (for district filter) ==========
 const malawiDistricts = [
@@ -274,13 +274,13 @@ router.post(
       }
       // ========================================================
 
-      // ========== EMAIL ALERT FOR PREMIUM USERS (DISABLED - moved to Supabase) ==========
-      // try {
-      //   await notifyMatchingSavedSearches(house);
-      //   console.log("✅ Email alerts processed");
-      // } catch (emailErr) {
-      //   console.error("❌ Email alert error (non-critical):", emailErr.message);
-      // }
+      // ========== EMAIL ALERT FOR PREMIUM USERS (INSTANT) ==========
+      try {
+        await notifyMatchingSavedSearches(house);
+        console.log("✅ Email alerts processed");
+      } catch (emailErr) {
+        console.error("❌ Email alert error (non-critical):", emailErr.message);
+      }
       // ============================================================
 
       // Log activity
