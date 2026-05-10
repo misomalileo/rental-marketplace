@@ -3,23 +3,35 @@
 <head>
   <title>Redirecting...</title>
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const role = urlParams.get('role');
+    // Supabase returns token in URL hash fragment
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const access_token = hashParams.get('access_token');
+    const refresh_token = hashParams.get('refresh_token');
 
-    if (token) {
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', role);
-      // Redirect based on role
-      if (role === 'admin') {
-        window.location.href = 'admin.html';
-      } else if (role === 'premium_user') {
-        window.location.href = 'premium-dashboard.html';
-      } else if (role === 'landlord') {
-        window.location.href = 'dashboard.html';
-      } else {
+    if (access_token) {
+      localStorage.setItem('token', access_token);
+      // Fetch user info to get role
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${access_token}` }
+      })
+      .then(res => res.json())
+      .then(user => {
+        const role = user?.user_metadata?.role || 'free';
+        localStorage.setItem('role', role);
+        if (role === 'admin') {
+          window.location.href = 'admin.html';
+        } else if (role === 'premium_user') {
+          window.location.href = 'premium-dashboard.html';
+        } else if (role === 'landlord') {
+          window.location.href = 'dashboard.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      })
+      .catch(() => {
+        // Fallback to index if role fetch fails
         window.location.href = 'index.html';
-      }
+      });
     } else {
       window.location.href = 'login.html?error=no-token';
     }
