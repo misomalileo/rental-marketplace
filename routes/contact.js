@@ -1,13 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { sendEmail } = require("../utils/emailService");
+// const { sendEmail } = require("../utils/emailService"); // DISABLED – moved to Supabase
 
 router.post("/", async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
     console.log("Contact message:", { name, email, subject, message });
 
-    // Optionally send email to admin
+    // Optionally send email to admin – DISABLED (no emailService)
+    /*
     await sendEmail({
       to: process.env.ADMIN_EMAIL || "admin@example.com",
       subject: `Contact Form: ${subject}`,
@@ -16,6 +17,7 @@ router.post("/", async (req, res) => {
              <p><strong>Subject:</strong> ${subject}</p>
              <p><strong>Message:</strong><br>${message}</p>`
     });
+    */
 
     res.json({ message: "Message sent to admin" });
   } catch (err) {
