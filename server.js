@@ -1,6 +1,6 @@
 const session = require("express-session");
-const passport = require("passport");
-require("./config/googleAuth");
+// const passport = require("passport");           // REMOVED – not needed with Supabase
+// require("./config/googleAuth");                // REMOVED – file deleted
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -129,8 +129,10 @@ app.use(session({
 }));
 // ==========================================================
 
-app.use(passport.initialize());
-app.use(passport.session());
+// ========== REMOVED: passport initialization (not needed with Supabase) ==========
+// app.use(passport.initialize());
+// app.use(passport.session());
+// ================================================================================
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
