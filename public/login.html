@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* Your original styles – unchanged */
     * {
       margin: 0;
       padding: 0;
@@ -315,15 +314,18 @@
         });
         const data = await res.json();
         if (res.ok) {
-          // Supabase returns token and user with user_metadata
+          if (data.twoFactorRequired) {
+            sessionStorage.setItem('temp2faToken', data.tempToken);
+            window.location.href = '/2fa-verify.html';
+            return;
+          }
           localStorage.setItem('token', data.token);
-          const role = data.user?.user_metadata?.role || 'free';
-          localStorage.setItem('role', role);
-          if (role === 'admin') {
+          localStorage.setItem('role', data.user.role);
+          if (data.user.role === 'admin') {
             window.location.href = 'admin.html';
-          } else if (role === 'premium_user' || role === 'premium_landlord') {
+          } else if (data.user.role === 'premium_user' || data.user.role === 'premium_landlord') {
             window.location.href = 'premium-dashboard.html';
-          } else if (role === 'landlord') {
+          } else if (data.user.role === 'landlord') {
             window.location.href = 'dashboard.html';
           } else {
             window.location.href = 'index.html';
