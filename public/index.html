@@ -156,7 +156,7 @@
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-    button i, .save-search-btn i, .carousel-btn i, .tab-btn i { color: white !important; }
+    button i, .carousel-btn i, .tab-btn i { color: white !important; }
 
     /* ========== MODERN IMAGE SLIDER ========== */
     .slider {
@@ -746,7 +746,7 @@
       text-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     .hero h1 {
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: 800;
       display: flex;
       align-items: center;
@@ -780,8 +780,6 @@
       position: relative;
       pointer-events: auto;
       z-index: 10;
-      background: rgba(0,0,0,0.2);
-      border-radius: 12px;
       overflow: hidden;
     }
     #hero3dHouse canvas {
@@ -799,9 +797,25 @@
       align-items: center; background: var(--card-bg); padding: 0.6rem 1.2rem;
       border-radius: 60px; border: 1px solid var(--input-border);
     }
-    .price-range { min-width: 180px; background: var(--input-bg); border-radius: 40px; padding: 0.2rem 1rem; border: 1px solid var(--input-border); }
-    .price-range .range-values { display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.2rem; }
-    #priceSlider { margin: 0.3rem 0; }
+    .price-inputs {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--input-bg);
+      border-radius: 40px;
+      padding: 0.2rem 0.8rem;
+      border: 1px solid var(--input-border);
+      align-items: center;
+    }
+    .price-inputs input {
+      width: 100px;
+      padding: 0.3rem 0.4rem;
+      border-radius: 30px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 0.75rem;
+      text-align: center;
+    }
     .sort-select, .save-search-btn {
       padding: 0.4rem 1rem; border-radius: 40px; border: 1px solid var(--input-border);
       background: var(--input-bg); color: var(--text-color); cursor: pointer; font-size: 0.8rem; font-weight: 500;
@@ -809,7 +823,12 @@
     .save-search-btn { background: var(--button-bg); color: white; border: none; }
     .save-search-btn:hover { background: var(--button-hover); transform: translateY(-2px); }
     .amenities-filters {
-      display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 1rem 0 1.2rem;
+      display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center; margin: 1rem 0 1.2rem;
+      background: var(--card-bg);
+      padding: 0.6rem 1.2rem;
+      border-radius: 60px;
+      border: 1px solid var(--input-border);
+      align-items: center;
     }
     .amenities-filters label {
       display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-color);
@@ -817,20 +836,35 @@
       border: 1px solid var(--input-border); cursor: pointer;
     }
     .amenities-filters label:hover { background: var(--button-bg); color: white; border-color: var(--button-bg); }
+    .amenities-filters input[type="number"] {
+      width: 80px;
+      padding: 0.3rem 0.4rem;
+      border-radius: 30px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      text-align: center;
+    }
     #searchInput {
       width: 100%; max-width: 450px; display: block; margin: 0.8rem auto;
       padding: 0.6rem 1rem; border: 1px solid var(--input-border); border-radius: 60px;
       background: var(--input-bg); color: var(--text-color); font-size: 0.85rem;
     }
 
-    /* ========== MARKET PULSE WIDGET (with district selector) ========== */
+    /* ========== MARKET PULSE WIDGET – UPGRADED & MOVED ========== */
     .market-pulse {
-      background: var(--card-bg);
-      border-radius: 28px;
-      padding: 1rem;
-      margin: 1rem 0 1.5rem;
-      border: 1px solid var(--input-border);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      background: linear-gradient(145deg, var(--card-bg) 0%, rgba(0,0,0,0.02) 100%);
+      border-radius: 32px;
+      padding: 1.2rem;
+      margin: 2rem 0 1.5rem;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2);
+      backdrop-filter: blur(4px);
+      transition: all 0.3s;
+    }
+    .market-pulse:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 28px 40px -12px rgba(0,0,0,0.25);
     }
     .pulse-header {
       display: flex;
@@ -839,29 +873,29 @@
       flex-wrap: wrap;
       gap: 0.8rem;
       margin-bottom: 1rem;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 0.6rem;
     }
     .pulse-title {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      font-weight: 700;
-      font-size: 1rem;
+      font-weight: 800;
+      font-size: 1.2rem;
       font-family: 'Poppins', sans-serif;
     }
     .pulse-title i {
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       color: var(--primary);
-    }
-    .district-pulse-selector {
-      margin-left: auto;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
     }
     .district-pulse-selector select {
-      background: var(--input-bg);
-      color: var(--text-color);
-      border: 1px solid var(--input-border);
+      background: linear-gradient(105deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
       border-radius: 40px;
-      padding: 0.3rem 1rem;
-      font-size: 0.7rem;
+      padding: 0.4rem 1.2rem;
+      font-weight: 600;
       cursor: pointer;
     }
     .price-scout {
@@ -869,9 +903,10 @@
       align-items: center;
       gap: 0.5rem;
       background: linear-gradient(135deg, #f59e0b20, #2563eb20);
-      padding: 0.3rem 0.8rem;
+      padding: 0.3rem 1rem;
       border-radius: 40px;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
     .price-scout i {
       font-size: 1rem;
@@ -885,34 +920,41 @@
       flex-wrap: wrap;
     }
     .stat-card {
-      background: rgba(0,0,0,0.03);
-      border-radius: 24px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 28px;
       padding: 0.6rem 1rem;
       text-align: center;
       flex: 1;
       min-width: 100px;
+      backdrop-filter: blur(4px);
+      transition: 0.2s;
     }
+    .stat-card:hover { transform: scale(1.02); background: rgba(0,0,0,0.08); }
     .stat-number {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       font-weight: 800;
       font-family: 'Poppins', sans-serif;
       color: var(--primary);
     }
     .stat-label {
-      font-size: 0.65rem;
-      opacity: 0.7;
+      font-size: 0.7rem;
+      opacity: 0.8;
+      font-weight: 500;
     }
     .trend-chart {
       margin: 1rem 0;
+      background: rgba(0,0,0,0.02);
+      border-radius: 24px;
+      padding: 0.5rem;
     }
     canvas#priceTrendChart {
-      max-height: 100px;
+      max-height: 110px;
       width: 100%;
     }
     .hot-districts {
-      background: rgba(0,0,0,0.03);
-      border-radius: 40px;
-      padding: 0.5rem 1rem;
+      background: linear-gradient(90deg, rgba(0,0,0,0.03), rgba(0,0,0,0.08));
+      border-radius: 48px;
+      padding: 0.6rem 1rem;
       font-size: 0.7rem;
       overflow-x: auto;
       white-space: nowrap;
@@ -922,34 +964,12 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      margin-right: 1rem;
+      margin-right: 1.2rem;
+      font-weight: 600;
     }
     .hot-districts i {
       color: #f59e0b;
     }
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.4); }
-      70% { box-shadow: 0 0 0 8px rgba(37,99,235,0); }
-      100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
-    }
-    .demand-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(0,0,0,0.1);
-      border-radius: 40px;
-      padding: 0.15rem 0.5rem;
-      font-size: 0.6rem;
-      font-weight: 600;
-      margin: 0.2rem 0;
-      animation: pulseGlow 2s infinite;
-    }
-    .demand-high { background: #ef4444; color: white; }
-    .demand-trend { background: #f59e0b; color: white; }
-    .demand-new { background: #10b981; color: white; }
-    .price-compare { font-size: 0.65rem; font-weight: 600; margin: 0.2rem 0; }
-    .price-below { color: #10b981; }
-    .price-above { color: #ef4444; }
 
     /* PHONE FIRST : SIDE REDUCTION (almost half of original side spacing) & HERO SIZE REDUCED */
     @media (max-width: 768px) {
@@ -957,45 +977,32 @@
       .hero { 
         margin: 0.6rem; 
         border-radius: 36px; 
-        padding: 1rem 0.8rem;    /* was 2rem 1rem → reduced height by >50% */
-        min-height: 180px;       /* was 320px → nearly half */
+        padding: 1rem 0.8rem;
+        min-height: 180px;
       }
-      .hero h1 { font-size: 1.5rem; }
+      .hero h1 { font-size: 1.8rem; }
       .hero p { font-size: 0.8rem; }
-      #hero3dHouse { width: 50px; height: 50px; } /* 3D house scales down */
+      #hero3dHouse { width: 50px; height: 50px; }
       .carousel-section { margin: 0.5rem; }
       .carousel-container { padding: 0.8rem 0.3rem 1rem; }
       .carousel-title { padding: 0 0.5rem; font-size: 1.2rem; }
       .filters-row { flex-direction: column; border-radius: 32px; padding: 0.8rem 0.6rem; margin: 1rem 0; gap: 0.6rem; }
-      .price-range { width: 100%; }
+      .price-inputs { width: 100%; justify-content: center; }
       .category-tabs { gap: 0.5rem; margin: 1rem 0; }
       .tab-btn { padding: 0.35rem 0.9rem; font-size: 0.7rem; }
       .pulse-header { flex-direction: column; align-items: flex-start; }
       .district-pulse-selector { margin-left: 0; width: 100%; }
       .map-controls { flex-direction: column; align-items: stretch; }
-      .amenity-toggles { justify-content: center; }
+      .amenities-filters { flex-direction: column; align-items: stretch; }
+      .amenities-filters label { justify-content: center; }
       .footer-container { gap: 0.8rem; }
       .footer-col { padding: 0.6rem; }
     }
     @media (max-width: 480px) {
       .main-container { padding: 0 0.5rem; }
       .hero { margin: 0.4rem; border-radius: 28px; padding: 0.8rem 0.6rem; min-height: 160px; }
-      .hero h1 { font-size: 1.3rem; }
+      .hero h1 { font-size: 1.5rem; }
       #hero3dHouse { width: 45px; height: 45px; }
-    }
-
-    @media (max-width: 768px) {
-      .pulse-header {
-        flex-wrap: wrap;
-      }
-      .district-pulse-selector {
-        margin-left: 0;
-        width: 100%;
-        margin-top: 0.5rem;
-      }
-      .district-pulse-selector select {
-        width: 100%;
-      }
     }
 
     /* Property grid */
@@ -1183,13 +1190,13 @@
     }
     #getLocationBtn { background: var(--button-bg); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 40px; font-size: 0.85rem; cursor: pointer; }
 
-    /* ========== WOOOW FOOTER – REDESIGNED ========== */
+    /* ========== WOOOW FOOTER – PROFESSIONAL REDESIGN ========== */
     .footer {
-      background: var(--footer-bg);
+      background: linear-gradient(135deg, var(--footer-bg) 0%, rgba(0,0,0,0.05) 100%);
       backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(255,255,255,0.2);
+      border-top: 2px solid rgba(255,255,255,0.2);
       margin-top: 3rem;
-      padding: 2rem 1rem 1rem;
+      padding: 2.5rem 1rem 1rem;
       position: relative;
       overflow: hidden;
     }
@@ -1197,37 +1204,38 @@
       content: '';
       position: absolute;
       top: 0;
-      left: -50%;
-      width: 200%;
-      height: 100%;
-      background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05), transparent);
-      pointer-events: none;
+      left: -30%;
+      width: 160%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, #FFD966, #FF8C42, #FF3B3F, transparent);
+      filter: blur(2px);
     }
     .footer-container {
       max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.8rem;
+      margin-bottom: 1.8rem;
       position: relative;
       z-index: 2;
     }
     .footer-col {
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(4px);
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(8px);
       border-radius: 28px;
-      padding: 1rem;
-      transition: all 0.3s ease;
-      border: 1px solid rgba(255,255,255,0.08);
+      padding: 1.2rem;
+      transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
+      border: 1px solid rgba(255,255,255,0.15);
     }
     .footer-col:hover {
-      transform: translateY(-5px);
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.25);
+      transform: translateY(-8px);
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.35);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.2);
     }
     .footer-logo {
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       font-weight: 800;
       background: linear-gradient(135deg, #FFD966, #FF8C42);
       -webkit-background-clip: text;
@@ -1235,126 +1243,130 @@
       color: transparent;
     }
     .footer-tagline {
-      opacity: 0.8;
-      font-size: 0.7rem;
-      margin-top: 0.2rem;
+      opacity: 0.85;
+      font-size: 0.75rem;
+      margin-top: 0.3rem;
     }
     .footer-copyright {
-      opacity: 0.6;
+      opacity: 0.65;
       font-size: 0.65rem;
-      margin-top: 0.5rem;
+      margin-top: 0.6rem;
     }
     .footer-col h3 {
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 700;
-      margin-bottom: 0.6rem;
+      margin-bottom: 0.8rem;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-      letter-spacing: -0.3px;
+      gap: 0.5rem;
+      letter-spacing: -0.2px;
     }
     .footer-col ul li {
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.5rem;
     }
     .footer-col ul li a {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       transition: all 0.2s;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      color: var(--text-color);
+      opacity: 0.8;
     }
     .footer-col ul li a:hover {
       color: var(--primary);
-      transform: translateX(4px);
+      transform: translateX(5px);
+      opacity: 1;
     }
     .social-links {
       display: flex;
-      gap: 0.8rem;
-      margin-top: 0.8rem;
+      gap: 0.9rem;
+      margin-top: 1rem;
     }
     .social-links a {
-      width: 34px;
-      height: 34px;
-      background: rgba(255,255,255,0.1);
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.12);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.25);
     }
     .social-links a:hover {
       background: var(--primary);
-      transform: translateY(-3px);
+      transform: translateY(-4px) scale(1.05);
     }
     .contact-info p {
-      font-size: 0.7rem;
-      margin-bottom: 0.4rem;
+      font-size: 0.75rem;
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     .footer-newsletter {
-      padding: 0.8rem;
-      margin: 0 auto 1rem;
-      max-width: 450px;
-      background: rgba(255,255,255,0.03);
-      border-radius: 48px;
-      border: 1px solid rgba(255,255,255,0.1);
-      backdrop-filter: blur(8px);
+      padding: 1rem;
+      margin: 0 auto 1.5rem;
+      max-width: 500px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 60px;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(12px);
     }
     .footer-newsletter h3 {
-      font-size: 1rem;
+      font-size: 1.1rem;
       margin-bottom: 0.3rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
       justify-content: center;
     }
     .footer-newsletter p {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       margin-bottom: 0.8rem;
     }
     .footer-newsletter form {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.6rem;
       flex-wrap: wrap;
       justify-content: center;
     }
     .footer-newsletter input {
       flex: 2;
-      min-width: 180px;
-      padding: 0.5rem 1rem;
-      border-radius: 40px;
-      border: 1px solid var(--input-border);
+      min-width: 200px;
+      padding: 0.6rem 1.2rem;
+      border-radius: 50px;
+      border: none;
       background: var(--input-bg);
       color: var(--text-color);
-      font-size: 0.75rem;
+      font-size: 0.8rem;
+      border: 1px solid var(--input-border);
     }
     .footer-newsletter button {
-      background: var(--button-bg);
+      background: linear-gradient(105deg, #25D366, #128C7E);
       color: white;
       border: none;
-      border-radius: 40px;
-      padding: 0.5rem 1.2rem;
-      font-size: 0.75rem;
+      border-radius: 50px;
+      padding: 0.6rem 1.5rem;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: 0.2s;
     }
     .footer-newsletter button:hover {
-      background: var(--button-hover);
       transform: translateY(-2px);
+      filter: brightness(1.05);
     }
     .footer-bottom {
-      font-size: 0.65rem;
-      padding-top: 1rem;
+      font-size: 0.7rem;
+      padding-top: 1.2rem;
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 0.8rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      margin-top: 0.5rem;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      margin-top: 0.8rem;
     }
     .back-to-top {
       position: fixed;
@@ -1362,8 +1374,8 @@
       right: 20px;
       background: var(--primary);
       color: white;
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -1373,7 +1385,7 @@
       visibility: hidden;
       transition: all 0.3s;
       z-index: 999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     .back-to-top.visible {
       opacity: 1;
@@ -1626,10 +1638,11 @@
         <span>Khomo Lathu</span>
       </h1>
       <p>
-        <svg width="18" height="18" viewBox="0 0 18 18" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-          <path d="M9,2.5 A6.5,6.5 0 0,1 15.5,9 A6.5,6.5 0 0,1 9,15.5 A6.5,6.5 0 0,1 2.5,9 A6.5,6.5 0 0,1 9,2.5 Z" fill="#009CFF"/>
-          <circle cx="9" cy="9" r="6" fill="#009CFF"/>
-          <path d="M6.2 9.2 L8.2 11.2 L11.8 7.8" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <!-- Replaced with the same curved verified badge as landlord cards -->
+        <svg width="20" height="20" viewBox="0 0 20 20" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+          <path d="M10,2.5 A7.5,7.5 0 0,1 17.5,10 A7.5,7.5 0 0,1 10,17.5 A7.5,7.5 0 0,1 2.5,10 A7.5,7.5 0 0,1 10,2.5 Z" fill="#009CFF"/>
+          <circle cx="10" cy="10" r="6" fill="#009CFF"/>
+          <path d="M7.2 10.2 L9.2 12.2 L12.8 8.8" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
         Verified rentals from trusted landlords
       </p>
@@ -1653,72 +1666,31 @@
   </div>
 
   <main class="main-container">
+    <!-- SIMPLIFIED FILTERS ROW: district, sort, min price, max price, apply -->
     <div class="filters-row">
-      <div class="price-range">
-        <div class="range-values"><span id="priceMinLabel">Min: 0</span><span id="priceMaxLabel">Max: 2,000,000</span></div>
-        <div id="priceSlider"></div>
-        <input type="hidden" id="priceMin" value="0"><input type="hidden" id="priceMax" value="2000000">
-      </div>
-      <select id="regionFilter" class="sort-select">
-        <option value="">All Regions</option><option value="Northern">Northern</option><option value="Central">Central</option><option value="Southern">Southern</option>
-      </select>
+      <div class="district-filter" id="districtFilterContainer"></div>
       <select id="sortSelect" class="sort-select">
         <option value="default">Sort: Default</option><option value="price_asc">Price: Low to High</option>
         <option value="price_desc">Price: High to Low</option><option value="newest">Newest First</option>
         <option value="rating">Highest Rated</option><option value="distance">Nearest to Me</option>
       </select>
-      <button id="saveSearchBtn" class="save-search-btn"><i class="fas fa-save"></i> Save Search</button>
-      <button id="applyFiltersBtn" class="save-search-btn" style="background: var(--button-hover);"><i class="fas fa-filter"></i> Apply Filters</button>
+      <div class="price-inputs">
+        <input type="number" id="minPriceInput" placeholder="Min price" value="0">
+        <span>—</span>
+        <input type="number" id="maxPriceInput" placeholder="Max price" value="2000000">
+      </div>
+      <button id="applyFiltersBtn" class="save-search-btn"><i class="fas fa-filter"></i> Apply Filters</button>
     </div>
 
-    <section class="amenities-filters">
+    <!-- REDESIGNED AMENITIES FILTERS: bedrooms, self contained, wifi, pool -->
+    <div class="amenities-filters">
+      <label><i class="fas fa-bed"></i> Bedrooms: <input type="number" id="filterBedrooms" min="0" value="0" style="width:70px;"></label>
+      <label><input type="checkbox" id="filterSelfContained"> <i class="fas fa-home"></i> Self Contained</label>
       <label><input type="checkbox" id="filterWifi"> <i class="fas fa-wifi"></i> WiFi</label>
-      <label><input type="checkbox" id="filterParking"> <i class="fas fa-parking"></i> Parking</label>
-      <label><input type="checkbox" id="filterFurnished"> <i class="fas fa-couch"></i> Furnished</label>
-      <label><input type="checkbox" id="filterPetFriendly"> <i class="fas fa-paw"></i> Pet Friendly</label>
       <label><input type="checkbox" id="filterPool"> <i class="fas fa-swimming-pool"></i> Pool</label>
-      <label><input type="checkbox" id="filterAC"> <i class="fas fa-snowflake"></i> AC</label>
-    </section>
+    </div>
 
     <input type="text" id="searchInput" placeholder="Search by area or name...">
-
-    <!-- ========== MARKET PULSE WIDGET (with district selector) ========== -->
-    <div class="market-pulse" id="marketPulse">
-      <div class="pulse-header">
-        <div class="pulse-title">
-          <i class="fas fa-chart-line"></i> Market Pulse
-          <span class="price-scout"><i class="fas fa-robot"></i> Price Scout AI</span>
-        </div>
-        <div class="district-pulse-selector">
-          <select id="pulseDistrictSelect" class="sort-select" style="padding:0.3rem 1rem; font-size:0.7rem; background:var(--input-bg);">
-            <option value="">All Malawi</option>
-          </select>
-        </div>
-        <div class="price-scout" id="weeklySummary">
-          <i class="fas fa-microphone-alt"></i> <span>Loading insights...</span>
-        </div>
-      </div>
-      <div class="pulse-stats">
-        <div class="stat-card">
-          <div class="stat-number" id="totalListings">0</div>
-          <div class="stat-label">Active Listings</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="avgPrice">0</div>
-          <div class="stat-label">Avg. Price (MWK)</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="hotListings">0</div>
-          <div class="stat-label">🔥 Hot Properties</div>
-        </div>
-      </div>
-      <div class="trend-chart">
-        <canvas id="priceTrendChart" width="400" height="100"></canvas>
-      </div>
-      <div class="hot-districts" id="hotDistrictsMarquee">
-        <span><i class="fas fa-fire"></i> Loading districts...</span>
-      </div>
-    </div>
 
     <div class="category-tabs">
       <button class="tab-btn active" data-type="all"><i class="fas fa-globe"></i> All</button>
@@ -1768,6 +1740,44 @@
       </div>
       <div id="map"></div>
     </section>
+
+    <!-- MARKET PULSE WIDGET MOVED BELOW MAP -->
+    <div class="market-pulse" id="marketPulse">
+      <div class="pulse-header">
+        <div class="pulse-title">
+          <i class="fas fa-chart-line"></i> Market Pulse
+          <span class="price-scout"><i class="fas fa-robot"></i> Price Scout AI</span>
+        </div>
+        <div class="district-pulse-selector">
+          <select id="pulseDistrictSelect" class="sort-select">
+            <option value="">All Malawi</option>
+          </select>
+        </div>
+        <div class="price-scout" id="weeklySummary">
+          <i class="fas fa-microphone-alt"></i> <span>Loading insights...</span>
+        </div>
+      </div>
+      <div class="pulse-stats">
+        <div class="stat-card">
+          <div class="stat-number" id="totalListings">0</div>
+          <div class="stat-label">Active Listings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="avgPrice">0</div>
+          <div class="stat-label">Avg. Price (MWK)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="hotListings">0</div>
+          <div class="stat-label">🔥 Hot Properties</div>
+        </div>
+      </div>
+      <div class="trend-chart">
+        <canvas id="priceTrendChart" width="400" height="100"></canvas>
+      </div>
+      <div class="hot-districts" id="hotDistrictsMarquee">
+        <span><i class="fas fa-fire"></i> Loading districts...</span>
+      </div>
+    </div>
 
     <section class="gps-section">
       <h2><i class="fas fa-location-dot"></i> Property GPS Locator</h2>
@@ -1930,6 +1940,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+  <!-- noUiSlider still loaded but not used (kept for compatibility, but we removed its init) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
@@ -1938,7 +1949,7 @@
   <script src="js/lease.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <!-- 3D House Script (standalone, using global THREE) -->
+  <!-- 3D House Script (standalone, using global THREE) – unchanged except border removed -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     (function() {
@@ -2321,7 +2332,8 @@
                 ${districts.map(d => `<option value="${d}">${d}</option>`).join('')}
               </select>
             `;
-            filterRow.appendChild(districtDiv);
+            // Insert as first child of .filters-row
+            filterRow.insertBefore(districtDiv, filterRow.firstChild);
 
             document.getElementById('districtFilterSelect').addEventListener('change', function(e) {
               const selected = e.target.value;

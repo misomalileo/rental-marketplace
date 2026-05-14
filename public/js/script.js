@@ -15,7 +15,6 @@ let drawnPolygon = null;
 let drawnItems;
 let currentShareHouseId = null;
 let comparisonList = [];
-let currentRegion = '';
 let currentDistrict = '';
 let districtDropdown = null;
 
@@ -167,7 +166,7 @@ async function loadHeroCarousel() {
           <img src="${house.images?.[0] || 'placeholder.jpg'}" alt="${escapeHtml(house.name)}">
           <div class="carousel-card-content">
             <h3>${escapeHtml(house.name)}</h3>
-            <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location || 'N/A')}</p>
+            <p><i class="fas fa-map-marker-alt" style="color: #10b981;"></i> ${escapeHtml(house.location || 'N/A')}</p>
             <div class="carousel-price">MWK ${Number(house.price).toLocaleString()}</div>
             <button class="carousel-btn" onclick="showDetails('${house._id}')">View Details</button>
           </div>
@@ -279,7 +278,7 @@ async function submitDreamMatch(e) {
         <div class="dream-card-content">
           <div class="dream-match-badge"><i class="fas fa-chart-line"></i> ${Math.round(house.score)}% Match</div>
           <h3>${escapeHtml(house.name)}</h3>
-          <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(house.location)}</p>
+          <p><i class="fas fa-map-marker-alt" style="color: #10b981;"></i> ${escapeHtml(house.location)}</p>
           <div class="dream-price">MWK ${Number(house.price).toLocaleString()}</div>
           <button class="carousel-btn" onclick="event.stopPropagation(); showDetails('${house.id}'); closeDreamMatchModal();">View Details</button>
         </div>
@@ -448,19 +447,19 @@ function renderMarkers(houses) {
   });
 }
 
-// ========== FETCH HOUSES (UPDATED: fetch more for market pulse) ==========
+// ========== FETCH HOUSES (UPDATED: fetch more for market pulse, removed region) ==========
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
     const params = new URLSearchParams();
     params.append('page', page);
-    params.append('limit', 200); // Increased to fetch all houses for accurate market pulse
+    params.append('limit', 200);
     if (type !== 'all') params.append('type', type);
     if (filters.minPrice) params.append('minPrice', filters.minPrice);
     if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
     if (filters.bedrooms) params.append('bedrooms', filters.bedrooms);
-    if (filters.pool) params.append('pool', 'true');
     if (filters.wifi) params.append('wifi', 'true');
     if (filters.selfContained) params.append('selfContained', 'true');
+    if (filters.pool) params.append('pool', 'true');
     if (sort !== 'default') params.append('sort', sort);
     if (filters.district && filters.district !== '') params.append('district', filters.district);
 
@@ -470,9 +469,11 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     currentPage = data.page;
     totalPages = data.pages;
 
-    // after loading, apply client-side selfContained filter if needed (since backend may not support it)
-    if (filters.selfContained) {
-      allHouses = allHouses.filter(house => house.selfContained === true);
+    const urlParams = new URLSearchParams(window.location.search);
+    const houseId = urlParams.get('house');
+    if (houseId) {
+      const house = allHouses.find(h => h._id === houseId);
+      if (house) setTimeout(() => showDetails(houseId), 500);
     }
     renderHouses(allHouses);
     renderMarkers(allHouses);
@@ -514,71 +515,41 @@ function changePage(page) {
   loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 
-// ========== REGION FILTER (kept for backwards compatibility but not used in UI) ==========
-function filterByRegion(house) {
-  if (!currentRegion) return true;
-  const locationLower = (house.location || '').toLowerCase();
-  for (const [city, region] of Object.entries(regionMap)) {
-    if (locationLower.includes(city.toLowerCase()) && region === currentRegion) return true;
-  }
-  return false;
-}
-function applyRegionFilter() {
-  const filtered = allHouses.filter(house => filterByRegion(house));
-  renderHouses(filtered);
-  renderMarkers(filtered);
-}
-
-// ========== NEW FILTER FUNCTIONS ==========
+// ========== GET CURRENT FILTERS (no region, no save search) ==========
 function getCurrentFilters() {
-  const minPrice = document.getElementById('minPriceInput')?.value ? parseInt(document.getElementById('minPriceInput').value) : '';
-  const maxPrice = document.getElementById('maxPriceInput')?.value ? parseInt(document.getElementById('maxPriceInput').value) : '';
-  const bedroomsCheckbox = document.getElementById('filterBedroomsCheckbox');
-  let bedrooms = '';
-  if (bedroomsCheckbox && bedroomsCheckbox.checked) {
-    bedrooms = document.getElementById('filterBedrooms')?.value ? parseInt(document.getElementById('filterBedrooms').value) : 1;
-  }
-  const pool = document.getElementById('filterPool')?.checked || false;
-  const wifi = document.getElementById('filterWifi')?.checked || false;
-  const selfContained = document.getElementById('filterSelfContained')?.checked || false;
-  const district = document.getElementById('districtFilterSelect')?.value || '';
-  const sort = document.getElementById('sortSelect')?.value || 'default';
-  return { minPrice, maxPrice, bedrooms, pool, wifi, selfContained, district, sort };
+  const districtDropdownEl = document.getElementById('districtFilterSelect');
+  let districtValue = '';
+  if (districtDropdownEl && districtDropdownEl.value) districtValue = districtDropdownEl.value;
+  else if (window.selectedDistrict) districtValue = window.selectedDistrict;
+  currentDistrict = districtValue;
+  return {
+    minPrice: document.getElementById('minPriceInput')?.value || '',
+    maxPrice: document.getElementById('maxPriceInput')?.value || '',
+    bedrooms: document.getElementById('filterBedrooms')?.value || '',
+    selfContained: document.getElementById('filterSelfContained')?.checked || false,
+    wifi: document.getElementById('filterWifi')?.checked || false,
+    pool: document.getElementById('filterPool')?.checked || false,
+    district: districtValue
+  };
 }
 function applyFilters() {
   currentFilters = getCurrentFilters();
   currentDistrict = currentFilters.district;
-  currentSort = currentFilters.sort;
   currentPage = 1;
   loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 function handleSortChange() {
   const sortSelect = document.getElementById('sortSelect');
-  if (sortSelect) {
-    sortSelect.addEventListener('change', () => {
-      currentSort = sortSelect.value;
-      applyFilters();
-    });
-  }
+  if (!sortSelect) return;
+  currentSort = sortSelect.value;
+  currentPage = 1;
+  loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 
-// ========== SAVE SEARCH (kept, may be removed later but kept for compatibility) ==========
+// ========== SAVE SEARCH (removed from UI but function kept for completeness) ==========
 function saveSearch() {
-  const modal = document.getElementById('saveSearchModal');
-  if (!modal) return;
-  modal.style.display = 'block';
-  document.getElementById('saveSearchForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('searchEmail').value;
-    const name = document.getElementById('searchName').value;
-    const filters = getCurrentFilters();
-    const searchData = { name: name || 'Saved Search', email, filters, type: currentType, sort: currentSort, createdAt: new Date().toISOString() };
-    let savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
-    savedSearches.push(searchData);
-    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
-    document.getElementById('saveSearchStatus').innerHTML = '<div class="message success"><i class="fas fa-check-circle"></i> Search saved! You will receive email alerts when new houses match.</div>';
-    setTimeout(() => { modal.style.display = 'none'; document.getElementById('saveSearchStatus').innerHTML = ''; }, 2000);
-  };
+  // Not used on frontend anymore – kept to avoid errors if called
+  console.log("Save search disabled as requested.");
 }
 
 // ========== MAP INIT ==========
@@ -601,7 +572,7 @@ function initMap() {
 }
 function filterHousesByPolygon() {
   if (!drawnPolygon) return;
-  const filtered = allHouses.filter(house => { if (!house.lat || !house.lng) return false; const point = turf.point([house.lng, house.lat]); const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]); const poly = turf.polygon([coords]); return turf.booleanPointInPoint(point, poly); });
+  const filtered = allHouses.filter(house => { if (!house.lat || !house.lng) return false; const point = turf.point([house.lng, house.lat]); const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]); const poly = turf.polygon([coords]); return turf.booleanPointInPolygon(point, poly); });
   renderHouses(filtered);
   renderMarkers(filtered);
 }
@@ -640,19 +611,14 @@ function openComparisonModal() {
   housesToCompare.forEach(house => { tableHtml += `<th style="padding: 8px;">${house.name}</th>`; });
   tableHtml += '</thead><tbody>';
   const features = [
-    { label: '<i class="fas fa-money-bill-wave"></i> Price', key: 'price', format: (v, house) => `MWK ${v.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}` },
-    { label: '<i class="fas fa-map-marker-alt"></i> Location', key: 'location' },
-    { label: '<i class="fas fa-home"></i> Type', key: 'type', format: (v) => getDisplayType(v) },
-    { label: '<i class="fas fa-bed"></i> Bedrooms', key: 'bedrooms', format: (v) => v || 'N/A' },
-    { label: '<i class="fas fa-clipboard-list"></i> Condition', key: 'condition' },
-    { label: '<i class="fas fa-home"></i> Self Contained', key: 'selfContained', format: (v) => v ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No' },
-    { label: '<i class="fas fa-wifi"></i> WiFi', key: 'wifi', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
-    { label: '<i class="fas fa-parking"></i> Parking', key: 'parking', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
-    { label: '<i class="fas fa-couch"></i> Furnished', key: 'furnished', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
-    { label: '<i class="fas fa-paw"></i> Pet Friendly', key: 'petFriendly', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
-    { label: '<i class="fas fa-swimming-pool"></i> Pool', key: 'pool', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
-    { label: '<i class="fas fa-snowflake"></i> AC', key: 'ac', format: (v) => v ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' },
-    { label: '<i class="fas fa-star"></i> Rating', key: 'averageRating', format: (v) => v ? v.toFixed(1) : 'No ratings' }
+    { label: '<i class="fas fa-money-bill-wave" style="color:#f59e0b;"></i> Price', key: 'price', format: (v, house) => `MWK ${v.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}` },
+    { label: '<i class="fas fa-map-marker-alt" style="color:#10b981;"></i> Location', key: 'location' },
+    { label: '<i class="fas fa-home" style="color:#2563eb;"></i> Type', key: 'type', format: (v) => getDisplayType(v) },
+    { label: '<i class="fas fa-bed" style="color:#8b5cf6;"></i> Bedrooms', key: 'bedrooms', format: (v) => v || 'N/A' },
+    { label: '<i class="fas fa-clipboard-list" style="color:#6b7280;"></i> Condition', key: 'condition' },
+    { label: '<i class="fas fa-home" style="color:#9b59b6;"></i> Self Contained', key: 'selfContained', format: (v) => v ? '<i class="fas fa-check-circle" style="color:#10b981;"></i> Yes' : '<i class="fas fa-times-circle" style="color:#ef4444;"></i> No' },
+    { label: '<i class="fas fa-wifi" style="color:#3b82f6;"></i> WiFi', key: 'wifi', format: (v) => v ? '<i class="fas fa-check-circle" style="color:#10b981;"></i>' : '<i class="fas fa-times-circle" style="color:#ef4444;"></i>' },
+    { label: '<i class="fas fa-swimming-pool" style="color:#0ea5a4;"></i> Pool', key: 'pool', format: (v) => v ? '<i class="fas fa-check-circle" style="color:#10b981;"></i>' : '<i class="fas fa-times-circle" style="color:#ef4444;"></i>' }
   ];
   features.forEach(feature => {
     tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;">${feature.label}</td>`;
@@ -668,12 +634,12 @@ function openComparisonModal() {
     });
     tableHtml += `</tr>`;
   });
-  tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image"></i> Image</td>`;
+  tableHtml += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding: 8px; font-weight: bold;"><i class="fas fa-image" style="color:#ec4899;"></i> Image</td>`;
   housesToCompare.forEach(house => {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</table></tbody><table>`;
+  tableHtml += `</table></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -688,7 +654,7 @@ function openComparisonModal() {
 }
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
-// ========== RENDER HOUSE CARDS (UPDATED: reads propertyDetails for type-specific fields) ==========
+// ========== RENDER HOUSE CARDS (UPDATED: coloured icons) ==========
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
@@ -724,7 +690,6 @@ function renderHouses(houses) {
       landlordInfoHtml = `<div class="landlord-info-row" style="position: relative;">${avatarHtml}<a href="#" class="landlord-name-link" data-landlord-id="${house.owner._id}" style="text-decoration:none; font-weight:600;">${house.owner.name}</a>${landlordBadge}</div>`;
     }
 
-    // Status badges (available, featured, new/trending)
     let rentalStatusBadge = '';
     if (house.rentalStatus === 'available') rentalStatusBadge = '<span class="badge available"><i class="fas fa-check-circle"></i> Available</span>';
     else if (house.rentalStatus === 'rented') rentalStatusBadge = '<span class="badge rented"><i class="fas fa-ban"></i> Rented</span>';
@@ -735,12 +700,10 @@ function renderHouses(houses) {
     else if (house.isNew) trendingBadge = '<span class="new-badge"><i class="fas fa-sparkles"></i> New</span>';
     const statusRow = `<div class="status-badges" style="display:flex; flex-wrap:wrap; gap:4px; margin: 4px 0;">${rentalStatusBadge} ${featuredBadge} ${trendingBadge}</div>`;
 
-    // Property type badge (gradient + icon)
     const typeIcon = getTypeIcon(house.type);
     const displayType = getDisplayType(house.type);
     const propertyTypeBadge = `<div class="property-type-badge-card"><i class="fas ${typeIcon}"></i> ${displayType}</div>`;
 
-    // Price display with percentage change if oldPrice exists
     let priceHtml = '';
     const priceValue = house.price;
     const formattedPrice = `MWK ${Number(priceValue).toLocaleString()}`;
@@ -751,58 +714,54 @@ function renderHouses(houses) {
       const percent = ((change / oldPrice) * 100).toFixed(0);
       const changeClass = change < 0 ? 'negative' : 'positive';
       const changeSymbol = change < 0 ? '↓' : '↑';
-      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${changeSymbol} ${Math.abs(percent)}%</span> ${formattedPrice} ${isShortStay ? '' : (house.type === 'Hostel' ? '/ room' : '/ month')}</p>`;
+      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave" style="color:#f59e0b;"></i> <span class="old-price">MWK ${oldPrice.toLocaleString()}</span> <span class="price-change ${changeClass}">${changeSymbol} ${Math.abs(percent)}%</span> ${formattedPrice} ${isShortStay ? '' : (house.type === 'Hostel' ? '/ room' : '/ month')}</p>`;
     } else {
-      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave"></i> ${formattedPrice} ${isShortStay ? '' : (house.type === 'Hostel' ? '/ room' : '/ month')}</p>`;
+      priceHtml = `<p class="price"><i class="fas fa-money-bill-wave" style="color:#f59e0b;"></i> ${formattedPrice} ${isShortStay ? '' : (house.type === 'Hostel' ? '/ room' : '/ month')}</p>`;
     }
 
-    // Amenities row (only furnished/self contained)
     let amenitiesHtml = '';
     if (house.furnished || house.selfContained) {
       let amenitiesList = [];
-      if (house.furnished) amenitiesList.push('<i class="fas fa-couch"></i> Furnished');
-      if (house.selfContained) amenitiesList.push('<i class="fas fa-home"></i> Self Contained');
+      if (house.furnished) amenitiesList.push('<i class="fas fa-couch" style="color:#ec4899;"></i> Furnished');
+      if (house.selfContained) amenitiesList.push('<i class="fas fa-home" style="color:#9b59b6;"></i> Self Contained');
       amenitiesHtml = `<div class="amenities-row">${amenitiesList.join(' • ')}</div>`;
     }
 
-    // Per-type specific fields – now read from propertyDetails
     const pd = house.propertyDetails || {};
     let typeSpecificHtml = '';
     switch (house.type) {
       case 'Hostel':
-        typeSpecificHtml = `<p><i class="fas fa-hotel"></i> Total rooms: ${pd.totalRooms || house.totalRooms || 'N/A'} | Vacancies: ${pd.vacancies || house.vacancies || 'N/A'}</p>`;
-        if (house.gender && house.gender !== 'none') typeSpecificHtml += `<p><i class="fas fa-venus-mars"></i> Gender: ${house.gender}</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-hotel" style="color:#10b981;"></i> Total rooms: ${pd.totalRooms || house.totalRooms || 'N/A'} | Vacancies: ${pd.vacancies || house.vacancies || 'N/A'}</p>`;
+        if (house.gender && house.gender !== 'none') typeSpecificHtml += `<p><i class="fas fa-venus-mars" style="color:#f59e0b;"></i> Gender: ${house.gender}</p>`;
         break;
       case 'Office':
-        typeSpecificHtml = `<p><i class="fas fa-chart-line"></i> Office size: ${pd.officeSize || house.officeSize || 'N/A'} sqm</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-chart-line" style="color:#6b7280;"></i> Office size: ${pd.officeSize || house.officeSize || 'N/A'} sqm</p>`;
         break;
       case 'ShortStay':
         const daily = pd.dailyPrice || house.dailyPrice;
         const weekly = pd.weeklyPrice || house.weeklyPrice;
-        typeSpecificHtml = `<p><i class="fas fa-sun"></i> Daily: MWK ${daily ? Number(daily).toLocaleString() : 'N/A'} | Weekly: MWK ${weekly ? Number(weekly).toLocaleString() : 'N/A'}</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-sun" style="color:#f97316;"></i> Daily: MWK ${daily ? Number(daily).toLocaleString() : 'N/A'} | Weekly: MWK ${weekly ? Number(weekly).toLocaleString() : 'N/A'}</p>`;
         break;
       case 'SharedLiving':
-        typeSpecificHtml = `<p><i class="fas fa-users"></i> Total beds: ${pd.totalBeds || house.totalBeds || 'N/A'} | Available: ${pd.availableBeds || house.availableBeds || 'N/A'}</p>`;
-        if (house.gender && house.gender !== 'none') typeSpecificHtml += `<p><i class="fas fa-venus-mars"></i> Gender: ${house.gender}</p>`;
-        if (pd.roomSize) typeSpecificHtml += `<p><i class="fas fa-ruler-combined"></i> Room size: ${pd.roomSize} sqm</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-users" style="color:#14b8a6;"></i> Total beds: ${pd.totalBeds || house.totalBeds || 'N/A'} | Available: ${pd.availableBeds || house.availableBeds || 'N/A'}</p>`;
+        if (house.gender && house.gender !== 'none') typeSpecificHtml += `<p><i class="fas fa-venus-mars" style="color:#f59e0b;"></i> Gender: ${house.gender}</p>`;
+        if (pd.roomSize) typeSpecificHtml += `<p><i class="fas fa-ruler-combined" style="color:#64748b;"></i> Room size: ${pd.roomSize} sqm</p>`;
         break;
       case 'StudentAccommodation':
         const nearbyUni = pd.nearbyUniversity || house.nearbyUniversity;
-        typeSpecificHtml = `<p><i class="fas fa-university"></i> Nearby: ${nearbyUni || 'N/A'}</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-university" style="color:#a855f7;"></i> Nearby: ${nearbyUni || 'N/A'}</p>`;
         break;
       case 'Room':
         const roomType = pd.roomType || house.roomType || 'Standard';
-        typeSpecificHtml = `<p><i class="fas fa-door-open"></i> Room type: ${roomType}</p>`;
+        typeSpecificHtml = `<p><i class="fas fa-door-open" style="color:#8b5cf6;"></i> Room type: ${roomType}</p>`;
         break;
       default:
-        // For House, Apartment, FurnishedApartment – show bedrooms
         const bedrooms = pd.bedrooms || house.bedrooms;
-        if (bedrooms) typeSpecificHtml = `<p><i class="fas fa-bed"></i> Bedrooms: ${bedrooms}</p>`;
+        if (bedrooms) typeSpecificHtml = `<p><i class="fas fa-bed" style="color:#8b5cf6;"></i> Bedrooms: ${bedrooms}</p>`;
         else typeSpecificHtml = '';
         break;
     }
 
-    // Read more button (all extra buttons go inside modal)
     const readMoreBtn = `<button class="read-more-btn" onclick="showDetails('${house._id}')"><i class="fas fa-book-open"></i> Read more</button>`;
 
     card.innerHTML = `
@@ -817,7 +776,7 @@ function renderHouses(houses) {
         ${statusRow}
         ${propertyTypeBadge}
         <h3>${house.name}</h3>
-        <p><i class="fas fa-map-marker-alt"></i> ${house.location || 'N/A'}</p>
+        <p><i class="fas fa-map-marker-alt" style="color:#10b981;"></i> ${house.location || 'N/A'}</p>
         ${priceHtml}
         ${typeSpecificHtml}
         ${amenitiesHtml}
@@ -826,7 +785,7 @@ function renderHouses(houses) {
     `;
     container.appendChild(card);
 
-    // Attach slider logic
+    // Slider logic (unchanged)
     const sliderContainer = card.querySelector('.slides-container');
     const dots = card.querySelectorAll('.dot');
     if (sliderContainer && dots.length) {
@@ -852,7 +811,6 @@ function renderHouses(houses) {
       });
     }
 
-    // Lightbox on image click
     const slidesContainer = card.querySelector('.slides-container');
     if (slidesContainer) {
       slidesContainer.addEventListener('click', (e) => {
@@ -864,20 +822,17 @@ function renderHouses(houses) {
       });
     }
 
-    // Record view on card click (but not on buttons)
     card.addEventListener("click", (e) => {
       if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.classList.contains("star") || e.target.classList.contains("dot")) return;
       fetch(`/api/houses/${house._id}/view`, { method: "PUT" }).catch(err => console.error("Failed to record view", err));
     });
   });
 
-  // Re-attach landlord click handlers
   document.querySelectorAll('.landlord-name-link').forEach(link => {
     link.removeEventListener('click', handleLandlordClick);
     link.addEventListener('click', handleLandlordClick);
   });
 
-  // Add crown to premium landlord avatars
   document.querySelectorAll('.landlord-avatar').forEach(avatar => {
     const houseOwnerId = avatar.getAttribute('data-landlord-id');
     const house = houses.find(h => h.owner?._id === houseOwnerId);
@@ -889,7 +844,7 @@ function renderHouses(houses) {
   setTimeout(() => updateMarketPulse(currentPulseDistrict), 100);
 }
 
-// ========== REPORT, CHAT, LANDLORD PROFILE (UPDATED: replaced prompt with custom modal) ==========
+// ========== REPORT, CHAT, LANDLORD PROFILE (unchanged logic, only colours added in modal later) ==========
 async function reportHouse(houseId) {
   const token = localStorage.getItem("token");
   if (!token) { showToast("Please login to report.", 'error'); return; }
@@ -926,12 +881,12 @@ async function showLandlordProfile(landlordId) {
     else if (landlord.verificationType === 'official') badgeHtml = '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified Landlord</span>';
     else badgeHtml = '<span class="badge none"><i class="fas fa-lock"></i> Not Verified</span>';
     const businessHtml = landlord.businessName ? `<div class="business-name"><i class="fas fa-building"></i> ${landlord.businessName}</div>` : '';
-    const addressHtml = landlord.address ? `<div class="info-row"><i class="fas fa-map-marker-alt"></i> ${landlord.address}</div>` : '';
-    const phoneHtml = `<div class="info-row"><i class="fas fa-phone-alt"></i> ${landlord.phone || 'Not provided'}</div>`;
-    const emailHtml = `<div class="info-row"><i class="fas fa-envelope"></i> ${landlord.email}</div>`;
-    const joinedHtml = `<div class="info-row"><i class="fas fa-calendar-alt"></i> Joined ${new Date(landlord.createdAt).toLocaleDateString()}</div>`;
-    const responseRateHtml = `<div class="info-row"><i class="fas fa-reply-all"></i> Response Rate: ${landlord.profile?.responseRate || 0}%</div>`;
-    const bioHtml = landlord.bio ? `<div class="bio"><i class="fas fa-quote-left"></i> ${landlord.bio}</div>` : '';
+    const addressHtml = landlord.address ? `<div class="info-row"><i class="fas fa-map-marker-alt" style="color:#10b981;"></i> ${landlord.address}</div>` : '';
+    const phoneHtml = `<div class="info-row"><i class="fas fa-phone-alt" style="color:#25D366;"></i> ${landlord.phone || 'Not provided'}</div>`;
+    const emailHtml = `<div class="info-row"><i class="fas fa-envelope" style="color:#2563eb;"></i> ${landlord.email}</div>`;
+    const joinedHtml = `<div class="info-row"><i class="fas fa-calendar-alt" style="color:#6b7280;"></i> Joined ${new Date(landlord.createdAt).toLocaleDateString()}</div>`;
+    const responseRateHtml = `<div class="info-row"><i class="fas fa-reply-all" style="color:#8b5cf6;"></i> Response Rate: ${landlord.profile?.responseRate || 0}%</div>`;
+    const bioHtml = landlord.bio ? `<div class="bio"><i class="fas fa-quote-left" style="color:#f59e0b;"></i> ${landlord.bio}</div>` : '';
 
     let housesPreview = '';
     if (houses && houses.length) {
@@ -1013,8 +968,8 @@ function filterPropertiesNearAmenity(pointsArray, typeName) {
       <ul style="margin-top: 12px;">
         ${nearby.slice(0,15).map(a => `
           <li style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.03); border-radius: 12px;">
-            <i class="fas fa-map-marker-alt"></i> <strong>${a.name}</strong><br>
-            <i class="fas fa-arrows-up-down"></i> ${a.distance.toFixed(2)} km (approx. ${Math.round(a.distance/5 * 60)} min walk)<br>
+            <i class="fas fa-map-marker-alt" style="color:#10b981;"></i> <strong>${a.name}</strong><br>
+            <i class="fas fa-arrows-up-down" style="color:#f59e0b;"></i> ${a.distance.toFixed(2)} km (approx. ${Math.round(a.distance/5 * 60)} min walk)<br>
             <a href="https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}" target="_blank" style="font-size:0.7rem;">View on Google Maps <i class="fas fa-external-link-alt"></i></a>
           </li>
         `).join('')}
@@ -1051,7 +1006,7 @@ const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
 observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
 setTimeout(attachDoubleClickToHouseCards, 2000);
 
-// ========== NEIGHBOURHOOD INSIGHTS ==========
+// ========== NEIGHBOURHOOD INSIGHTS (unchanged) ==========
 async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
   if (!insightsDiv) return;
@@ -1113,7 +1068,7 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
   insightsDiv.innerHTML = insightsHtml;
 }
 
-// ========== STREET VIEW ==========
+// ========== STREET VIEW (unchanged) ==========
 function loadStreetView(lat, lng) {
   const container = document.getElementById('modalStreetView');
   container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Loading street view...</div>';
@@ -1129,7 +1084,7 @@ function loadStreetView(lat, lng) {
   img.src = url;
 }
 
-// ========== PRICE INSIGHTS ==========
+// ========== PRICE INSIGHTS (unchanged) ==========
 async function loadPriceInsights(houseId) {
   const container = document.getElementById('modalPricing');
   container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-chart-line fa-spin"></i> Fetching market data...</div>';
@@ -1186,61 +1141,57 @@ function loadVirtualTour(url) {
   } catch (err) { console.error('Failed to load 360 image:', err); messageDiv.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> Failed to load 360° image. Make sure it\'s a valid panoramic image.</p>'; }
 }
 
-// ========== SHOW DETAILS (MODAL WITH ALL BUTTONS, READS propertyDetails) ==========
+// ========== SHOW DETAILS (MODAL WITH COLOURED ICONS) ==========
 async function showDetails(houseId) {
   const house = allHouses.find(h => h._id === houseId);
   if (!house) return;
 
   const pd = house.propertyDetails || {};
 
-  // Build detailed HTML (phone number hidden, only WhatsApp)
   let detailsHtml = `<h2>${house.name}</h2>
-    <p><strong><i class="fas fa-home"></i> Type:</strong> ${getDisplayType(house.type)}</p>
-    <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${house.location}</p>`;
+    <p><strong><i class="fas fa-home" style="color:#2563eb;"></i> Type:</strong> ${getDisplayType(house.type)}</p>
+    <p><strong><i class="fas fa-map-marker-alt" style="color:#10b981;"></i> Location:</strong> ${house.location}</p>`;
 
-  // Price section – handle ShortStay separately
   if (house.type === 'ShortStay') {
     const daily = pd.dailyPrice || house.dailyPrice;
     const weekly = pd.weeklyPrice || house.weeklyPrice;
-    detailsHtml += `<p><strong><i class="fas fa-money-bill-wave"></i> Daily Price:</strong> MWK ${daily ? Number(daily).toLocaleString() : 'N/A'}</p>
-                    <p><strong><i class="fas fa-money-bill-wave"></i> Weekly Price:</strong> MWK ${weekly ? Number(weekly).toLocaleString() : 'N/A'}</p>`;
+    detailsHtml += `<p><strong><i class="fas fa-money-bill-wave" style="color:#f59e0b;"></i> Daily Price:</strong> MWK ${daily ? Number(daily).toLocaleString() : 'N/A'}</p>
+                    <p><strong><i class="fas fa-money-bill-wave" style="color:#f59e0b;"></i> Weekly Price:</strong> MWK ${weekly ? Number(weekly).toLocaleString() : 'N/A'}</p>`;
   } else {
-    detailsHtml += `<p><strong><i class="fas fa-money-bill-wave"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
+    detailsHtml += `<p><strong><i class="fas fa-money-bill-wave" style="color:#f59e0b;"></i> Price:</strong> MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? '/ room' : '/ month'}</p>`;
   }
 
-  detailsHtml += `<p><strong><i class="fas fa-bed"></i> Bedrooms:</strong> ${pd.bedrooms || house.bedrooms || 'N/A'}</p>
-    <p><strong><i class="fas fa-bath"></i> Bathrooms:</strong> ${pd.bathrooms || house.bathrooms || 'N/A'}</p>
-    <p><strong><i class="fas fa-clipboard-list"></i> Condition:</strong> ${house.condition}</p>
-    <p><strong><i class="fas fa-home"></i> Self Contained:</strong> ${pd.selfContained || house.selfContained ? '<i class="fas fa-check-circle"></i> Yes' : '<i class="fas fa-times-circle"></i> No'}</p>
-    <p><strong><i class="fas fa-align-left"></i> Description:</strong> ${house.description || 'No description'}</p>
-    <p><strong><i class="fas fa-cogs"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake"></i> AC ' : ''}</p>
-    <p><strong><i class="fas fa-venus-mars"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus"></i> Girls Only' : '<i class="fas fa-venus-mars"></i> Mixed'}</p>
-    <p><strong><i class="fas fa-calendar-times"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
-    <p><strong><i class="fab fa-whatsapp"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank" style="background: linear-gradient(135deg, #25D366, #128C7E); padding: 4px 12px; border-radius: 40px; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-whatsapp"></i> WhatsApp</a></p>`;
+  detailsHtml += `<p><strong><i class="fas fa-bed" style="color:#8b5cf6;"></i> Bedrooms:</strong> ${pd.bedrooms || house.bedrooms || 'N/A'}</p>
+    <p><strong><i class="fas fa-bath" style="color:#8b5cf6;"></i> Bathrooms:</strong> ${pd.bathrooms || house.bathrooms || 'N/A'}</p>
+    <p><strong><i class="fas fa-clipboard-list" style="color:#6b7280;"></i> Condition:</strong> ${house.condition}</p>
+    <p><strong><i class="fas fa-home" style="color:#9b59b6;"></i> Self Contained:</strong> ${pd.selfContained || house.selfContained ? '<i class="fas fa-check-circle" style="color:#10b981;"></i> Yes' : '<i class="fas fa-times-circle" style="color:#ef4444;"></i> No'}</p>
+    <p><strong><i class="fas fa-align-left" style="color:#64748b;"></i> Description:</strong> ${house.description || 'No description'}</p>
+    <p><strong><i class="fas fa-cogs" style="color:#3b82f6;"></i> Amenities:</strong> ${house.wifi ? '<i class="fas fa-wifi" style="color:#3b82f6;"></i> WiFi ' : ''}${house.parking ? '<i class="fas fa-parking" style="color:#6b7280;"></i> Parking ' : ''}${house.furnished ? '<i class="fas fa-couch" style="color:#ec4899;"></i> Furnished ' : ''}${house.petFriendly ? '<i class="fas fa-paw" style="color:#f59e0b;"></i> Pet Friendly ' : ''}${house.pool ? '<i class="fas fa-swimming-pool" style="color:#0ea5a4;"></i> Pool ' : ''}${house.ac ? '<i class="fas fa-snowflake" style="color:#3b82f6;"></i> AC ' : ''}</p>
+    <p><strong><i class="fas fa-venus-mars" style="color:#f59e0b;"></i> Gender:</strong> ${house.gender === 'none' ? 'No restriction' : house.gender === 'boys' ? '<i class="fas fa-mars" style="color:#3498db;"></i> Boys Only' : house.gender === 'girls' ? '<i class="fas fa-venus" style="color:#e84393;"></i> Girls Only' : '<i class="fas fa-venus-mars" style="color:#f1c40f;"></i> Mixed'}</p>
+    <p><strong><i class="fas fa-calendar-times" style="color:#ef4444;"></i> Unavailable Dates:</strong> ${house.unavailableDates?.length ? house.unavailableDates.map(d => new Date(d).toLocaleDateString()).join(', ') : 'None'}</p>
+    <p><strong><i class="fab fa-whatsapp" style="color:#25D366;"></i> Contact:</strong> <a href="https://wa.me/${house.phone}" target="_blank" style="background: linear-gradient(135deg, #25D366, #128C7E); padding: 4px 12px; border-radius: 40px; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-whatsapp"></i> WhatsApp</a></p>`;
 
-  // Additional type-specific details for modal
   if (house.type === 'StudentAccommodation') {
     const uni = pd.nearbyUniversity || house.nearbyUniversity;
-    if (uni) detailsHtml += `<p><strong><i class="fas fa-university"></i> Nearby University:</strong> ${uni}</p>`;
+    if (uni) detailsHtml += `<p><strong><i class="fas fa-university" style="color:#a855f7;"></i> Nearby University:</strong> ${uni}</p>`;
   }
   if (house.type === 'Office') {
     const size = pd.officeSize || house.officeSize;
-    if (size) detailsHtml += `<p><strong><i class="fas fa-chart-line"></i> Office Size:</strong> ${size} sqm</p>`;
+    if (size) detailsHtml += `<p><strong><i class="fas fa-chart-line" style="color:#6b7280;"></i> Office Size:</strong> ${size} sqm</p>`;
   }
   if (house.type === 'Room') {
     const roomType = pd.roomType || house.roomType;
-    if (roomType) detailsHtml += `<p><strong><i class="fas fa-door-open"></i> Room Type:</strong> ${roomType}</p>`;
+    if (roomType) detailsHtml += `<p><strong><i class="fas fa-door-open" style="color:#8b5cf6;"></i> Room Type:</strong> ${roomType}</p>`;
   }
   if (house.type === 'SharedLiving') {
     const availBeds = pd.availableBeds || house.availableBeds;
-    if (availBeds) detailsHtml += `<p><strong><i class="fas fa-bed"></i> Available Beds:</strong> ${availBeds}</p>`;
+    if (availBeds) detailsHtml += `<p><strong><i class="fas fa-bed" style="color:#8b5cf6;"></i> Available Beds:</strong> ${availBeds}</p>`;
   }
   if (house.type === 'Hostel') {
     const vacancies = pd.vacancies || house.vacancies;
-    if (vacancies) detailsHtml += `<p><strong><i class="fas fa-bed"></i> Vacancies:</strong> ${vacancies}</p>`;
+    if (vacancies) detailsHtml += `<p><strong><i class="fas fa-bed" style="color:#8b5cf6;"></i> Vacancies:</strong> ${vacancies}</p>`;
   }
 
-  // Action buttons row inside modal
   const isLoggedIn = !!localStorage.getItem("token");
   let currentUserId = null;
   if (isLoggedIn) {
@@ -1254,18 +1205,16 @@ async function showDetails(houseId) {
   const isFav = favorites.includes(house._id);
   const actionButtons = `
     <div class="modal-action-buttons">
-      <button onclick="toggleFavorite('${house._id}'); showDetails('${house._id}')"><i class="${isFav ? 'fas fa-heart' : 'far fa-heart'}"></i> ${isFav ? 'Saved' : 'Save'}</button>
-      <button onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt"></i> Share</button>
-      <button onclick="addToCompare('${house._id}'); showDetails('${house._id}')"><i class="fas fa-chart-simple"></i> ${comparisonList.includes(house._id) ? 'Remove from Compare' : 'Compare'}</button>
-      ${!isOwner && isLoggedIn ? `<button onclick="startChat('${house.owner?._id}', '${house._id}')"><i class="fas fa-comment-dots"></i> Chat with Landlord</button>` : ''}
-      ${isLoggedIn && !isOwner ? `<button onclick="reportHouse('${house._id}')"><i class="fas fa-flag"></i> Report</button>` : ''}
-      ${!isLoggedIn ? `<button onclick="window.location.href='login.html'"><i class="fas fa-sign-in-alt"></i> Login to Interact</button>` : ''}
+      <button onclick="toggleFavorite('${house._id}'); showDetails('${house._id}')"><i class="${isFav ? 'fas fa-heart' : 'far fa-heart'}" style="color:#e74c3c;"></i> ${isFav ? 'Saved' : 'Save'}</button>
+      <button onclick="shareHouse('${house._id}', '${house.name}')"><i class="fas fa-share-alt" style="color:#1DA1F2;"></i> Share</button>
+      <button onclick="addToCompare('${house._id}'); showDetails('${house._id}')"><i class="fas fa-chart-simple" style="color:#f59e0b;"></i> ${comparisonList.includes(house._id) ? 'Remove from Compare' : 'Compare'}</button>
+      ${!isOwner && isLoggedIn ? `<button onclick="startChat('${house.owner?._id}', '${house._id}')"><i class="fas fa-comment-dots" style="color:#10b981;"></i> Chat with Landlord</button>` : ''}
+      ${isLoggedIn && !isOwner ? `<button onclick="reportHouse('${house._id}')"><i class="fas fa-flag" style="color:#ef4444;"></i> Report</button>` : ''}
+      ${!isLoggedIn ? `<button onclick="window.location.href='login.html'"><i class="fas fa-sign-in-alt" style="color:#2563eb;"></i> Login to Interact</button>` : ''}
     </div>
   `;
-
   detailsHtml = actionButtons + detailsHtml;
 
-  // Offer section (unchanged but with custom modal for confirmations)
   let myOffer = null;
   if (isLoggedIn && house.owner && house.owner._id !== currentUserId) {
     try {
@@ -1600,7 +1549,7 @@ function initHeatmap() {
   }
 }
 
-// ========== MARKET PULSE & SMART PRICE SCOUT ==========
+// ========== MARKET PULSE & SMART PRICE SCOUT (unchanged but moved) ==========
 function getDistrictAvgPriceMap() {
   const districtMap = {};
   allHouses.forEach(house => {
@@ -1616,7 +1565,7 @@ function getDistrictAvgPriceMap() {
   return avgMap;
 }
 function addSmartBadges(card, house, avgPriceMap) {
-  // (Smart badges already integrated in card design, keeping function for compatibility)
+  // kept for compatibility
 }
 async function updateMarketPulse(districtFilter = '') {
   const totalListingsEl = document.getElementById('totalListings');
@@ -1729,13 +1678,6 @@ function populatePulseDistrictDropdown(districts) {
 }
 
 // ========== EVENT LISTENERS & INITIALIZATION ==========
-function addHeroVerifiedBadge() {
-  const container = document.getElementById('heroVerifiedBadge');
-  if (container) {
-    container.innerHTML = fbSaturatedSky(22, 12, 4);
-  }
-}
-
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1746,10 +1688,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 const filterBtn = document.getElementById("applyFiltersBtn"); if (filterBtn) filterBtn.onclick = applyFilters;
-const searchInput = document.getElementById("searchInput"); if (searchInput) { searchInput.addEventListener("keyup", () => { const term = searchInput.value.toLowerCase(); const filtered = allHouses.filter(h => (h.name.toLowerCase().includes(term) || (h.location && h.location.toLowerCase().includes(term))) && filterByRegion(h)); renderHouses(filtered); renderMarkers(filtered); }); }
-const nearBtn = document.getElementById("nearMeBtn"); if (nearBtn) { nearBtn.onclick = () => { if (!navigator.geolocation) { showToast("GPS not supported", 'error'); return; } navigator.geolocation.getCurrentPosition(pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; map.setView([userLocation.lat, userLocation.lng], 14); L.marker([userLocation.lat, userLocation.lng]).addTo(map).bindPopup("<i class='fas fa-map-pin'></i> You are here").openPopup(); const nearby = allHouses.filter(h => { if (!h.lat || !h.lng) return false; const dist = getDistance(userLocation.lat, userLocation.lng, h.lat, h.lng); return dist <= radius; }); renderHouses(nearby); renderMarkers(nearby); }); }; }
+const searchInput = document.getElementById("searchInput"); if (searchInput) { searchInput.addEventListener("keyup", () => { const term = searchInput.value.toLowerCase(); const filtered = allHouses.filter(h => (h.name.toLowerCase().includes(term) || (h.location && h.location.toLowerCase().includes(term)))); renderHouses(filtered); renderMarkers(filtered); }); }
 const gpsBtn = document.getElementById("getLocationBtn"); if (gpsBtn) { gpsBtn.addEventListener("click", () => { const status = document.getElementById("gpsStatus"); if (navigator.geolocation) { status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Getting location..."; navigator.geolocation.getCurrentPosition(pos => { document.getElementById("latitude").value = pos.coords.latitude; document.getElementById("longitude").value = pos.coords.longitude; status.innerHTML = `<i class="fas fa-check-circle"></i> Captured! Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`; }, () => { status.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Allow location access"; }, { enableHighAccuracy: true }); } else { status.innerHTML = "GPS not supported"; } }); }
-const regionSelect = document.getElementById('regionFilter'); if (regionSelect) regionSelect.addEventListener('change', () => { currentRegion = regionSelect.value; applyRegionFilter(); });
 const compareFloatingBtn = document.getElementById('compareFloatingBtn'); if (compareFloatingBtn) compareFloatingBtn.addEventListener('click', openComparisonModal);
 const dreamLink = document.getElementById('dreamMatchLink');
 if (dreamLink) dreamLink.addEventListener('click', (e) => { e.preventDefault(); openDreamMatchModal(); });
@@ -1803,21 +1743,11 @@ function initPulseDropdown() {
     populatePulseDistrictDropdown(fallback);
   }
 }
-function initSortSelect() {
-  const sortSelect = document.getElementById('sortSelect');
-  if (sortSelect) {
-    sortSelect.addEventListener('change', () => {
-      currentSort = sortSelect.value;
-      applyFilters();
-    });
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  addHeroVerifiedBadge();
   initMap();
-  const saveBtn = document.getElementById('saveSearchBtn');
-  if (saveBtn) saveBtn.addEventListener('click', saveSearch);
+  // no price slider init anymore
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) sortSelect.addEventListener('change', handleSortChange);
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('page')) currentPage = parseInt(urlParams.get('page'));
   if (urlParams.has('type')) {
@@ -1825,6 +1755,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.tab-btn').forEach(btn => { if (btn.dataset.type === currentType) btn.classList.add('active'); else btn.classList.remove('active'); });
   }
   if (urlParams.has('sort')) currentSort = urlParams.get('sort');
+  if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
   if (urlParams.has('district')) { currentDistrict = urlParams.get('district'); syncDistrictFilter(); }
   loadHouses(currentPage, currentType, currentFilters, currentSort);
   loadHeroCarousel();
@@ -1832,10 +1763,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAmenityLayers();
   initHeatmap();
   setTimeout(() => initPulseDropdown(), 1500);
-  initSortSelect();
 });
 
-// Expose global functions
+// Expose global functions (no change)
 window.showDetails = showDetails;
 window.closePropertyModal = closePropertyModal;
 window.toggleFavorite = toggleFavorite;
