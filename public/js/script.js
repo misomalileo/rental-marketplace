@@ -458,12 +458,9 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     if (filters.minPrice) params.append('minPrice', filters.minPrice);
     if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
     if (filters.bedrooms) params.append('bedrooms', filters.bedrooms);
-    if (filters.wifi) params.append('wifi', 'true');
-    if (filters.parking) params.append('parking', 'true');
-    if (filters.furnished) params.append('furnished', 'true');
-    if (filters.petFriendly) params.append('petFriendly', 'true');
     if (filters.pool) params.append('pool', 'true');
-    if (filters.ac) params.append('ac', 'true');
+    if (filters.wifi) params.append('wifi', 'true');
+    if (filters.selfContained) params.append('selfContained', 'true');
     if (sort !== 'default') params.append('sort', sort);
     if (filters.district && filters.district !== '') params.append('district', filters.district);
 
@@ -473,13 +470,10 @@ async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default'
     currentPage = data.page;
     totalPages = data.pages;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const houseId = urlParams.get('house');
-    if (houseId) {
-      const house = allHouses.find(h => h._id === houseId);
-      if (house) setTimeout(() => showDetails(houseId), 500);
+    // after loading, apply client-side selfContained filter if needed (since backend may not support it)
+    if (filters.selfContained) {
+      allHouses = allHouses.filter(house => house.selfContained === true);
     }
-    applyRegionFilter();
     renderHouses(allHouses);
     renderMarkers(allHouses);
     renderPagination();
@@ -520,7 +514,7 @@ function changePage(page) {
   loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 
-// ========== REGION FILTER ==========
+// ========== REGION FILTER (kept for backwards compatibility but not used in UI) ==========
 function filterByRegion(house) {
   if (!currentRegion) return true;
   const locationLower = (house.location || '').toLowerCase();
@@ -535,66 +529,40 @@ function applyRegionFilter() {
   renderMarkers(filtered);
 }
 
-// ========== PRICE SLIDER ==========
-function initPriceSlider() {
-  const slider = document.getElementById('priceSlider');
-  if (!slider) return;
-  const minPriceInput = document.getElementById('priceMin');
-  const maxPriceInput = document.getElementById('priceMax');
-  const minLabel = document.getElementById('priceMinLabel');
-  const maxLabel = document.getElementById('priceMaxLabel');
-  noUiSlider.create(slider, {
-    start: [0, 2000000],
-    connect: true,
-    range: { 'min': 0, 'max': 2000000 },
-    step: 5000,
-    format: { to: value => Math.round(value), from: value => Number(value) }
-  });
-  slider.noUiSlider.on('update', (values) => {
-    const min = values[0];
-    const max = values[1];
-    minPriceInput.value = min;
-    maxPriceInput.value = max;
-    minLabel.innerText = `Min: ${min.toLocaleString()}`;
-    maxLabel.innerText = `Max: ${max.toLocaleString()}`;
-  });
-}
+// ========== NEW FILTER FUNCTIONS ==========
 function getCurrentFilters() {
-  const districtDropdownEl = document.getElementById('districtFilterSelect');
-  let districtValue = '';
-  if (districtDropdownEl && districtDropdownEl.value) districtValue = districtDropdownEl.value;
-  else if (window.selectedDistrict) districtValue = window.selectedDistrict;
-  currentDistrict = districtValue;
-  return {
-    minPrice: document.getElementById('priceMin')?.value || '',
-    maxPrice: document.getElementById('priceMax')?.value || '',
-    bedrooms: document.getElementById('bedrooms')?.value || '',
-    wifi: document.getElementById('filterWifi')?.checked || false,
-    parking: document.getElementById('filterParking')?.checked || false,
-    furnished: document.getElementById('filterFurnished')?.checked || false,
-    petFriendly: document.getElementById('filterPetFriendly')?.checked || false,
-    pool: document.getElementById('filterPool')?.checked || false,
-    ac: document.getElementById('filterAC')?.checked || false,
-    region: document.getElementById('regionFilter')?.value || '',
-    district: districtValue
-  };
+  const minPrice = document.getElementById('minPriceInput')?.value ? parseInt(document.getElementById('minPriceInput').value) : '';
+  const maxPrice = document.getElementById('maxPriceInput')?.value ? parseInt(document.getElementById('maxPriceInput').value) : '';
+  const bedroomsCheckbox = document.getElementById('filterBedroomsCheckbox');
+  let bedrooms = '';
+  if (bedroomsCheckbox && bedroomsCheckbox.checked) {
+    bedrooms = document.getElementById('filterBedrooms')?.value ? parseInt(document.getElementById('filterBedrooms').value) : 1;
+  }
+  const pool = document.getElementById('filterPool')?.checked || false;
+  const wifi = document.getElementById('filterWifi')?.checked || false;
+  const selfContained = document.getElementById('filterSelfContained')?.checked || false;
+  const district = document.getElementById('districtFilterSelect')?.value || '';
+  const sort = document.getElementById('sortSelect')?.value || 'default';
+  return { minPrice, maxPrice, bedrooms, pool, wifi, selfContained, district, sort };
 }
 function applyFilters() {
   currentFilters = getCurrentFilters();
-  currentRegion = currentFilters.region;
   currentDistrict = currentFilters.district;
+  currentSort = currentFilters.sort;
   currentPage = 1;
   loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 function handleSortChange() {
   const sortSelect = document.getElementById('sortSelect');
-  if (!sortSelect) return;
-  currentSort = sortSelect.value;
-  currentPage = 1;
-  loadHouses(currentPage, currentType, currentFilters, currentSort);
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      applyFilters();
+    });
+  }
 }
 
-// ========== SAVE SEARCH ==========
+// ========== SAVE SEARCH (kept, may be removed later but kept for compatibility) ==========
 function saveSearch() {
   const modal = document.getElementById('saveSearchModal');
   if (!modal) return;
@@ -633,7 +601,7 @@ function initMap() {
 }
 function filterHousesByPolygon() {
   if (!drawnPolygon) return;
-  const filtered = allHouses.filter(house => { if (!house.lat || !house.lng) return false; const point = turf.point([house.lng, house.lat]); const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]); const poly = turf.polygon([coords]); return turf.booleanPointInPolygon(point, poly); });
+  const filtered = allHouses.filter(house => { if (!house.lat || !house.lng) return false; const point = turf.point([house.lng, house.lat]); const coords = drawnPolygon.getLatLngs()[0].map(p => [p.lng, p.lat]); const poly = turf.polygon([coords]); return turf.booleanPointInPoint(point, poly); });
   renderHouses(filtered);
   renderMarkers(filtered);
 }
@@ -705,7 +673,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</table></tbody></table>`;
+  tableHtml += `</table></tbody><table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -1761,6 +1729,13 @@ function populatePulseDistrictDropdown(districts) {
 }
 
 // ========== EVENT LISTENERS & INITIALIZATION ==========
+function addHeroVerifiedBadge() {
+  const container = document.getElementById('heroVerifiedBadge');
+  if (container) {
+    container.innerHTML = fbSaturatedSky(22, 12, 4);
+  }
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1828,11 +1803,19 @@ function initPulseDropdown() {
     populatePulseDistrictDropdown(fallback);
   }
 }
-document.addEventListener('DOMContentLoaded', () => {
-  initMap();
-  initPriceSlider();
+function initSortSelect() {
   const sortSelect = document.getElementById('sortSelect');
-  if (sortSelect) sortSelect.addEventListener('change', handleSortChange);
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      applyFilters();
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  addHeroVerifiedBadge();
+  initMap();
   const saveBtn = document.getElementById('saveSearchBtn');
   if (saveBtn) saveBtn.addEventListener('click', saveSearch);
   const urlParams = new URLSearchParams(window.location.search);
@@ -1842,7 +1825,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.tab-btn').forEach(btn => { if (btn.dataset.type === currentType) btn.classList.add('active'); else btn.classList.remove('active'); });
   }
   if (urlParams.has('sort')) currentSort = urlParams.get('sort');
-  if (sortSelect && currentSort !== 'default') sortSelect.value = currentSort;
   if (urlParams.has('district')) { currentDistrict = urlParams.get('district'); syncDistrictFilter(); }
   loadHouses(currentPage, currentType, currentFilters, currentSort);
   loadHeroCarousel();
@@ -1850,6 +1832,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAmenityLayers();
   initHeatmap();
   setTimeout(() => initPulseDropdown(), 1500);
+  initSortSelect();
 });
 
 // Expose global functions
