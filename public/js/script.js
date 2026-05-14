@@ -45,7 +45,7 @@ function showToast(message, type = 'info') {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// ========== CUSTOM MODAL (replaces alerts/prompts) ==========
+// ========== CUSTOM MODAL ==========
 function showCustomModal(message, type = 'info', onConfirm = null, onCancel = null, inputFields = null) {
   const overlay = document.createElement('div');
   overlay.className = 'custom-modal-overlay';
@@ -447,18 +447,19 @@ function renderMarkers(houses) {
   });
 }
 
-// ========== FETCH HOUSES (UPDATED: fetch more for market pulse, removed region) ==========
+// ========== FETCH HOUSES ==========
 async function loadHouses(page = 1, type = 'all', filters = {}, sort = 'default') {
   try {
     const params = new URLSearchParams();
     params.append('page', page);
     params.append('limit', 200);
     if (type !== 'all') params.append('type', type);
-    if (filters.minPrice) params.append('minPrice', filters.minPrice);
-    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-    if (filters.bedrooms) params.append('bedrooms', filters.bedrooms);
-    if (filters.wifi) params.append('wifi', 'true');
+    if (filters.minPrice && filters.minPrice !== '') params.append('minPrice', filters.minPrice);
+    if (filters.maxPrice && filters.maxPrice !== '') params.append('maxPrice', filters.maxPrice);
+    if (filters.bedrooms && filters.bedrooms > 0) params.append('bedrooms', filters.bedrooms);
+    if (filters.bathrooms && filters.bathrooms > 0) params.append('bathrooms', filters.bathrooms);
     if (filters.selfContained) params.append('selfContained', 'true');
+    if (filters.wifi) params.append('wifi', 'true');
     if (filters.pool) params.append('pool', 'true');
     if (sort !== 'default') params.append('sort', sort);
     if (filters.district && filters.district !== '') params.append('district', filters.district);
@@ -515,7 +516,7 @@ function changePage(page) {
   loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 
-// ========== GET CURRENT FILTERS (no region, no save search) ==========
+// ========== GET CURRENT FILTERS (with new amenities) ==========
 function getCurrentFilters() {
   const districtDropdownEl = document.getElementById('districtFilterSelect');
   let districtValue = '';
@@ -526,6 +527,7 @@ function getCurrentFilters() {
     minPrice: document.getElementById('minPriceInput')?.value || '',
     maxPrice: document.getElementById('maxPriceInput')?.value || '',
     bedrooms: document.getElementById('filterBedrooms')?.value || '',
+    bathrooms: document.getElementById('filterBathrooms')?.value || '',
     selfContained: document.getElementById('filterSelfContained')?.checked || false,
     wifi: document.getElementById('filterWifi')?.checked || false,
     pool: document.getElementById('filterPool')?.checked || false,
@@ -546,9 +548,8 @@ function handleSortChange() {
   loadHouses(currentPage, currentType, currentFilters, currentSort);
 }
 
-// ========== SAVE SEARCH (removed from UI but function kept for completeness) ==========
+// ========== SAVE SEARCH (kept but not used on UI) ==========
 function saveSearch() {
-  // Not used on frontend anymore – kept to avoid errors if called
   console.log("Save search disabled as requested.");
 }
 
@@ -639,7 +640,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `</table></tbody></table>`;
+  tableHtml += `<tr></tbody></table>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -654,7 +655,7 @@ function openComparisonModal() {
 }
 function closeComparisonModal() { document.getElementById('comparisonModal').style.display = 'none'; }
 
-// ========== RENDER HOUSE CARDS (UPDATED: coloured icons) ==========
+// ========== RENDER HOUSE CARDS (coloured icons) ==========
 function renderHouses(houses) {
   const container = document.getElementById("houses-container");
   if (!container) return;
@@ -785,7 +786,7 @@ function renderHouses(houses) {
     `;
     container.appendChild(card);
 
-    // Slider logic (unchanged)
+    // Slider logic
     const sliderContainer = card.querySelector('.slides-container');
     const dots = card.querySelectorAll('.dot');
     if (sliderContainer && dots.length) {
@@ -844,7 +845,7 @@ function renderHouses(houses) {
   setTimeout(() => updateMarketPulse(currentPulseDistrict), 100);
 }
 
-// ========== REPORT, CHAT, LANDLORD PROFILE (unchanged logic, only colours added in modal later) ==========
+// ========== REPORT, CHAT, LANDLORD PROFILE ==========
 async function reportHouse(houseId) {
   const token = localStorage.getItem("token");
   if (!token) { showToast("Please login to report.", 'error'); return; }
@@ -1006,7 +1007,7 @@ const observer = new MutationObserver(() => attachDoubleClickToHouseCards());
 observer.observe(document.getElementById('houses-container'), { childList: true, subtree: true });
 setTimeout(attachDoubleClickToHouseCards, 2000);
 
-// ========== NEIGHBOURHOOD INSIGHTS (unchanged) ==========
+// ========== NEIGHBOURHOOD INSIGHTS ==========
 async function loadNeighbourhoodInsights(houseLat, houseLng) {
   const insightsDiv = document.getElementById('modalInsights');
   if (!insightsDiv) return;
@@ -1068,7 +1069,7 @@ async function loadNeighbourhoodInsights(houseLat, houseLng) {
   insightsDiv.innerHTML = insightsHtml;
 }
 
-// ========== STREET VIEW (unchanged) ==========
+// ========== STREET VIEW ==========
 function loadStreetView(lat, lng) {
   const container = document.getElementById('modalStreetView');
   container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Loading street view...</div>';
@@ -1084,7 +1085,7 @@ function loadStreetView(lat, lng) {
   img.src = url;
 }
 
-// ========== PRICE INSIGHTS (unchanged) ==========
+// ========== PRICE INSIGHTS ==========
 async function loadPriceInsights(houseId) {
   const container = document.getElementById('modalPricing');
   container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-chart-line fa-spin"></i> Fetching market data...</div>';
@@ -1549,7 +1550,7 @@ function initHeatmap() {
   }
 }
 
-// ========== MARKET PULSE & SMART PRICE SCOUT (unchanged but moved) ==========
+// ========== MARKET PULSE & SMART PRICE SCOUT ==========
 function getDistrictAvgPriceMap() {
   const districtMap = {};
   allHouses.forEach(house => {
@@ -1677,6 +1678,36 @@ function populatePulseDistrictDropdown(districts) {
   });
 }
 
+// ========== AMENITIES DROPDOWN HANDLER ==========
+function initAmenitiesDropdown() {
+  const btn = document.getElementById('amenitiesDropdownBtn');
+  const dropdown = document.getElementById('amenitiesDropdownContent');
+  if (!btn || !dropdown) return;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('show');
+  });
+  document.addEventListener('click', (e) => {
+    if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('show');
+    }
+  });
+  // close on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dropdown.classList.contains('show')) {
+      dropdown.classList.remove('show');
+    }
+  });
+  // apply filters when any amenity changes (auto-apply optional)
+  const inputs = dropdown.querySelectorAll('input');
+  inputs.forEach(input => {
+    input.addEventListener('change', () => {
+      // optional: auto-apply filters
+      // applyFilters();
+    });
+  });
+}
+
 // ========== EVENT LISTENERS & INITIALIZATION ==========
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
@@ -1745,7 +1776,6 @@ function initPulseDropdown() {
 }
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
-  // no price slider init anymore
   const sortSelect = document.getElementById('sortSelect');
   if (sortSelect) sortSelect.addEventListener('change', handleSortChange);
   const urlParams = new URLSearchParams(window.location.search);
@@ -1762,10 +1792,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAndUpdateUserMenu();
   loadAmenityLayers();
   initHeatmap();
+  initAmenitiesDropdown(); // new
   setTimeout(() => initPulseDropdown(), 1500);
 });
 
-// Expose global functions (no change)
+// Expose global functions
 window.showDetails = showDetails;
 window.closePropertyModal = closePropertyModal;
 window.toggleFavorite = toggleFavorite;
