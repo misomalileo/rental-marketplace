@@ -87,6 +87,34 @@
       color: #555;
       line-height: 1.4;
     }
+    .password-section {
+      background: #f8f9fa;
+      border-radius: 16px;
+      padding: 1.2rem;
+      margin-top: 1rem;
+      border: 1px solid #e2e8f0;
+    }
+    .password-section h3 {
+      margin-bottom: 0.5rem;
+    }
+    .password-section input {
+      padding: 0.5rem;
+      border-radius: 30px;
+      border: 1px solid #cbd5e1;
+      width: 250px;
+      margin-right: 0.5rem;
+    }
+    .password-section button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+    @media (max-width: 640px) {
+      .password-section input { width: 100%; margin-bottom: 0.5rem; }
+    }
   </style>
 </head>
 <body>
@@ -130,7 +158,6 @@
       const badgeClass = landlord.verificationType === 'premium' ? 'premium' : (landlord.verificationType === 'official' ? 'verified' : '');
       const badgeText = landlord.verificationType === 'premium' ? '⭐ Premium' : (landlord.verificationType === 'official' ? '✔ Verified' : '');
 
-      // Avatar: if profilePicture exists, use it; else fallback to initial
       let avatarHtml = '';
       if (landlord.profilePicture) {
         avatarHtml = `<img src="${landlord.profilePicture}" style="width:100px;height:100px;object-fit:cover;border-radius:50%;">`;
@@ -139,14 +166,26 @@
         avatarHtml = `<div class="avatar">${avatarInitial}</div>`;
       }
 
-      // Display business name, address, bio if available
       const businessHtml = landlord.businessName ? `<p><strong>🏢 Business:</strong> ${landlord.businessName}</p>` : '';
       const addressHtml = landlord.address ? `<p><strong>📍 Address:</strong> ${landlord.address}</p>` : '';
       const bioHtml = landlord.bio ? `<div class="bio-text"><strong>About:</strong><br>${landlord.bio}</div>` : '';
 
+      // Show password set form only if user has no password (Google auth)
+      let passwordHtml = '';
+      if (!landlord.password) {
+        passwordHtml = `
+          <div class="password-section">
+            <h3><i class="fas fa-key"></i> Set a Password</h3>
+            <p>Since you signed up with Google, you don't have a password. Set one to log in with email/password later.</p>
+            <input type="password" id="newPassword" placeholder="New password (min 6 chars)">
+            <button id="setPasswordBtn">Set Password</button>
+            <div id="passwordMessage"></div>
+          </div>
+        `;
+      }
+
       let housesHtml = '';
       houses.forEach(house => {
-        // Use full Cloudinary URL
         const img = house.images?.length ? house.images[0] : 'placeholder.jpg';
         housesHtml += `
           <div class="house-card">
@@ -178,11 +217,42 @@
             </div>
           </div>
         </div>
+        ${passwordHtml}
         <h2>Listings by ${landlord.name}</h2>
         <div class="houses-grid">
           ${housesHtml || '<p>No listings yet.</p>'}
         </div>
       `;
+
+      if (!landlord.password) {
+        const setBtn = document.getElementById('setPasswordBtn');
+        const passInput = document.getElementById('newPassword');
+        const passMsg = document.getElementById('passwordMessage');
+        setBtn.addEventListener('click', async () => {
+          const password = passInput.value;
+          if (!password || password.length < 6) {
+            passMsg.innerHTML = '<span style="color:red;">Password must be at least 6 characters.</span>';
+            return;
+          }
+          const token = localStorage.getItem('token');
+          try {
+            const res = await fetch('/api/users/set-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+              passMsg.innerHTML = '<span style="color:green;">Password set! You can now log in with email and password.</span>';
+              passInput.value = '';
+            } else {
+              passMsg.innerHTML = `<span style="color:red;">${data.message}</span>`;
+            }
+          } catch (err) {
+            passMsg.innerHTML = '<span style="color:red;">Network error.</span>';
+          }
+        });
+      }
     }
 
     loadProfile();

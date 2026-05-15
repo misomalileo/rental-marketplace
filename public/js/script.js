@@ -640,7 +640,7 @@ function openComparisonModal() {
     const imgUrl = house.images?.[0] || 'placeholder.jpg';
     tableHtml += `<td style="padding: 8px;"><img src="${imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;"></td>`;
   });
-  tableHtml += `<tr></tbody></table>`;
+  tableHtml += `<tr></tbody><tr>`;
   let bestHouse = housesToCompare[0];
   for (let i = 1; i < housesToCompare.length; i++) {
     const a = bestHouse;
@@ -1463,7 +1463,6 @@ function setLoggedInDropdown(user) {
   } 
   else if (user.role === 'landlord') {
     roleLabel = 'Landlord';
-    // Use existing dashboard.html (not landlord-dashboard.html)
     landlordDashboardLink = `<div class="dropdown-item" id="landlordDashboardLink"><i class="fas fa-building"></i> My Dashboard</div>`;
     upgradePremiumLink = `<div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>`;
   }
@@ -1500,43 +1499,14 @@ function setLoggedInDropdown(user) {
     window.location.href = 'premium-dashboard.html';
   });
   
-  // Landlord Dashboard – now points to existing dashboard.html
+  // Landlord Dashboard – points to existing dashboard.html
   document.getElementById('landlordDashboardLink')?.addEventListener('click', () => {
     window.location.href = 'dashboard.html';
   });
   
-  // Become a Landlord (free upgrade)
-  document.getElementById('becomeLandlordLink')?.addEventListener('click', async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      showToast('You must be logged in.', 'error');
-      return;
-    }
-    try {
-      const res = await fetch('/api/users/upgrade-to-landlord', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (res.ok) {
-        showToast('You are now a Landlord! Page will reload.');
-        localStorage.setItem('role', 'landlord');
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const userObj = JSON.parse(storedUser);
-          userObj.role = 'landlord';
-          localStorage.setItem('user', JSON.stringify(userObj));
-        }
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        const err = await res.json();
-        showToast(err.message || 'Upgrade failed', 'error');
-      }
-    } catch (err) {
-      showToast('Network error', 'error');
-    }
+  // Become a Landlord (free upgrade) – redirect to registration form
+  document.getElementById('becomeLandlordLink')?.addEventListener('click', () => {
+    window.location.href = 'become-landlord.html';
   });
   
   // Upgrade to Premium (for free users or landlords)
