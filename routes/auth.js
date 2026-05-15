@@ -24,7 +24,7 @@ function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// ========== REGISTER (FIXED: email sent BEFORE saving user) ==========
+// ========== REGISTER (email sent BEFORE saving user) ==========
 router.post("/register", authLimiter, validateRegister, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password, phone, role = "free" } = req.body;
@@ -149,7 +149,7 @@ router.post("/reset-password", validateResetPassword, handleValidationErrors, as
   }
 });
 
-// ========== LOGIN (with fixed 2FA handling) ==========
+// ========== LOGIN ==========
 router.post("/login", authLimiter, validateLogin, handleValidationErrors, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -353,7 +353,7 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
-// ========== GOOGLE LOGIN ==========
+// ========== GOOGLE LOGIN (FIXED: sets isEmailVerified = true) ==========
 router.get("/google", (req, res, next) => {
   const role = req.query.role || "free";
   req.session.intendedRole = role;
@@ -368,17 +368,30 @@ router.get(
   }),
   async (req, res) => {
     try {
-      const user = req.user;
+      // req.user is the user object returned by your Google Strategy (defined in passport config)
+      // If your strategy does not already create/update the user, you must do it here.
+      // Assuming your Google Strategy returns the user from database (or creates it).
+      let user = req.user;
       if (!user) return res.redirect("/login.html?error=google-auth-failed");
+
+      // --- FIX: Ensure email is marked as verified (Google already verified it) ---
+      if (!user.isEmailVerified) {
+        user.isEmailVerified = true;
+        user.emailVerificationToken = undefined; // remove any pending token
+        await user.save();
+      }
+
+      // Handle role assignment (if user came from sign-up with a specific role)
       let finalRole = user.role;
       if (!user.role || user.role === "free") {
         const intendedRole = req.session.intendedRole || "free";
         if (intendedRole === "landlord" || intendedRole === "premium_user") {
           user.role = intendedRole;
-          await user.save().catch(err => console.error("Save error:", err));
+          await user.save();
         }
         finalRole = user.role;
       }
+
       const token = jwt.sign(
         { id: user._id, role: finalRole },
         process.env.JWT_SECRET,

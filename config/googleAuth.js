@@ -14,18 +14,31 @@ passport.use(new GoogleStrategy({
         const email = profile.emails[0].value;
         user = await User.findOne({ email });
         if (user) {
+          // Existing user with same email – link Google account and mark email as verified
           user.googleId = profile.id;
           user.authProvider = "google";
+          user.isEmailVerified = true;        // ← CRITICAL FIX
+          user.emailVerificationToken = undefined; // remove any pending token
           await user.save();
         } else {
+          // New user – create with email already verified by Google
           user = new User({
             name: profile.displayName,
             email: email,
             googleId: profile.id,
             authProvider: "google",
+            isEmailVerified: true,             // ← CRITICAL FIX
             verified: false,
-            phone: ""
+            phone: "",
+            role: "free"                       // default role, can be upgraded later
           });
+          await user.save();
+        }
+      } else {
+        // User already exists with Google ID – ensure email is marked verified (safety)
+        if (!user.isEmailVerified) {
+          user.isEmailVerified = true;
+          user.emailVerificationToken = undefined;
           await user.save();
         }
       }
