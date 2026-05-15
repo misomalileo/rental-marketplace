@@ -1463,7 +1463,8 @@ function setLoggedInDropdown(user) {
   } 
   else if (user.role === 'landlord') {
     roleLabel = 'Landlord';
-    landlordDashboardLink = `<div class="dropdown-item" id="landlordDashboardLink"><i class="fas fa-building"></i> Landlord Dashboard</div>`;
+    // Use existing dashboard.html (not landlord-dashboard.html)
+    landlordDashboardLink = `<div class="dropdown-item" id="landlordDashboardLink"><i class="fas fa-building"></i> My Dashboard</div>`;
     upgradePremiumLink = `<div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>`;
   }
   else { // free user
@@ -1486,7 +1487,7 @@ function setLoggedInDropdown(user) {
     ${landlordDashboardLink}
     ${becomeLandlordLink}
     ${upgradePremiumLink}
-    <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout
+    <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
   `;
   
   // Profile link
@@ -1499,9 +1500,9 @@ function setLoggedInDropdown(user) {
     window.location.href = 'premium-dashboard.html';
   });
   
-  // Landlord Dashboard (only for landlords)
+  // Landlord Dashboard – now points to existing dashboard.html
   document.getElementById('landlordDashboardLink')?.addEventListener('click', () => {
-    window.location.href = 'landlord-dashboard.html';
+    window.location.href = 'dashboard.html';
   });
   
   // Become a Landlord (free upgrade)
