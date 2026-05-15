@@ -1449,10 +1449,29 @@ function setLoggedInDropdown(user) {
   const userName = user.name || 'User';
   const userInitial = userName.charAt(0).toUpperCase();
   const avatarHtml = user.profilePicture ? `<img src="${user.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`;
-  const roleLabel = user.role === 'premium_user' ? 'Premium User' 
-                   : (user.role === 'landlord' ? 'Landlord' 
-                   : (user.role === 'premium_landlord' ? 'Premium Landlord' 
-                   : (user.role === 'admin' ? 'Admin' : 'Free User')));
+  
+  let roleLabel = '';
+  let landlordDashboardLink = '';
+  let premiumDashboardLink = '';
+  let becomeLandlordLink = '';
+  let upgradePremiumLink = '';
+  
+  // Determine role label and which links to show
+  if (user.role === 'premium_user' || user.role === 'premium_landlord') {
+    roleLabel = 'Premium User';
+    premiumDashboardLink = `<div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>`;
+  } 
+  else if (user.role === 'landlord') {
+    roleLabel = 'Landlord';
+    landlordDashboardLink = `<div class="dropdown-item" id="landlordDashboardLink"><i class="fas fa-building"></i> Landlord Dashboard</div>`;
+    upgradePremiumLink = `<div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>`;
+  }
+  else { // free user
+    roleLabel = 'Free User';
+    premiumDashboardLink = `<div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>`;
+    becomeLandlordLink = `<div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>`;
+    upgradePremiumLink = `<div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>`;
+  }
   
   userDropdown.innerHTML = `
     <div class="dropdown-header">
@@ -1463,21 +1482,29 @@ function setLoggedInDropdown(user) {
       </div>
     </div>
     <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
-    <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
-    ${user.role === 'free' ? `<div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>` : ''}
-    ${user.role === 'free' ? `<div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>` : ''}
-    ${user.role === 'landlord' ? `<div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium Landlord <span class="premium-badge">MWK 500/mo</span></div>` : ''}
-    <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
+    ${premiumDashboardLink}
+    ${landlordDashboardLink}
+    ${becomeLandlordLink}
+    ${upgradePremiumLink}
+    <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout
   `;
   
+  // Profile link
   document.getElementById('profileLink')?.addEventListener('click', () => {
     window.location.href = 'profile.html';
   });
+  
+  // Premium Dashboard (for free or premium users)
   document.getElementById('premiumDashboardLink')?.addEventListener('click', () => {
     window.location.href = 'premium-dashboard.html';
   });
   
-  // BECOME A LANDLORD (free upgrade)
+  // Landlord Dashboard (only for landlords)
+  document.getElementById('landlordDashboardLink')?.addEventListener('click', () => {
+    window.location.href = 'landlord-dashboard.html';
+  });
+  
+  // Become a Landlord (free upgrade)
   document.getElementById('becomeLandlordLink')?.addEventListener('click', async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -1493,9 +1520,7 @@ function setLoggedInDropdown(user) {
         }
       });
       if (res.ok) {
-        const data = await res.json();
         showToast('You are now a Landlord! Page will reload.');
-        // Update local storage and reload
         localStorage.setItem('role', 'landlord');
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -1513,7 +1538,7 @@ function setLoggedInDropdown(user) {
     }
   });
   
-  // UPGRADE TO PREMIUM (paid)
+  // Upgrade to Premium (for free users or landlords)
   document.getElementById('upgradePremiumLink')?.addEventListener('click', async () => {
     const token = localStorage.getItem('token');
     try {
@@ -1532,6 +1557,7 @@ function setLoggedInDropdown(user) {
     }
   });
   
+  // Logout
   document.getElementById('logoutLink')?.addEventListener('click', () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
