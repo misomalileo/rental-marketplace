@@ -45,7 +45,7 @@ function showToast(message, type = 'info') {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// ========== CUSTOM MODAL ==========
+// ========== CUSTOM MODAL (replaces all alerts/prompts/confirms) ==========
 function showCustomModal(message, type = 'info', onConfirm = null, onCancel = null, inputFields = null) {
   const overlay = document.createElement('div');
   overlay.className = 'custom-modal-overlay';
@@ -848,26 +848,50 @@ function renderHouses(houses) {
 // ========== REPORT, CHAT, LANDLORD PROFILE ==========
 async function reportHouse(houseId) {
   const token = localStorage.getItem("token");
-  if (!token) { showToast("Please login to report.", 'error'); return; }
+  if (!token) { 
+    showCustomModal("Please login to report.", "error", null, null);
+    return; 
+  }
   showCustomModal('Please provide a reason for reporting this property:', 'confirm', async (inputs) => {
     const reason = inputs.reason;
-    if (!reason) { showToast('Reason is required.', 'error'); return; }
+    if (!reason) { 
+      showToast('Reason is required.', 'error'); 
+      return; 
+    }
     try {
-      const res = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ houseId, reason }) });
+      const res = await fetch("/api/report", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, 
+        body: JSON.stringify({ houseId, reason }) 
+      });
       const data = await res.json();
       showToast(data.message);
-    } catch (err) { showToast("Network error. Please try again.", 'error'); }
+    } catch (err) { 
+      showToast("Network error. Please try again.", 'error'); 
+    }
   }, null, [{ id: 'reason', label: 'Reason', type: 'textarea', placeholder: 'e.g., fake listing, wrong price...' }]);
 }
 async function startChat(recipientId, houseId = null) {
   const token = localStorage.getItem("token");
-  if (!token) { showToast("Please log in to message the landlord.", 'error'); window.location = "login.html"; return; }
+  if (!token) { 
+    showCustomModal("Please log in to message the landlord.", "error", () => {
+      window.location.href = "login.html";
+    }); 
+    return; 
+  }
   try {
-    const response = await fetch("/api/chat/start", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ recipientId, houseId }) });
+    const response = await fetch("/api/chat/start", { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, 
+      body: JSON.stringify({ recipientId, houseId }) 
+    });
     const data = await response.json();
     if (response.ok) window.location = `chat.html?chatId=${data.chatId}`;
     else showToast("Could not start chat: " + (data.message || "Unknown error"), 'error');
-  } catch (error) { console.error(error); showToast("Network error. Please try again.", 'error'); }
+  } catch (error) { 
+    console.error(error); 
+    showToast("Network error. Please try again.", 'error'); 
+  }
 }
 async function showLandlordProfile(landlordId) {
   try {
@@ -1104,7 +1128,15 @@ function getShareUrl() { return `${window.location.origin}/house/${currentShareH
 function shareOnFacebook() { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`, '_blank', 'width=600,height=400'); closeShareModal(); }
 function shareOnWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this property: ${getShareUrl()}`)}`, '_blank'); closeShareModal(); }
 function shareOnTwitter() { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getShareUrl())}`, '_blank', 'width=600,height=400'); closeShareModal(); }
-function copyShareLink() { navigator.clipboard.writeText(getShareUrl()).then(() => { document.getElementById('shareStatus').innerHTML = '<span style="color:green;"><i class="fas fa-check-circle"></i> Link copied to clipboard!</span>'; setTimeout(() => { document.getElementById('shareStatus').innerHTML = ''; }, 2000); }).catch(() => { document.getElementById('shareStatus').innerHTML = '<span style="color:red;"><i class="fas fa-times-circle"></i> Failed to copy link.</span>'; setTimeout(() => { document.getElementById('shareStatus').innerHTML = ''; }, 2000); }); }
+function copyShareLink() { 
+  navigator.clipboard.writeText(getShareUrl()).then(() => { 
+    document.getElementById('shareStatus').innerHTML = '<span style="color:green;"><i class="fas fa-check-circle"></i> Link copied to clipboard!</span>'; 
+    setTimeout(() => { document.getElementById('shareStatus').innerHTML = ''; }, 2000); 
+  }).catch(() => { 
+    document.getElementById('shareStatus').innerHTML = '<span style="color:red;"><i class="fas fa-times-circle"></i> Failed to copy link.</span>'; 
+    setTimeout(() => { document.getElementById('shareStatus').innerHTML = ''; }, 2000); 
+  }); 
+}
 
 // ========== VIRTUAL TOUR ==========
 function loadVirtualTour(url) {
@@ -1417,25 +1449,97 @@ function setLoggedInDropdown(user) {
   const userName = user.name || 'User';
   const userInitial = userName.charAt(0).toUpperCase();
   const avatarHtml = user.profilePicture ? `<img src="${user.profilePicture}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${userInitial}</span>`;
-  userDropdown.innerHTML = `<div class="dropdown-header"><div class="avatar">${avatarHtml}</div><div class="info"><h4>${escapeHtml(userName)}</h4><p>${user.role === 'premium_user' ? 'Premium User' : (user.role === 'premium_landlord' ? 'Premium Landlord' : (user.role === 'admin' ? 'Admin' : 'Free User'))}</p></div></div><div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div><div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div><div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div><div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div><div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>`;
-  document.getElementById('profileLink')?.addEventListener('click', () => window.location.href = 'profile.html');
-  document.getElementById('premiumDashboardLink')?.addEventListener('click', () => window.location.href = 'premium-dashboard.html');
-  document.getElementById('becomeLandlordLink')?.addEventListener('click', () => window.location.href = 'dashboard.html');
+  const roleLabel = user.role === 'premium_user' ? 'Premium User' 
+                   : (user.role === 'landlord' ? 'Landlord' 
+                   : (user.role === 'premium_landlord' ? 'Premium Landlord' 
+                   : (user.role === 'admin' ? 'Admin' : 'Free User')));
+  
+  userDropdown.innerHTML = `
+    <div class="dropdown-header">
+      <div class="avatar">${avatarHtml}</div>
+      <div class="info">
+        <h4>${escapeHtml(userName)}</h4>
+        <p>${roleLabel}</p>
+      </div>
+    </div>
+    <div class="dropdown-item" id="profileLink"><i class="fas fa-user-circle"></i> My Profile</div>
+    <div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>
+    ${user.role === 'free' ? `<div class="dropdown-item" id="becomeLandlordLink"><i class="fas fa-building"></i> Become a Landlord</div>` : ''}
+    ${user.role === 'free' ? `<div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium <span class="premium-badge">MWK 500/mo</span></div>` : ''}
+    ${user.role === 'landlord' ? `<div class="dropdown-item" id="upgradePremiumLink"><i class="fas fa-gem"></i> Upgrade to Premium Landlord <span class="premium-badge">MWK 500/mo</span></div>` : ''}
+    <div class="dropdown-item" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</div>
+  `;
+  
+  document.getElementById('profileLink')?.addEventListener('click', () => {
+    window.location.href = 'profile.html';
+  });
+  document.getElementById('premiumDashboardLink')?.addEventListener('click', () => {
+    window.location.href = 'premium-dashboard.html';
+  });
+  
+  // BECOME A LANDLORD (free upgrade)
+  document.getElementById('becomeLandlordLink')?.addEventListener('click', async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showToast('You must be logged in.', 'error');
+      return;
+    }
+    try {
+      const res = await fetch('/api/users/upgrade-to-landlord', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        showToast('You are now a Landlord! Page will reload.');
+        // Update local storage and reload
+        localStorage.setItem('role', 'landlord');
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userObj = JSON.parse(storedUser);
+          userObj.role = 'landlord';
+          localStorage.setItem('user', JSON.stringify(userObj));
+        }
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        const err = await res.json();
+        showToast(err.message || 'Upgrade failed', 'error');
+      }
+    } catch (err) {
+      showToast('Network error', 'error');
+    }
+  });
+  
+  // UPGRADE TO PREMIUM (paid)
   document.getElementById('upgradePremiumLink')?.addEventListener('click', async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('/api/payment/premium-user', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+      const res = await fetch('/api/payment/premium-user', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
-      if (data.payment_url) window.location.href = data.payment_url;
-      else showToast('Payment initiation failed', 'error');
-    } catch (err) { showToast('Error starting upgrade', 'error'); }
+      if (data.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        showToast('Payment initiation failed', 'error');
+      }
+    } catch (err) {
+      showToast('Error starting upgrade', 'error');
+    }
   });
+  
   document.getElementById('logoutLink')?.addEventListener('click', () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('user');
     window.location.reload();
   });
 }
+
 async function loadAndUpdateUserMenu() {
   const token = localStorage.getItem('token');
   if (!token) { setGuestDropdown(); return; }
@@ -1692,18 +1796,15 @@ function initAmenitiesDropdown() {
       dropdown.classList.remove('show');
     }
   });
-  // close on escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && dropdown.classList.contains('show')) {
       dropdown.classList.remove('show');
     }
   });
-  // apply filters when any amenity changes (auto-apply optional)
   const inputs = dropdown.querySelectorAll('input');
   inputs.forEach(input => {
     input.addEventListener('change', () => {
-      // optional: auto-apply filters
-      // applyFilters();
+      // optional auto-apply
     });
   });
 }
@@ -1792,7 +1893,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAndUpdateUserMenu();
   loadAmenityLayers();
   initHeatmap();
-  initAmenitiesDropdown(); // new
+  initAmenitiesDropdown();
   setTimeout(() => initPulseDropdown(), 1500);
 });
 

@@ -238,6 +238,7 @@ const chatbotRoutes = require("./routes/chatbot");
 const premiumRoutes = require("./routes/premium");
 const savedSearchRoutes = require("./routes/savedSearches");
 const imageSearchRoutes = require("./routes/imageSearch");
+const userRoutes = require("./routes/users");   // <-- ADDED for role upgrade
 
 app.use("/api/auth", authRoutes);
 app.use("/api/houses", houseRoutes);
@@ -252,6 +253,7 @@ app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/premium", premiumRoutes);
 app.use("/api/saved-searches", savedSearchRoutes);
 app.use("/api/image-search", imageSearchRoutes);
+app.use("/api/users", userRoutes);            // <-- ADDED
 
 // Offers route
 try {
