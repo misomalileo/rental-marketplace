@@ -1458,8 +1458,12 @@ function setLoggedInDropdown(user) {
   
   // Determine role label and which links to show
   if (user.role === 'premium_user' || user.role === 'premium_landlord') {
-    roleLabel = 'Premium User';
+    roleLabel = user.role === 'premium_landlord' ? 'Premium Landlord' : 'Premium User';
     premiumDashboardLink = `<div class="dropdown-item" id="premiumDashboardLink"><i class="fas fa-crown"></i> Premium Dashboard</div>`;
+    // FIX: a premium landlord also manages properties, so show the landlord dashboard link too
+    if (user.role === 'premium_landlord') {
+      landlordDashboardLink = `<div class="dropdown-item" id="landlordDashboardLink"><i class="fas fa-building"></i> My Dashboard</div>`;
+    }
   } 
   else if (user.role === 'landlord') {
     roleLabel = 'Landlord';
@@ -1544,6 +1548,7 @@ async function loadAndUpdateUserMenu() {
     const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
     if (res.ok) {
       const user = await res.json();
+      if (user.role) localStorage.setItem('role', user.role);   // FIX: keep the saved role in sync with the server
       setLoggedInDropdown(user);
       if (user.profilePicture) userAvatar.innerHTML = `<img src="${user.profilePicture}">`;
       else userAvatar.innerHTML = `<span>${user.name?.charAt(0).toUpperCase() || 'U'}</span>`;
@@ -1561,6 +1566,7 @@ async function loadAndUpdateUserMenu() {
       }
     } else {
       localStorage.removeItem('token');
+      localStorage.removeItem('role');   // FIX: an expired login also clears the saved role
       setGuestDropdown();
       userAvatar.innerHTML = '<i class="fas fa-user-circle"></i>';
     }

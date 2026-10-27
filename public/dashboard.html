@@ -802,26 +802,38 @@
   </style>
 </head>
 <body>
+  <script src="js/role-redirect.js"></script>
   <script>
     (function() {
       const token = localStorage.getItem('token');
       const role = localStorage.getItem('role');
-      if (!token) { window.location.href = 'login.html'; return; }
+      if (!token) { window.location.replace('login.html'); return; }
       const allowedRoles = ['landlord', 'premium_user', 'premium_landlord', 'admin'];
-      if (!allowedRoles.includes(role)) {
-        alert('Access denied. This dashboard is for landlords and premium users only.');
-        window.location.href = 'index.html';
-        return;
-      }
+      // FIX: the role is checked against the SERVER (not only the saved browser value),
+      // and anyone who does not belong here is sent to THEIR OWN page instead of an alert + home page.
       fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
-        .then(res => res.json())
+        .then(res => {
+          // FIX: an expired/invalid login no longer shows the "verify your email" message
+          if (!res.ok) throw new Error('session-expired');
+          return res.json();
+        })
         .then(user => {
+          const serverRole = user.role || role;
+          if (serverRole !== role) localStorage.setItem('role', serverRole);   // keep saved role in sync
+          if (!allowedRoles.includes(serverRole)) {
+            window.location.replace(KL.dashboardForRole(serverRole));
+            return;
+          }
           if (!user.isEmailVerified) {
             alert('Please verify your email address before accessing the dashboard.');
             window.location.href = 'login.html?error=unverified';
           }
         })
-        .catch(err => { console.error(err); window.location.href = 'login.html'; });
+        .catch(err => {
+          console.error(err);
+          KL.clearSession();
+          window.location.replace('login.html');
+        });
     })();
   </script>
 

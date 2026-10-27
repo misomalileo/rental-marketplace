@@ -1,8 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+
+// FIX: after a role change, give the browser a NEW token that carries the new role
+function issueToken(user) {
+  return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+}
 
 // Upgrade free user to landlord (no payment) – old endpoint kept for compatibility
 router.post('/upgrade-to-landlord', auth, async (req, res) => {
@@ -14,7 +20,7 @@ router.post('/upgrade-to-landlord', auth, async (req, res) => {
     }
     user.role = 'landlord';
     await user.save();
-    res.json({ message: 'You are now a landlord!', role: user.role });
+    res.json({ message: 'You are now a landlord!', role: user.role, token: issueToken(user) });
   } catch (err) {
     console.error('Upgrade to landlord error:', err);
     res.status(500).json({ message: 'Server error' });
@@ -28,7 +34,7 @@ router.post('/become-landlord', auth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (user.role !== 'free') {
-      return res.status(400).json({ message: 'You are already a landlord or premium user.' });
+      return res.status(400).json({ message: 'You are already a landlord or premium user.', role: user.role }); // FIX: tell the page the role so it can open the right dashboard
     }
     // Update profile fields
     if (businessName) user.businessName = businessName;
@@ -37,7 +43,7 @@ router.post('/become-landlord', auth, async (req, res) => {
     if (phone) user.phone = phone;
     user.role = 'landlord';
     await user.save();
-    res.json({ message: 'You are now a landlord!', user: { role: user.role, businessName: user.businessName, address: user.address, bio: user.bio } });
+    res.json({ message: 'You are now a landlord!', token: issueToken(user), user: { role: user.role, businessName: user.businessName, address: user.address, bio: user.bio } });
   } catch (err) {
     console.error('Become landlord error:', err);
     res.status(500).json({ message: 'Server error' });

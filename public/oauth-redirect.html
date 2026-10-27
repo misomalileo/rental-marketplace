@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Redirecting...</title>
+  <script src="js/role-redirect.js"></script>
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
@@ -10,18 +11,31 @@
     if (token) {
       localStorage.setItem('token', token);
       localStorage.setItem('role', role);
-      // Redirect based on role
-      if (role === 'admin') {
-        window.location.href = 'admin.html';
-      } else if (role === 'premium_user') {
-        window.location.href = 'premium-dashboard.html';
-      } else if (role === 'landlord') {
-        window.location.href = 'dashboard.html';
-      } else {
-        window.location.href = 'index.html';
-      }
+      // FIX: remove the token from the address bar so it does not stay in the browser history
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // FIX: confirm the real role with the server, then go to that role's own dashboard
+      fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(res => {
+          if (!res.ok) throw new Error('bad-token');
+          return res.json();
+        })
+        .then(user => {
+          KL.saveSession(token, user.role || role);
+          // Redirect based on role: admin / premium / landlord / free each go to their own page
+          KL.goToDashboard(user.role || role);
+        })
+        .catch(err => {
+          if (err.message === 'bad-token') {
+            KL.clearSession();
+            window.location.replace('login.html?error=google-auth-failed');
+          } else {
+            // network problem: fall back to the role the server sent in the link
+            KL.goToDashboard(role);
+          }
+        });
     } else {
-      window.location.href = 'login.html?error=no-token';
+      window.location.replace('login.html?error=no-token');
     }
   </script>
 </head>

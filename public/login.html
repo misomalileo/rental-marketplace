@@ -268,6 +268,7 @@
     </div>
   </div>
 
+  <script src="js/role-redirect.js"></script>
   <script>
     const togglePassword = document.getElementById('togglePassword');
     const passwordField = document.getElementById('password');
@@ -283,6 +284,16 @@
     }
     if (urlParams.get('error') === 'google-auth-failed') {
       showMessage('Google authentication failed.', 'error');
+    }
+    // FIX: clear messages for the other redirect reasons
+    if (urlParams.get('error') === 'google-not-configured') {
+      showMessage('Google login is not available right now. Please log in with your email.', 'error');
+    }
+    if (urlParams.get('error') === 'unverified') {
+      showMessage('Please verify your email address before logging in.', 'error');
+    }
+    if (urlParams.get('error') === 'no-token') {
+      showMessage('Login could not be completed. Please try again.', 'error');
     }
 
     function showMessage(text, type) {
@@ -321,15 +332,8 @@
           }
           localStorage.setItem('token', data.token);
           localStorage.setItem('role', data.user.role);
-          if (data.user.role === 'admin') {
-            window.location.href = 'admin.html';
-          } else if (data.user.role === 'premium_user' || data.user.role === 'premium_landlord') {
-            window.location.href = 'premium-dashboard.html';
-          } else if (data.user.role === 'landlord') {
-            window.location.href = 'dashboard.html';
-          } else {
-            window.location.href = 'index.html';
-          }
+          // FIX: same destinations as Google login (admin / premium / landlord / free), from ONE shared helper
+          KL.goToDashboard(data.user.role);
         } else {
           showMessage(data.message || 'Login failed', 'error');
           loginBtn.disabled = false;

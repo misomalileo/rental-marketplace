@@ -138,6 +138,7 @@
     </div>
   </div>
 
+  <script src="js/role-redirect.js"></script>
   <script>
     const form = document.getElementById('landlordForm');
     const messageDiv = document.getElementById('message');
@@ -148,6 +149,14 @@
       messageDiv.style.display = 'block';
       setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
     }
+
+    // FIX: page guard - not logged in -> login; already landlord/premium/admin -> go to THEIR dashboard
+    (function guard() {
+      const savedToken = localStorage.getItem('token');
+      if (!savedToken) { window.location.replace('login.html'); return; }
+      const savedRole = localStorage.getItem('role');
+      if (savedRole && savedRole !== 'free') { KL.goToDashboard(savedRole); }
+    })();
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -180,8 +189,21 @@
         const data = await res.json();
         if (res.ok) {
           showMessage('You are now a landlord! Redirecting to dashboard...', 'success');
-          localStorage.setItem('role', 'landlord');
-          setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+          // FIX: save the NEW token from the server (the old one still says "free") and the new role
+          if (data.token) localStorage.setItem('token', data.token);
+          const newRole = (data.user && data.user.role) || 'landlord';
+          localStorage.setItem('role', newRole);
+          setTimeout(() => { KL.goToDashboard(newRole); }, 2000);
+        } else if (data.message === 'Invalid token' || res.status === 401) {
+          // FIX: expired login -> back to login, not a confusing error
+          KL.clearSession();
+          showMessage('Your session expired. Please log in again.', 'error');
+          setTimeout(() => { window.location.replace('login.html'); }, 1500);
+        } else if (data.role && data.role !== 'free') {
+          // FIX: already a landlord/premium user -> send them to their own dashboard
+          localStorage.setItem('role', data.role);
+          showMessage(data.message || 'You already have an upgraded account.', 'error');
+          setTimeout(() => { KL.goToDashboard(data.role); }, 2000);
         } else {
           showMessage(data.message || 'Upgrade failed', 'error');
         }
