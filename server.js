@@ -1,6 +1,14 @@
+require("dotenv").config();   // FIX: load .env FIRST so config files (Google OAuth, etc.) can read the keys
 const session = require("express-session");
+const MongoStoreModule = require("connect-mongo");
+const MongoStore = MongoStoreModule.default || MongoStoreModule;
 const passport = require("passport");
-require("./config/googleAuth");
+// FIX: a missing/invalid Google key must not crash the whole server
+try {
+  require("./config/googleAuth");
+} catch (err) {
+  console.warn("⚠️ Google login disabled:", err.message);
+}
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -12,7 +20,7 @@ const jwt = require("jsonwebtoken");
 const Chat = require("./models/Chat");
 const User = require("./models/User");
 const LeaseNegotiation = require("./models/LeaseNegotiation");
-require("dotenv").config();
+// (dotenv is now loaded at the very top of this file)
 const fs = require("fs");
 const path = require("path");
 const rateLimit = require("express-rate-limit");
@@ -21,7 +29,25 @@ const { limiter } = require("./middleware/rateLimiter");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, { cors: { origin: "*" } });
+// FIX: restrict origins by setting ALLOWED_ORIGINS in .env (comma separated). Open if not set.
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
+  : null;
+const io = socketIo(server, { cors: { origin: allowedOrigins || "*" } });
+
+// FIX: debug endpoints only work when ENABLE_DEBUG_ENDPOINTS=true in .env (keep it OFF in production)
+const debugOnly = (req, res, next) =>
+  process.env.ENABLE_DEBUG_ENDPOINTS === "true" ? next() : res.status(404).json({ message: "Not found" });
+
+// FIX: escape text before putting it into HTML (prevents script injection)
+function escapeHtml(str) {
+  return String(str === undefined || str === null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 app.set("trust proxy", 1);
 
@@ -70,7 +96,7 @@ app.use((req, res, next) => {
 // ==========================================================
 
 app.use(cookieParser());
-app.use(cors());
+app.use(allowedOrigins ? cors({ origin: allowedOrigins }) : cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/", limiter);
@@ -94,7 +120,7 @@ app.use("/data", express.static(dataPath, {
 }));
 
 // ========== DEBUG ENDPOINT: CHECK IF DATA FILES EXIST ==========
-app.get("/api/debug/data-files", (req, res) => {
+app.get("/api/debug/data-files", debugOnly, (req, res) => {
   try {
     const files = fs.readdirSync(dataPath).filter(f => f.endsWith('.geojson'));
     res.json({ 
@@ -120,10 +146,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "your-secret-key",
   resave: false,
   saveUninitialized: false,
+  // FIX: store sessions in MongoDB so users stay logged in after server restarts
+  store: process.env.MONGO_URI ? MongoStore.create({ mongoUrl: process.env.MONGO_URI }) : undefined,
   cookie: {
     httpOnly: true,
-    secure: true,        // only send over HTTPS (required on Render)
-    sameSite: 'strict',  // CSRF protection
+    secure: "auto",      // FIX: secure on HTTPS (Render), still works on http://localhost
+    sameSite: 'lax',     // FIX: 'strict' breaks the Google login redirect
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
 }));
@@ -159,6 +187,7 @@ io.on("connection", async (socket) => {
       if (!chatId) return;
       const chat = await Chat.findById(chatId);
       if (!chat) return;
+      if (!chat.participants.some(p => p && p.toString() === socket.userId)) return; // FIX: only chat members can send
       const otherParticipant = chat.participants.find(p => p && p.toString() !== socket.userId);
       if (otherParticipant) {
         io.to(otherParticipant.toString()).emit("newMessage", {
@@ -174,6 +203,7 @@ io.on("connection", async (socket) => {
       const userId = socket.userId;
       const chat = await Chat.findById(chatId);
       if (!chat) return;
+      if (!chat.participants.some(p => p && p.toString() === userId)) return; // FIX: only chat members
       const otherParticipant = chat.participants.find(p => p && p.toString() !== userId);
       if (otherParticipant) {
         io.to(otherParticipant.toString()).emit("messagesRead", { chatId, readBy: userId, readAt: new Date() });
@@ -184,6 +214,7 @@ io.on("connection", async (socket) => {
   socket.on("typing", ({ chatId, isTyping }) => {
     Chat.findById(chatId).then(chat => {
       if (!chat) return;
+      if (!chat.participants.some(p => p && p.toString() === socket.userId)) return; // FIX: only chat members
       const otherParticipant = chat.participants.find(p => p && p.toString() !== socket.userId);
       if (otherParticipant) {
         io.to(otherParticipant.toString()).emit("typing", { chatId, userId: socket.userId, isTyping });
@@ -191,9 +222,21 @@ io.on("connection", async (socket) => {
     }).catch(err => console.error(err));
   });
 
-  socket.on("join-negotiation", (negotiationId) => {
-    socket.join(`negotiation_${negotiationId}`);
-    console.log(`User ${socket.userId} joined negotiation ${negotiationId}`);
+  socket.on("join-negotiation", async (negotiationId) => {
+    try {
+      // FIX: only the landlord or tenant of this negotiation may join its room
+      const negotiation = await LeaseNegotiation.findById(negotiationId);
+      if (!negotiation) return;
+      const uid = socket.userId;
+      const isLandlord = negotiation.landlordId && negotiation.landlordId.toString() === uid;
+      const isTenant = negotiation.tenantId && negotiation.tenantId.toString() === uid;
+      if (!isLandlord && !isTenant) {
+        socket.emit("negotiation-error", { message: "Not authorized for this negotiation" });
+        return;
+      }
+      socket.join(`negotiation_${negotiationId}`);
+      console.log(`User ${socket.userId} joined negotiation ${negotiationId}`);
+    } catch (err) { console.error(err); }
   });
 
   socket.on("negotiation-message", async ({ negotiationId, text }) => {
@@ -204,7 +247,7 @@ io.on("connection", async (socket) => {
       let sender = "unknown";
       if (negotiation.landlordId.toString() === userId) sender = "landlord";
       else if (negotiation.tenantId && negotiation.tenantId.toString() === userId) sender = "tenant";
-      else sender = "ai";
+      else return; // FIX: only the landlord or tenant may post messages
       io.to(`negotiation_${negotiationId}`).emit("negotiation-message", { sender, text, time: new Date() });
     } catch (err) { console.error(err); }
   });
@@ -278,7 +321,7 @@ app.get("/api/lease-test", (req, res) => {
 });
 
 // Debug endpoints
-app.get("/api/db-test", async (req, res) => {
+app.get("/api/db-test", debugOnly, async (req, res) => {
   try {
     const admin = mongoose.connection.db.admin();
     const info = await admin.buildInfo();
@@ -287,7 +330,7 @@ app.get("/api/db-test", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get("/api/houses-test", async (req, res) => {
+app.get("/api/houses-test", debugOnly, async (req, res) => {
   try {
     const House = require("./models/House");
     const count = await House.countDocuments();
@@ -297,7 +340,7 @@ app.get("/api/houses-test", async (req, res) => {
 });
 
 // ========== NEW DEBUG ENDPOINT: CHECK AVAILABLE PROPERTY TYPES ==========
-app.get("/api/debug/types", (req, res) => {
+app.get("/api/debug/types", debugOnly, (req, res) => {
   try {
     const House = require("./models/House");
     const enumValues = House.schema.path('type').enumValues;
@@ -316,9 +359,9 @@ app.get('/house/:id', async (req, res) => {
     const House = require('./models/House');
     const house = await House.findById(req.params.id).populate('owner', 'name');
     if (!house) return res.status(404).send('House not found');
-    const title = `${house.name} - ${house.location}`;
-    const description = house.description || `MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? 'per room' : 'per month'}. ${house.bedrooms} bedrooms.`;
-    const imageUrl = house.images?.[0] || 'https://rental-marketplace-irmj.onrender.com/default-house.jpg';
+    const title = escapeHtml(`${house.name} - ${house.location}`);
+    const description = escapeHtml(house.description || `MWK ${house.price.toLocaleString()} ${house.type === 'Hostel' ? 'per room' : 'per month'}. ${house.bedrooms} bedrooms.`);
+    const imageUrl = escapeHtml(house.images?.[0] || 'https://rental-marketplace-irmj.onrender.com/default-house.jpg');
     const pageUrl = `https://rental-marketplace-irmj.onrender.com/house/${house._id}`;
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><meta property="og:title" content="${title}" /><meta property="og:description" content="${description}" /><meta property="og:image" content="${imageUrl}" /><meta property="og:url" content="${pageUrl}" /><meta property="og:type" content="website" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content="${title}" /><meta name="twitter:description" content="${description}" /><meta name="twitter:image" content="${imageUrl}" /><meta http-equiv="refresh" content="0; url=/?house=${house._id}" /></head><body><p>Redirecting to <a href="/?house=${house._id}">${title}</a>...</p></body></html>`;
     res.send(html);
@@ -338,7 +381,7 @@ app.get('/sitemap.xml', async (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error("🔥 Global error:", err.stack);
-  res.status(500).json({ message: "Internal Server Error", error: err.message });
+  res.status(500).json({ message: "Internal Server Error", error: process.env.ENABLE_DEBUG_ENDPOINTS === "true" ? err.message : undefined }); // FIX: hide details in production
 });
 
 const PORT = process.env.PORT || 5000;

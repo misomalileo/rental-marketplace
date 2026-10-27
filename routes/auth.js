@@ -159,6 +159,10 @@ router.post("/login", authLimiter, validateLogin, handleValidationErrors, async 
     if (user.authProvider === "google" && !user.password) {
       return res.status(400).json({ message: "This email uses Google Sign-In. Please click 'Login with Google'." });
     }
+    if (!user.password) {
+      // FIX: prevents a crash (bcrypt.compare on an empty password) for accounts without a password
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
     if (!user.isEmailVerified) {
       return res.status(403).json({ message: "Please verify your email address before logging in." });
     }
@@ -355,6 +359,8 @@ router.get("/me", auth, async (req, res) => {
 
 // ========== GOOGLE LOGIN (FIXED: sets isEmailVerified = true) ==========
 router.get("/google", (req, res, next) => {
+  // FIX: if Google keys are missing, send the user back politely instead of a server error
+  if (!passport._strategy("google")) return res.redirect("/login.html?error=google-not-configured");
   const role = req.query.role || "free";
   req.session.intendedRole = role;
   passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
