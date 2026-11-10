@@ -54,7 +54,7 @@ app.set("trust proxy", 1);
 // ========== FIX MONGOOSE DEPRECATION WARNINGS GLOBALLY ==========
 mongoose.set('strictQuery', false);
 // Set default options for findOneAndUpdate to use returnDocument instead of new
-mongoose.set('returnOriginal', false);
+mongoose.set('returnDocument', 'after');
 // ================================================================
 
 // ========== SECURITY: Stricter rate limiting for login ==========

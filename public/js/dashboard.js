@@ -699,14 +699,14 @@ function updateRealAIInsight() {
       const diffPercent = ((avgViews - globalAvgViews) / globalAvgViews * 100).toFixed(0);
       let insight = '';
       if (avgViews > globalAvgViews) {
-        insight = `🔥 Your properties get ${diffPercent}% more views than the platform average. Great engagement! Consider adding more photos to boost even higher.`;
+        insight = `<i class="fas fa-fire"></i> Your properties get ${diffPercent}% more views than the platform average. Great engagement! Consider adding more photos to boost even higher.`;
       } else if (avgViews < globalAvgViews) {
-        insight = `⚠️ Your listings receive ${Math.abs(diffPercent)}% fewer views. Try featuring your best property or improving descriptions.`;
+        insight = `<i class="fas fa-triangle-exclamation"></i> Your listings receive ${Math.abs(diffPercent)}% fewer views. Try featuring your best property or improving descriptions.`;
       } else {
-        insight = `📊 Your views are on par with the platform average. Keep updating your listings regularly.`;
+        insight = `<i class="fas fa-chart-column"></i> Your views are on par with the platform average. Keep updating your listings regularly.`;
       }
-      if (avgRating > 4) insight += ` ⭐ Excellent average rating (${avgRating.toFixed(1)}/5) – tenants love you!`;
-      else if (avgRating < 3) insight += ` 💡 Your rating (${avgRating.toFixed(1)}/5) could improve. Respond faster to enquiries.`;
+      if (avgRating > 4) insight += ` <i class="fas fa-star"></i> Excellent average rating (${avgRating.toFixed(1)}/5) – tenants love you!`;
+      else if (avgRating < 3) insight += ` <i class="fas fa-lightbulb"></i> Your rating (${avgRating.toFixed(1)}/5) could improve. Respond faster to enquiries.`;
       document.getElementById('insightText').innerHTML = insight;
     });
 }
@@ -834,7 +834,7 @@ async function loadLeaseNegotiations() {
       let statusText = l.status;
       if (contractStatus === 'active') { statusClass += ' accepted'; statusText = 'Signed & Active'; }
       else if (contractStatus === 'terminated') { statusClass += ' rejected'; statusText = 'Terminated'; }
-      else if (l.status === 'signed') { statusClass += ' accepted'; statusText = 'Signed ✓'; }
+      else if (l.status === 'signed') { statusClass += ' accepted'; statusText = 'Signed <i class="fas fa-check"></i>'; }
       else if (l.status === 'agreed') { statusClass += ' pending'; statusText = 'Awaiting Signatures'; }
       else if (l.status === 'negotiating') { statusClass += ' pending'; statusText = 'Negotiating'; }
       

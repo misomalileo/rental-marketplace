@@ -89,7 +89,22 @@ function showCustomModal(message, type = 'info', onConfirm = null, onCancel = nu
 }
 
 // ========== CUSTOM VERIFIED BADGE (SVG) ==========
+// ========== VERIFIED SEAL (scalloped rosette, like Facebook / Telegram / Instagram) ==========
+function verifiedSealSvg(size = 18) {
+  if (!verifiedSealSvg._d) {
+    let pts = [];
+    for (let i = 0; i < 192; i++) {
+      const t = 2 * Math.PI * i / 192 - Math.PI / 2;
+      const r = 10.2 * (1 + 0.075 * Math.cos(8 * t)) * 0.97;
+      pts.push((12 + r * Math.cos(t)).toFixed(2) + ' ' + (12 + r * Math.sin(t)).toFixed(2));
+    }
+    verifiedSealSvg._d = 'M' + pts.join(' L') + 'Z';
+  }
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" class="verified-seal" role="img" aria-label="Verified" style="display:inline-block;vertical-align:middle;flex:none;"><path d="${verifiedSealSvg._d}" fill="#1D9BF0"/><path d="M7.4 12.4l3.1 3.1 6.1-6.4" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
 function fbSaturatedSky(size = 18, scallops = 12, depth = 3.5) {
+  return verifiedSealSvg(size); // new real-style seal (old drawing below kept for reference)
   const cx = size/2, cy = size/2, r = size/2 - 2;
   const angleStep = (2 * Math.PI) / scallops;
   let path = '';
@@ -409,7 +424,7 @@ function renderMarkers(houses) {
     const img = house.images?.length ? house.images[0] : "placeholder.jpg";
     let badge = "";
     if (house.owner?.verificationType === "premium") badge = `<span class="badge premium"><i class="fas fa-star"></i> Premium</span>`;
-    else if (house.owner?.verificationType === "official") badge = `<span class="badge verified"><i class="fas fa-check-circle"></i> Verified</span>`;
+    else if (house.owner?.verificationType === "official") badge = `<span class="badge verified">${verifiedSealSvg(14)} Verified</span>`;
     let details = '';
     if (house.type === 'Hostel') {
       details = `<p><i class="fas fa-hotel"></i> Hostel</p><p><i class="fas fa-bed"></i> Vacancies: ${house.vacancies || 0} rooms</p><p><i class="fas fa-money-bill-wave"></i> MWK ${Number(house.price).toLocaleString()} / room</p>`;
@@ -903,7 +918,7 @@ async function showLandlordProfile(landlordId) {
     const avatarHtml = landlord.profilePicture ? `<img class="avatar" src="${landlord.profilePicture}" alt="${landlord.name}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;">` : `<div class="avatar" style="background: #3498db; display: flex; align-items: center; justify-content: center; font-size: 2rem; width:100px;height:100px;border-radius:50%;">${landlord.name.charAt(0)}</div>`;
     let badgeHtml = '';
     if (landlord.verificationType === 'premium') badgeHtml = '<span class="badge premium"><i class="fas fa-star"></i> Premium Landlord</span>';
-    else if (landlord.verificationType === 'official') badgeHtml = '<span class="badge verified"><i class="fas fa-check-circle"></i> Verified Landlord</span>';
+    else if (landlord.verificationType === 'official') badgeHtml = '<span class="badge verified">' + verifiedSealSvg(14) + ' Verified Landlord</span>';
     else badgeHtml = '<span class="badge none"><i class="fas fa-lock"></i> Not Verified</span>';
     const businessHtml = landlord.businessName ? `<div class="business-name"><i class="fas fa-building"></i> ${landlord.businessName}</div>` : '';
     const addressHtml = landlord.address ? `<div class="info-row"><i class="fas fa-map-marker-alt" style="color:#10b981;"></i> ${landlord.address}</div>` : '';
@@ -1023,7 +1038,7 @@ function attachDoubleClickToHouseCards() {
       if (!house || !house.lat || !house.lng) return;
       lastSelectedHouse = house;
       map.flyTo([house.lat, house.lng], 16, { duration: 1.5 });
-      showToast(`📍 ${house.name} – now showing nearby amenities`, 'info');
+      showToast(`<i class="fas fa-location-dot"></i> ${house.name} – now showing nearby amenities`, 'info');
     });
   });
 }
@@ -1721,7 +1736,7 @@ async function updateMarketPulse(districtFilter = '') {
       const fav = favorites.includes(h._id) ? 1 : 0;
       return (views * 0.6 + fav * 40) > 80;
     }).length;
-    if (districtHotCount > 2) summary += ` 🔥 ${districtHotCount} hot properties in this district.`;
+    if (districtHotCount > 2) summary += ` <i class="fas fa-fire"></i> ${districtHotCount} hot properties in this district.`;
   } else {
     const totalHot = hotCount;
     const topDistrict = topDistricts[0] ? topDistricts[0][0] : 'no district';

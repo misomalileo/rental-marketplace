@@ -129,9 +129,9 @@ async function loadLandlords() {
         <td>${escapeHtml(user.email)}</td>
         <td><span class="badge ${badgeClass}">${user.verificationType || 'none'}</span></td>
         <td>
-          <button class="action-btn verify" onclick="verifyUser('${user._id}', 'official')">✔ Official</button>
-          <button class="action-btn premium" onclick="verifyUser('${user._id}', 'premium')">⭐ Premium</button>
-          <button class="action-btn ban" onclick="banUser('${user._id}')">🚫 Ban</button>
+          <button class="action-btn verify" onclick="verifyUser('${user._id}', 'official')"><i class="fas fa-circle-check"></i> Official</button>
+          <button class="action-btn premium" onclick="verifyUser('${user._id}', 'premium')"><i class="fas fa-star"></i> Premium</button>
+          <button class="action-btn ban" onclick="banUser('${user._id}')"><i class="fas fa-ban"></i> Ban</button>
           </td>
       `;
       tbody.appendChild(row);
@@ -215,12 +215,12 @@ async function loadHouses() {
         <td>${escapeHtml(house.location || 'N/A')}</td>
         <td>MWK ${house.price?.toLocaleString()}</td>
         <td>${escapeHtml(house.owner?.name || 'Unknown')}</td>
-        <td><span class="badge ${house.featured ? 'premium' : 'none'}">${house.featured ? '⭐ Yes' : 'No'}</span></td>
+        <td><span class="badge ${house.featured ? 'premium' : 'none'}">${house.featured ? '<i class="fas fa-star"></i> Yes' : 'No'}</span></td>
         <td>
           <button class="action-btn ${house.featured ? 'verify' : 'premium'}" onclick="toggleFeatured('${house._id}')">
-            ${house.featured ? '❌ Remove' : '⭐ Make Featured'}
+            ${house.featured ? '<i class="fas fa-circle-xmark"></i> Remove' : '<i class="fas fa-star"></i> Make Featured'}
           </button>
-          <button class="action-btn delete" onclick="deleteHouse('${house._id}')">🗑 Delete</button>
+          <button class="action-btn delete" onclick="deleteHouse('${house._id}')"><i class="fas fa-trash-can"></i> Delete</button>
           </td>
       `;
       tbody.appendChild(row);
@@ -290,7 +290,7 @@ async function loadReports() {
         <td>${escapeHtml(r.reason)}</td>
         <td>${new Date(r.createdAt).toLocaleDateString()}</td>
         <td><span class="badge ${r.status === 'pending' ? 'none' : 'official'}">${r.status}</span></td>
-        <td>${r.status === 'pending' ? `<button class="action-btn verify" onclick="resolveReport('${r._id}')">✔ Resolve</button>` : 'Resolved'}</td>
+        <td>${r.status === 'pending' ? `<button class="action-btn verify" onclick="resolveReport('${r._id}')"><i class="fas fa-circle-check"></i> Resolve</button>` : 'Resolved'}</td>
       `;
       tbody.appendChild(row);
     });
@@ -392,7 +392,7 @@ async function loadPremiumUsers() {
         row.insertCell(1).innerText = user.email;
         row.insertCell(2).innerHTML = `<span class="badge premium">Premium User</span>`;
         row.insertCell(3).innerText = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).toLocaleDateString() : 'N/A';
-        row.insertCell(4).innerHTML = `<button class="action-btn ban" onclick="revokePremium('${user._id}')">🚫 Revoke</button>`;
+        row.insertCell(4).innerHTML = `<button class="action-btn ban" onclick="revokePremium('${user._id}')"><i class="fas fa-ban"></i> Revoke</button>`;
       });
     }
   } catch (err) {
